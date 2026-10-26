@@ -1,0 +1,56 @@
+name: Build RuneLauncher
+
+on:
+  push:
+    paths:
+      - "RuneLauncher/**"
+      - ".github/workflows/runelauncher.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: runelauncher-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: RuneLauncher
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Build release APK
+        run: |
+          chmod +x gradlew
+          ./gradlew --no-daemon assembleRelease
+
+      - name: Rename APK
+        run: cp app/build/outputs/apk/release/app-release.apk RuneLauncher.apk
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: RuneLauncher-apk
+          path: RuneLauncher/RuneLauncher.apk
+
+      # A rolling pre-release so the APK can be downloaded straight from a phone.
+      - name: Publish "latest" pre-release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release delete runelauncher-latest --yes --cleanup-tag || true
+          gh release create runelauncher-latest RuneLauncher.apk \
+            --prerelease \
+            --target "$GITHUB_SHA" \
+            --title "RuneLauncher (latest build)" \
+            --notes "Built from ${GITHUB_REF_NAME} @ ${GITHUB_SHA::7}. Download RuneLauncher.apk on your phone, install it, then press Home and pick RuneLauncher."
