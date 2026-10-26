@@ -40,7 +40,10 @@ class LauncherActivity : Activity() {
         setContentView(root)
         setupWindow()
 
-        source.listen { game.reloadApps() }
+        source.listen {
+            game.icons.clear()
+            game.reloadApps()
+        }
         game.actions.initTorch { root.invalidateAll() }
         val filter = IntentFilter(Intent.ACTION_BATTERY_CHANGED)
         val sticky = if (Build.VERSION.SDK_INT >= 33) {
