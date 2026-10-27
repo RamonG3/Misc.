@@ -1,0 +1,56 @@
+name: Build Duel Cards
+
+on:
+  push:
+    paths:
+      - "DuelCards/**"
+      - ".github/workflows/duelcards.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: duelcards-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: DuelCards
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Build release APK
+        run: |
+          chmod +x gradlew
+          ./gradlew --no-daemon assembleRelease
+
+      - name: Rename APK
+        run: cp app/build/outputs/apk/release/app-release.apk DuelCards.apk
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: DuelCards-apk
+          path: DuelCards/DuelCards.apk
+
+      # A rolling pre-release so the APK can be downloaded straight from a phone.
+      - name: Publish "latest" pre-release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release delete duelcards-latest --yes --cleanup-tag || true
+          gh release create duelcards-latest DuelCards.apk \
+            --prerelease \
+            --target "$GITHUB_SHA" \
+            --title "Duel Cards (latest build)" \
+            --notes "Built from ${GITHUB_REF_NAME} @ ${GITHUB_SHA::7}. Download DuelCards.apk on your phone and open it to install."
