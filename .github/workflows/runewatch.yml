@@ -54,6 +54,8 @@ jobs:
           chmod +x gradlew
           ./gradlew --no-daemon assembleRelease
           cp watchface/build/outputs/apk/release/watchface-release.apk RuneWatch.apk
+          # Watch Face Format APKs must be resources only.
+          if unzip -l RuneWatch.apk | grep -q '\.dex$'; then echo "::error::APK contains code"; exit 1; fi
 
       - uses: actions/upload-artifact@v4
         with:

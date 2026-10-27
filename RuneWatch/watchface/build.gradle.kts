@@ -30,11 +30,14 @@ android {
     }
 
     buildTypes {
+        // R8 strips the generated R classes, so the APK ships with no classes.dex at all:
+        // Watch Face Format faces must not contain code.
         debug {
+            isMinifyEnabled = true
             signingConfig = signingConfigs.getByName("shared")
         }
         release {
-            isMinifyEnabled = false
+            isMinifyEnabled = true
             // Resources are only referenced from res/raw/watchface.xml, which the shrinker
             // cannot see, so it would delete all of them.
             isShrinkResources = false
