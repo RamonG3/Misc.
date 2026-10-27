@@ -14,6 +14,12 @@ adb shell settings put system screen_off_timeout 1800000 || true
 # happily switch back to one of them. Let it finish first.
 sleep 60
 
+# The emulator says it is on a charger, and Wear OS then covers every watch face with
+# its charging clock. Unplug it (and give Prayer something to show).
+adb shell dumpsys battery unplug || true
+adb shell dumpsys battery set status 3 || true
+adb shell dumpsys battery set level 68 || true
+
 adb install -r "$APK"
 sleep 5
 
