@@ -6,7 +6,11 @@ Agility XP on the real experience curve. Level 99 needs 13,034,431 steps in one 
 
 <p>
   <img src="docs/preview.png" width="300" alt="RuneWatch">
+  <img src="docs/emulator.png" width="300" alt="RuneWatch running on the Wear OS emulator">
 </p>
+
+*Left: the preview. Right: the real thing on the Wear OS 5 emulator in CI, where nobody
+has walked anywhere or has a pulse, so it is a level 1 adventurer at "-- BPM".*
 
 <p>
   <img src="docs/skins.png" width="620" alt="The four interface skins">
