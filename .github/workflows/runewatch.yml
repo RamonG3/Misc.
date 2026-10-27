@@ -1,0 +1,110 @@
+name: Build RuneWatch
+
+on:
+  push:
+    paths:
+      - "RuneWatch/**"
+      - ".github/workflows/runewatch.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: runewatch-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: RuneWatch
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      # Parses every expression, checks data sources, images and strings, and renders
+      # each branch of every condition. Catches what would be a silent blank on the watch.
+      - name: Check watchface.xml expressions and resources
+        run: |
+          pip install --quiet pillow numpy
+          python3 tools/render_preview.py --check
+
+      - name: Validate against the official Watch Face Format schema
+        run: |
+          git clone --quiet https://github.com/google/watchface.git /tmp/wff
+          git -C /tmp/wff checkout --quiet d1cdafa953c95d5554fc54df4bc3948befbefc4d
+          (cd /tmp/wff/third_party/wff && chmod +x gradlew && ./gradlew --no-daemon -q :specification:validator:executable-jar)
+          java -jar /tmp/wff/third_party/wff/specification/validator/build/libs/wff-validator.jar \
+            1 --stop-on-fail watchface/src/main/res/raw/watchface.xml
+
+      - name: Build release APK
+        run: |
+          chmod +x gradlew
+          ./gradlew --no-daemon assembleRelease
+          cp watchface/build/outputs/apk/release/watchface-release.apk RuneWatch.apk
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: RuneWatch-apk
+          path: RuneWatch/RuneWatch.apk
+
+      # A rolling pre-release so the APK can be downloaded straight from a phone.
+      - name: Publish "latest" pre-release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release delete runewatch-latest --yes --cleanup-tag || true
+          gh release create runewatch-latest RuneWatch.apk \
+            --prerelease \
+            --target "$GITHUB_SHA" \
+            --title "RuneWatch (latest build)" \
+            --notes "Built from ${GITHUB_REF_NAME} @ ${GITHUB_SHA::7}. A RuneScape 3 style watch face for Pixel Watch and other Wear OS 4+ watches. See RuneWatch/README.md for how to sideload it."
+
+  # Boots a Wear OS emulator, sets RuneWatch as the watch face and attaches a screenshot to
+  # the release. Best effort: emulators are flaky and this never blocks the APK.
+  screenshot:
+    needs: build
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: RuneWatch-apk
+
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
+      - uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 34
+          target: android-wear
+          arch: x86_64
+          profile: wearos_large_round
+          disable-animations: true
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
+          script: bash RuneWatch/tools/ci_screenshot.sh RuneWatch.apk
+
+      - name: Attach screenshot to the release
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release upload runewatch-latest screenshot.png logcat.txt --clobber --repo "$GITHUB_REPOSITORY"

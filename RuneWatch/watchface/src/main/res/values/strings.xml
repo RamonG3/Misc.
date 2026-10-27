@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="watch_face_name">RuneWatch</string>
+
+    <string name="skin_label">Interface</string>
+    <string name="skin_steel">Steel</string>
+    <string name="skin_legacy">Legacy</string>
+    <string name="skin_abyss">Abyss</string>
+    <string name="skin_obsidian">Obsidian</string>
+
+    <string name="slot_1_label">Action slot 1</string>
+    <string name="slot_2_label">Action slot 2</string>
+</resources>
