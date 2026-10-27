@@ -109,4 +109,5 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release upload runewatch-latest screenshot.png logcat.txt --clobber --repo "$GITHUB_REPOSITORY"
+          gh release upload runewatch-latest screenshot.png logcat.txt wff-runtime.txt wallpaper.txt \
+            --clobber --repo "$GITHUB_REPOSITORY"
