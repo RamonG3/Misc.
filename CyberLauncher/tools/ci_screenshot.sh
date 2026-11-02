@@ -130,6 +130,15 @@ mark "replay: swipe right"
 adb shell input swipe $((W / 5)) $((H / 2)) $((W * 4 / 5)) $((H / 2)) 400
 sleep 2
 shot 22-replay-deck
+# Hold Gmail (top row, second column) and drag it down the grid, photographed mid-drag.
+demo home 2
+mark "drag and drop"
+adb shell input draganddrop $((W * 38 / 100)) $((H * 287 / 1000)) $((W * 62 / 100)) $((H * 617 / 1000)) 3000 &
+sleep 2
+shot 23-drag
+wait
+sleep 2
+shot 24-dropped
 adb logcat -d -s CyberTouch > touch.txt || true
 echo "--- input settings" >> touch.txt
 adb shell settings get secure navigation_mode >> touch.txt 2>&1 || true

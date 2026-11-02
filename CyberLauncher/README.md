@@ -101,10 +101,12 @@ Open `CyberLauncher/` in Android Studio, or run `./gradlew assembleRelease`.
 Builds are signed with `keystore/shared.jks`, a throwaway key committed on purpose so every CI
 build installs over the previous one. It is fine for sideloading; don't use it for the Play Store.
 
-CI also boots an emulator, runs the release build as the home app to check it survives, and
-attaches screenshots to the release. Debug builds take `--es demo <screen>` extras
-(`seed`, `drawer`, `deck`, `settings`, `scan:N`, `menu:N`, `homemenu`, `levelup`, `theme:<id>`) so the
-screenshots don't depend on tapping coordinates. Release builds ignore them.
+CI also boots an emulator, runs the release build as the home app to check it survives real
+taps and swipes, and attaches screenshots to the release (the ones above come from there). Debug
+builds take `--es demo <screen>` extras (`seed`, `home`, `drawer`, `deck`, `settings`, `scan:N`,
+`menu:N`, `homemenu`, `levelup`, `theme:<id>`) so most screenshots don't depend on tapping
+coordinates, and log what the home screen did with each touch under the `CyberTouch` tag.
+Release builds ignore both.
 
 ## Disclaimer
 
