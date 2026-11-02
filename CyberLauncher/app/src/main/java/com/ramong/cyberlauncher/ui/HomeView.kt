@@ -287,6 +287,8 @@ class HomeView(context: Context, private val game: Game) : View(context) {
     override fun onTouchEvent(e: MotionEvent): Boolean {
         val x = e.x
         val y = e.y
+        val before = mode
+        touchLog?.invoke("${MotionEvent.actionToString(e.actionMasked)} x=${x.toInt()} y=${y.toInt()} mode=$mode pos=${"%.2f".format(currentPos())} n=${e.historySize} lag=${SystemClock.uptimeMillis() - e.eventTime}ms")
         when (e.actionMasked) {
             MotionEvent.ACTION_DOWN -> {
                 deckScroller.forceFinished(true)
@@ -330,6 +332,7 @@ class HomeView(context: Context, private val game: Game) : View(context) {
                     else -> Unit
                 }
                 lastY = y
+                if (mode != before) touchLog?.invoke("mode $before -> $mode at dx=${dx.toInt()} dy=${dy.toInt()}")
                 invalidate()
             }
             MotionEvent.ACTION_UP -> {
@@ -373,6 +376,7 @@ class HomeView(context: Context, private val game: Game) : View(context) {
                     Mode.DRAG -> dragEnd(x, y)
                     else -> Unit
                 }
+                touchLog?.invoke("UP handled as $mode: dx=${dx.toInt()} dy=${dy.toInt()} vx=${vx.toInt()} vy=${vy.toInt()} slop=${slop.toInt()} deck=${game.save.deck} -> page target $animTo")
                 reset()
             }
             MotionEvent.ACTION_CANCEL -> {
@@ -394,6 +398,7 @@ class HomeView(context: Context, private val game: Game) : View(context) {
     }
 
     private fun onLongPress() {
+        touchLog?.invoke("long press fired: mode=$mode pressed=$pressed")
         if (mode != Mode.PENDING) return
         val t = pressed
         pressed = null
@@ -812,6 +817,9 @@ class HomeView(context: Context, private val game: Game) : View(context) {
     }
 
     companion object {
+        /** Debug builds log touches here so CI can see what a device did with a gesture. */
+        var touchLog: ((String) -> Unit)? = null
+
         const val PAGE_MS = 260L
         const val DOCK_BASE = 1000
         const val DROP_REMOVE = -2

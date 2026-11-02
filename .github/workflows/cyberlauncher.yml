@@ -95,5 +95,6 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release upload cyberlauncher-latest shots/*.png smoke.txt logcat.txt \
+          touch smoke.txt logcat.txt touch.txt
+          gh release upload cyberlauncher-latest shots/*.png smoke.txt logcat.txt touch.txt \
             --clobber --repo "$GITHUB_REPOSITORY"

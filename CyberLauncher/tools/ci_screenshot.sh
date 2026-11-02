@@ -105,6 +105,35 @@ shot 17-levelup
 demo theme:corpo 4
 shot 18-corpo
 demo theme:street 2
+# Real gestures, with the debug build's touch log (tag CyberTouch) saved to touch.txt.
+mark() { adb shell log -t CyberTouch "=== $1" || true; }
+demo home 2
+mark "swipe right from W/5"
+adb shell input swipe $((W / 5)) $((H / 2)) $((W * 4 / 5)) $((H / 2)) 400
+sleep 2
+shot 19-swipe-edge
+demo home 2
+mark "swipe right from 2W/5"
+adb shell input swipe $((W * 2 / 5)) $((H / 2)) $((W * 9 / 10)) $((H / 2)) 400
+sleep 2
+shot 20-swipe-mid
+# The release run's exact sequence: swipe up, Back, swipe right.
+demo home 2
+mark "replay: swipe up"
+adb shell input swipe $((W / 2)) $((H * 6 / 10)) $((W / 2)) $((H * 2 / 10)) 250
+sleep 2
+shot 21-replay-drawer
+mark "replay: back"
+adb shell input keyevent KEYCODE_BACK
+sleep 1
+mark "replay: swipe right"
+adb shell input swipe $((W / 5)) $((H / 2)) $((W * 4 / 5)) $((H / 2)) 400
+sleep 2
+shot 22-replay-deck
+adb logcat -d -s CyberTouch > touch.txt || true
+echo "--- input settings" >> touch.txt
+adb shell settings get secure navigation_mode >> touch.txt 2>&1 || true
+adb shell dumpsys input | grep -iE "gesture|exclusion|back" | head -40 >> touch.txt || true
 
 if alive; then echo "debug build: alive after the tour" >> smoke.txt; else echo "debug build: NOT RUNNING" >> smoke.txt; fi
 adb logcat -d > logcat-full.txt || true

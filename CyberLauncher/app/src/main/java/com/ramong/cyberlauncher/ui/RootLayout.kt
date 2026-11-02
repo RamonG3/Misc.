@@ -62,6 +62,17 @@ class RootLayout(context: Context, private val game: Game) : ViewGroup(context),
         }
     }
 
+    override fun dispatchTouchEvent(e: android.view.MotionEvent): Boolean {
+        val handled = super.dispatchTouchEvent(e)
+        HomeView.touchLog?.let { log ->
+            if (e.actionMasked != android.view.MotionEvent.ACTION_MOVE) {
+                val shown = (overlays + notice).filter { it.visibility == VISIBLE }.joinToString { it.javaClass.simpleName }
+                log("root ${android.view.MotionEvent.actionToString(e.actionMasked)} handled=$handled visible=[$shown] page=${home.page}")
+            }
+        }
+        return handled
+    }
+
     init {
         isFocusable = true
         isFocusableInTouchMode = true

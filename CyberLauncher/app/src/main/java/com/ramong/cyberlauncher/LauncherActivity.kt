@@ -58,6 +58,9 @@ class LauncherActivity : Activity() {
         sticky?.let { game.stats.onBattery(it) }
         game.start()
         root.requestFocus()
+        if (applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE != 0) {
+            com.ramong.cyberlauncher.ui.HomeView.touchLog = { android.util.Log.d("CyberTouch", it) }
+        }
         demo(intent)
     }
 
@@ -142,7 +145,8 @@ class LauncherActivity : Activity() {
     @Deprecated("Launchers swallow Back; it only closes our own overlays.")
     @Suppress("DEPRECATION")
     override fun onBackPressed() {
-        game.back()
+        val handled = game.back()
+        com.ramong.cyberlauncher.ui.HomeView.touchLog?.invoke("back -> $handled")
     }
 
     override fun onDestroy() {
