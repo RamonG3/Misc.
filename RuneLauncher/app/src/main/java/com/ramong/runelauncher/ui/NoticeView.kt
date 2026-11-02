@@ -202,7 +202,9 @@ class NoticeView(context: Context, private val game: Game) : View(context) {
                 continue
             }
             val alpha = if (u > 0.7f) ((1f - u) / 0.3f * 255).toInt() else 255
-            val y = dropY + d.row * R3.dp(26f) - u * R3.dp(70f)
+            // Under the banner while one is showing, so the two never overlap.
+            val base = if (banners.isNotEmpty()) maxOf(dropY, topInset + R3.dp(170f)) else dropY
+            val y = base + d.row * R3.dp(26f) - u * R3.dp(if (banners.isNotEmpty()) 30f else 70f)
             val text = "+${d.amount}"
             val iconSize = R3.dp(22f)
             val tw = dropPaint.measureText(text)
