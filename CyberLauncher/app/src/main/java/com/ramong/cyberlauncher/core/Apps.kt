@@ -128,7 +128,8 @@ interface AppSource {
     fun details(app: AppEntry)
     fun uninstall(app: AppEntry)
     fun intel(app: AppEntry): AppIntel?
-    fun listen(onChanged: () -> Unit) {}
+    /** [onChanged] gets the package that changed, or null when several did. */
+    fun listen(onChanged: (String?) -> Unit) {}
     fun dispose() {}
 }
 
@@ -223,13 +224,13 @@ class LauncherAppsSource(private val ctx: Context) : AppSource {
         }
     }
 
-    override fun listen(onChanged: () -> Unit) {
+    override fun listen(onChanged: (String?) -> Unit) {
         val cb = object : LauncherApps.Callback() {
-            override fun onPackageRemoved(packageName: String?, user: UserHandle?) = onChanged()
-            override fun onPackageAdded(packageName: String?, user: UserHandle?) = onChanged()
-            override fun onPackageChanged(packageName: String?, user: UserHandle?) = onChanged()
-            override fun onPackagesAvailable(names: Array<out String>?, user: UserHandle?, replacing: Boolean) = onChanged()
-            override fun onPackagesUnavailable(names: Array<out String>?, user: UserHandle?, replacing: Boolean) = onChanged()
+            override fun onPackageRemoved(packageName: String?, user: UserHandle?) = onChanged(packageName)
+            override fun onPackageAdded(packageName: String?, user: UserHandle?) = onChanged(packageName)
+            override fun onPackageChanged(packageName: String?, user: UserHandle?) = onChanged(packageName)
+            override fun onPackagesAvailable(names: Array<out String>?, user: UserHandle?, replacing: Boolean) = onChanged(names?.singleOrNull())
+            override fun onPackagesUnavailable(names: Array<out String>?, user: UserHandle?, replacing: Boolean) = onChanged(names?.singleOrNull())
         }
         callback = cb
         launcherApps.registerCallback(cb, Handler(Looper.getMainLooper()))
@@ -257,6 +258,8 @@ class IconCache(
     private var palette: Palette = Content.palettes[0]
 
     private val cache = HashMap<String, Bitmap>()
+    /** Icons being refreshed after an update: shown until the new one is ready. */
+    private val stale = HashMap<String, Bitmap>()
     private val pending = HashSet<String>()
     private var notifyQueued = false
 
@@ -285,6 +288,7 @@ class IconCache(
                 }
                 post(Runnable {
                     pending.remove(k)
+                    stale.remove(k)
                     if (bmp != null && k == keyOf(app)) cache[k] = bmp
                     if (!notifyQueued) {
                         notifyQueued = true
@@ -296,14 +300,19 @@ class IconCache(
                 })
             }
         }
-        return cache[k]
+        return cache[k] ?: stale[k]
     }
 
-    fun invalidate(app: AppEntry) {
-        cache.keys.removeAll { it.startsWith(app.key + "@") }
+    /** One package changed (usually an update): reload just its icons, keeping the old ones meanwhile. */
+    fun refresh(packageName: String) {
+        val keys = cache.keys.filter { it.startsWith("$packageName/") }
+        for (k in keys) cache.remove(k)?.let { stale[k] = it }
     }
 
-    fun clear() = cache.clear()
+    fun clear() {
+        cache.clear()
+        stale.clear()
+    }
 
     companion object {
         const val SIZE = 128

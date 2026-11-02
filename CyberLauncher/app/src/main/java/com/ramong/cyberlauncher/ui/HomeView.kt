@@ -340,8 +340,16 @@ class HomeView(context: Context, private val game: Game) : View(context) {
                 val vx = t?.xVelocity ?: 0f
                 val vy = t?.yVelocity ?: 0f
                 val dy = y - downY
+                val dx = x - downX
                 when (mode) {
-                    Mode.PENDING -> pressed?.let { tap(it, x, y) }
+                    // Lifted far from where it landed with no moves in between (it happens with
+                    // injected or coalesced input): still a swipe, not a tap.
+                    Mode.PENDING -> when {
+                        abs(dx) > Cy.dp(80f) && abs(dx) > abs(dy) && game.save.deck -> showPage(if (dx > 0) Game.PAGE_DECK else Game.PAGE_HOME)
+                        dy < -Cy.dp(80f) && abs(dy) > abs(dx) -> if (onHomePage()) game.ui.openDrawer(search = false, pick = false)
+                        dy > Cy.dp(80f) && abs(dy) > abs(dx) -> game.actions.expandNotifications()
+                        else -> pressed?.let { tap(it, x, y) }
+                    }
                     Mode.PAGE -> {
                         val target = when {
                             vx < -minFling * 4 -> 1

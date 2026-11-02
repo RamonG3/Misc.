@@ -60,7 +60,7 @@ shot 03-drawer
 adb shell input keyevent KEYCODE_BACK
 sleep 1
 # Swipe right for the deck page, then Home goes back to the home page.
-adb shell input swipe $((W / 8)) $((H / 2)) $((W * 7 / 8)) $((H / 2)) 250
+adb shell input swipe $((W / 5)) $((H / 2)) $((W * 4 / 5)) $((H / 2)) 400
 sleep 2
 shot 04-deck
 adb shell input keyevent KEYCODE_HOME

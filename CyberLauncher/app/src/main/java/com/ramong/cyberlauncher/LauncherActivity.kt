@@ -42,9 +42,10 @@ class LauncherActivity : Activity() {
         setContentView(root)
         setupWindow()
 
-        source.listen {
-            // An update can change an app's icon without changing its key.
-            game.icons.clear()
+        source.listen { pkg ->
+            // An update can change an app's icon without changing its key. Only that app's
+            // icon reloads, so the rest of the screen doesn't flicker during nightly updates.
+            if (pkg != null) game.icons.refresh(pkg) else game.icons.clear()
             game.reloadApps()
         }
         game.actions.initTorch { root.invalidateAll() }
