@@ -8,7 +8,6 @@ import android.graphics.RectF
 import android.os.SystemClock
 import android.provider.Settings
 import android.view.MotionEvent
-import android.view.VelocityTracker
 import android.view.View
 import android.view.ViewConfiguration
 import android.widget.OverScroller
@@ -161,7 +160,8 @@ class SettingsView(context: Context, private val game: Game) : View(context) {
     private var lastY = 0f
     private var dragging = false
     private var pressedRow = -1
-    private var tracker: VelocityTracker? = null
+    private val swipe = Swipe()
+    private val minFling = ViewConfiguration.get(context).scaledMinimumFlingVelocity.toFloat()
     private val slop = ViewConfiguration.get(context).scaledTouchSlop.toFloat()
 
     private fun rowAt(y: Float): Int {
@@ -186,11 +186,10 @@ class SettingsView(context: Context, private val game: Game) : View(context) {
                 lastY = y
                 dragging = false
                 pressedRow = rowAt(y)
-                tracker?.recycle()
-                tracker = VelocityTracker.obtain().also { it.addMovement(e) }
+                swipe.down(e)
             }
             MotionEvent.ACTION_MOVE -> {
-                tracker?.addMovement(e)
+                swipe.move(e)
                 if (!dragging && hypot(x - downX, y - downY) > slop) {
                     dragging = true
                     pressedRow = -1
@@ -199,15 +198,13 @@ class SettingsView(context: Context, private val game: Game) : View(context) {
                 lastY = y
             }
             MotionEvent.ACTION_UP -> {
-                val t = tracker
-                t?.addMovement(e)
-                t?.computeCurrentVelocity(1000)
+                swipe.up(e, minFling)
                 if (dragging) {
-                    val vx = t?.xVelocity ?: 0f
+                    val vx = swipe.vx
                     if (x - downX > Cy.dp(90f) && abs(x - downX) > abs(y - downY) * 2 && vx > 0f) {
                         hide()
                     } else {
-                        scroller.fling(0, scroll.toInt(), 0, -(t?.yVelocity ?: 0f).toInt(), 0, 0, 0, maxScroll().toInt())
+                        scroller.fling(0, scroll.toInt(), 0, -swipe.vy.toInt(), 0, 0, 0, maxScroll().toInt())
                         postInvalidateOnAnimation()
                     }
                 } else if (closeBtn.contains(x, y) || (y < header.bottom && x < Cy.dp(60f))) {
@@ -225,12 +222,11 @@ class SettingsView(context: Context, private val game: Game) : View(context) {
                     }
                 }
                 pressedRow = -1
-                tracker?.recycle()
-                tracker = null
             }
             MotionEvent.ACTION_CANCEL -> {
                 pressedRow = -1
                 dragging = false
+                swipe.clear()
             }
         }
         invalidate()

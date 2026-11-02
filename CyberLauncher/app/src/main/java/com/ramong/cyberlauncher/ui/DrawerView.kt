@@ -10,7 +10,6 @@ import android.os.Handler
 import android.os.Looper
 import android.os.SystemClock
 import android.view.MotionEvent
-import android.view.VelocityTracker
 import android.view.View
 import android.view.ViewConfiguration
 import android.widget.OverScroller
@@ -191,7 +190,7 @@ class DrawerView(context: Context, private val game: Game, private val home: Hom
     private var lastY = 0f
     private var pressed: AppEntry? = null
     private var held: AppEntry? = null
-    private var tracker: VelocityTracker? = null
+    private val swipe = Swipe()
     private val slop = ViewConfiguration.get(context).scaledTouchSlop.toFloat()
     private val timer = Handler(Looper.getMainLooper())
     private val minFling = ViewConfiguration.get(context).scaledMinimumFlingVelocity.toFloat()
@@ -217,8 +216,7 @@ class DrawerView(context: Context, private val game: Game, private val home: Hom
                 downX = x
                 downY = y
                 lastY = y
-                tracker?.recycle()
-                tracker = VelocityTracker.obtain().also { it.addMovement(e) }
+                swipe.down(e)
                 if (letters.size > 1 && rail.contains(x, y) && !searching) {
                     mode = Mode.RAIL
                     jumpTo(y)
@@ -230,7 +228,7 @@ class DrawerView(context: Context, private val game: Game, private val home: Hom
                 invalidate()
             }
             MotionEvent.ACTION_MOVE -> {
-                tracker?.addMovement(e)
+                swipe.move(e)
                 when (mode) {
                     Mode.PENDING -> if (hypot(x - downX, y - downY) > slop) {
                         timer.removeCallbacks(longPress)
@@ -260,10 +258,8 @@ class DrawerView(context: Context, private val game: Game, private val home: Hom
             MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
                 timer.removeCallbacks(longPress)
                 val cancel = e.actionMasked == MotionEvent.ACTION_CANCEL
-                val t = tracker
-                t?.addMovement(e)
-                t?.computeCurrentVelocity(1000)
-                val vy = t?.yVelocity ?: 0f
+                swipe.up(e, minFling)
+                val vy = swipe.vy
                 when (mode) {
                     Mode.PENDING -> if (!cancel) tap(x, y)
                     Mode.SCROLL -> if (!cancel) {
@@ -285,8 +281,6 @@ class DrawerView(context: Context, private val game: Game, private val home: Hom
                 pressed = null
                 held = null
                 railLetter = null
-                tracker?.recycle()
-                tracker = null
                 invalidate()
             }
         }

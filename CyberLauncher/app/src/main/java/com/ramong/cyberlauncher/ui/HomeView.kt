@@ -12,7 +12,6 @@ import android.os.Handler
 import android.os.Looper
 import android.os.SystemClock
 import android.view.MotionEvent
-import android.view.VelocityTracker
 import android.view.View
 import android.view.ViewConfiguration
 import android.widget.OverScroller
@@ -245,7 +244,7 @@ class HomeView(context: Context, private val game: Game) : View(context) {
     private var downY = 0f
     private var lastY = 0f
     private var downPos = 1f
-    private var tracker: VelocityTracker? = null
+    private val swipe = Swipe()
     private var pressed: Target? = null
     private var drag: Drag? = null
     private val slop = ViewConfiguration.get(context).scaledTouchSlop.toFloat()
@@ -302,14 +301,13 @@ class HomeView(context: Context, private val game: Game) : View(context) {
                 downY = y
                 lastY = y
                 downPos = currentPos()
-                tracker?.recycle()
-                tracker = VelocityTracker.obtain().also { it.addMovement(e) }
+                swipe.down(e)
                 pressed = targetAt(x, y)
                 timer.postDelayed(longPress, ViewConfiguration.getLongPressTimeout().toLong())
                 invalidate()
             }
             MotionEvent.ACTION_MOVE -> {
-                tracker?.addMovement(e)
+                swipe.move(e)
                 val dx = x - downX
                 val dy = y - downY
                 when (mode) {
@@ -337,11 +335,9 @@ class HomeView(context: Context, private val game: Game) : View(context) {
             }
             MotionEvent.ACTION_UP -> {
                 timer.removeCallbacks(longPress)
-                val t = tracker
-                t?.addMovement(e)
-                t?.computeCurrentVelocity(1000)
-                val vx = t?.xVelocity ?: 0f
-                val vy = t?.yVelocity ?: 0f
+                swipe.up(e, minFling)
+                val vx = swipe.vx
+                val vy = swipe.vy
                 val dy = y - downY
                 val dx = x - downX
                 when (mode) {
@@ -354,6 +350,8 @@ class HomeView(context: Context, private val game: Game) : View(context) {
                         else -> pressed?.let { tap(it, x, y) }
                     }
                     Mode.PAGE -> {
+                        // Where the finger let go counts, not just the last move before that.
+                        pagePos = (downPos - dx / width).coerceIn(-0.06f, 1.06f)
                         val target = when {
                             vx < -minFling * 4 -> 1
                             vx > minFling * 4 -> 0
@@ -392,8 +390,7 @@ class HomeView(context: Context, private val game: Game) : View(context) {
     private fun reset() {
         mode = Mode.IDLE
         pressed = null
-        tracker?.recycle()
-        tracker = null
+        swipe.clear()
         invalidate()
     }
 

@@ -140,6 +140,8 @@ wait
 sleep 2
 shot 24-dropped
 adb logcat -d -s CyberTouch > touch.txt || true
+DECK_HITS="$(grep -c 'root ACTION_UP.*page=0' touch.txt || true)"
+echo "debug build: ${DECK_HITS:-0} of 3 sideways swipes reached the deck" >> smoke.txt
 echo "--- input settings" >> touch.txt
 adb shell settings get secure navigation_mode >> touch.txt 2>&1 || true
 adb shell dumpsys input | grep -iE "gesture|exclusion|back" | head -40 >> touch.txt || true
