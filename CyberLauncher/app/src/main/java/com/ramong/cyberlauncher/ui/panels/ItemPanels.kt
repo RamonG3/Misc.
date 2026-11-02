@@ -23,32 +23,37 @@ class InventoryPanel(game: Game, host: PanelView) : Panel(game, host) {
     override val scrollable get() = true
     private val cell = RectF()
 
-    private fun cellW(r: RectF) = r.width() / COLS
+    /** Four columns, or five when the panel is wide (landscape), so all twenty slots fit. */
+    private fun cols(r: RectF) = if (r.width() > r.height() * 1.25f) 5 else 4
+    private fun rows(r: RectF) = SaveData.INVENTORY / cols(r)
+    private fun cellW(r: RectF) = r.width() / cols(r)
     private fun cellH(r: RectF): Float {
         val minH = Cy.dp(if (game.save.labels) 62f else 50f)
-        return min(cellW(r) * 0.86f, max(minH, r.height() / ROWS))
+        return min(cellW(r) * 0.86f, max(minH, r.height() / rows(r)))
     }
 
     fun cellSize(r: RectF) = min(cellW(r), cellH(r))
 
-    override fun contentHeight(r: RectF) = ROWS * cellH(r)
+    override fun contentHeight(r: RectF) = rows(r) * cellH(r)
 
     override fun info() = "${game.save.inventory.count { game.app(it) != null }}/${SaveData.INVENTORY}"
 
     fun slotAt(x: Float, y: Float, r: RectF): Int {
         if (x < r.left || x > r.right || y < r.top) return -1
+        val cols = cols(r)
         val col = ((x - r.left) / cellW(r)).toInt()
         val row = ((y - r.top) / cellH(r)).toInt()
-        val i = row * COLS + col
-        return if (col in 0 until COLS && i in 0 until SaveData.INVENTORY) i else -1
+        val i = row * cols + col
+        return if (col in 0 until cols && i in 0 until SaveData.INVENTORY) i else -1
     }
 
     private fun rectOf(i: Int, r: RectF): RectF {
         val w = cellW(r)
         val h = cellH(r)
         val g = Cy.dp(3f)
-        val col = i % COLS
-        val row = i / COLS
+        val cols = cols(r)
+        val col = i % cols
+        val row = i / cols
         cell.set(r.left + col * w + g, r.top + row * h + g, r.left + (col + 1) * w - g, r.top + (row + 1) * h - g)
         return cell
     }
@@ -67,10 +72,6 @@ class InventoryPanel(game: Game, host: PanelView) : Panel(game, host) {
         game.inventoryTap(slot, host.screenRect(RectF(rectOf(slot, r))))
     }
 
-    companion object {
-        const val COLS = 4
-        const val ROWS = SaveData.INVENTORY / COLS
-    }
 }
 
 /** The ripperdoc's view: ten more slots wired into a wireframe body. */

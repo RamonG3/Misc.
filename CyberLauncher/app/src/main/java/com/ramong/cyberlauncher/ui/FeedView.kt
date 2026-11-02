@@ -92,10 +92,13 @@ class FeedView(context: Context, private val game: Game) : View(context) {
         for (i in game.feed.indices.reversed()) {
             val f = game.feed[i]
             val wrapped = Cy.wrapRich(Cy.rich(f.text, Cy.TEXT), body, textW).take(3)
+            if (rows.size + wrapped.size > maxLines) {
+                // Only the newest message may be shortened; older ones show whole or not at all.
+                if (rows.isEmpty()) wrapped.take(maxLines).forEachIndexed { j, line -> rows += (if (j == 0) f else null) to line }
+                break
+            }
             for (j in wrapped.indices.reversed()) rows.add(0, (if (j == 0) f else null) to wrapped[j])
-            if (rows.size >= maxLines) break
         }
-        while (rows.size > maxLines) rows.removeAt(0)
         var y = inner.bottom - (rows.size - 1) * lineH
         c.save()
         c.clipRect(frame.left, frame.top + Cy.dp(14f), frame.right, promptRow.top)

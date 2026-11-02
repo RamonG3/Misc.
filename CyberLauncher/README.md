@@ -38,7 +38,7 @@ a launcher gets to a quit button.
 |---|---|
 | Health bar | Battery. Says REGEN on the charger. Below 15% it flashes CRITICAL and the city gets a red vignette. Tap for battery settings. |
 | RAM | Free memory, one cell per eighth. Quickhacks spend it and it recovers. Tap for quickhacks. |
-| Level, Street Cred | Every launch pays XP and Street Cred. Finished jobs pay more. Level 60 takes about three years. |
+| Level, Street Cred | Every launch pays XP and Street Cred. Finished jobs pay more. Level 60 takes about two years of normal phone use, which you were going to do anyway. |
 | Eddies (€$) | Earned on every launch. Spend them at the vendor in Settings on new colour schemes. |
 | Minimap | Your maps app. Hold it to fast travel to another district (new map, new skyline). |
 | Tracked job | Whatever you're tracking in the journal. Tap to open the journal. |

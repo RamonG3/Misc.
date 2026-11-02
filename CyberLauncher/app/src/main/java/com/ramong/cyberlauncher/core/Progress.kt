@@ -96,7 +96,7 @@ enum class Rarity(val title: String, val color: Int, val minLaunches: Int) {
 }
 
 /**
- * Experience curves. Level 60 is roughly three years of normal phone use, attributes cap at 20
+ * Experience curves. Level 60 is roughly two years of normal phone use, attributes cap at 20
  * like the game, and Street Cred tops out at 50.
  */
 object Curves {
