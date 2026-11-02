@@ -14,22 +14,25 @@ import android.os.Build
 import android.os.Environment
 import android.os.Handler
 import android.os.Looper
+import android.os.PowerManager
 import android.os.StatFs
 import android.provider.AlarmClock
 import android.provider.MediaStore
 import android.provider.Settings
 import android.view.KeyEvent
 
-/** Battery, storage, memory and volume - shown on the orbs next to the minimap. */
+/** Battery, storage, memory, volume and power state - everything the home screen shows about the phone. */
 class DeviceStats(private val ctx: Context) {
     var battery = 100
     var charging = false
-    var storageFreePct = 100
     var storageFreeGb = 0f
     var storageTotalGb = 0f
     var ramFreePct = 100
+    var ramFreeGb = 0f
     var ramTotalGb = 0f
     var volumePct = 50
+    var powerSave = false
+    var musicActive = false
 
     fun onBattery(i: Intent) {
         val level = i.getIntExtra(BatteryManager.EXTRA_LEVEL, -1)
@@ -43,14 +46,12 @@ class DeviceStats(private val ctx: Context) {
         try {
             val fs = StatFs(Environment.getDataDirectory().path)
             val total = fs.totalBytes.toFloat()
-            val free = fs.availableBytes.toFloat()
             if (total > 0) {
-                storageFreePct = (free * 100 / total).toInt()
-                storageFreeGb = free / 1e9f
+                storageFreeGb = fs.availableBytes / 1e9f
                 storageTotalGb = total / 1e9f
             }
         } catch (e: Exception) {
-            // Leave the previous values.
+            // Keep the previous values.
         }
         try {
             val am = ctx.getSystemService(ActivityManager::class.java)
@@ -58,19 +59,31 @@ class DeviceStats(private val ctx: Context) {
             am?.getMemoryInfo(mi)
             if (mi.totalMem > 0) {
                 ramFreePct = (mi.availMem * 100 / mi.totalMem).toInt()
+                ramFreeGb = mi.availMem / 1e9f
                 ramTotalGb = mi.totalMem / 1e9f
             }
         } catch (e: Exception) {
-            // Leave the previous values.
+            // Keep the previous values.
         }
         try {
-            val audio = ctx.getSystemService(AudioManager::class.java) ?: return
-            val max = audio.getStreamMaxVolume(AudioManager.STREAM_MUSIC)
-            if (max > 0) volumePct = audio.getStreamVolume(AudioManager.STREAM_MUSIC) * 100 / max
+            val audio = ctx.getSystemService(AudioManager::class.java)
+            if (audio != null) {
+                val max = audio.getStreamMaxVolume(AudioManager.STREAM_MUSIC)
+                if (max > 0) volumePct = audio.getStreamVolume(AudioManager.STREAM_MUSIC) * 100 / max
+                musicActive = audio.isMusicActive
+            }
         } catch (e: Exception) {
-            // Leave the previous values.
+            // Keep the previous values.
+        }
+        try {
+            powerSave = ctx.getSystemService(PowerManager::class.java)?.isPowerSaveMode == true
+        } catch (e: Exception) {
+            powerSave = false
         }
     }
+
+    /** RAM cells on the HUD: one per eighth of memory that is free right now. */
+    fun ramCells(): Int = ((ramFreePct + 6) / 12.5f).toInt().coerceIn(1, 8)
 }
 
 /** Every "do something with the phone" action: intents, the torch, media keys. */
@@ -93,19 +106,44 @@ class SystemActions(private val ctx: Context) {
 
     fun camera() = start(Intent(MediaStore.INTENT_ACTION_STILL_IMAGE_CAMERA)) || start(Intent(MediaStore.ACTION_IMAGE_CAPTURE))
     fun dial() = start(Intent(Intent.ACTION_DIAL))
+    fun messages() = category(Intent.CATEGORY_APP_MESSAGING)
+    fun browser() = category(Intent.CATEGORY_APP_BROWSER) || url("https://duckduckgo.com")
     fun alarms() = start(Intent(AlarmClock.ACTION_SHOW_ALARMS))
     fun calendar() = category(Intent.CATEGORY_APP_CALENDAR)
+    fun music() = category(Intent.CATEGORY_APP_MUSIC)
     fun maps() = category(Intent.CATEGORY_APP_MAPS) || start(Intent(Intent.ACTION_VIEW, Uri.parse("geo:0,0")))
     fun url(u: String) = start(Intent(Intent.ACTION_VIEW, Uri.parse(u)))
     fun webSearch(q: String) = start(Intent(Intent.ACTION_WEB_SEARCH).putExtra(SearchManager.QUERY, q)) ||
-        url("https://www.google.com/search?q=" + Uri.encode(q))
-    fun assistant() = start(Intent(Intent.ACTION_VOICE_COMMAND)) || start(Intent(Intent.ACTION_ASSIST))
+        url("https://duckduckgo.com/?q=" + Uri.encode(q))
     fun homeSettings() = settings(Settings.ACTION_HOME_SETTINGS)
     fun wallpaper() = start(Intent.createChooser(Intent(Intent.ACTION_SET_WALLPAPER), "Choose a wallpaper"))
-    fun internetPanel() = if (Build.VERSION.SDK_INT >= 29) {
+    fun battery() = settings(Intent.ACTION_POWER_USAGE_SUMMARY)
+    fun batterySaver() = settings(Settings.ACTION_BATTERY_SAVER_SETTINGS)
+    fun bluetooth() = settings(Settings.ACTION_BLUETOOTH_SETTINGS)
+    fun location() = settings(Settings.ACTION_LOCATION_SOURCE_SETTINGS)
+    fun airplane() = settings(Settings.ACTION_AIRPLANE_MODE_SETTINGS)
+    fun doNotDisturb() = settings("android.settings.ZEN_MODE_SETTINGS")
+    fun hotspot() = start(Intent("android.settings.TETHER_SETTINGS")) || settings(Settings.ACTION_WIRELESS_SETTINGS)
+    fun storage() = settings(Settings.ACTION_INTERNAL_STORAGE_SETTINGS)
+
+    fun internet() = if (Build.VERSION.SDK_INT >= 29) {
         start(Intent(Settings.Panel.ACTION_INTERNET_CONNECTIVITY)) || settings(Settings.ACTION_WIFI_SETTINGS)
     } else {
         settings(Settings.ACTION_WIFI_SETTINGS)
+    }
+
+    fun volume() {
+        if (Build.VERSION.SDK_INT >= 29 && start(Intent(Settings.Panel.ACTION_VOLUME))) return
+        showVolume()
+    }
+
+    fun showVolume() {
+        try {
+            ctx.getSystemService(AudioManager::class.java)
+                ?.adjustStreamVolume(AudioManager.STREAM_MUSIC, AudioManager.ADJUST_SAME, AudioManager.FLAG_SHOW_UI)
+        } catch (e: Exception) {
+            // Ignore.
+        }
     }
 
     fun media(keyCode: Int) {
@@ -115,15 +153,6 @@ class SystemActions(private val ctx: Context) {
             audio.dispatchMediaKeyEvent(KeyEvent(KeyEvent.ACTION_UP, keyCode))
         } catch (e: Exception) {
             // No media session around - nothing to control.
-        }
-    }
-
-    fun showVolume() {
-        try {
-            ctx.getSystemService(AudioManager::class.java)
-                ?.adjustStreamVolume(AudioManager.STREAM_MUSIC, AudioManager.ADJUST_SAME, AudioManager.FLAG_SHOW_UI)
-        } catch (e: Exception) {
-            // Ignore.
         }
     }
 
@@ -195,6 +224,7 @@ class SystemActions(private val ctx: Context) {
             Intent.makeMainSelectorActivity(Intent.ACTION_MAIN, Intent.CATEGORY_APP_GALLERY),
             Intent.makeMainSelectorActivity(Intent.ACTION_MAIN, Intent.CATEGORY_APP_MAPS),
             Intent.makeMainSelectorActivity(Intent.ACTION_MAIN, Intent.CATEGORY_APP_EMAIL),
+            Intent.makeMainSelectorActivity(Intent.ACTION_MAIN, Intent.CATEGORY_APP_MUSIC),
             Intent.makeMainSelectorActivity(Intent.ACTION_MAIN, Intent.CATEGORY_APP_CALENDAR),
             Intent(Settings.ACTION_SETTINGS),
         )

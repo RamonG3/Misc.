@@ -1,8 +1,8 @@
 package com.ramong.runelauncher.core
 
 import android.content.Context
-import android.content.Intent
 import android.graphics.Rect
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.os.Handler
@@ -10,6 +10,7 @@ import android.os.Looper
 import android.os.SystemClock
 import android.provider.Settings
 import android.view.KeyEvent
+import java.util.Locale
 import java.util.concurrent.Executor
 import java.util.concurrent.Executors
 import kotlin.math.max
@@ -17,8 +18,8 @@ import kotlin.math.min
 import kotlin.random.Random
 
 /**
- * The launcher's brain: apps, inventory, XP, chat, quests and every action the UI can trigger.
- * The views only draw [Game] state and forward taps here.
+ * The launcher's brain: apps, the home grid, dock and folders, skills and XP, quests and every
+ * action the UI can trigger. Views only draw [Game] state and forward taps here.
  */
 class Game(
     val ctx: Context,
@@ -29,24 +30,41 @@ class Game(
 ) {
     /** What the game needs from the views. Implemented by the root layout. */
     interface Ui {
-        val bankOpen: Boolean
-        val currentTab: Int
+        val drawerOpen: Boolean
+        val page: Int
         fun invalidateAll()
         fun tick()
-        fun openBank(search: Boolean, skill: Skill?)
-        fun closeBank()
-        fun bankRefresh()
-        fun showMenu(options: List<MenuOption>, x: Float, y: Float)
+        fun openDrawer(search: Boolean, pick: Boolean)
+        fun closeDrawer()
+        fun drawerRefresh()
+        fun openSettings()
+        fun closeSettings(): Boolean
+        fun openFolder(id: String)
+        fun closeFolder(): Boolean
+        fun showMenu(menu: ItemMenu)
         fun hideMenu(): Boolean
+        fun showExamine(app: AppEntry)
+        fun hideExamine(): Boolean
+        fun showChoice(choice: Choice)
+        fun hideChoice(): Boolean
         fun openKeyboard(initial: String)
         fun closeKeyboard()
+        fun banner(b: Banner)
+        fun toast(line: FeedLine)
         fun xpDrop(skill: Skill, amount: Int)
-        fun fireworks()
-        fun overhead(text: String)
-        fun emote(name: String): Boolean
-        fun selectTab(index: Int)
+        fun showPage(page: Int)
         fun worldHop()
+        fun themeChanged()
         fun haptic()
+    }
+
+    /** A place something can sit: one of the home grid cells or one of the dock cells. */
+    data class Slot(val dock: Boolean, val index: Int)
+
+    /** What a cell holds, resolved. Cells pointing at uninstalled apps read as empty. */
+    sealed class Cell {
+        class App(val app: AppEntry) : Cell()
+        class Dir(val folder: Folder) : Cell()
     }
 
     enum class InputMode { NONE, SEARCH, PROMPT }
@@ -62,11 +80,8 @@ class Game(
     var apps: List<AppEntry> = emptyList()
         private set
     private val byKey = HashMap<String, AppEntry>()
-    val chat = ArrayList<ChatLine>()
-    val dialogues = ArrayDeque<Dialogue>()
+    val feed = ArrayList<FeedLine>()
 
-    /** Inventory slot picked with "Use", waiting for a second item. -1 when not in use mode. */
-    var useSlot = -1
     var inputMode = InputMode.NONE
         private set
     var inputText = ""
@@ -75,11 +90,12 @@ class Game(
         private set
     private var promptAction: ((String) -> Unit)? = null
 
-    var nowPlaying = 0
-    var world = 301 + Random.nextInt(250)
+    /** True while the drawer is open to pick an app for the home screen (or [pickFolder]). */
+    var picking = false
+    var pickFolder: String? = null
     var resumed = false
         private set
-    private var pendingFireworks = false
+    private var firstHintPending = false
 
     private val handler = Handler(Looper.getMainLooper())
     private var ticking = false
@@ -88,51 +104,56 @@ class Game(
     private val tick = object : Runnable {
         override fun run() {
             ticks++
-            if (ticks % 8 == 0L) stats.refresh()
+            if (ticks % 5 == 0L) stats.refresh()
             ui.tick()
             if (ticking) handler.postDelayed(this, TICK_MS)
         }
     }
 
+    val palette: Palette get() = Content.palette(save.theme)
+    val place: Place get() = Content.places[save.place.coerceIn(0, Content.places.size - 1)]
+
     // ------------------------------------------------------------------ lifecycle
 
     fun start() {
         if (save.installTime == 0L) save.installTime = System.currentTimeMillis()
-        icons.pixelSize = pixelSizeFor(save.iconStyle)
+        icons.configure(save.iconStyle, palette.frame)
         reloadApps()
         stats.refresh()
-        message("Welcome to RuneScape.")
         if (!save.initialized) firstRun()
         save.save()
     }
 
     private fun firstRun() {
         save.initialized = true
-        var slot = 0
-        for (pkg in actions.defaultPackages()) {
-            val app = apps.firstOrNull { it.packageName == pkg && !it.isWork } ?: continue
-            if (slot < 12 && save.inventory.none { it == app.key }) save.inventory[slot++] = app.key
+        firstHintPending = true
+        if (save.migrated) return
+        // Phone, messages, camera, browser and one more in the dock; the next eight on the home screen.
+        val defaults = actions.defaultPackages().mapNotNull { pkg -> apps.firstOrNull { it.packageName == pkg && !it.isWork } }
+        var d = 0
+        for (a in defaults) if (d < SaveData.DOCK) save.dock[d++] = a.key
+        var h = 0
+        for (a in defaults.drop(d) + apps) {
+            if (h >= 8) break
+            if (!placed(a.key)) save.home[h++] = a.key
         }
-        for (app in apps) {
-            if (slot >= 8) break
-            if (save.inventory.none { it == app.key }) save.inventory[slot++] = app.key
+        for (a in apps) {
+            if (d >= SaveData.DOCK) break
+            if (!placed(a.key)) save.dock[d++] = a.key
         }
-        for (def in Content.builtinQuests) save.quests += Quest(def.id, def.name, Quest.NOT_STARTED, true)
-        message("Tip: tap the chat line to search your bank. Type <col=0000ff>::help</col> for commands.")
-        message("Swipe up, or use the bank chest, to see all of your items.")
     }
 
     fun resume() {
         resumed = true
         stats.refresh()
-        if (actions.isDefaultHome()) questEvent("tutorial")
-        if (pendingFireworks) {
-            pendingFireworks = false
-            ui.fireworks()
-        }
+        if (actions.isDefaultHome()) achievement("home")
         if (!ticking) {
             ticking = true
             handler.postDelayed(tick, TICK_MS)
+        }
+        if (firstHintPending) {
+            firstHintPending = false
+            feed(Tag.NEWS, if (save.migrated) "Your inventory moved in. The rest is in the <col=hi>Backpack</col> folder if it didn't fit. ${Content.FIRST_HINT}" else Content.FIRST_HINT)
         }
         ui.invalidateAll()
     }
@@ -147,47 +168,46 @@ class Game(
     /** The launcher went to the background: tidy up so it comes back to the home screen. */
     fun hidden() {
         ui.hideMenu()
+        ui.hideChoice()
+        ui.hideExamine()
+        ui.closeSettings()
+        ui.closeFolder()
         cancelInput()
-        if (ui.bankOpen) ui.closeBank()
-        useSlot = -1
+        if (ui.drawerOpen) ui.closeDrawer()
     }
 
-    /** Home pressed while already home: close things, then "Home Teleport". */
+    /** Home pressed while already home: close things, then go back to the home page. */
     fun homePressed() {
         var acted = ui.hideMenu()
+        acted = ui.hideChoice() || acted
+        acted = ui.hideExamine() || acted
+        acted = ui.closeSettings() || acted
+        acted = ui.closeFolder() || acted
         if (inputMode != InputMode.NONE) {
             cancelInput()
             acted = true
         }
-        if (ui.bankOpen) {
-            ui.closeBank()
+        if (ui.drawerOpen) {
+            ui.closeDrawer()
             acted = true
         }
-        if (useSlot >= 0) {
-            useSlot = -1
-            acted = true
-        }
-        if (!acted && ui.currentTab != INVENTORY_TAB) {
-            ui.selectTab(INVENTORY_TAB)
-            acted = true
-        }
-        if (!acted) ui.emote("CAST")
+        if (!acted && ui.page != PAGE_HOME) ui.showPage(PAGE_HOME)
         ui.invalidateAll()
     }
 
     fun back(): Boolean {
-        if (ui.hideMenu()) return true
+        if (ui.hideChoice() || ui.hideMenu() || ui.hideExamine() || ui.closeSettings()) return true
         if (inputMode != InputMode.NONE) {
             cancelInput()
             return true
         }
-        if (ui.bankOpen) {
-            ui.closeBank()
+        if (ui.closeFolder()) return true
+        if (ui.drawerOpen) {
+            ui.closeDrawer()
             return true
         }
-        if (useSlot >= 0) {
-            useSlot = -1
-            ui.invalidateAll()
+        if (ui.page != PAGE_HOME) {
+            ui.showPage(PAGE_HOME)
             return true
         }
         return false
@@ -198,43 +218,64 @@ class Game(
         byKey.clear()
         apps.forEach { byKey[it.key] = it }
         if (::ui.isInitialized) {
-            ui.bankRefresh()
+            ui.drawerRefresh()
             ui.invalidateAll()
         }
+    }
+
+    fun onBatteryChanged() {
+        if (::ui.isInitialized) ui.invalidateAll()
     }
 
     // ------------------------------------------------------------------ lookups
 
     fun app(key: String?): AppEntry? = key?.let { byKey[it] }
-    fun invApp(slot: Int): AppEntry? = app(save.inventory[slot])
-    fun equipApp(slot: EquipSlot): AppEntry? = app(save.equipment[slot.ordinal])
-    fun level(s: Skill) = Xp.level(save.xp[s.ordinal])
+    private fun cells(s: Slot) = if (s.dock) save.dock else save.home
+    fun raw(s: Slot): String? = cells(s).getOrNull(s.index)
+    fun folder(id: String?): Folder? = id?.let { save.folders[it] }
+
+    fun cell(s: Slot): Cell? {
+        val k = raw(s) ?: return null
+        if (k.startsWith(SaveData.FOLDER)) {
+            val f = folder(k.removePrefix(SaveData.FOLDER)) ?: return null
+            return Cell.Dir(f)
+        }
+        return app(k)?.let { Cell.App(it) }
+    }
+
+    fun folderApps(f: Folder): List<AppEntry> = f.items.mapNotNull { app(it) }
+    fun slotOfFolder(id: String): Slot? {
+        val ref = SaveData.FOLDER + id
+        save.home.indexOf(ref).takeIf { it >= 0 }?.let { return Slot(false, it) }
+        save.dock.indexOf(ref).takeIf { it >= 0 }?.let { return Slot(true, it) }
+        return null
+    }
+
+    /** True if the app sits anywhere on the home screen: grid, dock or inside a folder. */
+    fun placed(key: String): Boolean = save.home.any { it == key } || save.dock.any { it == key } ||
+        save.folders.values.any { key in it.items }
+
+    fun folderOf(key: String): Folder? = save.folders.values.firstOrNull { key in it.items }
+
+    fun level(s: Skill) = Xp.level(save.xp[s.ordinal], s.maxLevel)
     fun xp(s: Skill) = save.xp[s.ordinal]
     fun totalLevel() = Skill.values().sumOf { level(it) }
     fun totalXp() = save.xp.sum()
     fun combatLevel() = Xp.combatLevel { level(it) }
-    fun questPoints() = save.quests.count { it.state == Quest.DONE }
-    fun unlockedTracks() = min(Content.tracks.size, 6 + totalLevel() / 8)
-    fun appsTraining(s: Skill) = apps.count { it.skill == s }
+    fun launches(app: AppEntry) = save.launches[app.key] ?: 0
+    fun appsTraining(s: Skill) = apps.filter { it.skill == s }
+    fun unlockedTracks() = min(Content.tracks.size, 6 + (totalLevel() - 38) / 10)
+    fun achievementsDone() = save.achievements.size
 
-    fun hoverText(): String {
-        val use = if (useSlot >= 0) invApp(useSlot) else null
-        return if (use != null) "Use <col=ff9040>${use.label}</col> ->" else "Walk here"
-    }
+    fun recentApps(n: Int): List<AppEntry> = save.lastUsed.entries.sortedByDescending { it.value }
+        .mapNotNull { app(it.key) }.distinctBy { it.key }.take(n)
 
-    fun bankItems(query: String, skill: Skill?): List<AppEntry> {
+    /** All apps A to Z, or the best matches first while searching. */
+    fun drawerItems(query: String): List<AppEntry> {
         val q = query.trim().lowercase()
-        var seq = apps.asSequence()
-        if (skill != null) seq = seq.filter { it.skill == skill }
-        val searching = q.isNotEmpty() && !q.startsWith("::") && !q.startsWith("/")
-        if (searching) seq = seq.filter { it.label.lowercase().contains(q) }
-        val list = seq.toList()
-        return when {
-            searching -> list.sortedWith(compareBy({ rank(it.label.lowercase(), q) }, { it.label.lowercase() }))
-            save.bankSort == 1 -> list.sortedWith(compareByDescending<AppEntry> { save.launches[it.key] ?: 0 }.thenBy { it.label.lowercase() })
-            save.bankSort == 2 -> list.sortedWith(compareBy({ it.skill.ordinal }, { it.label.lowercase() }))
-            else -> list
-        }
+        if (q.isEmpty() || q.startsWith("::") || q.startsWith("/")) return apps
+        return apps.filter { it.label.lowercase().contains(q) }
+            .sortedWith(compareBy({ rank(it.label.lowercase(), q) }, { it.label.lowercase() }))
     }
 
     private fun rank(label: String, q: String) = when {
@@ -243,253 +284,394 @@ class Game(
         else -> 2
     }
 
-    // ------------------------------------------------------------------ chat
+    // ------------------------------------------------------------------ messages
 
-    fun message(text: String) = addChat(ChatLine(Channel.GAME, text))
-
-    private fun addChat(line: ChatLine) {
-        chat.add(line)
-        while (chat.size > 150) chat.removeAt(0)
-        if (::ui.isInitialized) ui.invalidateAll()
+    fun feed(tag: Tag, text: String) {
+        val line = FeedLine(tag, text, System.currentTimeMillis())
+        feed.add(line)
+        while (feed.size > 60) feed.removeAt(0)
+        if (::ui.isInitialized) ui.toast(line)
     }
 
-    private fun esc(s: String) = s.replace('<', '‹').replace('>', '›')
+    fun esc(s: String) = s.replace('<', '‹').replace('>', '›')
 
-    fun say(raw: String) {
-        val text = raw.trim().take(80)
-        if (text.isEmpty()) return
-        val body = ChatEffects.parse(text).body
-        addChat(ChatLine(Channel.PUBLIC, "${esc(save.name)}: <col=0000ff>${esc(body)}</col>"))
-        ui.overhead(text)
-        questEvent("chat")
-        val l = body.lowercase()
-        when {
-            "buying gf" in l -> message("Nothing interesting happens.")
-            "doubling money" in l || "double money" in l ->
-                message("<col=ef1020>Nobody will ever ask for your password. Especially not to double your money.</col>")
-            "hunter2" in l -> message("All I see is *******.")
-            "free armour trimming" in l -> message("Nobody takes you up on your offer.")
-        }
-    }
-
-    // ------------------------------------------------------------------ launching & xp
+    // ------------------------------------------------------------------ launching & XP
 
     fun launch(app: AppEntry, bounds: Rect? = null, options: Bundle? = null) {
         haptic()
         if (!source.launch(app, bounds, options)) {
-            message("Nothing interesting happens.")
+            feed(Tag.ERR, "Nothing interesting happens. ${esc(app.label)} won't open.")
             return
         }
-        save.launches[app.key] = (save.launches[app.key] ?: 0) + 1
+        save.launches[app.key] = launches(app) + 1
         save.lastUsed[app.key] = System.currentTimeMillis()
         val skill = app.skill
-        award(skill, skill.xpPerAction)
-        if (skill != Skill.HITPOINTS) award(Skill.HITPOINTS, max(1, skill.xpPerAction / 3))
-        if (!save.hasPet && Random.nextInt(PET_CHANCE) == 0) {
-            save.hasPet = true
-            message("<col=ef1020>You have a funny feeling like you're being followed.</col>")
-        }
+        award(skill, skill.xpPerLaunch)
+        if (skill != Skill.CONSTITUTION) award(Skill.CONSTITUTION, max(1, skill.xpPerLaunch / 4), drop = false)
         save.save()
     }
 
-    fun award(skill: Skill, amount: Int) {
+    fun award(skill: Skill, amount: Int, drop: Boolean = true) {
         val i = skill.ordinal
         val before = level(skill)
         save.xp[i] = min(Xp.MAX, save.xp[i] + amount)
-        if (save.xpDrops) ui.xpDrop(skill, amount)
+        if (drop && save.xpDrops && ::ui.isInitialized) ui.xpDrop(skill, amount)
         val after = level(skill)
-        if (after > before) levelUp(skill, after)
+        if (after > before && ::ui.isInitialized) {
+            val extra = if (after == skill.maxLevel) "Maximum level. Go outside." else "Total level ${totalLevel()}"
+            ui.banner(Banner(Banner.Kind.LEVEL, "Level up!", "${skill.title} level $after", extra, skill))
+            if (after >= 50) achievement("level50")
+            if (totalLevel() >= 100) achievement("total100")
+        }
     }
 
-    private fun levelUp(skill: Skill, level: Int) {
-        dialogues.addLast(Dialogue.LevelUp(skill, level))
-        message(
-            if (level == 99) "Congratulations, you've reached the highest possible ${skill.title} level of 99."
-            else "Congratulations, you've just advanced your ${skill.title} level. You are now level $level."
-        )
-        if (resumed) ui.fireworks() else pendingFireworks = true
-        if (totalLevel() >= 100) questEvent("grind")
+    /** One-off achievements: the first time you do the thing, it pays out. */
+    fun achievement(id: String) {
+        if (id in save.achievements) return
+        val def = Content.achievements.firstOrNull { it.id == id } ?: return
+        save.achievements += id
+        save.save()
+        if (!::ui.isInitialized) return
+        ui.banner(Banner(Banner.Kind.ACHIEVEMENT, "Achievement", def.title, def.hint))
         ui.invalidateAll()
     }
 
     fun haptic() {
-        if (save.haptics) ui.haptic()
+        if (save.haptics && ::ui.isInitialized) ui.haptic()
     }
 
-    // ------------------------------------------------------------------ inventory, bank, equipment
+    // ------------------------------------------------------------------ home screen, dock and folders
 
-    fun firstFreeInv(): Int = (0 until 28).firstOrNull { invApp(it) == null } ?: -1
+    fun firstFreeHome(): Int = (0 until SaveData.HOME).firstOrNull { cell(Slot(false, it)) == null } ?: -1
+    fun firstFreeDock(): Int = (0 until SaveData.DOCK).firstOrNull { cell(Slot(true, it)) == null } ?: -1
 
-    fun inventoryTap(slot: Int, bounds: Rect?) {
-        val app = invApp(slot)
-        if (useSlot >= 0) {
-            val from = useSlot
-            useSlot = -1
-            if (app != null && slot != from) message("Nothing interesting happens.")
-            ui.invalidateAll()
-            return
-        }
-        if (app != null) launch(app, bounds)
-    }
-
-    fun inventoryMenu(slot: Int, x: Float, y: Float) {
-        val app = invApp(slot) ?: return
-        haptic()
-        ui.showMenu(
-            listOf(
-                MenuOption("Open", app.label) { launch(app) },
-                MenuOption("Use", app.label) {
-                    useSlot = slot
-                    ui.invalidateAll()
-                },
-                MenuOption("Wield", app.label) { wield(slot) },
-                MenuOption("Check", app.label) { source.details(app) },
-                MenuOption("Drop", app.label) {
-                    save.inventory[slot] = null
-                    save.save()
-                    ui.invalidateAll()
-                },
-                MenuOption("Examine", app.label) { examine(app) },
-                MenuOption("Destroy", app.label) { destroy(app) },
-            ),
-            x, y,
-        )
-    }
-
-    fun swapInventory(a: Int, b: Int) {
-        if (a == b || a !in 0 until 28 || b !in 0 until 28) return
-        val t = save.inventory[a]
-        save.inventory[a] = save.inventory[b]
-        save.inventory[b] = t
+    private fun changed() {
         save.save()
-        ui.invalidateAll()
+        if (::ui.isInitialized) ui.invalidateAll()
     }
 
-    fun withdraw(app: AppEntry) {
-        if (save.inventory.any { it == app.key }) {
-            message("You already have a ${app.label} in your inventory.")
-            return
+    fun addToHome(app: AppEntry): Boolean {
+        if (placed(app.key)) {
+            feed(Tag.GAME, "${esc(app.label)} is already on your home screen.")
+            return true
         }
-        val free = firstFreeInv()
+        val free = firstFreeHome()
         if (free < 0) {
-            message("You don't have enough inventory space.")
-            return
+            feed(Tag.ERR, "Your home screen is full. Try putting things in a folder.")
+            return false
         }
-        save.inventory[free] = app.key
-        save.save()
-        questEvent("withdraw")
-        ui.invalidateAll()
+        save.home[free] = app.key
+        achievement("bank")
+        changed()
+        return true
     }
 
-    fun bankMenu(app: AppEntry, x: Float, y: Float) {
-        haptic()
-        ui.showMenu(
-            listOf(
-                MenuOption("Open", app.label) { launch(app) },
-                MenuOption("Withdraw-1", app.label) { withdraw(app) },
-                MenuOption("Check", app.label) { source.details(app) },
-                MenuOption("Examine", app.label) { examine(app) },
-                MenuOption("Destroy", app.label) { destroy(app) },
-            ),
-            x, y,
-        )
-    }
-
-    fun wield(slot: Int) {
-        val key = save.inventory[slot] ?: return
-        val order = listOf(
-            EquipSlot.WEAPON, EquipSlot.SHIELD, EquipSlot.HEAD, EquipSlot.BODY, EquipSlot.LEGS, EquipSlot.CAPE,
-            EquipSlot.NECK, EquipSlot.AMMO, EquipSlot.HANDS, EquipSlot.FEET, EquipSlot.RING,
-        )
-        val target = order.firstOrNull { equipApp(it) == null } ?: EquipSlot.WEAPON
-        val old = save.equipment[target.ordinal]?.takeIf { app(it) != null }
-        save.equipment[target.ordinal] = key
-        save.inventory[slot] = old
-        save.save()
-        questEvent("wield")
-        ui.invalidateAll()
-    }
-
-    fun unequip(slot: EquipSlot) {
-        val key = save.equipment[slot.ordinal] ?: return
-        val free = firstFreeInv()
+    fun addToDock(app: AppEntry): Boolean {
+        if (save.dock.any { it == app.key }) return true
+        val free = firstFreeDock()
         if (free < 0) {
-            message("You don't have enough free inventory space to do that.")
-            return
+            feed(Tag.ERR, "The dock is full. Drag something out of it first.")
+            return false
         }
-        save.inventory[free] = key
-        save.equipment[slot.ordinal] = null
-        save.save()
-        ui.invalidateAll()
+        save.dock[free] = app.key
+        changed()
+        return true
     }
 
-    fun equipmentMenu(slot: EquipSlot, x: Float, y: Float) {
-        val app = equipApp(slot) ?: return
+    fun removeFrom(s: Slot) {
+        cells(s)[s.index] = null
+        changed()
+    }
+
+    /** Drag and drop between cells. Whatever is at [to] swaps into [from]. */
+    fun move(from: Slot, to: Slot) {
+        if (from == to) return
+        val a = cells(from)
+        val b = cells(to)
+        val t = b[to.index]
+        b[to.index] = a[from.index]
+        a[from.index] = t
+        changed()
+    }
+
+    /** Puts [key] at [to]. Whatever was there moves to the next free cell. */
+    fun place(key: String, to: Slot) {
+        val arr = cells(to)
+        val existing = arr.indexOf(key)
+        if (existing >= 0) arr[existing] = null
+        val occupant = arr[to.index]?.takeIf { it != key && cell(to) != null }
+        arr[to.index] = key
+        if (occupant != null) {
+            val free = if (to.dock) firstFreeDock() else firstFreeHome()
+            if (free >= 0) arr[free] = occupant else feed(Tag.ERR, "No room left, so something got bumped off the home screen.")
+        }
+        if (!to.dock) achievement("bank")
+        changed()
+    }
+
+    private fun autoName(a: AppEntry, b: AppEntry?): String {
+        val s = if (b == null || a.skill == b.skill) a.skill else null
+        s?.let { return Content.folderNames[it] ?: it.title }
+        val both = "${a.label} & ${b?.label}"
+        return if (both.length <= 20) both else "Folder"
+    }
+
+    /**
+     * [key] was dropped onto [target]. Onto an app: the two become a folder. Onto a folder: it
+     * joins. [from] is where the dragged app came from, so its old cell can be cleared.
+     */
+    fun mergeInto(target: Slot, key: String, from: Slot?, fromFolder: String?) {
+        val incoming = app(key) ?: return
+        when (val c = cell(target)) {
+            is Cell.Dir -> {
+                if (c.folder.id == fromFolder) return
+                fromFolder?.let { detach(it, key) }
+                from?.let { cells(it)[it.index] = null }
+                if (key !in c.folder.items) c.folder.items += key
+                feed(Tag.GAME, "${esc(incoming.label)} goes into <col=hi>${esc(c.folder.name)}</col>.")
+            }
+            is Cell.App -> {
+                if (c.app.key == key) return
+                fromFolder?.let { detach(it, key) }
+                from?.let { cells(it)[it.index] = null }
+                val f = Folder("f" + SystemClock.elapsedRealtime().toString(36) + Random.nextInt(1000), autoName(c.app, incoming), mutableListOf(c.app.key, key))
+                save.folders[f.id] = f
+                cells(target)[target.index] = SaveData.FOLDER + f.id
+                achievement("folder")
+                feed(Tag.GAME, "New folder: <col=hi>${esc(f.name)}</col>. Hold it to rename.")
+            }
+            null -> {
+                fromFolder?.let { detach(it, key) }
+                if (from != null) move(from, target) else place(key, target)
+                return
+            }
+        }
+        changed()
+    }
+
+    /** Takes [key] out of folder [id] without putting it anywhere; dissolves a folder left with one app. */
+    private fun detach(id: String, key: String) {
+        val f = folder(id) ?: return
+        f.items.remove(key)
+        val slot = slotOfFolder(id) ?: return
+        val left = f.items.filter { app(it) != null }
+        when {
+            f.items.isEmpty() -> cells(slot)[slot.index] = null
+            left.size == 1 && f.items.size == 1 -> {
+                cells(slot)[slot.index] = left[0]
+                save.folders.remove(id)
+                if (::ui.isInitialized) ui.closeFolder()
+            }
+        }
+    }
+
+    fun removeFromFolder(id: String, key: String) {
+        detach(id, key)
+        changed()
+    }
+
+    /** "Take out": out of the folder and onto the first free home cell. */
+    fun takeOut(id: String, key: String) {
+        val free = firstFreeHome()
+        if (free < 0) {
+            feed(Tag.ERR, "No free space on the home screen to take it out to.")
+            return
+        }
+        detach(id, key)
+        if (!placed(key)) save.home[firstFreeHome().takeIf { it >= 0 } ?: free] = key
+        changed()
+    }
+
+    /** An app from a folder dropped on a plain cell. */
+    fun moveOutOfFolder(id: String, key: String, to: Slot) {
+        detach(id, key)
+        place(key, to)
+    }
+
+    fun addAppToFolder(id: String, app: AppEntry) {
+        val f = folder(id) ?: return
+        if (app.key in f.items) return
+        f.items += app.key
+        changed()
+    }
+
+    fun renameFolder(id: String) {
+        val f = folder(id) ?: return
+        prompt("Name this folder", f.name) { n ->
+            if (n.isNotBlank()) {
+                f.name = n.trim().take(20)
+                changed()
+            }
+        }
+    }
+
+    /** Puts a folder's apps back on the home screen, as far as space allows. */
+    fun ungroup(id: String) {
+        val f = folder(id) ?: return
+        val slot = slotOfFolder(id) ?: return
+        val items = f.items.filter { app(it) != null }.toMutableList()
+        cells(slot)[slot.index] = items.removeFirstOrNull()
+        val left = ArrayList<String>()
+        for (k in items) {
+            val free = firstFreeHome()
+            if (free >= 0) save.home[free] = k else left += k
+        }
+        if (left.isNotEmpty()) {
+            f.items.clear()
+            f.items += left
+            val free = firstFreeHome()
+            if (free >= 0) save.home[free] = SaveData.FOLDER + id
+            feed(Tag.ERR, "Ran out of room: ${left.size} app${if (left.size == 1) "" else "s"} stayed in ${esc(f.name)}.")
+        } else {
+            save.folders.remove(id)
+        }
+        ui.closeFolder()
+        changed()
+    }
+
+    fun picked(app: AppEntry) {
+        val fid = pickFolder
+        picking = false
+        pickFolder = null
+        ui.closeDrawer()
+        if (fid != null) {
+            addAppToFolder(fid, app)
+            ui.openFolder(fid)
+        } else {
+            addToHome(app)
+        }
+    }
+
+    fun pickForFolder(id: String) {
+        ui.closeFolder()
+        picking = true
+        pickFolder = id
+        ui.openDrawer(search = false, pick = true)
+    }
+
+    private fun subtitle(app: AppEntry): String {
+        val n = launches(app)
+        return "Trains ${app.skill.title} · $n use${if (n == 1) "" else "s"}"
+    }
+
+    /** "Put in a folder": every existing folder, or a new one. */
+    private fun chooseFolder(app: AppEntry, slot: Slot?) {
+        val opts = save.folders.values.filter { slotOfFolder(it.id) != null && app.key !in it.items }.map { f ->
+            ChoiceOption(f.name) {
+                if (slot != null) cells(slot)[slot.index] = null
+                f.items += app.key
+                feed(Tag.GAME, "${esc(app.label)} goes into <col=hi>${esc(f.name)}</col>.")
+                changed()
+            }
+        } + ChoiceOption("New folder...", primary = true) {
+            val target = slot?.takeIf { !it.dock } ?: firstFreeHome().takeIf { it >= 0 }?.let { Slot(false, it) }
+            if (target == null) {
+                feed(Tag.ERR, "Your home screen is full, so there's nowhere to put a new folder.")
+                return@ChoiceOption
+            }
+            if (slot != null && slot != target) cells(slot)[slot.index] = null
+            val f = Folder("f" + SystemClock.elapsedRealtime().toString(36), autoName(app, null), mutableListOf(app.key))
+            save.folders[f.id] = f
+            cells(target)[target.index] = SaveData.FOLDER + f.id
+            achievement("folder")
+            changed()
+            renameFolder(f.id)
+        }
+        ui.showChoice(Choice("Put ${app.label} in a folder", "Which folder?", opts))
+    }
+
+    /** Long-press menu for an app: held on the home screen [slot], in folder [folderId], or in the drawer. */
+    fun appMenu(app: AppEntry, slot: Slot?, folderId: String?, x: Float, y: Float) {
         haptic()
-        ui.showMenu(
-            listOf(
-                MenuOption("Open", app.label) { launch(app) },
-                MenuOption("Remove", app.label) { unequip(slot) },
-                MenuOption("Check", app.label) { source.details(app) },
-                MenuOption("Examine", app.label) { examine(app) },
-            ),
-            x, y,
-        )
+        val opts = ArrayList<MenuOption>()
+        when {
+            folderId != null -> {
+                opts += MenuOption("Take out of folder") { takeOut(folderId, app.key) }
+                opts += MenuOption("Remove from folder") { removeFromFolder(folderId, app.key) }
+            }
+            slot == null -> {
+                if (!placed(app.key)) opts += MenuOption("Add to home screen") { addToHome(app) }
+                if (save.dock.none { it == app.key }) opts += MenuOption("Add to dock") { addToDock(app) }
+                if (!placed(app.key)) opts += MenuOption("Put in a folder") { chooseFolder(app, null) }
+            }
+            slot.dock -> {
+                opts += MenuOption("Remove from dock") { removeFrom(slot) }
+                opts += MenuOption("Put in a folder") { chooseFolder(app, slot) }
+            }
+            else -> {
+                opts += MenuOption("Remove from home") { removeFrom(slot) }
+                if (save.dock.none { it == app.key }) opts += MenuOption("Move to dock") { if (addToDock(app)) removeFrom(slot) }
+                opts += MenuOption("Put in a folder") { chooseFolder(app, slot) }
+            }
+        }
+        opts += MenuOption("Examine") { examine(app) }
+        opts += MenuOption("App info") { source.details(app) }
+        opts += MenuOption("Uninstall", danger = true) { uninstall(app) }
+        ui.showMenu(ItemMenu(app.label, subtitle(app), palette.hi, opts, x, y))
+    }
+
+    fun folderMenu(slot: Slot, x: Float, y: Float) {
+        val f = (cell(slot) as? Cell.Dir)?.folder ?: return
+        haptic()
+        val n = folderApps(f).size
+        ui.showMenu(ItemMenu(f.name, "Folder · $n app${if (n == 1) "" else "s"}", palette.hi, listOf(
+            MenuOption("Open") { ui.openFolder(f.id) },
+            MenuOption("Rename") { renameFolder(f.id) },
+            MenuOption("Add apps") { pickForFolder(f.id) },
+            MenuOption("Ungroup") { ungroup(f.id) },
+            MenuOption("Remove from home", danger = true) { removeFrom(slot) },
+        ), x, y))
+    }
+
+    /** Long-press on empty space. */
+    fun homeMenu(x: Float, y: Float) {
+        haptic()
+        ui.showMenu(ItemMenu("Home screen", "World ${save.world} · ${place.name}", palette.hi, listOf(
+            MenuOption("Add apps") {
+                picking = true
+                pickFolder = null
+                ui.openDrawer(search = false, pick = true)
+            },
+            MenuOption("Launcher settings") { ui.openSettings() },
+            MenuOption(if (save.scene == 0) "Use my wallpaper" else "Show Gielinor") {
+                save.scene = 1 - save.scene
+                changed()
+            },
+            MenuOption("World hop") { worldHop() },
+            MenuOption("Android settings") { actions.settings(Settings.ACTION_SETTINGS) },
+        ), x, y))
     }
 
     fun examine(app: AppEntry) {
+        ui.hideMenu()
+        ui.showExamine(app)
+        achievement("examine")
+    }
+
+    fun examineLine(app: AppEntry): String {
         val line = Content.examines[Math.floorMod(app.key.hashCode(), Content.examines.size)]
-        message(line.replace("%s", app.label))
-        val n = save.launches[app.key] ?: 0
-        message("It trains ${app.skill.title}. Used $n time${if (n == 1) "" else "s"}.")
-        questEvent("examine")
+        val vowel = app.label.firstOrNull()?.lowercaseChar() in "aeiou".toSet()
+        return line.replace("A %s", (if (vowel) "An " else "A ") + app.label)
+            .replace("a %s", (if (vowel) "an " else "a ") + app.label)
+            .replace("%s", app.label)
     }
 
-    fun destroy(app: AppEntry) {
-        dialogues.addFirst(
-            Dialogue.Options(
-                "Destroy the ${app.label}? You can't reclaim it.",
-                listOf("Yes. (Uninstall it.)" to { source.uninstall(app) }, "No." to {}),
-            )
-        )
-        ui.invalidateAll()
+    fun uninstall(app: AppEntry) {
+        ui.showChoice(Choice(
+            "Destroy item", "Really uninstall ${app.label}? You can't reclaim it.",
+            listOf(
+                ChoiceOption("Yes, uninstall it.", primary = true, danger = true) { source.uninstall(app) },
+                ChoiceOption("No, keep it."),
+            ),
+        ))
     }
 
-    fun equipmentStats() {
-        message("Device: ${Build.MANUFACTURER} ${Build.MODEL}. Android ${Build.VERSION.RELEASE} (API ${Build.VERSION.SDK_INT}).")
-        message(
-            String.format(
-                java.util.Locale.US, "Prayer bonus: +%.0f GB free of %.0f GB. Memory: %.1f GB, %d%% free.",
-                stats.storageFreeGb, stats.storageTotalGb, stats.ramTotalGb, stats.ramFreePct,
-            )
-        )
-    }
-
-    fun itemsKeptOnDeath() {
-        val owned = (save.inventory.toList() + save.equipment.toList()).mapNotNull { app(it) }.distinctBy { it.key }
-        val top = owned.sortedByDescending { save.launches[it.key] ?: 0 }.take(3)
-        if (top.isEmpty()) message("You have nothing worth keeping. Impressive.")
-        else message("If you die, you will keep: ${top.joinToString(", ") { it.label }}.")
-    }
-
-    // ------------------------------------------------------------------ dialogue & input
-
-    fun continueDialogue() {
-        dialogues.removeFirstOrNull()
-        ui.invalidateAll()
-    }
-
-    fun chooseOption(i: Int) {
-        val d = dialogues.firstOrNull() as? Dialogue.Options ?: return
-        dialogues.removeFirst()
-        ui.invalidateAll()
-        d.options.getOrNull(i)?.second?.invoke()
-    }
+    // ------------------------------------------------------------------ input
 
     fun beginSearch() {
         inputMode = InputMode.SEARCH
         inputText = ""
-        ui.openBank(true, null)
+        if (!ui.drawerOpen) ui.openDrawer(search = true, pick = picking)
         ui.openKeyboard("")
         ui.invalidateAll()
     }
@@ -505,8 +687,8 @@ class Game(
 
     fun onInputChanged(t: String) {
         if (inputMode == InputMode.NONE) return
-        inputText = t.take(80)
-        if (inputMode == InputMode.SEARCH) ui.bankRefresh()
+        inputText = t.take(60)
+        if (inputMode == InputMode.SEARCH) ui.drawerRefresh()
         ui.invalidateAll()
     }
 
@@ -519,22 +701,20 @@ class Game(
         ui.closeKeyboard()
         when (mode) {
             InputMode.SEARCH -> when {
-                text.startsWith("::") -> {
-                    ui.closeBank()
+                text.startsWith("::") || text.startsWith("/") -> {
+                    ui.closeDrawer()
                     command(text)
                 }
-                text.startsWith("/") -> {
-                    ui.closeBank()
-                    say(text.drop(1))
-                }
-                text.isEmpty() -> Unit
+                text.isEmpty() -> ui.drawerRefresh()
                 else -> {
-                    val hit = bankItems(text, null).firstOrNull()
-                    if (hit != null) {
-                        launch(hit)
-                    } else {
-                        ui.closeBank()
-                        say(text)
+                    val hit = drawerItems(text).firstOrNull()
+                    when {
+                        hit != null && picking -> picked(hit)
+                        hit != null -> launch(hit)
+                        else -> {
+                            ui.closeDrawer()
+                            actions.webSearch(text)
+                        }
                     }
                 }
             }
@@ -551,240 +731,263 @@ class Game(
         inputText = ""
         promptAction = null
         ui.closeKeyboard()
-        if (wasSearch) ui.bankRefresh()
+        if (wasSearch) ui.drawerRefresh()
         ui.invalidateAll()
     }
 
     // ------------------------------------------------------------------ commands
 
     fun command(raw: String) {
-        val parts = raw.removePrefix("::").trim().split(Regex("\\s+"), limit = 2)
-        val cmd = parts[0].lowercase()
+        val parts = raw.trimStart(':', '/').trim().split(Regex("\\s+"), limit = 2)
+        val cmd = parts[0].lowercase(Locale.US)
         val arg = parts.getOrElse(1) { "" }.trim()
         when (cmd) {
-            "help", "commands", "" -> message(Content.HELP)
-            "bank" -> ui.openBank(false, null)
-            "wiki" -> actions.url(
-                if (arg.isEmpty()) "https://oldschool.runescape.wiki/"
-                else "https://oldschool.runescape.wiki/?search=" + android.net.Uri.encode(arg)
-            )
-            "search", "google" -> if (arg.isNotEmpty()) actions.webSearch(arg) else message("Search for what, exactly?")
+            "help", "?", "", "commands" -> feed(Tag.GAME, Content.HELP)
+            "bank", "apps" -> ui.openDrawer(search = false, pick = false)
+            "stats", "xp", "levels" -> feed(Tag.XP,
+                "Total level ${totalLevel()}, combat ${combatLevel()}, ${Rs3Format.number(totalXp())} XP, ${save.questPoints} quest points.")
             "name" -> if (arg.isNotEmpty()) setName(arg) else askName()
-            "emote" -> if (!ui.emote(arg)) message("You don't know that emote.")
-            "xp", "stats" -> message(
-                "Total level: ${totalLevel()}. Total XP: ${String.format(java.util.Locale.US, "%,d", totalXp())}. " +
-                    "Combat level: ${combatLevel()}. Quest points: ${questPoints()}."
-            )
+            "theme" -> {
+                val p = Content.palettes.firstOrNull { it.id.equals(arg, true) || it.name.equals(arg, true) }
+                if (p != null) setTheme(p.id) else feed(Tag.GAME, "Themes: " + Content.palettes.joinToString(", ") { it.name } + ".")
+            }
+            "hop", "world" -> worldHop()
+            "wiki" -> actions.url(if (arg.isEmpty()) "https://runescape.wiki/" else "https://runescape.wiki/?search=" + Uri.encode(arg))
+            "ge", "price" -> actions.url("https://runescape.wiki/w/Special:Search?search=" + Uri.encode("$arg exchange"))
+            "settings", "options" -> ui.openSettings()
+            "log" -> ui.showPage(PAGE_LOG)
             "reset" -> confirmReset()
             "home" -> actions.homeSettings()
             "wallpaper" -> actions.wallpaper()
-            "settings" -> actions.settings(Settings.ACTION_SETTINGS)
-            "world", "hop" -> worldHop()
-            "pet" -> message(
-                if (save.hasPet) "Your pet looks up at you expectantly."
-                else "You have a funny feeling like you would have been followed..."
-            )
-            "gf", "bond", "dupe" -> message("Nothing interesting happens.")
-            else -> if (!ui.emote(cmd)) message("Unknown command: ::$cmd. Type ::help for a list.")
+            "dupe", "gf", "bond" -> feed(Tag.GAME, "Nothing interesting happens.")
+            "logout", "quit" -> quit()
+            else -> {
+                val hit = drawerItems(raw.trimStart(':', '/')).firstOrNull()
+                if (hit != null) launch(hit) else feed(Tag.ERR, "Unknown command ::$cmd. Try ::help.")
+            }
         }
     }
 
-    fun askName() = prompt("Enter your new display name:", save.name) { setName(it) }
+    fun askName() = prompt("Enter your display name", save.name) { setName(it) }
 
     fun setName(n: String) {
         val name = n.trim().take(12)
         if (name.isEmpty()) return
         save.name = name
-        save.save()
-        message("Your display name is now <col=0000ff>$name</col>.")
+        changed()
+        feed(Tag.GAME, "Your display name is now <col=hi>${esc(name)}</col>.")
     }
 
-    fun confirmReset() {
-        dialogues.addFirst(
-            Dialogue.Options(
-                "Reset ALL of your experience?",
-                listOf(
-                    "Yes. Back to Tutorial Island." to {
-                        save.xp.fill(0L)
-                        save.xp[Skill.HITPOINTS.ordinal] = Xp.forLevel(10)
-                        save.save()
-                        message("Your stats have been reset. Welcome back to level 3.")
-                    },
-                    "No." to {},
-                ),
-            )
-        )
-        ui.invalidateAll()
-    }
-
-    fun worldHop() {
-        world = 301 + Random.nextInt(250)
-        ui.worldHop()
-        message("You hop to world $world.")
-    }
-
-    // ------------------------------------------------------------------ quests
-
-    fun questEvent(id: String) {
-        val q = save.quests.firstOrNull { it.id == id && it.builtin } ?: return
-        if (q.state != Quest.DONE) completeQuest(q)
-    }
-
-    private fun completeQuest(q: Quest) {
-        q.state = Quest.DONE
-        save.save()
-        message("Congratulations, you've completed a quest: <col=ef1020>${q.name}</col>")
-        dialogues.addLast(Dialogue.Message("Congratulations!", listOf("You have completed ${q.name}!", "Quest Points: ${questPoints()}")))
-        if (::ui.isInitialized) ui.invalidateAll()
-    }
-
-    fun questTap(q: Quest) {
-        if (q.builtin) {
-            val hint = Content.builtinQuests.firstOrNull { it.id == q.id }?.hint ?: ""
-            message("<col=ef1020>${q.name}</col>: $hint")
-            if (q.state == Quest.NOT_STARTED) {
-                q.state = Quest.STARTED
-                save.save()
-            }
-        } else {
-            q.state = (q.state + 1) % 3
-            if (q.state == Quest.DONE) completeQuest(q) else save.save()
-        }
-        ui.invalidateAll()
-    }
-
-    fun questMenu(q: Quest, x: Float, y: Float) {
-        val opts = ArrayList<MenuOption>()
-        if (!q.builtin) {
-            opts += MenuOption("Rename", q.name, QUEST_COLOR) {
-                prompt("Rename your quest:", q.name) { n ->
-                    if (n.isNotBlank()) {
-                        q.name = n.trim().take(40)
-                        save.save()
-                    }
-                }
-            }
-        }
-        opts += MenuOption("Abandon", q.name, QUEST_COLOR) {
-            save.quests.remove(q)
-            save.save()
-            message("You abandon ${q.name}. It probably wasn't important.")
-        }
-        ui.showMenu(opts, x, y)
-    }
-
-    fun newQuest() = prompt("What is the name of your new quest?") { n ->
-        if (n.isNotBlank()) {
-            val q = Quest("u" + SystemClock.elapsedRealtime(), n.trim().take(40), Quest.STARTED, false)
-            save.quests += q
-            save.save()
-            message("You have started a new quest: <col=ef1020>${q.name}</col>")
-        }
-    }
-
-    // ------------------------------------------------------------------ side panel actions
-
-    fun orbTapped(i: Int) {
-        when (i) {
-            0 -> actions.settings(Intent.ACTION_POWER_USAGE_SUMMARY)
-            1 -> quickPrayer()
-            2 -> actions.internetPanel()
-            3 -> actions.showVolume()
-        }
-    }
-
-    fun quickPrayer() {
-        if (!actions.hasTorch()) {
-            message("You don't have a light source.")
-        } else if (!actions.toggleTorch()) {
-            message("You have run out of prayer points, you can recharge at an altar.")
-        }
-        ui.invalidateAll()
-    }
-
-    fun playerClicked() {
-        ui.overhead(Content.playerQuotes.random())
-    }
-
-    fun groundMenu(x: Float, y: Float) {
-        haptic()
-        ui.showMenu(
-            listOf(
-                MenuOption("Walk here"),
-                MenuOption("Change", "Wallpaper", ITEM_CYAN) { actions.wallpaper() },
-                MenuOption("Open", "Launcher settings", ITEM_CYAN) { ui.selectTab(SETTINGS_TAB) },
-                MenuOption("Open", "Android settings", ITEM_CYAN) { actions.settings(Settings.ACTION_SETTINGS) },
-            ),
-            x, y,
-        )
+    fun setTheme(id: String) {
+        if (save.theme == id) return
+        save.theme = id
+        icons.configure(save.iconStyle, palette.frame)
+        achievement("theme")
+        changed()
+        ui.themeChanged()
     }
 
     fun setIconStyle(style: Int) {
         save.iconStyle = style
-        icons.pixelSize = pixelSizeFor(style)
-        save.save()
-        ui.invalidateAll()
+        icons.configure(style, palette.frame)
+        changed()
     }
 
-    fun castSpell(name: String, xp: Int, action: () -> Boolean) {
-        ui.emote("CAST")
-        if (action()) {
-            award(Skill.MAGIC, xp)
-            questEvent("spell")
-            save.save()
-        } else {
-            message("You can't cast $name here. (No app can handle it.)")
+    fun worldHop() {
+        save.world = 1 + Random.nextInt(140)
+        save.place = Random.nextInt(Content.places.size)
+        changed()
+        ui.worldHop()
+        feed(Tag.GAME, "You hop to world ${save.world}. You arrive in <col=hi>${place.name}</col>.")
+    }
+
+    fun confirmReset() {
+        ui.showChoice(Choice(
+            "Wise Old Man", "Reset all of your XP? Your home screen and folders stay as they are.",
+            listOf(
+                ChoiceOption("Yes. Start over.", primary = true, danger = true) {
+                    save.xp.fill(0L)
+                    save.xp[Skill.CONSTITUTION.ordinal] = Xp.forLevel(10)
+                    save.launches.clear()
+                    changed()
+                    feed(Tag.GAME, "Your stats have been reset. Back to combat level 3.")
+                },
+                ChoiceOption("No, I worked hard for that."),
+            ),
+        ))
+    }
+
+    fun quit() {
+        ui.showChoice(Choice(
+            "Logout", "Switch to a different home app?",
+            listOf(
+                ChoiceOption("Yes, pick another home app.", primary = true) { actions.homeSettings() },
+                ChoiceOption("No, keep playing."),
+            ),
+        ))
+    }
+
+    // ------------------------------------------------------------------ quests
+
+    fun newQuest() = prompt("Name your quest") { t ->
+        if (t.isNotBlank()) {
+            save.quests += Quest("q" + SystemClock.elapsedRealtime().toString(36), t.trim().take(48), false, System.currentTimeMillis())
+            changed()
         }
     }
 
-    fun logout() {
-        dialogues.addFirst(
-            Dialogue.Options(
-                "Log out? (This opens your home app settings.)",
-                listOf(
-                    "Yes." to {
-                        questEvent("logout")
-                        actions.homeSettings()
-                    },
-                    "No." to { message("You can't log out until 10 seconds after the end of combat.") },
-                ),
-            )
-        )
-        ui.invalidateAll()
+    fun questTap(q: Quest) {
+        haptic()
+        q.done = !q.done
+        if (q.done) {
+            save.questPoints++
+            ui.banner(Banner(Banner.Kind.QUEST, "Quest complete!", q.title, "Quest points: ${save.questPoints}"))
+            achievement("quest")
+        } else {
+            save.questPoints = max(0, save.questPoints - 1)
+        }
+        changed()
+    }
+
+    fun questMenu(q: Quest, x: Float, y: Float) {
+        haptic()
+        ui.showMenu(ItemMenu(q.title, if (q.done) "Completed" else "In progress", palette.hi, listOf(
+            MenuOption(if (q.done) "Mark not done" else "Mark complete") { questTap(q) },
+            MenuOption("Rename") {
+                prompt("Rename quest", q.title) { n ->
+                    if (n.isNotBlank()) {
+                        q.title = n.trim().take(48)
+                        changed()
+                    }
+                }
+            },
+            MenuOption("Abandon", danger = true) {
+                save.quests.remove(q)
+                changed()
+            },
+        ), x, y))
+    }
+
+    fun clearDoneQuests() {
+        save.quests.removeAll { it.done }
+        changed()
+    }
+
+    // ------------------------------------------------------------------ quick settings & music
+
+    fun prayer(p: PrayerDef) {
+        haptic()
+        val ok = when (p.id) {
+            "internet" -> actions.internet()
+            "torch" -> {
+                if (!actions.hasTorch()) {
+                    feed(Tag.ERR, "You have no light source. (No flashlight on this phone.)")
+                    return
+                }
+                actions.toggleTorch()
+            }
+            "bluetooth" -> actions.bluetooth()
+            "dnd" -> actions.doNotDisturb()
+            "volume" -> {
+                actions.volume()
+                true
+            }
+            "location" -> actions.location()
+            "saver" -> actions.batterySaver()
+            "hotspot" -> actions.hotspot()
+            "airplane" -> actions.airplane()
+            else -> actions.settings(Settings.ACTION_SETTINGS)
+        }
+        if (!ok) {
+            feed(Tag.ERR, "You have run out of prayer points. (Nothing could open that setting.)")
+            return
+        }
+        award(Skill.PRAYER, 8)
+        achievement("prayer")
+        changed()
     }
 
     fun playTrack(i: Int) {
+        haptic()
         if (i >= unlockedTracks()) {
-            message("You have not unlocked this piece of music yet!")
+            feed(Tag.GAME, "You have not unlocked this piece of music yet!")
             return
         }
-        nowPlaying = i
+        save.track = i
         actions.media(KeyEvent.KEYCODE_MEDIA_PLAY)
-        ui.invalidateAll()
+        changed()
     }
 
     fun mediaKey(code: Int) {
+        haptic()
         actions.media(code)
         val n = max(1, unlockedTracks())
         when (code) {
-            KeyEvent.KEYCODE_MEDIA_NEXT -> nowPlaying = (nowPlaying + 1) % n
-            KeyEvent.KEYCODE_MEDIA_PREVIOUS -> nowPlaying = (nowPlaying - 1 + n) % n
+            KeyEvent.KEYCODE_MEDIA_NEXT -> save.track = (save.track + 1) % n
+            KeyEvent.KEYCODE_MEDIA_PREVIOUS -> save.track = (save.track - 1 + n) % n
         }
-        ui.invalidateAll()
+        changed()
+    }
+
+    fun deviceReport() {
+        feed(Tag.GAME, "${Build.MANUFACTURER} ${Build.MODEL}, Android ${Build.VERSION.RELEASE}. " + String.format(Locale.US,
+            "%.1f of %.1f GB memory free, %.0f of %.0f GB storage free.", stats.ramFreeGb, stats.ramTotalGb, stats.storageFreeGb, stats.storageTotalGb))
+    }
+
+    /** Fills in a lived-in save for screenshots. Only reachable from debug builds and tests. */
+    fun demoSeed() {
+        val r = Random(2007)
+        apps.forEachIndexed { i, a ->
+            val n = if (i % 4 == 0) 20 + r.nextInt(120) else r.nextInt(12)
+            if (n > 0) {
+                save.launches[a.key] = n
+                save.lastUsed[a.key] = System.currentTimeMillis() - r.nextInt(3 * 86_400) * 1000L
+            }
+        }
+        for (s in Skill.values()) save.xp[s.ordinal] = Xp.forLevel(8 + r.nextInt(60)) + r.nextInt(900)
+        save.xp[Skill.RUNECRAFTING.ordinal] = Xp.forLevel(3)
+        save.questPoints = 7
+        save.achievements += listOf("home", "bank", "examine", "log")
+        if (save.quests.isEmpty()) {
+            save.quests += Quest("q1", "Buy groceries", false, System.currentTimeMillis())
+            save.quests += Quest("q2", "Call mum back", false, System.currentTimeMillis())
+            save.quests += Quest("q3", "Pay the rent", true, System.currentTimeMillis())
+        }
+        // A social folder in the last row, if there are enough social-ish apps around.
+        val group = apps.filter { it.skill == Skill.THIEVING || it.skill == Skill.RANGED }.filter { !placed(it.key) }.take(4)
+        if (group.size >= 2 && save.folders.isEmpty()) {
+            val free = firstFreeHome()
+            if (free >= 0) {
+                val f = Folder("social", "Social", group.map { it.key }.toMutableList())
+                save.folders[f.id] = f
+                save.home[free] = SaveData.FOLDER + f.id
+            }
+        }
+        var slot = 0
+        for (a in apps) {
+            if (save.home.count { it != null } >= 14) break
+            while (slot < SaveData.HOME && save.home[slot] != null) slot++
+            if (slot >= SaveData.HOME) break
+            if (!placed(a.key)) save.home[slot] = a.key
+        }
+        changed()
     }
 
     companion object {
-        const val TICK_MS = 600L
-        const val PET_CHANCE = 1000
-        const val INVENTORY_TAB = 3
-        const val SETTINGS_TAB = 11
-        const val QUEST_COLOR = 0xFFEF1020.toInt()
-        const val ITEM_CYAN = 0xFF00FFFF.toInt()
+        const val TICK_MS = 1000L
+        const val PAGE_LOG = 0
+        const val PAGE_HOME = 1
+    }
+}
 
-        fun pixelSizeFor(style: Int) = when (style) {
-            0 -> 26
-            1 -> 40
-            else -> 0
-        }
+object Rs3Format {
+    fun number(n: Long): String = String.format(Locale.US, "%,d", n)
+
+    /** 1,234 -> "1.2K", 12,345,678 -> "12.3M", like the XP counter. */
+    fun short(n: Long): String = when {
+        n >= 10_000_000 -> String.format(Locale.US, "%.1fM", n / 1e6)
+        n >= 100_000 -> "${n / 1000}K"
+        n >= 10_000 -> String.format(Locale.US, "%.1fK", n / 1e3)
+        else -> number(n)
     }
 }

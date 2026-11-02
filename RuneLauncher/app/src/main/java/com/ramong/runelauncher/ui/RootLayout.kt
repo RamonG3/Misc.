@@ -2,39 +2,47 @@ package com.ramong.runelauncher.ui
 
 import android.annotation.SuppressLint
 import android.content.Context
-import android.graphics.Canvas
 import android.graphics.Color
-import android.graphics.RectF
 import android.os.Build
 import android.text.Editable
 import android.text.InputType
 import android.text.TextWatcher
 import android.view.HapticFeedbackConstants
 import android.view.KeyEvent
+import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import android.view.WindowInsets
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
 import android.widget.EditText
+import com.ramong.runelauncher.core.AppEntry
+import com.ramong.runelauncher.core.Banner
+import com.ramong.runelauncher.core.Choice
+import com.ramong.runelauncher.core.FeedLine
 import com.ramong.runelauncher.core.Game
-import com.ramong.runelauncher.core.MenuOption
+import com.ramong.runelauncher.core.ItemMenu
 import com.ramong.runelauncher.core.Skill
 import kotlin.math.max
-import kotlin.math.min
 
 /**
- * Lays out the game view, chatbox and side panel (portrait: stacked; landscape: the classic
- * fixed-mode arrangement), hosts the bank and menu overlays, and implements [Game.Ui].
+ * Stacks the background, the home screen and every overlay (bank, folder, settings, menus,
+ * examine, dialogues, notices), and implements [Game.Ui].
  */
 @SuppressLint("ViewConstructor")
 class RootLayout(context: Context, private val game: Game) : ViewGroup(context), Game.Ui {
-    val gameView = GameView(context, game)
-    val chatbox = ChatboxView(context, game)
-    val side = SidePanelView(context, game)
-    val bank = BankView(context, game)
+    val scene = SceneView(context, game)
+    val home = HomeView(context, game)
+    val drawer = DrawerView(context, game, home)
+    val folder = FolderView(context, game, home)
+    val settings = SettingsView(context, game)
     val menu = MenuView(context)
+    val examine = ExamineView(context, game)
+    val choice = ChoiceView(context)
+    val notice = NoticeView(context, game)
+    val prompt = PromptView(context, game)
     private val input = RsInput(context, game)
+    private val overlays = listOf<View>(drawer, folder, settings, menu, examine, choice)
 
     private var insetTop = 0
     private var insetBottom = 0
@@ -43,37 +51,53 @@ class RootLayout(context: Context, private val game: Game) : ViewGroup(context),
     private var imeBottom = 0
     private var imeVisible = false
 
-    private val gameRect = RectF()
-    private val chatRect = RectF()
-    private val sideRect = RectF()
-    private val fillRect = RectF()
+    override fun dispatchTouchEvent(e: MotionEvent): Boolean {
+        val handled = super.dispatchTouchEvent(e)
+        HomeView.touchLog?.let { log ->
+            if (e.actionMasked != MotionEvent.ACTION_MOVE) {
+                val shown = overlays.filter { it.visibility == VISIBLE }.joinToString { it.javaClass.simpleName }
+                log("root ${MotionEvent.actionToString(e.actionMasked)} handled=$handled visible=[$shown] page=${home.page}")
+            }
+        }
+        return handled
+    }
 
     init {
-        setWillNotDraw(false)
         isFocusable = true
         isFocusableInTouchMode = true
         addView(input)
-        addView(gameView)
-        addView(chatbox)
-        addView(side)
-        addView(bank)
-        addView(menu)
-        bank.visibility = INVISIBLE
-        menu.visibility = INVISIBLE
+        addView(scene)
+        addView(home)
+        for (v in overlays) addView(v)
+        addView(prompt)
+        addView(notice)
+        for (v in overlays) v.visibility = INVISIBLE
+        prompt.visibility = INVISIBLE
         game.ui = this
+        R3.apply(game.palette)
         setOnApplyWindowInsetsListener { _, insets ->
             applyInsets(insets)
             insets
         }
     }
 
-    /** For tests and previews, where there is no window to supply insets. */
+    /** For previews, where there is no window to supply insets. */
     fun setInsets(top: Int, bottom: Int) {
         insetTop = top
         insetBottom = bottom
-        gameView.topInset = top
-        bank.setInsets(top, bottom)
+        pushInsets()
         requestLayout()
+    }
+
+    private fun pushInsets() {
+        home.setInsets(insetTop, insetBottom, insetLeft, insetRight)
+        drawer.setInsets(insetTop, max(insetBottom, imeBottom))
+        settings.setInsets(insetTop, insetBottom)
+        examine.setInsets(insetTop, insetBottom)
+        choice.setInsets(max(insetBottom, imeBottom))
+        notice.topInset = insetTop
+        prompt.bottomInset = max(insetBottom, imeBottom)
+        prompt.invalidate()
     }
 
     @Suppress("DEPRECATION")
@@ -93,108 +117,133 @@ class RootLayout(context: Context, private val game: Game) : ViewGroup(context),
             insetLeft = ins.systemWindowInsetLeft
             insetRight = ins.systemWindowInsetRight
             imeBottom = ins.systemWindowInsetBottom
-            imeVisible = imeBottom > insetBottom + Rs.dp(80f)
+            imeVisible = imeBottom > insetBottom + R3.dp(80f)
         }
-        // Keyboard dismissed with its own button while answering a question: treat as cancel.
+        // Keyboard dismissed with its own button while answering a prompt: treat as cancel.
         if (wasVisible && !imeVisible && game.inputMode == Game.InputMode.PROMPT) post { game.cancelInput() }
-        gameView.topInset = insetTop
-        bank.setInsets(insetTop, max(insetBottom, imeBottom))
+        pushInsets()
         requestLayout()
-    }
-
-    private fun computeRects(w: Float, h: Float) {
-        val top = insetTop.toFloat()
-        val bottom = h - insetBottom
-        val chatH = Rs.dp(134f)
-        if (w > h * 1.15f) {
-            val sideW = min(w * 0.42f, Rs.dp(380f))
-            sideRect.set(w - insetRight - sideW, top, w - insetRight, bottom)
-            chatRect.set(insetLeft.toFloat(), bottom - chatH, sideRect.left, bottom)
-            gameRect.set(insetLeft.toFloat(), 0f, sideRect.left, chatRect.top)
-            return
-        }
-        val f = Rs.px * 3
-        val tabH = min(Rs.dp(44f), (w - 2 * f) / 7f * 0.78f)
-        val chrome = 2 * tabH + 2 * f + Rs.dp(8f)
-        val idealRow = (w - 2 * f - Rs.dp(8f)) / 4f * 0.56f
-        var sideH = chrome + 7 * idealRow
-        val maxSide = bottom - chatH - top - Rs.dp(250f)
-        if (sideH > maxSide) sideH = max(maxSide, chrome + 7 * Rs.dp(42f))
-        sideRect.set(insetLeft.toFloat(), bottom - sideH, w - insetRight, bottom)
-        chatRect.set(insetLeft.toFloat(), sideRect.top - chatH, w - insetRight, sideRect.top)
-        gameRect.set(insetLeft.toFloat(), 0f, w - insetRight, chatRect.top)
     }
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
         val w = MeasureSpec.getSize(widthMeasureSpec)
         val h = MeasureSpec.getSize(heightMeasureSpec)
         setMeasuredDimension(w, h)
-        computeRects(w.toFloat(), h.toFloat())
-        fun exact(v: Float) = MeasureSpec.makeMeasureSpec(v.toInt(), MeasureSpec.EXACTLY)
-        gameView.measure(exact(gameRect.width()), exact(gameRect.height()))
-        chatbox.measure(exact(chatRect.width()), exact(chatRect.height()))
-        side.measure(exact(sideRect.width()), exact(sideRect.height()))
-        bank.measure(exact(w.toFloat()), exact(h.toFloat()))
-        menu.measure(exact(w.toFloat()), exact(h.toFloat()))
-        input.measure(exact(1f), exact(1f))
+        val ws = MeasureSpec.makeMeasureSpec(w, MeasureSpec.EXACTLY)
+        val hs = MeasureSpec.makeMeasureSpec(h, MeasureSpec.EXACTLY)
+        for (i in 0 until childCount) {
+            val v = getChildAt(i)
+            if (v === input) v.measure(MeasureSpec.makeMeasureSpec(1, MeasureSpec.EXACTLY), MeasureSpec.makeMeasureSpec(1, MeasureSpec.EXACTLY))
+            else v.measure(ws, hs)
+        }
     }
 
     override fun onLayout(changed: Boolean, l: Int, t: Int, r: Int, b: Int) {
-        fun place(v: View, rect: RectF) = v.layout(rect.left.toInt(), rect.top.toInt(), rect.right.toInt(), rect.bottom.toInt())
-        place(gameView, gameRect)
-        place(chatbox, chatRect)
-        place(side, sideRect)
-        bank.layout(0, 0, r - l, b - t)
-        menu.layout(0, 0, r - l, b - t)
-        input.layout(0, 0, 1, 1)
+        for (i in 0 until childCount) {
+            val v = getChildAt(i)
+            if (v === input) v.layout(0, 0, 1, 1) else v.layout(0, 0, r - l, b - t)
+        }
+        placeNotices()
     }
 
-    override fun onDraw(c: Canvas) {
-        // Stone under the navigation bar (and beside it in landscape) instead of bare wallpaper.
-        fillRect.set(0f, sideRect.bottom, width.toFloat(), height.toFloat())
-        Rs.stone(c, fillRect)
-        if (insetRight > 0) {
-            fillRect.set(sideRect.right, 0f, width.toFloat(), height.toFloat())
-            Rs.stone(c, fillRect)
+    private fun placeNotices() {
+        notice.toastBottom = if (drawer.showing || settings.showing || examine.showing) {
+            height - max(insetBottom, imeBottom) - R3.dp(16f)
+        } else {
+            home.toastBottom
         }
+        notice.dropX = home.dropAnchorX
+        notice.dropY = home.dropAnchorY
+    }
+
+    private fun updateCovered() {
+        scene.covered = drawer.showing || settings.showing || examine.showing
+        placeNotices()
     }
 
     // ------------------------------------------------------------------ Game.Ui
 
-    override val bankOpen: Boolean get() = bank.visibility == VISIBLE
-    override val currentTab: Int get() = side.tab.ordinal
+    override val drawerOpen: Boolean get() = drawer.showing
+    override val page: Int get() = home.page
 
     override fun invalidateAll() {
-        gameView.invalidate()
-        chatbox.invalidate()
-        side.invalidate()
-        if (bankOpen) bank.invalidate()
-        if (menu.showing) menu.invalidate()
+        updateCovered()
+        prompt.visibility = if (game.inputMode == Game.InputMode.PROMPT) VISIBLE else INVISIBLE
+        prompt.invalidate()
+        home.invalidate()
+        scene.invalidate()
+        notice.invalidate()
+        for (v in overlays) if (v.visibility == VISIBLE) v.invalidate()
     }
 
     override fun tick() {
-        gameView.tick()
-        if (side.tab == Tab.COMBAT || side.tab == Tab.PRAYER || side.tab == Tab.ACCOUNT) side.invalidate()
+        scene.tick()
+        home.invalidate()
+        notice.invalidate()
     }
 
-    override fun openBank(search: Boolean, skill: Skill?) {
+    override fun openDrawer(search: Boolean, pick: Boolean) {
         menu.hide()
-        bank.open(skill)
+        settings.hide()
+        folder.close()
+        drawer.open(pick)
+        updateCovered()
     }
 
-    override fun closeBank() {
+    override fun closeDrawer() {
         if (game.inputMode == Game.InputMode.SEARCH) game.cancelInput()
-        bank.visibility = INVISIBLE
+        drawer.close()
+        game.picking = false
+        game.pickFolder = null
+        updateCovered()
         invalidateAll()
     }
 
-    override fun bankRefresh() {
-        if (bankOpen) bank.refresh()
+    override fun drawerRefresh() {
+        if (drawer.visibility == VISIBLE) drawer.refresh()
     }
 
-    override fun showMenu(options: List<MenuOption>, x: Float, y: Float) = menu.show(options, x, y)
+    override fun openSettings() {
+        menu.hide()
+        if (drawer.showing) closeDrawer()
+        folder.close()
+        settings.open()
+        updateCovered()
+    }
 
+    override fun closeSettings(): Boolean {
+        val r = settings.hide()
+        updateCovered()
+        return r
+    }
+
+    override fun openFolder(id: String) {
+        menu.hide()
+        folder.open(id)
+    }
+
+    override fun closeFolder(): Boolean = folder.close()
+
+    override fun showMenu(menu: ItemMenu) = this.menu.show(menu)
     override fun hideMenu(): Boolean = menu.hide()
+
+    override fun showExamine(app: AppEntry) {
+        examine.show(app)
+        updateCovered()
+    }
+
+    override fun hideExamine(): Boolean {
+        val r = examine.hide()
+        updateCovered()
+        return r
+    }
+
+    override fun showChoice(choice: Choice) {
+        menu.hide()
+        this.choice.show(choice)
+    }
+
+    override fun hideChoice(): Boolean = choice.hide()
 
     override fun openKeyboard(initial: String) = input.open(initial)
 
@@ -203,28 +252,38 @@ class RootLayout(context: Context, private val game: Game) : ViewGroup(context),
         requestFocus()
     }
 
-    override fun xpDrop(skill: Skill, amount: Int) = gameView.xpDrop(skill, amount)
+    override fun banner(b: Banner) = notice.banner(b)
 
-    override fun fireworks() = gameView.fireworks()
-
-    override fun overhead(text: String) = gameView.overhead(text)
-
-    override fun emote(name: String): Boolean {
-        val e = Emote.find(name) ?: return false
-        gameView.emote(e)
-        return true
+    override fun toast(line: FeedLine) {
+        placeNotices()
+        notice.toast(line)
     }
 
-    override fun selectTab(index: Int) = side.select(Tab.values()[index])
+    override fun xpDrop(skill: Skill, amount: Int) {
+        placeNotices()
+        notice.xpDrop(skill, amount)
+    }
 
-    override fun worldHop() = gameView.worldHop()
+    override fun showPage(page: Int) = home.showPage(page)
+
+    override fun worldHop() {
+        scene.worldHop()
+        home.worldHop()
+    }
+
+    override fun themeChanged() {
+        R3.apply(game.palette)
+        scene.themeChanged()
+        home.themeChanged()
+        invalidateAll()
+    }
 
     override fun haptic() {
         performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY)
     }
 }
 
-/** An invisible text field that feeds the chatbox and bank search. */
+/** An invisible text field that feeds the app search and the prompts. */
 @SuppressLint("ViewConstructor")
 class RsInput(context: Context, private val game: Game) : EditText(context) {
     private var muted = false
