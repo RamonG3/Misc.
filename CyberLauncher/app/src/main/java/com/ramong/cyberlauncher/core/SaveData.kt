@@ -4,20 +4,6 @@ import android.content.Context
 import org.json.JSONArray
 import org.json.JSONObject
 
-/** The ten cyberware slots, five down each side of the ripperdoc diagram. */
-enum class Ware(val title: String, val short: String) {
-    CORTEX("Frontal Cortex", "CORTEX"),
-    OCULAR("Ocular System", "OPTICS"),
-    CIRCULATORY("Circulatory System", "BLOOD"),
-    NERVOUS("Nervous System", "NERVES"),
-    ARMS("Arms", "ARMS"),
-    OS("Operating System", "OS"),
-    SKIN("Integumentary System", "SKIN"),
-    SKELETON("Skeleton", "BONES"),
-    HANDS("Hands", "HANDS"),
-    LEGS("Legs", "LEGS"),
-}
-
 /** Everything the launcher remembers, kept in one SharedPreferences file. */
 class SaveData(ctx: Context) {
     private val sp = ctx.getSharedPreferences("cyberlauncher", Context.MODE_PRIVATE)
@@ -27,12 +13,15 @@ class SaveData(ctx: Context) {
     var lifepath = -1
     var theme = "street"
     val owned = HashSet<String>()
-    val inventory = arrayOfNulls<String>(INVENTORY)
-    val cyberware = arrayOfNulls<String>(Ware.values().size)
+    /** The home screen grid, row by row. (Stored under its old name, "inventory".) */
+    val home = arrayOfNulls<String>(HOME)
+    val dock = arrayOfNulls<String>(DOCK)
+    /** False until the dock has been filled once, from old cyberware slots or defaults. */
+    var dockReady = false
     val launches = HashMap<String, Int>()
     val lastUsed = HashMap<String, Long>()
+    /** User tasks, plus the built-in jobs, which are now hidden achievements. */
     val jobs = ArrayList<Job>()
-    var tracked: String? = null
 
     var xp = 0L
     val attrXp = LongArray(Attr.values().size)
@@ -44,15 +33,17 @@ class SaveData(ctx: Context) {
     /** 0 = stock icons, 1 = chrome (scanlines + colour fringe), 2 = holo (tinted to the theme). */
     var iconStyle = 1
     var labels = true
+    var rarityGlow = true
     var clock24 = true
     var realYear = false
     var rain = true
     var glitch = true
     var boot = true
     var haptics = true
-    /** 0 = draw the city, 1 = show the phone's wallpaper behind the HUD. */
+    /** Show the deck page to the left of home. */
+    var deck = true
+    /** 0 = draw the city, 1 = show the phone's wallpaper. */
     var scene = 0
-    var stashSort = 0
     var station = 0
     var hasCat = false
     var initialized = false
@@ -70,8 +61,10 @@ class SaveData(ctx: Context) {
             val a = JSONArray(s)
             for (i in 0 until a.length()) owned += a.optString(i)
         }
-        readArray("inventory", inventory)
-        readArray("cyberware", cyberware)
+        readArray("inventory", home)
+        dockReady = sp.getBoolean("dockReady", false)
+        readArray("dock", dock)
+        if (!dockReady) migrateDock()
         sp.getString("launches", null)?.let { s ->
             val o = JSONObject(s)
             o.keys().forEach { k -> launches[k] = o.optInt(k) }
@@ -90,7 +83,6 @@ class SaveData(ctx: Context) {
                 )
             }
         }
-        tracked = sp.getString("tracked", null)
         xp = sp.getLong("xp", 0L)
         sp.getString("attrXp", null)?.let { s ->
             val o = JSONObject(s)
@@ -102,18 +94,33 @@ class SaveData(ctx: Context) {
         hacks = sp.getInt("hacks", 0)
         iconStyle = sp.getInt("iconStyle", 1)
         labels = sp.getBoolean("labels", true)
+        rarityGlow = sp.getBoolean("rarityGlow", true)
         clock24 = sp.getBoolean("clock24", true)
         realYear = sp.getBoolean("realYear", false)
         rain = sp.getBoolean("rain", true)
         glitch = sp.getBoolean("glitch", true)
         boot = sp.getBoolean("boot", true)
         haptics = sp.getBoolean("haptics", true)
+        deck = sp.getBoolean("deck", true)
         scene = sp.getInt("scene", 0)
-        stashSort = sp.getInt("stashSort", 0)
         station = sp.getInt("station", 0)
         hasCat = sp.getBoolean("hasCat", false)
         initialized = sp.getBoolean("initialized", false)
         installTime = sp.getLong("installTime", 0L)
+    }
+
+    /** The first version had ten "cyberware" slots instead of a dock; keep the first five. */
+    private fun migrateDock() {
+        val old = arrayOfNulls<String>(10)
+        readArray("cyberware", old)
+        // Slots in the order the old launcher filled them: OS, cortex, optics, hands, arms...
+        val order = intArrayOf(5, 0, 1, 8, 4, 3, 2, 6, 7, 9)
+        var d = 0
+        for (i in order) {
+            val k = old[i] ?: continue
+            if (d < DOCK && dock.none { it == k }) dock[d++] = k
+        }
+        if (d > 0) dockReady = true
     }
 
     private fun readArray(key: String, into: Array<String?>) {
@@ -143,12 +150,12 @@ class SaveData(ctx: Context) {
             .putInt("lifepath", lifepath)
             .putString("theme", theme)
             .putString("owned", JSONArray(owned.toList()).toString())
-            .putString("inventory", writeArray(inventory))
-            .putString("cyberware", writeArray(cyberware))
+            .putString("inventory", writeArray(home))
+            .putString("dock", writeArray(dock))
+            .putBoolean("dockReady", dockReady)
             .putString("launches", JSONObject(launches as Map<*, *>).toString())
             .putString("lastUsed", JSONObject(lastUsed as Map<*, *>).toString())
             .putString("jobs", jobJson.toString())
-            .putString("tracked", tracked)
             .putLong("xp", xp)
             .putString("attrXp", attrJson.toString())
             .putLong("cred", cred)
@@ -157,14 +164,15 @@ class SaveData(ctx: Context) {
             .putInt("hacks", hacks)
             .putInt("iconStyle", iconStyle)
             .putBoolean("labels", labels)
+            .putBoolean("rarityGlow", rarityGlow)
             .putBoolean("clock24", clock24)
             .putBoolean("realYear", realYear)
             .putBoolean("rain", rain)
             .putBoolean("glitch", glitch)
             .putBoolean("boot", boot)
             .putBoolean("haptics", haptics)
+            .putBoolean("deck", deck)
             .putInt("scene", scene)
-            .putInt("stashSort", stashSort)
             .putInt("station", station)
             .putBoolean("hasCat", hasCat)
             .putBoolean("initialized", initialized)
@@ -173,6 +181,8 @@ class SaveData(ctx: Context) {
     }
 
     companion object {
-        const val INVENTORY = 20
+        const val HOME = 20
+        const val HOME_COLS = 4
+        const val DOCK = 5
     }
 }

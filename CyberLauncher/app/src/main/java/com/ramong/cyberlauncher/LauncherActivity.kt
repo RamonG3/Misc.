@@ -93,14 +93,19 @@ class LauncherActivity : Activity() {
         root.boot.visibility = View.INVISIBLE
         when {
             cmd == "seed" -> game.demoSeed()
-            cmd == "stash" -> game.ui.openStash(null, null)
+            cmd == "drawer" -> game.ui.openDrawer(search = false, pick = false)
+            cmd == "deck" -> game.ui.showPage(Game.PAGE_DECK)
             cmd == "home" -> game.homePressed()
+            cmd == "settings" -> game.ui.openSettings()
+            cmd == "homemenu" -> game.homeMenu(root.width / 2f, root.height * 0.45f)
             cmd == "levelup" -> game.award(null, (Curves.xpForLevel(game.level() + 1) - game.save.xp).toInt().coerceAtLeast(1))
             cmd == "lifepath" -> game.ui.boot(true)
             cmd == "breach" -> game.ui.breach()
-            cmd.startsWith("tab:") -> game.ui.selectTab(cmd.removePrefix("tab:").toIntOrNull() ?: 0)
             cmd.startsWith("scan:") -> game.apps.getOrNull(cmd.removePrefix("scan:").toIntOrNull() ?: 0)?.let { game.scan(it) }
-            cmd.startsWith("menu:") -> game.inventoryMenu(cmd.removePrefix("menu:").toIntOrNull() ?: 0, root.width / 2f, root.height * 0.6f)
+            cmd.startsWith("menu:") -> {
+                val i = cmd.removePrefix("menu:").toIntOrNull() ?: 0
+                game.homeApp(i)?.let { game.appMenu(it, Game.Slot(false, i), root.width / 2f, root.height * 0.45f) }
+            }
             cmd.startsWith("theme:") -> game.command("/theme " + cmd.removePrefix("theme:"))
         }
         root.invalidateAll()

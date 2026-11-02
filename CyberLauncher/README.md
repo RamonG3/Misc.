@@ -1,27 +1,21 @@
 # CyberLauncher
 
-An Android home screen launcher that thinks it's a Cyberpunk 2077 HUD.
-Your battery is your health bar. Your apps are loot. Opening Instagram too often gets the NCPD involved.
+An Android home screen with a Cyberpunk 2077 coat of paint. It works like the launcher you
+already know (app grid, dock, swipe up for all apps) and looks like you just jacked in.
+Night City lives behind your icons. Your battery is a health bar. Your apps level up.
 
 <p>
   <img src="docs/home.png" width="230" alt="Home screen">
-  <img src="docs/stash.png" width="230" alt="Stash (app drawer)">
+  <img src="docs/drawer.png" width="230" alt="All apps">
+  <img src="docs/deck.png" width="230" alt="The deck page">
+</p>
+<p>
+  <img src="docs/drag.png" width="230" alt="Dragging an app">
+  <img src="docs/menu.png" width="230" alt="Holding an app">
   <img src="docs/scan.png" width="230" alt="Scanning an app">
 </p>
 <p>
-  <img src="docs/character.png" width="230" alt="Character attributes">
-  <img src="docs/cyberware.png" width="230" alt="Cyberware slots">
-  <img src="docs/hacks.png" width="230" alt="Quickhacks (quick settings)">
-</p>
-<p>
-  <img src="docs/lifepath.png" width="230" alt="Choosing a lifepath on first run">
-  <img src="docs/journal.png" width="230" alt="Journal (to-do list)">
-  <img src="docs/emulator.png" width="230" alt="A real render on the CI emulator, with real apps">
-</p>
-
-The last one is a real Pixel 6 emulator in CI, with real apps. The rest are previews rendered off-device with stand-in icons.
-<p>
-  <img src="docs/palettes.png" width="700" alt="Street Kid, Corpo, Nomad, Netrunner and Samurai palettes">
+  <img src="docs/palettes.png" width="700" alt="Street Kid, Corpo, Nomad, Netrunner and Samurai themes">
 </p>
 
 ## Install
@@ -32,46 +26,66 @@ The last one is a real Pixel 6 emulator in CI, with real apps. The rest are prev
 3. Press Home and pick **CyberLauncher**, or go to Settings → Apps → Default apps → Home app.
 4. Choose your lifepath. It only picks your colours, so don't overthink it.
 
-To go back: Settings tab → *Quit game*. It opens the home app picker, which is as close as
-a launcher gets to a quit button.
+Updating from the first version keeps your apps: the old inventory becomes the home screen and
+the first five cyberware slots become the dock.
 
-## What does what
+## How it works
 
-| Night City | On your phone |
+It's a normal launcher, so the usual moves do the usual things:
+
+| Do this | Get this |
 |---|---|
-| Health bar | Battery. Says REGEN on the charger. Below 15% it flashes CRITICAL and the city gets a red vignette. Tap for battery settings. |
-| RAM | Free memory, one cell per eighth. Quickhacks spend it and it recovers. Tap for quickhacks. |
-| Level, Street Cred | Every launch pays XP and Street Cred. Finished jobs pay more. Level 60 takes about two years of normal phone use, which you were going to do anyway. |
-| Eddies (€$) | Earned on every launch. Spend them at the vendor in Settings on new colour schemes. |
-| Minimap | Your maps app. Hold it to fast travel to another district (new map, new skyline). |
-| Tracked job | Whatever you're tracking in the journal. Tap to open the journal. |
-| Clock / date | Alarms / calendar. The year is Night City time (+51) unless you switch it to boring. |
-| Inventory (20 slots) | Favourite apps. Tap to open, hold for the menu, hold and drag to rearrange. Tap an empty slot to fill it. |
-| Item rarity | Earned by use: Common, Uncommon (5 launches), Rare (25), Epic (75), Legendary (200). Your single most-used app goes Iconic at 400. |
-| Stash | Every app. Swipe up anywhere, or tap the net feed to search. Filter by attribute; sort by name, rarity or most recent. |
-| Net feed | Everything the launcher has to say. Tap it to search; Enter opens the top match. `/help` lists commands. |
-| Scanner | Hold an item → Scan. Shows which sensitive permissions the app actually holds (location, microphone, camera, contacts...), a threat level, version and install dates, and a bounty that means nothing. |
-| Character | The five attributes on a pentagon. Each app trains one: Body (fitness, food, maps), Reflexes (games, video, music), Technical Ability (tools, camera, settings), Intelligence (browsers, AI, docs, email), Cool (social, messaging, shopping, money). Tap one to see its apps. |
-| Cyberware | Ten more favourite slots, wired into a ripperdoc's diagram. |
-| Quickhacks | Quick settings. Ping is Wi-Fi, Reboot Optics the flashlight, Sonic Shock volume, Memory Wipe Do Not Disturb, Cripple Movement location, Cyberware Malfunction Bluetooth, Overheat battery saver, Request Backup hotspot, System Reset airplane mode, Breach Protocol everything else. |
-| Journal | A to-do list. Main jobs teach you the launcher; gigs are your own. Tap a gig when it's done and the fixer pays. |
-| Phone | One tap for calls, texts, camera ("photo mode"), the net and maps, plus your recent apps as contacts. |
-| Radio | Play, pause and skip for whatever is playing, dressed as a car radio. Stations unlock as you level. They are all fictional. So is the music, as far as your phone knows. |
-| NCPD heat | Open enough apps in 15 minutes and the stars come out. They leave when you put the phone down. Unlike you. |
-| Lifepath | Nomad, Street Kid or Corpo, picked on first run. Sets your colours. Change it in Settings. |
-| Swipes | Down for notifications. Sideways on the panel to flip tabs. |
+| Tap an app | Open it. |
+| Swipe up anywhere, or tap the search bar | All apps, A to Z. Scrub the letter rail to jump. Search filters as you type; Enter opens the top match, or searches the web if nothing matches. |
+| Hold an app | Options: remove from home, move to dock, scan app, app info, uninstall. |
+| Hold and drag an app | Move it around the grid or into the dock. Drop it on Remove, App info or Uninstall at the top. In the app drawer, hold an app and drag it out to put it on the home screen. |
+| Hold an empty spot | Add apps, launcher settings, rain on or off, a new skyline, Android settings. |
+| Swipe down | Notifications. |
+| Swipe right | The deck page (below). |
+| Back or Home | Close whatever is open; Home again goes back to the home page. |
 
-The city is drawn live: rain, flying cars, flickering neon, tower beacons and a holographic koi.
-It only animates while the home screen is in front, and stops entirely in battery saver.
-Rain and glitch effects can be switched off in Settings, as can the boot sequence.
+Up top there's a clock widget. Tap the time for alarms, the date for your calendar, the little
+health bar for battery settings. The line underneath shows your level and eddies, and your next to-do if
+you have one. The mini map in the corner opens your maps app; hold it for a new skyline.
 
-There is a 1 in 1,000 chance per launch that a stray cat moves onto your roof. It will not do anything useful.
+## The Cyberpunk bits
+
+- **Night City** is drawn live behind your icons: rain, flying cars, flickering neon, tower beacons
+  and a holographic koi. The sky follows the real time of day. It only animates while the home
+  screen is showing, and stops in battery saver. Prefer your own wallpaper? Settings → Background.
+- **Battery is your health bar.** Below 15% it flashes and the edges of the screen pulse red.
+- **Apps earn rarity by use.** A coloured bar under the label: Uncommon at 5 launches, Rare at 25, Epic
+  at 75, Legendary at 200. Your single most-used app goes Iconic at 400. Turn it off in settings if
+  you'd rather not be judged.
+- **Every launch pays out** XP, Street Cred and eddies. Level 60 takes about two years of normal phone
+  use, which you were going to do anyway. Eddies buy new themes in Settings.
+- **Scan app** shows which sensitive permissions an app actually holds (location, microphone, camera,
+  contacts...) with a threat level, plus versions and install dates.
+- **NCPD heat:** open enough apps in 15 minutes and stars show up next to your level. They go
+  away when you put the phone down. Unlike you.
+- **Lifepath, boot sequence, glitches.** All skippable or switchable in settings.
+
+## The deck page
+
+Swipe right from home. Everything here has a plain label, with the 2077 name in small print:
+
+| Card | What it does |
+|---|---|
+| Profile | Handle, level, Street Cred, eddies and the five attributes (Body, Reflexes, Tech, Int, Cool). Each app trains one of them, from fitness to social. |
+| Quick settings | Internet, flashlight, Bluetooth, Do Not Disturb, volume, location, battery saver, hotspot, airplane mode, Android settings. (Ping, Reboot Optics, Malfunction, Memory Wipe and friends.) |
+| Radio | Play, pause and skip whatever is playing. The stations are fictional and unlock as you level. |
+| Gigs | A to-do list. Tap to tick one off and a fixer pays you. Hold to rename or delete. |
+| Recent | Your last five apps. |
+
+Turn the deck off in Settings if you just want the home screen.
 
 ## Commands
 
-Type these into the net feed: `/help`, `/stash`, `/scan <app>`, `/net <search>`, `/name <handle>`,
-`/theme <palette>`, `/stats`, `/heat`, `/eddies`, `/travel`, `/rain`, `/glitch`, `/breach`, `/home`,
-`/wallpaper`, `/settings`, `/reset`. A few others exist. `/sudo` does not work, which is the point.
+Type these in the app search: `/help`, `/scan <app>`, `/net <search>`, `/name <handle>`, `/theme <name>`,
+`/stats`, `/heat`, `/eddies`, `/travel`, `/rain`, `/glitch`, `/breach`, `/settings`, `/reset`. A few others
+exist. `/sudo` does not work, which is the point.
+
+There is a 1 in 1,000 chance per launch that a stray cat moves onto your roof. It will not do anything useful.
 
 ## Fonts
 
@@ -89,8 +103,8 @@ build installs over the previous one. It is fine for sideloading; don't use it f
 
 CI also boots an emulator, runs the release build as the home app to check it survives, and
 attaches screenshots to the release. Debug builds take `--es demo <screen>` extras
-(`seed`, `stash`, `tab:N`, `scan:N`, `menu:N`, `levelup`, `theme:<id>`) so the screenshots don't
-depend on tapping coordinates. Release builds ignore them.
+(`seed`, `drawer`, `deck`, `settings`, `scan:N`, `menu:N`, `homemenu`, `levelup`, `theme:<id>`) so the
+screenshots don't depend on tapping coordinates. Release builds ignore them.
 
 ## Disclaimer
 

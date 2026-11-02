@@ -18,8 +18,8 @@ import kotlin.math.min
 import kotlin.random.Random
 
 /**
- * The launcher's brain: apps, inventory, cyberware, progression, jobs, the feed and every
- * action the UI can trigger. Views only draw [Game] state and forward taps here.
+ * The launcher's brain: apps, the home grid and dock, progression, tasks and every action
+ * the UI can trigger. Views only draw [Game] state and forward taps here.
  */
 class Game(
     val ctx: Context,
@@ -30,13 +30,15 @@ class Game(
 ) {
     /** What the game needs from the views. Implemented by the root layout. */
     interface Ui {
-        val stashOpen: Boolean
-        val currentTab: Int
+        val drawerOpen: Boolean
+        val page: Int
         fun invalidateAll()
         fun tick()
-        fun openStash(attr: Attr?, pick: Pick?)
-        fun closeStash()
-        fun stashRefresh()
+        fun openDrawer(search: Boolean, pick: Boolean)
+        fun closeDrawer()
+        fun drawerRefresh()
+        fun openSettings()
+        fun closeSettings(): Boolean
         fun showMenu(menu: ItemMenu)
         fun hideMenu(): Boolean
         fun showScan(app: AppEntry)
@@ -45,10 +47,10 @@ class Game(
         fun hideChoice(): Boolean
         fun openKeyboard(initial: String)
         fun closeKeyboard()
-        fun drop(text: String, color: Int)
         fun banner(b: Banner)
+        fun toast(line: FeedLine)
         fun glitch(strength: Float)
-        fun selectTab(index: Int)
+        fun showPage(page: Int)
         fun travel()
         fun breach()
         fun boot(lifepathAfter: Boolean)
@@ -56,11 +58,8 @@ class Game(
         fun haptic()
     }
 
-    /** What the stash is choosing an app for. */
-    sealed class Pick {
-        class Slot(val index: Int) : Pick()
-        class Implant(val ware: Ware) : Pick()
-    }
+    /** A place an app can sit: one of the home grid cells or one of the dock cells. */
+    data class Slot(val dock: Boolean, val index: Int)
 
     enum class InputMode { NONE, SEARCH, PROMPT }
 
@@ -85,8 +84,10 @@ class Game(
     var promptTitle = ""
         private set
     private var promptAction: ((String) -> Unit)? = null
+    /** True while the drawer is open to pick an app for the home screen. */
+    var picking = false
 
-    /** RAM cells spent on quickhacks; recovers over time like the game's RAM. */
+    /** RAM cells spent on quick settings; recovers over time like the game's RAM. */
     var ramSpent = 0f
         private set
     private val recentLaunches = ArrayDeque<Long>()
@@ -98,6 +99,7 @@ class Game(
         private set
     private var lastBattery = -1
     private var wasCharging = false
+    private var firstHintPending = false
 
     private val handler = Handler(Looper.getMainLooper())
     private var ticking = false
@@ -123,11 +125,10 @@ class Game(
         stats.refresh()
         lastBattery = stats.battery
         wasCharging = stats.charging
-        val firstRun = !save.initialized
-        if (firstRun) firstRun()
-        feed(Tag.SYS, "Optics online. Welcome back to Night City, <col=hi>${esc(save.name)}</col>.")
-        if (firstRun) {
-            for (tip in Content.callTips) feed(Tag.MSG, tip)
+        if (!save.initialized) firstRun()
+        if (!save.dockReady) fillDock()
+        if (save.jobs.none { it.main }) {
+            for (def in Content.mainJobs) save.jobs += Job(def.id, def.title, def.hint, false, true, System.currentTimeMillis())
         }
         if (coldBoot && (save.boot || save.lifepath < 0)) ui.boot(save.lifepath < 0)
         save.save()
@@ -135,19 +136,34 @@ class Game(
 
     private fun firstRun() {
         save.initialized = true
+        firstHintPending = true
+        fillDock()
+        // The rest of the usual suspects go on the home screen, then anything else up to a row of eight.
         var slot = 0
         for (pkg in actions.defaultPackages()) {
             val app = apps.firstOrNull { it.packageName == pkg && !it.isWork } ?: continue
-            if (slot < 12 && save.inventory.none { it == app.key }) save.inventory[slot++] = app.key
+            if (slot < 8 && save.dock.none { it == app.key } && save.home.none { it == app.key }) save.home[slot++] = app.key
         }
         for (app in apps) {
             if (slot >= 8) break
-            if (save.inventory.none { it == app.key }) save.inventory[slot++] = app.key
+            if (save.dock.none { it == app.key } && save.home.none { it == app.key }) save.home[slot++] = app.key
         }
-        if (save.jobs.none { it.main }) {
-            for (def in Content.mainJobs) save.jobs += Job(def.id, def.title, def.hint, false, true, System.currentTimeMillis())
+    }
+
+    /** Phone, messages, browser, camera and one more in the dock, like every other launcher. */
+    private fun fillDock() {
+        save.dockReady = true
+        if (save.dock.any { app(it) != null }) return
+        var d = 0
+        for (pkg in actions.defaultPackages()) {
+            if (d >= SaveData.DOCK) break
+            val app = apps.firstOrNull { it.packageName == pkg && !it.isWork } ?: continue
+            if (save.dock.none { it == app.key }) save.dock[d++] = app.key
         }
-        save.tracked = "rescue"
+        for (app in apps) {
+            if (d >= SaveData.DOCK) break
+            if (save.dock.none { it == app.key }) save.dock[d++] = app.key
+        }
     }
 
     fun resume() {
@@ -157,6 +173,10 @@ class Game(
         if (!ticking) {
             ticking = true
             handler.postDelayed(tick, TICK_MS)
+        }
+        if (firstHintPending && save.lifepath >= 0) {
+            firstHintPending = false
+            feed(Tag.MSG, Content.FIRST_HINT)
         }
         ui.invalidateAll()
     }
@@ -173,25 +193,27 @@ class Game(
         ui.hideMenu()
         ui.hideChoice()
         ui.hideScan()
+        ui.closeSettings()
         cancelInput()
-        if (ui.stashOpen) ui.closeStash()
+        if (ui.drawerOpen) ui.closeDrawer()
     }
 
-    /** Home pressed while already home: close things, then go back to the inventory. */
+    /** Home pressed while already home: close things, then go back to the home page. */
     fun homePressed() {
         var acted = ui.hideMenu()
         acted = ui.hideChoice() || acted
         acted = ui.hideScan() || acted
+        acted = ui.closeSettings() || acted
         if (inputMode != InputMode.NONE) {
             cancelInput()
             acted = true
         }
-        if (ui.stashOpen) {
-            ui.closeStash()
+        if (ui.drawerOpen) {
+            ui.closeDrawer()
             acted = true
         }
-        if (!acted && ui.currentTab != TAB_INVENTORY) {
-            ui.selectTab(TAB_INVENTORY)
+        if (!acted && ui.page != PAGE_HOME) {
+            ui.showPage(PAGE_HOME)
             acted = true
         }
         if (!acted) ui.glitch(0.6f)
@@ -199,13 +221,17 @@ class Game(
     }
 
     fun back(): Boolean {
-        if (ui.hideChoice() || ui.hideMenu() || ui.hideScan()) return true
+        if (ui.hideChoice() || ui.hideMenu() || ui.hideScan() || ui.closeSettings()) return true
         if (inputMode != InputMode.NONE) {
             cancelInput()
             return true
         }
-        if (ui.stashOpen) {
-            ui.closeStash()
+        if (ui.drawerOpen) {
+            ui.closeDrawer()
+            return true
+        }
+        if (ui.page != PAGE_HOME) {
+            ui.showPage(PAGE_HOME)
             return true
         }
         return false
@@ -217,7 +243,7 @@ class Game(
         apps.forEach { byKey[it.key] = it }
         recomputeTop()
         if (::ui.isInitialized) {
-            ui.stashRefresh()
+            ui.drawerRefresh()
             ui.invalidateAll()
         }
     }
@@ -239,7 +265,6 @@ class Game(
 
     private fun batteryEvents() {
         val b = stats.battery
-        if (stats.charging && !wasCharging) feed(Tag.SYS, "Regenerating. Charger connected.")
         if (!stats.charging && lastBattery > LOW_BATTERY && b <= LOW_BATTERY && lastBattery >= 0) {
             feed(Tag.ERR, "<col=red>Health critical.</col> Find a ripperdoc. Or a charger.")
         }
@@ -250,10 +275,13 @@ class Game(
     // ------------------------------------------------------------------ lookups
 
     fun app(key: String?): AppEntry? = key?.let { byKey[it] }
-    fun invApp(slot: Int): AppEntry? = app(save.inventory.getOrNull(slot))
-    fun wareApp(w: Ware): AppEntry? = app(save.cyberware[w.ordinal])
+    fun homeApp(i: Int): AppEntry? = app(save.home.getOrNull(i))
+    fun dockApp(i: Int): AppEntry? = app(save.dock.getOrNull(i))
+    fun slotApp(s: Slot): AppEntry? = if (s.dock) dockApp(s.index) else homeApp(s.index)
     fun launches(app: AppEntry) = save.launches[app.key] ?: 0
     fun rarity(app: AppEntry) = Rarity.of(launches(app), app.key == topKey)
+    fun onHome(app: AppEntry) = save.home.any { it == app.key }
+    fun inDock(app: AppEntry) = save.dock.any { it == app.key }
 
     fun level() = Curves.level(save.xp)
     fun levelProgress() = Curves.progress(save.xp, level(), Curves::xpForLevel, Curves.MAX_LEVEL)
@@ -261,7 +289,6 @@ class Game(
     fun credProgress() = Curves.progress(save.cred, credLevel(), Curves::credForLevel, Curves.MAX_CRED)
     fun attrLevel(a: Attr) = Curves.attrLevel(save.attrXp[a.ordinal])
     fun attrProgress(a: Attr) = Curves.progress(save.attrXp[a.ordinal], attrLevel(a), Curves::xpForAttr, Curves.ATTR_MAX)
-    fun appsTraining(a: Attr) = apps.count { it.attr == a }
     fun legendaries() = apps.count { rarity(it).ordinal >= Rarity.LEGENDARY.ordinal }
     fun ramCells() = stats.ramCells()
     fun ramFree() = max(0f, ramCells() - ramSpent)
@@ -275,23 +302,20 @@ class Game(
 
     fun lastUsed(app: AppEntry): Long = save.lastUsed[app.key] ?: 0L
 
+    /** The user's own to-do list. Built-in jobs are hidden achievements. */
+    fun tasks(): List<Job> = save.jobs.filter { !it.main }.sortedBy { it.done }
+    fun nextTask(): Job? = save.jobs.firstOrNull { !it.main && !it.done }
+
     private fun recomputeTop() {
         topKey = save.launches.entries.filter { byKey.containsKey(it.key) }.maxByOrNull { it.value }?.key
     }
 
-    fun stashItems(query: String, attr: Attr?): List<AppEntry> {
+    /** All apps A to Z, or the best matches first while searching. */
+    fun drawerItems(query: String): List<AppEntry> {
         val q = query.trim().lowercase()
-        var seq = apps.asSequence()
-        if (attr != null) seq = seq.filter { it.attr == attr }
-        val searching = q.isNotEmpty() && !q.startsWith("/")
-        if (searching) seq = seq.filter { it.label.lowercase().contains(q) }
-        val list = seq.toList()
-        return when {
-            searching -> list.sortedWith(compareBy({ rank(it.label.lowercase(), q) }, { it.label.lowercase() }))
-            save.stashSort == 1 -> list.sortedWith(compareByDescending<AppEntry> { launches(it) }.thenBy { it.label.lowercase() })
-            save.stashSort == 2 -> list.sortedWith(compareByDescending<AppEntry> { lastUsed(it) }.thenBy { it.label.lowercase() })
-            else -> list
-        }
+        if (q.isEmpty() || q.startsWith("/")) return apps
+        return apps.filter { it.label.lowercase().contains(q) }
+            .sortedWith(compareBy({ rank(it.label.lowercase(), q) }, { it.label.lowercase() }))
     }
 
     private fun rank(label: String, q: String) = when {
@@ -300,12 +324,14 @@ class Game(
         else -> 2
     }
 
-    // ------------------------------------------------------------------ feed
+    // ------------------------------------------------------------------ messages
 
+    /** A short message for the user, shown as a toast over the dock. */
     fun feed(tag: Tag, text: String) {
-        feed.add(FeedLine(tag, text, System.currentTimeMillis()))
-        while (feed.size > 120) feed.removeAt(0)
-        if (::ui.isInitialized) ui.invalidateAll()
+        val line = FeedLine(tag, text, System.currentTimeMillis())
+        feed.add(line)
+        while (feed.size > 60) feed.removeAt(0)
+        if (::ui.isInitialized) ui.toast(line)
     }
 
     fun esc(s: String) = s.replace('<', '‹').replace('>', '›')
@@ -328,19 +354,13 @@ class Game(
         save.totalLaunches++
         recomputeTop()
 
-        val xp = BASE_XP + if (firstToday) DAILY_BONUS else 0
-        award(app.attr, xp)
+        award(app.attr, BASE_XP + if (firstToday) DAILY_BONUS else 0)
         addCred(if (before == 0) NEW_ITEM_CRED else LAUNCH_CRED)
-        val ed = 8 + Random.nextInt(31) + rarity(app).ordinal * 4
-        save.eddies += ed
-        ui.drop("+$xp XP  ${app.attr.short}", ROLE_PRIMARY)
-        ui.drop("+€$ $ed", ROLE_HI)
+        save.eddies += 8 + Random.nextInt(31) + rarity(app).ordinal * 4
 
         val newRarity = rarity(app)
         if (newRarity != oldRarity) {
             ui.banner(Banner(Banner.Kind.ITEM, "ITEM UPGRADED", app.label.uppercase(Locale.US), newRarity.title.uppercase(Locale.US)))
-            feed(Tag.SYS, "${esc(app.label)} is now <col=${hex(newRarity.color)}>${newRarity.title.uppercase(Locale.US)}</col>." +
-                if (newRarity.ordinal >= Rarity.LEGENDARY.ordinal) " Maybe touch grass?" else "")
             if (newRarity.ordinal >= Rarity.LEGENDARY.ordinal) mainJob("legend")
         }
         recentLaunches.addLast(now)
@@ -359,24 +379,19 @@ class Game(
         return ca.get(Calendar.YEAR) == cb.get(Calendar.YEAR) && ca.get(Calendar.DAY_OF_YEAR) == cb.get(Calendar.DAY_OF_YEAR)
     }
 
-    /** Gives XP to the player and to one attribute, announcing any level-ups. */
+    /** Gives XP to the player and to one attribute, announcing level-ups. */
     fun award(attr: Attr?, amount: Int) {
         val lvBefore = level()
         save.xp += amount
         val lv = level()
         if (lv > lvBefore) {
             ui.banner(Banner(Banner.Kind.LEVEL, "LEVEL UP", "LEVEL $lv", "+1 PERK POINT  (THEY DO NOTHING)"))
-            feed(Tag.XP, "<col=hi>Level $lv.</col> ${Content.vTaps[lv % Content.vTaps.size]}")
             ui.glitch(0.8f)
         }
         if (attr != null) {
             val aBefore = attrLevel(attr)
             save.attrXp[attr.ordinal] += amount
-            val a = attrLevel(attr)
-            if (a > aBefore) {
-                ui.banner(Banner(Banner.Kind.ATTR, "${attr.title.uppercase(Locale.US)} INCREASED", "LEVEL $a", attr.skill.uppercase(Locale.US)))
-                feed(Tag.XP, "<col=ac>${attr.title} $a.</col> Your ${attr.skill} training is paying off.")
-            }
+            if (attrLevel(attr) > aBefore) feed(Tag.XP, "<col=ac>${attr.title} ${attrLevel(attr)}.</col> Your ${attr.skill} training is paying off.")
         }
     }
 
@@ -384,10 +399,7 @@ class Game(
         val before = credLevel()
         save.cred += amount
         val after = credLevel()
-        if (after > before) {
-            ui.banner(Banner(Banner.Kind.CRED, "STREET CRED INCREASED", "STREET CRED $after", ""))
-            feed(Tag.SYS, "Street Cred $after. ${credQuip(after)}")
-        }
+        if (after > before) feed(Tag.SYS, "<col=hi>Street Cred $after.</col> ${credQuip(after)}")
     }
 
     private fun credQuip(level: Int) = when {
@@ -423,149 +435,123 @@ class Game(
         if (save.haptics && ::ui.isInitialized) ui.haptic()
     }
 
-    // ------------------------------------------------------------------ inventory, stash, cyberware
+    // ------------------------------------------------------------------ home screen and dock
 
-    fun firstFreeSlot(): Int = (0 until SaveData.INVENTORY).firstOrNull { invApp(it) == null } ?: -1
+    fun firstFreeHome(): Int = (0 until SaveData.HOME).firstOrNull { homeApp(it) == null } ?: -1
+    fun firstFreeDock(): Int = (0 until SaveData.DOCK).firstOrNull { dockApp(it) == null } ?: -1
 
-    fun inventoryTap(slot: Int, bounds: Rect?) {
-        val app = invApp(slot)
-        if (app != null) launch(app, bounds) else pickFor(Pick.Slot(slot))
-    }
+    private fun cells(s: Slot) = if (s.dock) save.dock else save.home
 
-    fun pickFor(p: Pick) {
-        haptic()
-        ui.openStash(null, p)
-    }
-
-    fun picked(app: AppEntry, p: Pick) {
-        when (p) {
-            is Pick.Slot -> {
-                val existing = save.inventory.indexOf(app.key)
-                if (existing >= 0) save.inventory[existing] = save.inventory[p.index]
-                save.inventory[p.index] = app.key
-                mainJob("pickup")
-            }
-            is Pick.Implant -> implant(app, p.ware)
-        }
-        save.save()
-        ui.closeStash()
-        ui.invalidateAll()
-    }
-
-    fun swapInventory(a: Int, b: Int) {
-        if (a == b || a !in 0 until SaveData.INVENTORY || b !in 0 until SaveData.INVENTORY) return
-        val t = save.inventory[a]
-        save.inventory[a] = save.inventory[b]
-        save.inventory[b] = t
-        save.save()
-        ui.invalidateAll()
-    }
-
-    fun addToInventory(app: AppEntry) {
-        if (save.inventory.any { it == app.key }) {
-            feed(Tag.SYS, "${esc(app.label)} is already in your inventory.")
-            return
-        }
-        val free = firstFreeSlot()
+    fun addToHome(app: AppEntry): Boolean {
+        if (onHome(app)) return true
+        val free = firstFreeHome()
         if (free < 0) {
-            feed(Tag.ERR, "Inventory full. Drop something first. Weight limit is a law of nature.")
-            return
+            feed(Tag.ERR, "Home screen is full. Drag something off it first.")
+            return false
         }
-        save.inventory[free] = app.key
+        save.home[free] = app.key
         save.save()
         mainJob("pickup")
-        feed(Tag.SYS, "Added ${esc(app.label)} to your inventory.")
         ui.invalidateAll()
+        return true
     }
 
-    fun dropFromInventory(slot: Int) {
-        val app = invApp(slot)
-        save.inventory[slot] = null
-        save.save()
-        if (app != null) feed(Tag.SYS, "Dropped ${esc(app.label)}. It's still in your stash.")
-        ui.invalidateAll()
-    }
-
-    /** Puts an app into a cyberware slot (the first free one, or [into]). */
-    fun implant(app: AppEntry, into: Ware? = null) {
-        val target = into ?: WARE_ORDER.firstOrNull { wareApp(it) == null } ?: WARE_ORDER[0]
-        val old = save.cyberware.indexOf(app.key)
-        if (old >= 0) save.cyberware[old] = null
-        // Whatever was in the slot goes back into the inventory, ideally where the new one came from.
-        val displaced = save.cyberware[target.ordinal]?.takeIf { it != app.key && app(it) != null }
-        save.cyberware[target.ordinal] = app.key
-        val inv = save.inventory.indexOf(app.key)
-        if (inv >= 0) save.inventory[inv] = null
-        if (displaced != null && save.inventory.none { it == displaced }) {
-            val slot = if (inv >= 0) inv else firstFreeSlot()
-            if (slot >= 0) save.inventory[slot] = displaced
+    fun addToDock(app: AppEntry): Boolean {
+        if (inDock(app)) return true
+        val free = firstFreeDock()
+        if (free < 0) {
+            feed(Tag.ERR, "The dock is full. Drag something out of it first.")
+            return false
         }
+        save.dock[free] = app.key
         save.save()
         mainJob("chrome")
-        feed(Tag.SYS, "Ripperdoc installed ${esc(app.label)} as your <col=ac>${target.title}</col>. No refunds.")
-        ui.glitch(0.4f)
+        ui.invalidateAll()
+        return true
+    }
+
+    fun removeFrom(s: Slot) {
+        cells(s)[s.index] = null
+        save.save()
         ui.invalidateAll()
     }
 
-    fun removeImplant(w: Ware) {
-        val app = wareApp(w)
-        save.cyberware[w.ordinal] = null
-        if (app != null && save.inventory.none { it == app.key }) {
-            val free = firstFreeSlot()
-            if (free >= 0) save.inventory[free] = app.key
+    /** Drag and drop between home cells and dock cells. Whatever is at [to] swaps into [from]. */
+    fun move(from: Slot, to: Slot) {
+        if (from == to) return
+        val a = cells(from)
+        val b = cells(to)
+        val t = b[to.index]
+        b[to.index] = a[from.index]
+        a[from.index] = t
+        save.save()
+        if (to.dock) mainJob("chrome")
+        ui.invalidateAll()
+    }
+
+    /** An app dragged in from the drawer. Anything already there moves to the next free cell. */
+    fun place(app: AppEntry, to: Slot) {
+        val arr = cells(to)
+        val existing = arr.indexOf(app.key)
+        if (existing >= 0) arr[existing] = null
+        val occupant = arr[to.index]?.takeIf { it != app.key && app(it) != null }
+        arr[to.index] = app.key
+        if (occupant != null) {
+            val free = if (to.dock) firstFreeDock() else firstFreeHome()
+            if (free >= 0) arr[free] = occupant
         }
         save.save()
-        if (app != null) feed(Tag.SYS, "Removed ${esc(app.label)} from your ${w.title}. Feels lighter.")
+        mainJob(if (to.dock) "chrome" else "pickup")
         ui.invalidateAll()
     }
 
-    fun wareTap(w: Ware, bounds: Rect?) {
-        val app = wareApp(w)
-        if (app != null) launch(app, bounds) else pickFor(Pick.Implant(w))
+    fun picked(app: AppEntry) {
+        picking = false
+        addToHome(app)
+        ui.closeDrawer()
     }
 
     private fun subtitle(app: AppEntry): String {
         val n = launches(app)
-        return "${rarity(app).title.uppercase(Locale.US)} · ${app.attr.title.uppercase(Locale.US)} · $n USE${if (n == 1) "" else "S"}"
+        return "${rarity(app).title.uppercase(Locale.US)} · ${app.attr.title.uppercase(Locale.US)} · $n LAUNCH${if (n == 1) "" else "ES"}"
     }
 
-    private fun menu(app: AppEntry, x: Float, y: Float, opts: List<MenuOption>) {
+    /** Long-press menu for an app. [slot] says where it was held, or null for the drawer and deck. */
+    fun appMenu(app: AppEntry, slot: Slot?, x: Float, y: Float) {
         haptic()
+        val opts = ArrayList<MenuOption>()
+        when {
+            slot == null -> {
+                if (!onHome(app)) opts += MenuOption("Add to home") { addToHome(app) }
+                if (!inDock(app)) opts += MenuOption("Add to dock") { addToDock(app) }
+            }
+            slot.dock -> opts += MenuOption("Remove from dock") { removeFrom(slot) }
+            else -> {
+                opts += MenuOption("Remove from home") { removeFrom(slot) }
+                if (!inDock(app)) opts += MenuOption("Move to dock") {
+                    if (addToDock(app)) removeFrom(slot)
+                }
+            }
+        }
+        opts += MenuOption("Scan app") { scan(app) }
+        opts += MenuOption("App info") { source.details(app) }
+        opts += MenuOption("Uninstall", danger = true) { uninstall(app) }
         ui.showMenu(ItemMenu(app.label, subtitle(app), rarity(app).color, opts, x, y))
     }
 
-    fun inventoryMenu(slot: Int, x: Float, y: Float) {
-        val app = invApp(slot) ?: return
-        menu(app, x, y, listOf(
-            MenuOption("Use", "F") { launch(app) },
-            MenuOption("Scan", "Q") { scan(app) },
-            MenuOption("Install cyberware", "I") { implant(app) },
-            MenuOption("Drop", "Z") { dropFromInventory(slot) },
-            MenuOption("System info", "C") { source.details(app) },
-            MenuOption("Disassemble", "X", danger = true) { disassemble(app) },
-        ))
-    }
-
-    fun stashMenu(app: AppEntry, x: Float, y: Float) {
-        val inInv = save.inventory.any { it == app.key }
-        menu(app, x, y, listOfNotNull(
-            MenuOption("Use", "F") { launch(app) },
-            if (!inInv) MenuOption("Add to inventory", "E") { addToInventory(app) } else null,
-            MenuOption("Install cyberware", "I") { implant(app) },
-            MenuOption("Scan", "Q") { scan(app) },
-            MenuOption("System info", "C") { source.details(app) },
-            MenuOption("Disassemble", "X", danger = true) { disassemble(app) },
-        ))
-    }
-
-    fun wareMenu(w: Ware, x: Float, y: Float) {
-        val app = wareApp(w) ?: return
-        menu(app, x, y, listOf(
-            MenuOption("Use", "F") { launch(app) },
-            MenuOption("Scan", "Q") { scan(app) },
-            MenuOption("Uninstall cyberware", "R") { removeImplant(w) },
-            MenuOption("System info", "C") { source.details(app) },
-        ))
+    /** Long-press on empty space. */
+    fun homeMenu(x: Float, y: Float) {
+        haptic()
+        ui.showMenu(ItemMenu("Home screen", "${district.first} · ${district.second}", palette.accent, listOf(
+            MenuOption("Add apps") {
+                picking = true
+                ui.openDrawer(search = false, pick = true)
+            },
+            MenuOption("Launcher settings") { ui.openSettings() },
+            MenuOption(if (save.rain) "Stop the rain" else "Make it rain") { toggleRain() },
+            MenuOption("New skyline") { travel() },
+            MenuOption("Android settings") { actions.settings(Settings.ACTION_SETTINGS) },
+        ), x, y))
     }
 
     fun scan(app: AppEntry) {
@@ -576,11 +562,11 @@ class Game(
 
     fun scanLine(app: AppEntry): String = Content.intel[Math.floorMod(app.key.hashCode(), Content.intel.size)].replace("%s", app.label)
 
-    fun disassemble(app: AppEntry) {
+    fun uninstall(app: AppEntry) {
         ui.showChoice(Choice(
-            "RIPPERDOC", "Disassemble ${app.label}? That uninstalls it. No take-backs.",
+            "RIPPERDOC", "Uninstall ${app.label}? It's gone for good.",
             listOf(
-                ChoiceOption("[Disassemble] Rip it out.", primary = true, danger = true) { source.uninstall(app) },
+                ChoiceOption("[Uninstall] Rip it out.", primary = true, danger = true) { source.uninstall(app) },
                 ChoiceOption("Never mind, I'm attached to it."),
             ),
         ))
@@ -591,7 +577,7 @@ class Game(
     fun beginSearch() {
         inputMode = InputMode.SEARCH
         inputText = ""
-        if (!ui.stashOpen) ui.openStash(null, null)
+        if (!ui.drawerOpen) ui.openDrawer(search = true, pick = picking)
         ui.openKeyboard("")
         ui.invalidateAll()
     }
@@ -608,11 +594,11 @@ class Game(
     fun onInputChanged(t: String) {
         if (inputMode == InputMode.NONE) return
         inputText = t.take(60)
-        if (inputMode == InputMode.SEARCH) ui.stashRefresh()
+        if (inputMode == InputMode.SEARCH) ui.drawerRefresh()
         ui.invalidateAll()
     }
 
-    fun submitInput(pick: Pick? = null) {
+    fun submitInput() {
         val text = inputText.trim()
         val mode = inputMode
         val action = promptAction
@@ -622,18 +608,19 @@ class Game(
         when (mode) {
             InputMode.SEARCH -> when {
                 text.startsWith("/") -> {
-                    ui.closeStash()
+                    ui.closeDrawer()
                     command(text)
                 }
-                text.isEmpty() -> ui.stashRefresh()
+                text.isEmpty() -> ui.drawerRefresh()
                 else -> {
-                    val hit = stashItems(text, null).firstOrNull()
-                    if (hit != null) {
-                        if (pick != null) picked(hit, pick) else launch(hit)
-                    } else {
-                        ui.closeStash()
-                        feed(Tag.YOU, esc(text))
-                        feed(Tag.SYS, "No match in your stash. Try <col=ac>/net ${esc(text)}</col> to search the net.")
+                    val hit = drawerItems(text).firstOrNull()
+                    when {
+                        hit != null && picking -> picked(hit)
+                        hit != null -> launch(hit)
+                        else -> {
+                            ui.closeDrawer()
+                            actions.webSearch(text)
+                        }
                     }
                 }
             }
@@ -650,7 +637,7 @@ class Game(
         inputText = ""
         promptAction = null
         ui.closeKeyboard()
-        if (wasSearch) ui.stashRefresh()
+        if (wasSearch) ui.drawerRefresh()
         ui.invalidateAll()
     }
 
@@ -660,12 +647,11 @@ class Game(
         val parts = raw.removePrefix("/").trim().split(Regex("\\s+"), limit = 2)
         val cmd = parts[0].lowercase(Locale.US)
         val arg = parts.getOrElse(1) { "" }.trim()
-        feed(Tag.YOU, esc(raw))
         when (cmd) {
             "help", "?", "" -> feed(Tag.SYS, Content.HELP)
-            "stash", "inventory", "inv" -> ui.openStash(null, null)
+            "apps", "stash", "drawer" -> ui.openDrawer(search = false, pick = false)
             "scan" -> {
-                val hit = if (arg.isEmpty()) null else stashItems(arg, null).firstOrNull()
+                val hit = if (arg.isEmpty()) null else drawerItems(arg).firstOrNull()
                 if (hit != null) scan(hit) else feed(Tag.ERR, "Scan what? Try /scan spotify.")
             }
             "net", "search", "google" -> if (arg.isNotEmpty()) actions.webSearch(arg) else feed(Tag.ERR, "Search the net for what, exactly?")
@@ -676,8 +662,8 @@ class Game(
                     Attr.values().joinToString(" ") { "${it.short} ${attrLevel(it)}" } + ". ${number(save.totalLaunches)} launches.")
             "heat", "wanted" -> feed(Tag.NCPD, if (heat == 0) "No heat. The NCPD has no idea who you are." else "Heat level $heat. ${recentLaunches.size} apps in 15 minutes.")
             "eddies", "money", "balance" -> feed(Tag.EDDIES, "€$ ${number(save.eddies)}. Open apps to earn more. That's the whole economy.")
-            "motherlode", "rosebud", "money please", "cheat" -> feed(Tag.SYS, "Nice try. Eddies are earned, choom. By opening apps. Like an adult.")
-            "travel", "hop", "fasttravel" -> travel()
+            "motherlode", "rosebud", "cheat" -> feed(Tag.SYS, "Nice try. Eddies are earned, choom. By opening apps. Like an adult.")
+            "travel", "hop", "skyline" -> travel()
             "rain" -> toggleRain()
             "glitch" -> ui.glitch(1f)
             "breach" -> ui.breach()
@@ -691,11 +677,12 @@ class Game(
             "reset" -> confirmReset()
             "home" -> actions.homeSettings()
             "wallpaper" -> actions.wallpaper()
-            "settings" -> actions.settings(Settings.ACTION_SETTINGS)
+            "settings", "options" -> ui.openSettings()
+            "deck" -> ui.showPage(PAGE_DECK)
             "quit", "exit" -> quit()
             "preem", "nova", "choom" -> feed(Tag.SYS, "${cmd.replaceFirstChar { it.uppercase() }}.")
             else -> {
-                val hit = stashItems(raw.removePrefix("/"), null).firstOrNull()
+                val hit = drawerItems(raw.removePrefix("/")).firstOrNull()
                 if (hit != null) launch(hit) else feed(Tag.ERR, "Unknown command: /$cmd. Type /help.")
             }
         }
@@ -720,7 +707,7 @@ class Game(
     private fun themeCommand(arg: String) {
         val p = Content.palettes.firstOrNull { it.name.equals(arg, true) || it.id.equals(arg, true) }
         if (p == null) {
-            feed(Tag.SYS, "Palettes: " + Content.palettes.joinToString(", ") {
+            feed(Tag.SYS, "Themes: " + Content.palettes.joinToString(", ") {
                 it.name + if (it.price > 0 && it.id !in save.owned) " (€$ ${number(it.price.toLong())})" else ""
             })
             return
@@ -730,7 +717,7 @@ class Game(
 
     fun confirmReset() {
         ui.showChoice(Choice(
-            "SYSTEM", "Wipe all progress? Level, Street Cred, eddies, attributes and item rarity.",
+            "SYSTEM", "Wipe all progress? Level, Street Cred, eddies, attributes and app rarity. Your home screen stays.",
             listOf(
                 ChoiceOption("[Wipe] Start over.", primary = true, danger = true) {
                     save.xp = 0L
@@ -752,7 +739,7 @@ class Game(
 
     fun quit() {
         ui.showChoice(Choice(
-            "SYSTEM", "Quit to the home app picker?",
+            "SYSTEM", "Switch to a different home app?",
             listOf(
                 ChoiceOption("[Quit] Pick another home app.", primary = true) {
                     mainJob("quit")
@@ -776,92 +763,77 @@ class Game(
         ui.invalidateAll()
     }
 
-    // ------------------------------------------------------------------ jobs
+    // ------------------------------------------------------------------ jobs and tasks
 
-    fun trackedJob(): Job? {
-        save.jobs.firstOrNull { it.id == save.tracked && !it.done }?.let { return it }
-        return save.jobs.firstOrNull { it.main && !it.done } ?: save.jobs.firstOrNull { !it.done }
-    }
-
+    /** Built-in jobs are achievements: the first time you do the thing, it pays out. */
     fun mainJob(id: String) {
         val j = save.jobs.firstOrNull { it.id == id && it.main } ?: return
         if (j.done) return
         j.done = true
         save.eddies += Job.MAIN_EDDIES
-        if (save.tracked == id) save.tracked = null
         save.save()
         if (!::ui.isInitialized) return
         ui.banner(Banner(Banner.Kind.JOB, "JOB COMPLETE", j.title.uppercase(Locale.US), "+${Job.MAIN_XP} XP   +€$ ${number(Job.MAIN_EDDIES.toLong())}"))
-        feed(Tag.JOB, "<col=hi>${esc(j.title)}</col> complete. +${Job.MAIN_XP} XP, €$ ${number(Job.MAIN_EDDIES.toLong())}.")
         award(null, Job.MAIN_XP)
         addCred(Job.MAIN_CRED)
         ui.invalidateAll()
     }
 
-    fun newGig() = prompt("NAME YOUR GIG") { t ->
+    fun jobsDone() = save.jobs.count { it.main && it.done }
+    fun jobsTotal() = save.jobs.count { it.main }
+
+    fun newTask() = prompt("NEW TASK") { t ->
         if (t.isNotBlank()) {
-            val j = Job("g" + SystemClock.elapsedRealtime(), t.trim().take(48), "", false, false, System.currentTimeMillis())
-            save.jobs += j
-            save.tracked = j.id
+            save.jobs += Job("g" + SystemClock.elapsedRealtime(), t.trim().take(48), "", false, false, System.currentTimeMillis())
             save.save()
-            feed(Tag.JOB, "New gig: <col=hi>${esc(j.title)}</col>. Tracking it.")
+            ui.invalidateAll()
         }
     }
 
-    fun jobTap(j: Job) {
+    fun taskTap(j: Job) {
         haptic()
-        if (j.main) {
-            feed(Tag.JOB, "<col=hi>${esc(j.title)}</col>: ${esc(j.note)}")
-            if (!j.done) save.tracked = j.id
-        } else if (!j.done) {
+        if (!j.done) {
             j.done = true
-            if (save.tracked == j.id) save.tracked = null
             val pay = 250 + Random.nextInt(11) * 50
             save.eddies += pay
             ui.banner(Banner(Banner.Kind.JOB, "GIG COMPLETE", j.title.uppercase(Locale.US), "+${Job.GIG_XP} XP   +€$ $pay"))
-            feed(Tag.JOB, "Gig <col=hi>${esc(j.title)}</col> done. The fixer paid €$ $pay. Didn't even haggle.")
             award(null, Job.GIG_XP)
             addCred(Job.GIG_CRED)
             mainJob("gig")
         } else {
             j.done = false
-            feed(Tag.JOB, "Gig <col=hi>${esc(j.title)}</col> reopened. The fixer keeps the eddies.")
         }
         save.save()
         ui.invalidateAll()
     }
 
-    fun jobMenu(j: Job, x: Float, y: Float) {
+    fun taskMenu(j: Job, x: Float, y: Float) {
         haptic()
-        val opts = ArrayList<MenuOption>()
-        if (!j.done) opts += MenuOption("Track", "T") {
-            save.tracked = j.id
-            save.save()
-            ui.invalidateAll()
-        }
-        if (!j.main) {
-            opts += MenuOption("Rename", "R") {
-                prompt("RENAME GIG", j.title) { n ->
+        ui.showMenu(ItemMenu(j.title, if (j.done) "DONE" else "TASK", palette.hi, listOf(
+            MenuOption(if (j.done) "Mark not done" else "Mark done") { taskTap(j) },
+            MenuOption("Rename") {
+                prompt("RENAME TASK", j.title) { n ->
                     if (n.isNotBlank()) {
                         j.title = n.trim().take(48)
                         save.save()
                     }
                 }
-            }
-            opts += MenuOption("Abandon", "X", danger = true) {
+            },
+            MenuOption("Delete", danger = true) {
                 save.jobs.remove(j)
-                if (save.tracked == j.id) save.tracked = null
                 save.save()
-                feed(Tag.JOB, "Abandoned ${esc(j.title)}. The fixer will remember this.")
-            }
-        }
-        if (opts.isEmpty()) return
-        ui.showMenu(ItemMenu(j.title, if (j.main) "MAIN JOB" else "GIG", hiColor(), opts, x, y))
+                ui.invalidateAll()
+            },
+        ), x, y))
     }
 
-    private fun hiColor() = palette.hi
+    fun clearDoneTasks() {
+        save.jobs.removeAll { !it.main && it.done }
+        save.save()
+        ui.invalidateAll()
+    }
 
-    // ------------------------------------------------------------------ quickhacks
+    // ------------------------------------------------------------------ quick settings
 
     fun quickhack(q: QuickhackDef) {
         haptic()
@@ -887,20 +859,18 @@ class Game(
             else -> actions.settings(Settings.ACTION_SETTINGS)
         }
         if (!ok) {
-            feed(Tag.ERR, "Quickhack ${q.name} failed. Target ICE too strong. (Nothing could open that setting.)")
+            feed(Tag.ERR, "${q.label} failed. Target ICE too strong. (Nothing could open that setting.)")
             return
         }
-        val short = ramFree() < q.ram
         ramSpent = min(ramCells().toFloat(), ramSpent + q.ram)
         save.hacks++
-        feed(Tag.SYS, "Uploaded <col=ac>${q.name}</col>." + if (short) " Not enough RAM, but it's your phone, so it went through anyway." else "")
         award(Attr.INT, HACK_XP)
         mainJob("jackin")
         save.save()
         ui.invalidateAll()
     }
 
-    // ------------------------------------------------------------------ vendor & lifepath
+    // ------------------------------------------------------------------ themes & lifepath
 
     fun chooseLifepath(lp: Lifepath, first: Boolean = false) {
         save.lifepath = lp.ordinal
@@ -908,8 +878,13 @@ class Game(
         save.save()
         icons.configure(save.iconStyle, palette)
         ui.themeChanged()
-        feed(Tag.SYS, "Lifepath: <col=hi>${lp.title.uppercase(Locale.US)}</col>. ${lp.tagline}")
-        if (first) ui.banner(Banner(Banner.Kind.CALL, "INCOMING CALL", "UNKNOWN NUMBER", "CHECK YOUR FEED"))
+        if (first) {
+            ui.banner(Banner(Banner.Kind.CALL, "LIFEPATH: ${lp.title.uppercase(Locale.US)}", lp.tagline.uppercase(Locale.US), ""))
+            if (firstHintPending) {
+                firstHintPending = false
+                feed(Tag.MSG, Content.FIRST_HINT)
+            }
+        }
         ui.invalidateAll()
     }
 
@@ -942,7 +917,6 @@ class Game(
         icons.configure(save.iconStyle, p)
         ui.themeChanged()
         ui.glitch(0.7f)
-        feed(Tag.SYS, "New look: <col=pr>${p.name}</col>. Preem.")
     }
 
     fun setIconStyle(style: Int) {
@@ -963,8 +937,14 @@ class Game(
         save.station = i
         save.save()
         actions.media(KeyEvent.KEYCODE_MEDIA_PLAY)
-        val s = Content.stations[i]
-        feed(Tag.SYS, "Tuned to <col=ac>${s.freq} ${s.name}</col>. Your music app didn't get the memo, but it's playing.")
+        mainJob("radio")
+        ui.invalidateAll()
+    }
+
+    fun nextStation(step: Int) {
+        val n = max(1, unlockedStations())
+        save.station = Math.floorMod(save.station + step, n)
+        save.save()
         mainJob("radio")
         ui.invalidateAll()
     }
@@ -972,44 +952,19 @@ class Game(
     fun mediaKey(code: Int) {
         haptic()
         actions.media(code)
-        val n = max(1, unlockedStations())
-        when (code) {
-            KeyEvent.KEYCODE_MEDIA_NEXT -> save.station = (save.station + 1) % n
-            KeyEvent.KEYCODE_MEDIA_PREVIOUS -> save.station = (save.station - 1 + n) % n
-        }
-        save.save()
         ui.invalidateAll()
     }
 
-    // ------------------------------------------------------------------ home screen taps
-
-    fun sceneMenu(x: Float, y: Float) {
-        haptic()
-        ui.showMenu(ItemMenu("Night City", "${district.first} · ${district.second}", palette.accent, listOfNotNull(
-            MenuOption(if (save.rain) "Stop the rain" else "Make it rain", "R") { toggleRain() },
-            MenuOption(if (save.scene == 0) "Show my wallpaper" else "Show the city", "V") {
-                save.scene = 1 - save.scene
-                save.save()
-                ui.invalidateAll()
-            },
-            if (save.scene == 1) MenuOption("Change wallpaper", "W") { actions.wallpaper() } else null,
-            MenuOption("Fast travel", "M") { travel() },
-            MenuOption("Launcher settings", "O") { ui.selectTab(TAB_SETTINGS) },
-            MenuOption("Android settings", "S") { actions.settings(Settings.ACTION_SETTINGS) },
-        ), x, y))
-    }
+    // ------------------------------------------------------------------ odds and ends
 
     fun catTapped() {
         feed(Tag.MSG, Content.catLines.random())
     }
 
     fun deviceReport() {
-        feed(Tag.SCAN, "Chassis: ${Build.MANUFACTURER} ${Build.MODEL}. Android ${Build.VERSION.RELEASE} (API ${Build.VERSION.SDK_INT}).")
-        feed(Tag.SCAN, String.format(Locale.US, "RAM %.1f of %.1f GB free. Storage %.0f of %.0f GB free. Battery %d%%.",
-            stats.ramFreeGb, stats.ramTotalGb, stats.storageFreeGb, stats.storageTotalGb, stats.battery))
+        feed(Tag.SCAN, "${Build.MANUFACTURER} ${Build.MODEL}, Android ${Build.VERSION.RELEASE}. " + String.format(Locale.US,
+            "RAM %.1f of %.1f GB free, storage %.0f of %.0f GB free.", stats.ramFreeGb, stats.ramTotalGb, stats.storageFreeGb, stats.storageTotalGb))
     }
-
-    // ------------------------------------------------------------------ previews
 
     /** Fills in a lived-in save for screenshots. Only reachable from debug builds and tests. */
     fun demoSeed() {
@@ -1041,13 +996,11 @@ class Game(
             save.jobs += Job("g2", "Call mom back", "", false, false, System.currentTimeMillis())
             save.jobs += Job("g3", "Pay the rent", "", true, false, System.currentTimeMillis())
         }
-        var slot = save.inventory.count { it != null }
+        var slot = save.home.count { it != null }
         for (a in apps) {
-            if (slot >= 18) break
-            if (save.inventory.none { it == a.key }) save.inventory[slot++] = a.key
+            if (slot >= 16) break
+            if (save.home.none { it == a.key } && save.dock.none { it == a.key }) save.home[slot++] = a.key
         }
-        val free = apps.filter { a -> save.inventory.none { it == a.key } }
-        WARE_ORDER.take(6).forEachIndexed { i, w -> free.getOrNull(i)?.let { save.cyberware[w.ordinal] = it.key } }
         recomputeTop()
         save.save()
         if (::ui.isInitialized) ui.invalidateAll()
@@ -1066,24 +1019,8 @@ class Game(
         const val HEAT_WINDOW_MS = 15 * 60_000L
         val HEAT_STEPS = intArrayOf(8, 14, 20, 28, 36)
 
-        const val TAB_INVENTORY = 0
-        const val TAB_CHARACTER = 1
-        const val TAB_CYBERWARE = 2
-        const val TAB_HACKS = 3
-        const val TAB_JOURNAL = 4
-        const val TAB_PHONE = 5
-        const val TAB_RADIO = 6
-        const val TAB_SETTINGS = 7
-
-        /** Colour roles for [Ui.drop]; the view resolves them against the current palette. */
-        const val ROLE_PRIMARY = 1
-        const val ROLE_ACCENT = 2
-        const val ROLE_HI = 3
-
-        val WARE_ORDER = listOf(
-            Ware.OS, Ware.CORTEX, Ware.OCULAR, Ware.HANDS, Ware.ARMS,
-            Ware.NERVOUS, Ware.CIRCULATORY, Ware.SKIN, Ware.SKELETON, Ware.LEGS,
-        )
+        const val PAGE_DECK = 0
+        const val PAGE_HOME = 1
 
         fun number(n: Long): String = String.format(Locale.US, "%,d", n)
         fun hex(c: Int) = String.format(Locale.US, "%06x", c and 0xFFFFFF)

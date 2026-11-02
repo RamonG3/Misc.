@@ -402,6 +402,8 @@ object Cy {
     fun drawRich(c: Canvas, r: Rich, x: Float, y: Float, p: Paint) {
         val t = r.text
         if (t.isEmpty()) return
+        // Setting a colour resets alpha, so keep the paint's alpha for fades.
+        val baseAlpha = p.alpha
         val align = p.textAlign
         p.textAlign = Paint.Align.LEFT
         val startX = when (align) {
@@ -414,9 +416,11 @@ object Cy {
             var j = i + 1
             while (j < t.length && r.colors[j] == r.colors[i]) j++
             p.color = r.colors[i]
+            if (baseAlpha < 255) p.alpha = Color.alpha(r.colors[i]) * baseAlpha / 255
             c.drawText(t, i, j, startX + p.measureText(t, 0, i), y, p)
             i = j
         }
+        p.alpha = baseAlpha
         p.textAlign = align
     }
 }

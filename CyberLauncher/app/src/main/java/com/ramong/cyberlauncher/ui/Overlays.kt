@@ -36,12 +36,12 @@ class MenuView(context: Context) : View(context) {
 
     fun show(m: ItemMenu) {
         menu = m
-        options = m.options + MenuOption("Cancel", "ESC")
+        options = m.options + MenuOption("Cancel")
         rowH = Cy.dp(42f)
         headH = Cy.dp(52f)
         val longest = options.maxOf { verb.measureText(it.verb.uppercase(Locale.US)) }
         val w = min(
-            max(max(Cy.dp(220f), longest + Cy.dp(76f)), min(titlePaint.measureText(m.title), Cy.dp(280f)) + Cy.dp(32f)),
+            max(max(Cy.dp(210f), longest + Cy.dp(48f)), min(titlePaint.measureText(m.title.uppercase(Locale.US)), Cy.dp(280f)) + Cy.dp(32f)),
             ((parent as? View)?.width?.toFloat() ?: width.toFloat()) - Cy.dp(16f),
         )
         val h = headH + options.size * rowH + Cy.dp(8f)
@@ -115,16 +115,20 @@ class MenuView(context: Context) : View(context) {
                 Cy.rect(c, row.left, row.top + Cy.dp(6f), row.left + Cy.dp(3f), row.bottom - Cy.dp(6f), Cy.hi)
             }
             val by = Cy.baseline(verb, row.top, row.bottom)
-            keyBox.set(row.left + Cy.dp(10f), row.centerY() - Cy.dp(9f), row.left + Cy.dp(36f), row.centerY() + Cy.dp(9f))
-            Cy.panel(c, keyBox, Cy.dp(3f), 0, Cy.withAlpha(if (o.danger) Cy.DANGER else Cy.primary, 0x90), Cy.TR, ticks = false)
-            Cy.text(c, o.key, keyBox.centerX(), Cy.baseline(key, keyBox.top, keyBox.bottom), key, if (o.danger) Cy.DANGER else Cy.dim)
+            var tx = row.left + Cy.dp(14f)
+            if (o.key.isNotEmpty()) {
+                keyBox.set(row.left + Cy.dp(10f), row.centerY() - Cy.dp(9f), row.left + Cy.dp(36f), row.centerY() + Cy.dp(9f))
+                Cy.panel(c, keyBox, Cy.dp(3f), 0, Cy.withAlpha(if (o.danger) Cy.DANGER else Cy.primary, 0x90), Cy.TR, ticks = false)
+                Cy.text(c, o.key, keyBox.centerX(), Cy.baseline(key, keyBox.top, keyBox.bottom), key, if (o.danger) Cy.DANGER else Cy.dim)
+                tx = keyBox.right + Cy.dp(12f)
+            }
             val col = when {
                 p -> Cy.hi
                 o.danger -> Cy.DANGER
                 i == options.size - 1 -> Cy.MUTED
                 else -> Cy.WHITE
             }
-            Cy.text(c, o.verb.uppercase(Locale.US), keyBox.right + Cy.dp(12f), by, verb, col)
+            Cy.text(c, o.verb.uppercase(Locale.US), tx, by, verb, col)
         }
         c.restore()
         if (k < 1f) postInvalidateOnAnimation()

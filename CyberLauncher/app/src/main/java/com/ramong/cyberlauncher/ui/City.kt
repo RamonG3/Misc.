@@ -92,6 +92,14 @@ class City {
         cb.drawRect(0f, 0f, w.toFloat(), h.toFloat(), fill)
         fill.shader = RadialGradient(w * 0.55f, h * 1.05f, w * 0.9f, Cy.withAlpha(p.haze, 0x90), 0, Shader.TileMode.CLAMP)
         cb.drawRect(0f, 0f, w.toFloat(), h.toFloat(), fill)
+        if (phase != NIGHT) {
+            // A smoggy sun sinking behind the towers (high at noon, low at dawn and dusk).
+            val sy = h * if (phase == DAY) 0.42f else 0.58f
+            val sunCol = if (phase == DAY) 0xFFFFE2A0.toInt() else 0xFFFF9A5C.toInt()
+            fill.shader = RadialGradient(w * 0.72f, sy, w * 0.55f, intArrayOf(Cy.withAlpha(sunCol, 0x90), Cy.withAlpha(sunCol, 0x28), 0),
+                floatArrayOf(0f, 0.35f, 1f), Shader.TileMode.CLAMP)
+            cb.drawRect(0f, 0f, w.toFloat(), h.toFloat(), fill)
+        }
         fill.shader = null
         val lit = when (phase) {
             NIGHT -> 1f
@@ -328,11 +336,12 @@ class City {
     }
 
     private fun drawKoi(c: Canvas, t: Float, p: Palette) {
-        val len = min(140 * d, w * 0.36f)
+        val len = min(116 * d, w * 0.3f)
         val speed = 16 * d
         val span = w + len * 2
         val x = ((t * speed + w * 0.55f + len) % span) - len
-        val y = h * 0.62f + sin(t * 0.45f) * 8 * d
+        // Between the clock and the rooftops, so it swims behind the top rows of icons.
+        val y = h * 0.4f + sin(t * 0.45f) * 8 * d
         val tilt = (Math.cos(t * 0.45) * 4.0).toFloat()
         koiShape(sin(t * 2.6f))
         koiMatrix.setScale(len, len)
@@ -343,11 +352,11 @@ class City {
         if (koiFill.shader == null || koiTint != p.accent) {
             koiTint = p.accent
             val n = max(3, (3 * d).toInt())
-            val pat = IntArray(n) { if (it < n - 1) Cy.withAlpha(p.accent, 0x55) else 0 }
+            val pat = IntArray(n) { if (it < n - 1) Cy.withAlpha(p.accent, 0x40) else 0 }
             koiFill.shader = BitmapShader(Bitmap.createBitmap(pat, 1, n, Bitmap.Config.ARGB_8888), Shader.TileMode.REPEAT, Shader.TileMode.REPEAT)
         }
         c.drawPath(koiWorld, koiFill)
-        fill.color = Cy.withAlpha(p.primary, 0x80)
+        fill.color = Cy.withAlpha(p.primary, 0x66)
         c.drawPath(koiSpotsWorld, fill)
         koiWhiskerLocal.transform(koiMatrix, whiskers)
         stroke.color = Cy.withAlpha(p.accent, 0x90)
@@ -356,7 +365,7 @@ class City {
         stroke.color = Cy.withAlpha(p.accent, 0x2C)
         stroke.strokeWidth = 5 * d
         c.drawPath(koiWorld, stroke)
-        stroke.color = Cy.withAlpha(p.accent, 0xB8)
+        stroke.color = Cy.withAlpha(p.accent, 0x99)
         stroke.strokeWidth = 1.1f * d
         c.drawPath(koiWorld, stroke)
     }
@@ -370,7 +379,7 @@ class City {
             val scale = 0.55f + r.nextFloat() * 0.6f
             val speed = (34 + r.nextInt(40)) * d * scale * (if (right) 1 else -1)
             // Low enough to pass behind the clock rather than through the health bar.
-            cars += Car(if (right) -30 * d else w + 30 * d, h * (0.36f + r.nextFloat() * 0.22f), speed, scale)
+            cars += Car(if (right) -30 * d else w + 30 * d, h * (0.2f + r.nextFloat() * 0.24f), speed, scale)
             nextCar = now + 3_500 + r.nextInt(8_000)
         }
         val it = cars.iterator()
@@ -536,7 +545,11 @@ class City {
         private val VERTICAL = listOf("BAR", "HOTEL", "24H", "PAWN", "OPEN", "CLUB", "SUSHI", "DOJO", "BD")
         private val HORIZONTAL = listOf("NOODLES", "RIPPERDOC", "MOTEL", "LIQUOR", "NO FUTURE", "BRAINDANCE", "ARCADE", "TACOS 24H")
 
-        fun phaseOf(hour: Int) = when (hour) {
+        /** Tests and previews can pin the time of day; -1 follows the clock. */
+        @JvmField
+        var forcePhase = -1
+
+        fun phaseOf(hour: Int) = if (forcePhase >= 0) forcePhase else when (hour) {
             in 5..7 -> DAWN
             in 8..16 -> DAY
             in 17..20 -> DUSK
@@ -545,7 +558,8 @@ class City {
 
         fun sky(p: Palette, phase: Int): Triple<Int, Int, Int> = when (phase) {
             DAWN -> Triple(0xFF0E1220.toInt(), Cy.mix(0xFF3A2A4A.toInt(), p.haze, 0.3f), Cy.mix(0xFFFF8A5C.toInt(), p.haze, 0.45f))
-            DAY -> Triple(0xFF17242C.toInt(), Cy.mix(0xFF33454A.toInt(), p.haze, 0.2f), Cy.mix(0xFF9C8F55.toInt(), p.haze, 0.3f))
+            // Night City by day: blue up top, then a long yellow smog haze.
+            DAY -> Triple(0xFF0E1F30.toInt(), Cy.mix(0xFF3B5966.toInt(), p.haze, 0.22f), Cy.mix(0xFFD9AE62.toInt(), p.haze, 0.25f))
             DUSK -> Triple(0xFF0C0C1A.toInt(), Cy.mix(0xFF45203C.toInt(), p.haze, 0.4f), Cy.mix(0xFFFF6A3D.toInt(), p.haze, 0.4f))
             else -> Triple(0xFF05050D.toInt(), Cy.mix(0xFF16123A.toInt(), p.haze, 0.38f), Cy.mix(p.haze, 0xFFFF5070.toInt(), 0.16f))
         }

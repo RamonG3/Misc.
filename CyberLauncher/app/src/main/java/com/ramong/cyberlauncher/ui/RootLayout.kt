@@ -2,9 +2,7 @@ package com.ramong.cyberlauncher.ui
 
 import android.annotation.SuppressLint
 import android.content.Context
-import android.graphics.Canvas
 import android.graphics.Color
-import android.graphics.RectF
 import android.os.Build
 import android.os.SystemClock
 import android.text.Editable
@@ -19,30 +17,31 @@ import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
 import android.widget.EditText
 import com.ramong.cyberlauncher.core.AppEntry
-import com.ramong.cyberlauncher.core.Attr
 import com.ramong.cyberlauncher.core.Banner
 import com.ramong.cyberlauncher.core.Choice
+import com.ramong.cyberlauncher.core.FeedLine
 import com.ramong.cyberlauncher.core.Game
 import com.ramong.cyberlauncher.core.ItemMenu
 import kotlin.math.max
-import kotlin.math.min
 import kotlin.random.Random
 
 /**
- * Stacks the HUD, the feed and the tab panel (side by side in landscape), hosts every overlay,
- * and implements [Game.Ui].
+ * Stacks the city, the home screen and every overlay (drawer, settings, menus, scanner,
+ * dialogues, boot screen, notices), and implements [Game.Ui].
  */
 @SuppressLint("ViewConstructor")
 class RootLayout(context: Context, private val game: Game) : ViewGroup(context), Game.Ui {
-    val hud = HudView(context, game)
-    val feed = FeedView(context, game)
-    val panel = PanelView(context, game)
-    val stash = StashView(context, game)
+    val scene = SceneView(context, game)
+    val home = HomeView(context, game)
+    val drawer = DrawerView(context, game, home)
+    val settings = SettingsView(context, game)
     val menu = MenuView(context)
     val scan = ScanView(context, game)
     val choice = ChoiceView(context)
     val boot = BootView(context, game)
+    val notice = NoticeView(context, game)
     private val input = CyInput(context, game)
+    private val overlays = listOf<View>(drawer, settings, menu, scan, choice, boot)
 
     private var insetTop = 0
     private var insetBottom = 0
@@ -51,38 +50,28 @@ class RootLayout(context: Context, private val game: Game) : ViewGroup(context),
     private var imeBottom = 0
     private var imeVisible = false
 
-    private val hudRect = RectF()
-    private val feedRect = RectF()
-    private val panelRect = RectF()
-
     private var jitterUntil = 0L
     private val jitter = object : Runnable {
         override fun run() {
             if (SystemClock.uptimeMillis() < jitterUntil) {
-                panel.translationX = (Random.nextFloat() - 0.5f) * Cy.dp(6f)
-                feed.translationX = (Random.nextFloat() - 0.5f) * Cy.dp(8f)
+                home.translationX = (Random.nextFloat() - 0.5f) * Cy.dp(6f)
                 postDelayed(this, 40L)
             } else {
-                panel.translationX = 0f
-                feed.translationX = 0f
+                home.translationX = 0f
             }
         }
     }
 
     init {
-        setWillNotDraw(false)
         isFocusable = true
         isFocusableInTouchMode = true
         addView(input)
-        addView(hud)
-        addView(feed)
-        addView(panel)
-        addView(stash)
-        addView(menu)
-        addView(scan)
-        addView(choice)
-        addView(boot)
-        for (v in listOf(stash, menu, scan, choice, boot)) v.visibility = INVISIBLE
+        addView(scene)
+        addView(home)
+        for (v in overlays) addView(v)
+        addView(notice)
+        for (v in overlays) v.visibility = INVISIBLE
+        home.sceneCat = scene.catBox
         game.ui = this
         Cy.apply(game.palette)
         setOnApplyWindowInsetsListener { _, insets ->
@@ -100,11 +89,13 @@ class RootLayout(context: Context, private val game: Game) : ViewGroup(context),
     }
 
     private fun pushInsets() {
-        hud.topInset = insetTop
-        stash.setInsets(insetTop, max(insetBottom, imeBottom))
+        home.setInsets(insetTop, insetBottom, insetLeft, insetRight)
+        drawer.setInsets(insetTop, max(insetBottom, imeBottom))
+        settings.setInsets(insetTop, insetBottom)
         scan.setInsets(insetTop, insetBottom)
         choice.setInsets(max(insetBottom, imeBottom))
         boot.setInsets(insetTop, insetBottom)
+        notice.topInset = insetTop
     }
 
     @Suppress("DEPRECATION")
@@ -132,99 +123,92 @@ class RootLayout(context: Context, private val game: Game) : ViewGroup(context),
         requestLayout()
     }
 
-    private fun computeRects(w: Float, h: Float) {
-        val top = insetTop.toFloat()
-        val bottom = h - insetBottom
-        if (w > h * 1.15f) {
-            val pw = min(w * 0.46f, Cy.dp(460f))
-            panelRect.set(w - insetRight - pw, top, w - insetRight, bottom)
-            feedRect.set(insetLeft.toFloat(), bottom - Cy.dp(108f), panelRect.left, bottom)
-            hudRect.set(insetLeft.toFloat(), 0f, panelRect.left, feedRect.top)
-            return
-        }
-        val avail = bottom - top
-        val chrome = Cy.dp(100f)
-        val cellW = (w - insetLeft - insetRight - Cy.dp(32f)) / 4f
-        val idealRow = (cellW * 0.8f).coerceIn(Cy.dp(56f), Cy.dp(80f))
-        var panelH = chrome + 5 * idealRow
-        val maxPanel = avail * 0.52f
-        if (panelH > maxPanel) panelH = max(maxPanel, chrome + 5 * Cy.dp(52f))
-        val feedH = if (avail < Cy.dp(700f)) Cy.dp(96f) else Cy.dp(118f)
-        panelRect.set(insetLeft.toFloat(), bottom - panelH, w - insetRight, bottom)
-        feedRect.set(insetLeft.toFloat(), panelRect.top - feedH, w - insetRight, panelRect.top)
-        hudRect.set(insetLeft.toFloat(), 0f, w - insetRight, feedRect.top)
-    }
-
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
         val w = MeasureSpec.getSize(widthMeasureSpec)
         val h = MeasureSpec.getSize(heightMeasureSpec)
         setMeasuredDimension(w, h)
-        computeRects(w.toFloat(), h.toFloat())
-        fun exact(v: Float) = MeasureSpec.makeMeasureSpec(v.toInt(), MeasureSpec.EXACTLY)
-        hud.measure(exact(hudRect.width()), exact(hudRect.height()))
-        feed.measure(exact(feedRect.width()), exact(feedRect.height()))
-        panel.measure(exact(panelRect.width()), exact(panelRect.height()))
-        for (v in listOf(stash, menu, scan, choice, boot)) v.measure(exact(w.toFloat()), exact(h.toFloat()))
-        input.measure(exact(1f), exact(1f))
+        val ws = MeasureSpec.makeMeasureSpec(w, MeasureSpec.EXACTLY)
+        val hs = MeasureSpec.makeMeasureSpec(h, MeasureSpec.EXACTLY)
+        for (i in 0 until childCount) {
+            val v = getChildAt(i)
+            if (v === input) v.measure(MeasureSpec.makeMeasureSpec(1, MeasureSpec.EXACTLY), MeasureSpec.makeMeasureSpec(1, MeasureSpec.EXACTLY))
+            else v.measure(ws, hs)
+        }
     }
 
     override fun onLayout(changed: Boolean, l: Int, t: Int, r: Int, b: Int) {
-        fun place(v: View, rect: RectF) = v.layout(rect.left.toInt(), rect.top.toInt(), rect.right.toInt(), rect.bottom.toInt())
-        place(hud, hudRect)
-        place(feed, feedRect)
-        place(panel, panelRect)
-        for (v in listOf(stash, menu, scan, choice, boot)) v.layout(0, 0, r - l, b - t)
-        input.layout(0, 0, 1, 1)
+        for (i in 0 until childCount) {
+            val v = getChildAt(i)
+            if (v === input) v.layout(0, 0, 1, 1) else v.layout(0, 0, r - l, b - t)
+        }
+        placeToasts()
     }
 
-    override fun onDraw(c: Canvas) {
-        // The space under the navigation bar, and the HUD's backing behind the feed and panel.
-        Cy.rect(c, 0f, feedRect.top, width.toFloat(), height.toFloat(), Cy.withAlpha(Cy.bg, 0xF2))
-        if (insetRight > 0) Cy.rect(c, panelRect.right, 0f, width.toFloat(), height.toFloat(), Cy.bg)
+    private fun placeToasts() {
+        notice.toastBottom = if (drawer.showing || settings.showing || scan.showing) {
+            height - max(insetBottom, imeBottom) - Cy.dp(16f)
+        } else {
+            home.toastBottom
+        }
     }
 
     private fun updateCovered() {
-        hud.covered = stash.showing || scan.showing || boot.showing
+        scene.covered = drawer.showing || settings.showing || scan.showing || boot.showing
     }
 
     // ------------------------------------------------------------------ Game.Ui
 
-    override val stashOpen: Boolean get() = stash.showing
-    override val currentTab: Int get() = panel.tab
+    override val drawerOpen: Boolean get() = drawer.showing
+    override val page: Int get() = home.page
 
     override fun invalidateAll() {
         updateCovered()
-        invalidate()
-        hud.invalidate()
-        feed.invalidate()
-        panel.invalidate()
-        if (stash.showing) stash.invalidate()
-        if (menu.showing) menu.invalidate()
-        if (scan.showing) scan.invalidate()
-        if (choice.showing) choice.invalidate()
+        home.invalidate()
+        scene.invalidate()
+        notice.invalidate()
+        for (v in overlays) if (v.visibility == VISIBLE) v.invalidate()
     }
 
     override fun tick() {
-        hud.tick()
-        feed.invalidate()
-        if (panel.tab != Game.TAB_INVENTORY) panel.invalidate()
+        scene.tick()
+        home.invalidate()
+        notice.invalidate()
     }
 
-    override fun openStash(attr: Attr?, pick: Game.Pick?) {
+    override fun openDrawer(search: Boolean, pick: Boolean) {
         menu.hide()
-        stash.open(attr, pick)
+        settings.hide()
+        drawer.open(pick)
         updateCovered()
+        placeToasts()
     }
 
-    override fun closeStash() {
+    override fun closeDrawer() {
         if (game.inputMode == Game.InputMode.SEARCH) game.cancelInput()
-        stash.visibility = INVISIBLE
+        drawer.close()
+        game.picking = false
         updateCovered()
+        placeToasts()
         invalidateAll()
     }
 
-    override fun stashRefresh() {
-        if (stash.showing) stash.refresh()
+    override fun drawerRefresh() {
+        if (drawer.visibility == VISIBLE) drawer.refresh()
+    }
+
+    override fun openSettings() {
+        menu.hide()
+        if (drawer.showing) closeDrawer()
+        settings.open()
+        updateCovered()
+        placeToasts()
+    }
+
+    override fun closeSettings(): Boolean {
+        val r = settings.hide()
+        updateCovered()
+        placeToasts()
+        return r
     }
 
     override fun showMenu(menu: ItemMenu) = this.menu.show(menu)
@@ -233,11 +217,13 @@ class RootLayout(context: Context, private val game: Game) : ViewGroup(context),
     override fun showScan(app: AppEntry) {
         scan.show(app)
         updateCovered()
+        placeToasts()
     }
 
     override fun hideScan(): Boolean {
         val r = scan.hide()
         updateCovered()
+        placeToasts()
         return r
     }
 
@@ -255,23 +241,27 @@ class RootLayout(context: Context, private val game: Game) : ViewGroup(context),
         requestFocus()
     }
 
-    override fun drop(text: String, color: Int) = hud.drop(text, color)
-    override fun banner(b: Banner) = hud.banner(b)
+    override fun banner(b: Banner) = notice.banner(b)
+
+    override fun toast(line: FeedLine) {
+        placeToasts()
+        notice.toast(line)
+    }
 
     override fun glitch(strength: Float) {
-        hud.glitch(strength)
+        scene.glitch(strength)
         if (!game.save.glitch && strength < 0.5f) return
-        jitterUntil = SystemClock.uptimeMillis() + (120 + strength * 160).toLong()
+        jitterUntil = SystemClock.uptimeMillis() + (100 + strength * 140).toLong()
         removeCallbacks(jitter)
         post(jitter)
     }
 
-    override fun selectTab(index: Int) {
-        if (stash.showing) closeStash()
-        panel.select(index)
-    }
+    override fun showPage(page: Int) = home.showPage(page)
 
-    override fun travel() = hud.travel()
+    override fun travel() {
+        scene.travel()
+        home.travel()
+    }
 
     override fun breach() {
         boot.breach()
@@ -285,7 +275,8 @@ class RootLayout(context: Context, private val game: Game) : ViewGroup(context),
 
     override fun themeChanged() {
         Cy.apply(game.palette)
-        hud.themeChanged()
+        scene.themeChanged()
+        home.themeChanged()
         invalidateAll()
     }
 
@@ -294,7 +285,7 @@ class RootLayout(context: Context, private val game: Game) : ViewGroup(context),
     }
 }
 
-/** An invisible text field that feeds the stash search and the prompts. */
+/** An invisible text field that feeds the app search and the prompts. */
 @SuppressLint("ViewConstructor")
 class CyInput(context: Context, private val game: Game) : EditText(context) {
     private var muted = false
@@ -316,10 +307,7 @@ class CyInput(context: Context, private val game: Game) : EditText(context) {
             }
         })
         setOnEditorActionListener { _, _, event ->
-            if (event == null || event.action == KeyEvent.ACTION_DOWN) {
-                val root = parent as? RootLayout
-                game.submitInput(root?.stash?.pick?.takeIf { root.stash.showing })
-            }
+            if (event == null || event.action == KeyEvent.ACTION_DOWN) game.submitInput()
             true
         }
     }

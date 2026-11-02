@@ -61,7 +61,8 @@ enum class Lifepath(val title: String, val palette: String, val tagline: String,
     ),
 }
 
-class QuickhackDef(val id: String, val name: String, val does: String, val ram: Int)
+/** A quick setting. [label] is what it does; [hack] is the 2077 quickhack it's dressed up as. */
+class QuickhackDef(val id: String, val label: String, val hack: String, val ram: Int)
 
 class Station(val freq: String, val name: String, val genre: String)
 
@@ -101,16 +102,16 @@ object Content {
     fun palette(id: String?): Palette = palettes.firstOrNull { it.id == id } ?: palettes[0]
 
     val quickhacks = listOf(
-        QuickhackDef("ping", "Ping", "Wi-Fi and mobile data", 1),
-        QuickhackDef("optics", "Reboot Optics", "Flashlight", 2),
-        QuickhackDef("sonic", "Sonic Shock", "Volume", 2),
-        QuickhackDef("wipe", "Memory Wipe", "Do Not Disturb", 3),
-        QuickhackDef("cripple", "Cripple Movement", "Location", 3),
-        QuickhackDef("malfunction", "Cyberware Malfunction", "Bluetooth", 3),
-        QuickhackDef("overheat", "Overheat", "Battery saver", 4),
-        QuickhackDef("backup", "Request Backup", "Hotspot and tethering", 2),
-        QuickhackDef("reset", "System Reset", "Airplane mode", 6),
-        QuickhackDef("breach", "Breach Protocol", "Everything else (Android settings)", 0),
+        QuickhackDef("ping", "Internet", "Ping", 1),
+        QuickhackDef("optics", "Flashlight", "Reboot Optics", 2),
+        QuickhackDef("malfunction", "Bluetooth", "Malfunction", 3),
+        QuickhackDef("wipe", "DND", "Memory Wipe", 3),
+        QuickhackDef("sonic", "Volume", "Sonic Shock", 2),
+        QuickhackDef("cripple", "Location", "Cripple Move", 3),
+        QuickhackDef("overheat", "Battery", "Overheat", 4),
+        QuickhackDef("backup", "Hotspot", "Backup", 2),
+        QuickhackDef("reset", "Airplane", "System Reset", 6),
+        QuickhackDef("breach", "Settings", "Breach", 0),
     )
 
     val stations = listOf(
@@ -138,17 +139,18 @@ object Content {
         "BADLANDS" to "ROCKY RIDGE", "BADLANDS" to "RED PEAKS",
     )
 
+    /** Hidden achievements: doing these pays out with a "job complete" banner. */
     val mainJobs = listOf(
         JobDef("rescue", "The Rescue", "Set CyberLauncher as your default home app."),
-        JobDef("pickup", "The Pickup", "Add an item from your stash to your inventory."),
-        JobDef("scan", "Eyes Wide Open", "Scan any item. Hold it and pick SCAN."),
-        JobDef("chrome", "Chromed Up", "Install cyberware: put an app in a cyberware slot."),
-        JobDef("jackin", "Jacked In", "Upload any quickhack."),
-        JobDef("gig", "Gig Economy", "Add a gig to your journal, then finish it."),
-        JobDef("radio", "On Air", "Tune into a radio station."),
-        JobDef("vendor", "Retail Therapy", "Buy a new look from the vendor in Settings."),
-        JobDef("legend", "Living Legend", "Make any item Legendary. (Use it 200 times.)"),
-        JobDef("quit", "Quit Game?", "Find the QUIT button. You won't press it."),
+        JobDef("pickup", "The Pickup", "Add an app to your home screen."),
+        JobDef("scan", "Eyes Wide Open", "Scan an app."),
+        JobDef("chrome", "Chromed Up", "Put an app in your dock."),
+        JobDef("jackin", "Jacked In", "Use a quick setting on the deck."),
+        JobDef("gig", "Gig Economy", "Finish a task on the deck."),
+        JobDef("radio", "On Air", "Tune the radio on the deck."),
+        JobDef("vendor", "Retail Therapy", "Buy a theme in settings."),
+        JobDef("legend", "Living Legend", "Make an app Legendary. (Use it 200 times.)"),
+        JobDef("quit", "Quit Game?", "Switch home apps from settings. You won't."),
     )
 
     val bootLines = listOf(
@@ -203,13 +205,8 @@ object Content {
         "Reality is overrated. Battery isn't.",
     )
 
-    val callTips = listOf(
-        "Choom, listen. Tap the prompt to search your stash. Enter opens the top hit.",
-        "Hold an item for the menu. Hold and drag to move it around your inventory.",
-        "Swipe up for the stash. Swipe down for notifications. Swipe sideways to flip tabs.",
-        "Every app you open pays out XP and eddies. Use one enough and it goes Legendary.",
-    )
+    const val FIRST_HINT = "Swipe up for all apps. Swipe right for the deck. Hold an app to move it or for options."
 
-    const val HELP = "Commands: /help /stash /scan <app> /net <query> /name <handle> /theme <name> /stats /heat " +
-        "/eddies /travel /rain /glitch /breach /home /wallpaper /settings /reset. Anything else searches your stash."
+    const val HELP = "Commands: /scan <app>, /net <search>, /name <handle>, /theme <name>, /stats, /heat, " +
+        "/eddies, /travel, /rain, /glitch, /breach, /settings, /reset. Anything else searches your apps."
 }
