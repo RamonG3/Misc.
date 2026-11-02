@@ -102,7 +102,7 @@ Builds are signed with `keystore/shared.jks`, a throwaway key committed on purpo
 build installs over the previous one. It is fine for sideloading; don't use it for the Play Store.
 
 CI also boots an emulator, runs the release build as the home app to check it survives real
-taps and swipes, and attaches screenshots to the release (the ones above come from there). Debug
+taps and swipes, and attaches screenshots to the release (the phone screenshots above come from there). Debug
 builds take `--es demo <screen>` extras (`seed`, `home`, `drawer`, `deck`, `settings`, `scan:N`,
 `menu:N`, `homemenu`, `levelup`, `theme:<id>`) so most screenshots don't depend on tapping
 coordinates, and log what the home screen did with each touch under the `CyberTouch` tag.
