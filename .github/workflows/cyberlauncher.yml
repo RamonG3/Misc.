@@ -1,0 +1,99 @@
+name: Build CyberLauncher
+
+on:
+  push:
+    paths:
+      - "CyberLauncher/**"
+      - ".github/workflows/cyberlauncher.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: cyberlauncher-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: CyberLauncher
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Build release and debug APKs
+        run: |
+          chmod +x gradlew
+          ./gradlew --no-daemon assembleRelease assembleDebug
+
+      - name: Rename APKs
+        run: |
+          cp app/build/outputs/apk/release/app-release.apk CyberLauncher.apk
+          cp app/build/outputs/apk/debug/app-debug.apk CyberLauncher-debug.apk
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: CyberLauncher-apk
+          path: |
+            CyberLauncher/CyberLauncher.apk
+            CyberLauncher/CyberLauncher-debug.apk
+
+      # A rolling pre-release so the APK can be downloaded straight from a phone.
+      - name: Publish "latest" pre-release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release delete cyberlauncher-latest --yes --cleanup-tag || true
+          gh release create cyberlauncher-latest CyberLauncher.apk \
+            --prerelease \
+            --target "$GITHUB_SHA" \
+            --title "CyberLauncher (latest build)" \
+            --notes "Built from ${GITHUB_REF_NAME} @ ${GITHUB_SHA::7}. Download CyberLauncher.apk on your phone, install it, then press Home and pick CyberLauncher."
+
+  # Boots a phone emulator, smoke-tests the release APK as the home app, then photographs
+  # each screen with the debug build. Best effort: emulators are flaky and this never
+  # blocks the APK.
+  screenshot:
+    needs: build
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: CyberLauncher-apk
+
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
+      - uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 34
+          target: google_apis
+          arch: x86_64
+          profile: pixel_6
+          disable-animations: true
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
+          script: bash CyberLauncher/tools/ci_screenshot.sh CyberLauncher.apk CyberLauncher-debug.apk
+
+      - name: Attach screenshots to the release
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release upload cyberlauncher-latest shots/*.png smoke.txt logcat.txt \
+            --clobber --repo "$GITHUB_REPOSITORY"

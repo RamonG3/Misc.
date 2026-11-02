@@ -1,0 +1,21 @@
+<!-- An angular "C" with a chromatic-aberration glitch: cyan and red ghosts under the yellow. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <group android:translateX="-3">
+        <path android:fillColor="#5EF6FF" android:pathData="M72,34L45,34L37,42L37,66L45,74L72,74L72,64.5L49,64.5L46.5,62L46.5,46L49,43.5L72,43.5Z" />
+    </group>
+    <group android:translateX="3">
+        <path android:fillColor="#FF2A6D" android:pathData="M72,34L45,34L37,42L37,66L45,74L72,74L72,64.5L49,64.5L46.5,62L46.5,46L49,43.5L72,43.5Z" />
+    </group>
+    <path android:fillColor="#FCEE0A" android:pathData="M72,34L45,34L37,42L37,66L45,74L72,74L72,64.5L49,64.5L46.5,62L46.5,46L49,43.5L72,43.5Z" />
+    <!-- A sliced-off strip, nudged right like a bad signal. -->
+    <path android:fillColor="#0D0B10" android:pathData="M33,52h44v3.2h-44z" />
+    <path android:fillColor="#FCEE0A" android:pathData="M41.5,52.4h5v2.4h-5z" />
+    <path android:fillColor="#5EF6FF" android:pathData="M38.5,52.4h3v2.4h-3z" />
+    <path android:fillColor="#FCEE0A" android:pathData="M37,79h20v2.5h-20z" />
+    <path android:fillColor="#5EF6FF" android:pathData="M60,79h5v2.5h-5z" />
+    <path android:fillColor="#FF2A6D" android:pathData="M68,79h3v2.5h-3z" />
+</vector>
