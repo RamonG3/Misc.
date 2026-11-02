@@ -53,8 +53,8 @@ shot 01-first-run
 adb shell input tap $((W / 2)) $((H / 2))
 sleep 4
 shot 02-home
-# Swipe up on the city for the stash.
-adb shell input swipe $((W / 2)) $((H * 3 / 10)) $((W / 2)) $((H / 10)) 120
+# Swipe up on the city for the stash, at about the speed of a thumb.
+adb shell input swipe $((W / 2)) $((H * 3 / 10)) $((W / 2)) $((H / 10)) 250
 sleep 2
 shot 03-stash
 adb shell input keyevent KEYCODE_BACK

@@ -137,8 +137,9 @@ class HudView(context: Context, private val game: Game) : View(context) {
         }
 
         override fun onFling(e1: MotionEvent?, e2: MotionEvent, vx: Float, vy: Float): Boolean {
-            val dy = e2.y - (e1?.y ?: e2.y)
+            val dy = e2.y - (e1?.y ?: downY)
             if (abs(vy) > abs(vx) && abs(dy) > Cy.dp(40f)) {
+                swiped = true
                 if (vy < 0) game.ui.openStash(null, null) else game.actions.expandNotifications()
                 return true
             }
@@ -146,8 +147,31 @@ class HudView(context: Context, private val game: Game) : View(context) {
         }
     })
 
+    private var downX = 0f
+    private var downY = 0f
+    private var swiped = false
+
     @SuppressLint("ClickableViewAccessibility")
-    override fun onTouchEvent(event: MotionEvent): Boolean = gestures.onTouchEvent(event)
+    override fun onTouchEvent(event: MotionEvent): Boolean {
+        when (event.actionMasked) {
+            MotionEvent.ACTION_DOWN -> {
+                downX = event.x
+                downY = event.y
+                swiped = false
+            }
+        }
+        val handled = gestures.onTouchEvent(event)
+        // A slow, deliberate drag counts as a swipe too, not just a quick fling.
+        if (event.actionMasked == MotionEvent.ACTION_UP && !swiped) {
+            val dx = event.x - downX
+            val dy = event.y - downY
+            if (abs(dy) > Cy.dp(90f) && abs(dy) > abs(dx) * 1.5f) {
+                swiped = true
+                if (dy < 0) game.ui.openStash(null, null) else game.actions.expandNotifications()
+            }
+        }
+        return handled
+    }
 
     private fun tap(x: Float, y: Float) {
         val save = game.save

@@ -16,7 +16,10 @@ Your battery is your health bar. Your apps are loot. Opening Instagram too often
 <p>
   <img src="docs/lifepath.png" width="230" alt="Choosing a lifepath on first run">
   <img src="docs/journal.png" width="230" alt="Journal (to-do list)">
+  <img src="docs/emulator.png" width="230" alt="A real render on the CI emulator, with real apps">
 </p>
+
+The last one is a real Pixel 6 emulator in CI, with real apps. The rest are previews rendered off-device with stand-in icons.
 <p>
   <img src="docs/palettes.png" width="700" alt="Street Kid, Corpo, Nomad, Netrunner and Samurai palettes">
 </p>

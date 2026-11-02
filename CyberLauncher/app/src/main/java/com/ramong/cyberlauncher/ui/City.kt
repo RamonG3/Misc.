@@ -369,7 +369,8 @@ class City {
             val right = r.nextBoolean()
             val scale = 0.55f + r.nextFloat() * 0.6f
             val speed = (34 + r.nextInt(40)) * d * scale * (if (right) 1 else -1)
-            cars += Car(if (right) -30 * d else w + 30 * d, h * (0.16f + r.nextFloat() * 0.34f), speed, scale)
+            // Low enough to pass behind the clock rather than through the health bar.
+            cars += Car(if (right) -30 * d else w + 30 * d, h * (0.36f + r.nextFloat() * 0.22f), speed, scale)
             nextCar = now + 3_500 + r.nextInt(8_000)
         }
         val it = cars.iterator()
