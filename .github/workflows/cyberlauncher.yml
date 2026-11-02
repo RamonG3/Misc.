@@ -80,6 +80,19 @@ jobs:
           sudo udevadm control --reload-rules
           sudo udevadm trigger --name-match=kvm
 
+      # Google's download servers occasionally hand out a corrupt system image, which kills the
+      # emulator step before it starts. Fetch it up front, with retries.
+      - name: Fetch the emulator system image
+        run: |
+          SDKM="$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager"
+          [ -x "$SDKM" ] || SDKM=sdkmanager
+          for i in 1 2 3; do
+            yes | "$SDKM" --install 'system-images;android-34;google_apis;x86_64' --channel=0 > /dev/null && exit 0
+            echo "Download failed (attempt $i), retrying"
+            sleep 15
+          done
+          echo "Could not fetch the system image; the emulator step will try once more"
+
       - uses: reactivecircus/android-emulator-runner@v2
         with:
           api-level: 34
@@ -95,6 +108,8 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          touch smoke.txt logcat.txt touch.txt
+          [ -s smoke.txt ] || echo "the emulator run ended before the smoke test finished (see the job log)" > smoke.txt
+          touch logcat.txt touch.txt
+          shopt -s nullglob
           gh release upload cyberlauncher-latest shots/*.png smoke.txt logcat.txt touch.txt \
             --clobber --repo "$GITHUB_REPOSITORY"
