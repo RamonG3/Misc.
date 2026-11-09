@@ -1,0 +1,262 @@
+{
+ "Wizard Robe|printed": {
+  "value_per_copy": -1.223684210526315,
+  "vs_replaced": null,
+  "deck": 44.76315789473684
+ },
+ "Wizard Robe|style materials + -1 others": {
+  "value_per_copy": 1.2236842105263186,
+  "vs_replaced": null,
+  "deck": 47.10526315789474
+ },
+ "Wizard Robe|style mats -1 others, plate +1 attack": {
+  "value_per_copy": 1.276315789473685,
+  "vs_replaced": null,
+  "deck": 46.86842105263158
+ },
+ "Wizard Robe|style mats -1 others, plate +2 attack": {
+  "value_per_copy": 1.3684210526315788,
+  "vs_replaced": null,
+  "deck": 46.68421052631579
+ },
+ "Bronze Platebody|printed": {
+  "value_per_copy": -0.23684210526315752,
+  "vs_replaced": null,
+  "deck": 35.94736842105263
+ },
+ "Bronze Platebody|style materials + -1 others": {
+  "value_per_copy": 0.5789473684210549,
+  "vs_replaced": null,
+  "deck": 33.31578947368421
+ },
+ "Bronze Platebody|style mats -1 others, plate +1 attack": {
+  "value_per_copy": 1.105263157894738,
+  "vs_replaced": null,
+  "deck": 33.8421052631579
+ },
+ "Bronze Platebody|style mats -1 others, plate +2 attack": {
+  "value_per_copy": 2.0657894736842106,
+  "vs_replaced": null,
+  "deck": 35.71052631578947
+ },
+ "Leather Body|printed": {
+  "value_per_copy": 0.1578947368421062,
+  "vs_replaced": null,
+  "deck": 52.5
+ },
+ "Leather Body|style materials + -1 others": {
+  "value_per_copy": 1.1447368421052637,
+  "vs_replaced": null,
+  "deck": 53.68421052631579
+ },
+ "Leather Body|style mats -1 others, plate +1 attack": {
+  "value_per_copy": 1.25,
+  "vs_replaced": null,
+  "deck": 53.473684210526315
+ },
+ "Leather Body|style mats -1 others, plate +2 attack": {
+  "value_per_copy": 1.1315789473684212,
+  "vs_replaced": null,
+  "deck": 53.28947368421053
+ },
+ "Green D'hide Body|printed": {
+  "value_per_copy": 0.07894736842105488,
+  "vs_replaced": -0.15789473684210265,
+  "deck": 52.3421052631579
+ },
+ "Green D'hide Body|style materials + -1 others": {
+  "value_per_copy": 2.986842105263161,
+  "vs_replaced": 3.6842105263157947,
+  "deck": 57.36842105263158
+ },
+ "Green D'hide Body|style mats -1 others, plate +1 attack": {
+  "value_per_copy": 2.8947368421052637,
+  "vs_replaced": 3.2894736842105274,
+  "deck": 56.76315789473684
+ },
+ "Green D'hide Body|style mats -1 others, plate +2 attack": {
+  "value_per_copy": 2.8552631578947363,
+  "vs_replaced": 3.44736842105263,
+  "deck": 56.73684210526316
+ },
+ "Mithril Platebody|printed": {
+  "value_per_copy": 0.5789473684210549,
+  "vs_replaced": 1.6315789473684248,
+  "deck": 37.578947368421055
+ },
+ "Mithril Platebody|style materials + -1 others": {
+  "value_per_copy": 0.75,
+  "vs_replaced": 0.34210526315789025,
+  "deck": 33.6578947368421
+ },
+ "Mithril Platebody|style mats -1 others, plate +1 attack": {
+  "value_per_copy": 1.5657894736842106,
+  "vs_replaced": 0.9210526315789451,
+  "deck": 34.76315789473684
+ },
+ "Mithril Platebody|style mats -1 others, plate +2 attack": {
+  "value_per_copy": 2.776315789473683,
+  "vs_replaced": 1.4210526315789451,
+  "deck": 37.13157894736842
+ },
+ "Rune Platebody|printed": {
+  "value_per_copy": 0.4605263157894761,
+  "vs_replaced": null,
+  "deck": 42.578947368421055
+ },
+ "Rune Platebody|style materials + -1 others": {
+  "value_per_copy": 0.5131578947368389,
+  "vs_replaced": null,
+  "deck": 39.13157894736842
+ },
+ "Rune Platebody|style mats -1 others, plate +1 attack": {
+  "value_per_copy": 0.776315789473685,
+  "vs_replaced": null,
+  "deck": 39.28947368421053
+ },
+ "Rune Platebody|style mats -1 others, plate +2 attack": {
+  "value_per_copy": 0.9342105263157876,
+  "vs_replaced": null,
+  "deck": 39.44736842105263
+ },
+ "Mystic Robe Top|printed": {
+  "value_per_copy": -0.8815789473684212,
+  "vs_replaced": 0.6842105263157876,
+  "deck": 45.44736842105263
+ },
+ "Mystic Robe Top|style materials + -1 others": {
+  "value_per_copy": 1.4210526315789487,
+  "vs_replaced": 0.39473684210526017,
+  "deck": 47.5
+ },
+ "Mystic Robe Top|style mats -1 others, plate +1 attack": {
+  "value_per_copy": 1.473684210526315,
+  "vs_replaced": 0.39473684210526017,
+  "deck": 47.26315789473684
+ },
+ "Mystic Robe Top|style mats -1 others, plate +2 attack": {
+  "value_per_copy": 1.473684210526315,
+  "vs_replaced": 0.21052631578947256,
+  "deck": 46.89473684210526
+ },
+ "Infinity Top|printed": {
+  "value_per_copy": -1.25,
+  "vs_replaced": null,
+  "deck": 44.71052631578947
+ },
+ "Infinity Top|style materials + -1 others": {
+  "value_per_copy": 0.9342105263157876,
+  "vs_replaced": null,
+  "deck": 46.23684210526316
+ },
+ "Infinity Top|style mats -1 others, plate +1 attack": {
+  "value_per_copy": 0.8552631578947363,
+  "vs_replaced": null,
+  "deck": 45.921052631578945
+ },
+ "Infinity Top|style mats -1 others, plate +2 attack": {
+  "value_per_copy": 0.8552631578947363,
+  "vs_replaced": null,
+  "deck": 45.63157894736842
+ },
+ "Black D'hide Body|printed": {
+  "value_per_copy": -1.0657894736842088,
+  "vs_replaced": -3.2368421052631575,
+  "deck": 49.26315789473684
+ },
+ "Black D'hide Body|style materials + -1 others": {
+  "value_per_copy": 2.5657894736842124,
+  "vs_replaced": 0.8684210526315823,
+  "deck": 54.55263157894737
+ },
+ "Black D'hide Body|style mats -1 others, plate +1 attack": {
+  "value_per_copy": 2.565789473684209,
+  "vs_replaced": 0.7368421052631575,
+  "deck": 54.21052631578947
+ },
+ "Black D'hide Body|style mats -1 others, plate +2 attack": {
+  "value_per_copy": 2.4868421052631575,
+  "vs_replaced": 1.05263157894737,
+  "deck": 54.3421052631579
+ },
+ "Horvik|printed": {
+  "value_per_copy": 0.13157894736842124,
+  "vs_replaced": -0.6052631578947327,
+  "deck": 35.3421052631579
+ },
+ "Horvik|style materials + -1 others": {
+  "value_per_copy": 0.17105263157894868,
+  "vs_replaced": -0.7894736842105274,
+  "deck": 32.526315789473685
+ },
+ "Horvik|style mats -1 others, plate +1 attack": {
+  "value_per_copy": 0.39473684210526017,
+  "vs_replaced": -0.21052631578947967,
+  "deck": 33.63157894736842
+ },
+ "Horvik|style mats -1 others, plate +2 attack": {
+  "value_per_copy": 0.25,
+  "vs_replaced": -1.1052631578947327,
+  "deck": 34.60526315789474
+ },
+ "Thessalia|printed": {
+  "value_per_copy": -0.1842105263157876,
+  "vs_replaced": -2.2368421052631575,
+  "deck": 50.26315789473684
+ },
+ "Thessalia|style materials + -1 others": {
+  "value_per_copy": -0.03947368421052744,
+  "vs_replaced": -1.7894736842105274,
+  "deck": 51.89473684210526
+ },
+ "Thessalia|style mats -1 others, plate +1 attack": {
+  "value_per_copy": -0.01315789473684248,
+  "vs_replaced": -2.078947368421055,
+  "deck": 51.39473684210526
+ },
+ "Thessalia|style mats -1 others, plate +2 attack": {
+  "value_per_copy": 0.03947368421052744,
+  "vs_replaced": -1.7105263157894726,
+  "deck": 51.578947368421055
+ },
+ "Cloth|printed": {
+  "value_per_copy": -0.5657894736842124,
+  "vs_replaced": null,
+  "deck": 44.71052631578947
+ },
+ "Cloth|style materials + -1 others": {
+  "value_per_copy": -0.4473684210526301,
+  "vs_replaced": null,
+  "deck": 46.23684210526316
+ },
+ "Cloth|style mats -1 others, plate +1 attack": {
+  "value_per_copy": -0.5394736842105274,
+  "vs_replaced": null,
+  "deck": 45.921052631578945
+ },
+ "Cloth|style mats -1 others, plate +2 attack": {
+  "value_per_copy": -0.5131578947368425,
+  "vs_replaced": null,
+  "deck": 45.63157894736842
+ },
+ "Leather|printed": {
+  "value_per_copy": -0.03947368421052744,
+  "vs_replaced": null,
+  "deck": 52.5
+ },
+ "Leather|style materials + -1 others": {
+  "value_per_copy": -0.5921052631578974,
+  "vs_replaced": null,
+  "deck": 53.68421052631579
+ },
+ "Leather|style mats -1 others, plate +1 attack": {
+  "value_per_copy": -0.43421052631579116,
+  "vs_replaced": null,
+  "deck": 53.473684210526315
+ },
+ "Leather|style mats -1 others, plate +2 attack": {
+  "value_per_copy": -0.5394736842105274,
+  "vs_replaced": null,
+  "deck": 53.28947368421053
+ }
+}

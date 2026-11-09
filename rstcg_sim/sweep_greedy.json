@@ -1,0 +1,1980 @@
+{
+ "n": 100,
+ "bot": "greedy",
+ "cards": {
+  "Air Blast": [
+   {
+    "label": "Lean Mage (3)",
+    "copies": 3,
+    "n_slots": 3,
+    "cape": null,
+    "deck_wr": 45.026315789473685,
+    "value": 8.026315789473685,
+    "uses_per_game": 0.6147368421052631
+   }
+  ],
+  "Air Bolt": [
+   {
+    "label": "Lean Mage (4)",
+    "copies": 4,
+    "n_slots": 4,
+    "cape": null,
+    "deck_wr": 45.026315789473685,
+    "value": 14.526315789473685,
+    "uses_per_game": 1.0405263157894737
+   }
+  ],
+  "Air Rune": [
+   {
+    "label": "Lean Mage: 2 of 12 blanked",
+    "copies": 12,
+    "n_slots": 2,
+    "cape": null,
+    "deck_wr": 45.026315789473685,
+    "value": 1.1578947368421026,
+    "uses_per_game": 2.0060526315789473
+   }
+  ],
+  "Air Strike": [
+   {
+    "label": "Lean Mage (4)",
+    "copies": 4,
+    "n_slots": 4,
+    "cape": null,
+    "deck_wr": 45.026315789473685,
+    "value": 8.868421052631582,
+    "uses_per_game": 1.1026315789473684
+   }
+  ],
+  "Air Wave": [
+   {
+    "label": "Wave Mage (3)",
+    "copies": 3,
+    "n_slots": 3,
+    "cape": null,
+    "deck_wr": 44.31578947368421,
+    "value": 9.421052631578952,
+    "uses_per_game": 0.48447368421052633
+   }
+  ],
+  "Ancient Mace": [
+   {
+    "label": "Specials Melee (2)",
+    "copies": 2,
+    "n_slots": 2,
+    "cape": null,
+    "deck_wr": 38.921052631578945,
+    "value": 1.0526315789473628,
+    "uses_per_game": 0.4694736842105263
+   }
+  ],
+  "Archmage Sedridor": [
+   {
+    "label": "Lean Mage (2)",
+    "copies": 2,
+    "n_slots": 2,
+    "cape": null,
+    "deck_wr": 45.026315789473685,
+    "value": 0.6578947368421026,
+    "uses_per_game": 0.5
+   }
+  ],
+  "Augury": [
+   {
+    "label": "Lean Mage (2)",
+    "copies": 2,
+    "n_slots": 2,
+    "cape": null,
+    "deck_wr": 45.026315789473685,
+    "value": 6.815789473684212,
+    "uses_per_game": 0.5352631578947369
+   }
+  ],
+  "Banker": [
+   {
+    "label": "Lean Mage (1)",
+    "copies": 1,
+    "n_slots": 1,
+    "cape": null,
+    "deck_wr": 45.026315789473685,
+    "value": 0.07894736842105488,
+    "uses_per_game": 0.23842105263157895
+   }
+  ],
+  "Barrelchest Anchor": [
+   {
+    "label": "Specials Melee (2)",
+    "copies": 2,
+    "n_slots": 2,
+    "cape": null,
+    "deck_wr": 38.921052631578945,
+    "value": 1.8684210526315752,
+    "uses_per_game": 0.31657894736842107
+   }
+  ],
+  "Blood Rune": [
+   {
+    "label": "Wave Mage: 2 of 3 blanked",
+    "copies": 3,
+    "n_slots": 2,
+    "cape": null,
+    "deck_wr": 44.31578947368421,
+    "value": 3.60526315789474,
+    "uses_per_game": 0.4978947368421053
+   }
+  ],
+  "Bronze Arrows": [
+   {
+    "label": "Lean Ranged (4)",
+    "copies": 4,
+    "n_slots": 4,
+    "cape": null,
+    "deck_wr": 52.8421052631579,
+    "value": 6.078947368421055,
+    "uses_per_game": 0.3373684210526316
+   }
+  ],
+  "Bronze Bar": [
+   {
+    "label": "Lean Melee: 2 of 9 blanked",
+    "copies": 9,
+    "n_slots": 2,
+    "cape": null,
+    "deck_wr": 36.89473684210526,
+    "value": 3.421052631578945,
+    "uses_per_game": 1.598157894736842
+   }
+  ],
+  "Bronze Dagger": [
+   {
+    "label": "Lean Melee (2)",
+    "copies": 2,
+    "n_slots": 2,
+    "cape": null,
+    "deck_wr": 36.89473684210526,
+    "value": 1.473684210526315,
+    "uses_per_game": 0.3931578947368421
+   }
+  ],
+  "Bronze Darts": [
+   {
+    "label": "Thrown Ranged (2)",
+    "copies": 2,
+    "n_slots": 2,
+    "cape": null,
+    "deck_wr": 53.68421052631579,
+    "value": 0.02631578947368496,
+    "uses_per_game": 0.37842105263157894
+   }
+  ],
+  "Bronze Knives": [
+   {
+    "label": "Thrown Ranged (3)",
+    "copies": 3,
+    "n_slots": 3,
+    "cape": null,
+    "deck_wr": 53.68421052631579,
+    "value": 1.44736842105263,
+    "uses_per_game": 0.37315789473684213
+   }
+  ],
+  "Bronze Mace": [
+   {
+    "label": "Mace Melee (3)",
+    "copies": 3,
+    "n_slots": 3,
+    "cape": null,
+    "deck_wr": 37.473684210526315,
+    "value": 1.7105263157894726,
+    "uses_per_game": 0.44894736842105265
+   }
+  ],
+  "Bronze Platebody": [
+   {
+    "label": "Lean Melee (2)",
+    "copies": 2,
+    "n_slots": 2,
+    "cape": null,
+    "deck_wr": 36.89473684210526,
+    "value": 0.1842105263157876,
+    "uses_per_game": 0.08657894736842105
+   }
+  ],
+  "Bronze Scimitar": [
+   {
+    "label": "Lean Melee (4)",
+    "copies": 4,
+    "n_slots": 4,
+    "cape": null,
+    "deck_wr": 36.89473684210526,
+    "value": 2.8421052631578902,
+    "uses_per_game": 0.5794736842105264
+   }
+  ],
+  "Bronze Throwing Axe": [
+   {
+    "label": "Thrown Ranged (2)",
+    "copies": 2,
+    "n_slots": 2,
+    "cape": null,
+    "deck_wr": 53.68421052631579,
+    "value": 0.8157894736842053,
+    "uses_per_game": 0.17684210526315788
+   }
+  ],
+  "Burst of Strength": [
+   {
+    "label": "Lean Melee (3)",
+    "copies": 3,
+    "n_slots": 3,
+    "cape": null,
+    "deck_wr": 36.89473684210526,
+    "value": 5.315789473684209,
+    "uses_per_game": 0.595
+   }
+  ],
+  "Chaos Rune": [
+   {
+    "label": "Lean Mage: 2 of 5 blanked",
+    "copies": 5,
+    "n_slots": 2,
+    "cape": null,
+    "deck_wr": 45.026315789473685,
+    "value": 1.6315789473684248,
+    "uses_per_game": 0.6252631578947369
+   }
+  ],
+  "Cloth": [
+   {
+    "label": "Wave Mage: 2 of 3 blanked",
+    "copies": 3,
+    "n_slots": 2,
+    "cape": null,
+    "deck_wr": 44.31578947368421,
+    "value": -1.7894736842105274,
+    "uses_per_game": 0.7742105263157895
+   }
+  ],
+  "Crumble": [
+   {
+    "label": "Earth Mage (2)",
+    "copies": 2,
+    "n_slots": 2,
+    "cape": null,
+    "deck_wr": 49.8421052631579,
+    "value": -0.3157894736842053,
+    "uses_per_game": 0.22447368421052633
+   }
+  ],
+  "Crush": [
+   {
+    "label": "Mace Melee (4)",
+    "copies": 4,
+    "n_slots": 4,
+    "cape": null,
+    "deck_wr": 37.473684210526315,
+    "value": 1.1578947368421026,
+    "uses_per_game": 0.4663157894736842
+   }
+  ],
+  "Death Rune": [
+   {
+    "label": "Lean Mage: 2 of 3 blanked",
+    "copies": 3,
+    "n_slots": 2,
+    "cape": null,
+    "deck_wr": 45.026315789473685,
+    "value": 2.631578947368425,
+    "uses_per_game": 0.4842105263157895
+   }
+  ],
+  "Doric": [
+   {
+    "label": "Thrown Ranged (2)",
+    "copies": 2,
+    "n_slots": 2,
+    "cape": null,
+    "deck_wr": 53.68421052631579,
+    "value": 2.1052631578947327,
+    "uses_per_game": 0.4031578947368421
+   }
+  ],
+  "Dust Flurry": [
+   {
+    "label": "Dust Mage (4)",
+    "copies": 4,
+    "n_slots": 4,
+    "cape": null,
+    "deck_wr": 55.86842105263158,
+    "value": 13.815789473684212,
+    "uses_per_game": 1.0078947368421052
+   }
+  ],
+  "Dust Rune": [
+   {
+    "label": "Earth Mage (4)",
+    "copies": 4,
+    "n_slots": 4,
+    "cape": null,
+    "deck_wr": 49.8421052631579,
+    "value": 8.55263157894737,
+    "uses_per_game": 0.8086842105263158,
+    "vs_basics": 5.578947368421055
+   }
+  ],
+  "Earth Bolt": [
+   {
+    "label": "Earth Mage (4)",
+    "copies": 4,
+    "n_slots": 4,
+    "cape": null,
+    "deck_wr": 49.8421052631579,
+    "value": 14.184210526315795,
+    "uses_per_game": 0.9547368421052631
+   }
+  ],
+  "Earth Rune": [
+   {
+    "label": "Earth Mage: 2 of 8 blanked",
+    "copies": 8,
+    "n_slots": 2,
+    "cape": null,
+    "deck_wr": 49.8421052631579,
+    "value": 1.8421052631578974,
+    "uses_per_game": 1.0223684210526316
+   }
+  ],
+  "Earth Strike": [
+   {
+    "label": "Earth Mage (4)",
+    "copies": 4,
+    "n_slots": 4,
+    "cape": null,
+    "deck_wr": 49.8421052631579,
+    "value": 7.447368421052637,
+    "uses_per_game": 1.1265789473684211
+   }
+  ],
+  "Excalibur": [
+   {
+    "label": "Specials Melee (2)",
+    "copies": 2,
+    "n_slots": 2,
+    "cape": null,
+    "deck_wr": 38.921052631578945,
+    "value": 1.4210526315789451,
+    "uses_per_game": 0.4144736842105263
+   }
+  ],
+  "Fire Bolt": [
+   {
+    "label": "Smoke Mage (4)",
+    "copies": 4,
+    "n_slots": 4,
+    "cape": null,
+    "deck_wr": 52.473684210526315,
+    "value": 7.105263157894733,
+    "uses_per_game": 0.5247368421052632
+   }
+  ],
+  "Fire Rune": [
+   {
+    "label": "Fire Mage: 2 of 14 blanked",
+    "copies": 14,
+    "n_slots": 2,
+    "cape": null,
+    "deck_wr": 52.63157894736842,
+    "value": 3.2894736842105203,
+    "uses_per_game": 1.9839473684210527
+   }
+  ],
+  "Fire Strike": [
+   {
+    "label": "Smoke Mage (4)",
+    "copies": 4,
+    "n_slots": 4,
+    "cape": null,
+    "deck_wr": 52.473684210526315,
+    "value": 8.368421052631575,
+    "uses_per_game": 0.8768421052631579
+   }
+  ],
+  "Iban's Staff": [
+   {
+    "label": "Lean Mage (3)",
+    "copies": 3,
+    "n_slots": 3,
+    "cape": null,
+    "deck_wr": 45.026315789473685,
+    "value": 16.736842105263158,
+    "uses_per_game": 0.756578947368421
+   }
+  ],
+  "Infinity Top": [
+   {
+    "label": "Wave Mage (2)",
+    "copies": 2,
+    "n_slots": 2,
+    "cape": null,
+    "deck_wr": 44.31578947368421,
+    "value": -2.368421052631575,
+    "uses_per_game": 0.005
+   }
+  ],
+  "Kiteshield": [
+   {
+    "label": "Lean Ranged (4)",
+    "copies": 4,
+    "n_slots": 4,
+    "cape": null,
+    "deck_wr": 52.8421052631579,
+    "value": 6.894736842105267,
+    "uses_per_game": 0.8476315789473684
+   }
+  ],
+  "Lava Flurry": [
+   {
+    "label": "Lava Mage (4)",
+    "copies": 4,
+    "n_slots": 4,
+    "cape": null,
+    "deck_wr": 56.026315789473685,
+    "value": 12.578947368421055,
+    "uses_per_game": 1.0257894736842106
+   }
+  ],
+  "Lava Rune": [
+   {
+    "label": "Lava Mage (4)",
+    "copies": 4,
+    "n_slots": 4,
+    "cape": null,
+    "deck_wr": 56.026315789473685,
+    "value": 15.736842105263158,
+    "uses_per_game": 0.9023684210526316,
+    "vs_basics": 8.631578947368425
+   }
+  ],
+  "Leather": [
+   {
+    "label": "Lean Ranged: 2 of 2 blanked",
+    "copies": 2,
+    "n_slots": 2,
+    "cape": null,
+    "deck_wr": 52.8421052631579,
+    "value": -0.526315789473685,
+    "uses_per_game": 0.4436842105263158
+   }
+  ],
+  "Leather Body": [
+   {
+    "label": "Lean Ranged (2)",
+    "copies": 2,
+    "n_slots": 2,
+    "cape": null,
+    "deck_wr": 52.8421052631579,
+    "value": -0.5526315789473628,
+    "uses_per_game": 0.15263157894736842
+   }
+  ],
+  "Lobster": [
+   {
+    "label": "Fire Mage (4)",
+    "copies": 4,
+    "n_slots": 4,
+    "cape": null,
+    "deck_wr": 52.63157894736842,
+    "value": 8.34210526315789,
+    "uses_per_game": 0.9476315789473684
+   }
+  ],
+  "Longrange": [
+   {
+    "label": "Lean Ranged (4)",
+    "copies": 4,
+    "n_slots": 4,
+    "cape": null,
+    "deck_wr": 52.8421052631579,
+    "value": 1.473684210526315,
+    "uses_per_game": 0.03657894736842105
+   }
+  ],
+  "Lowe": [
+   {
+    "label": "Lean Ranged (2)",
+    "copies": 2,
+    "n_slots": 2,
+    "cape": null,
+    "deck_wr": 52.8421052631579,
+    "value": 1.8157894736842124,
+    "uses_per_game": 0.4457894736842105
+   }
+  ],
+  "Magic Shortbow": [
+   {
+    "label": "Lean Ranged (3)",
+    "copies": 3,
+    "n_slots": 3,
+    "cape": null,
+    "deck_wr": 52.8421052631579,
+    "value": 19.526315789473685,
+    "uses_per_game": 0.5086842105263157
+   }
+  ],
+  "Mirror Shield": [
+   {
+    "label": "Lean Mage (3)",
+    "copies": 3,
+    "n_slots": 3,
+    "cape": null,
+    "deck_wr": 45.026315789473685,
+    "value": 6.026315789473685,
+    "uses_per_game": 0.205
+   }
+  ],
+  "Mist Flurry": [
+   {
+    "label": "Mist Mage (4)",
+    "copies": 4,
+    "n_slots": 4,
+    "cape": null,
+    "deck_wr": 59.94736842105263,
+    "value": 15.210526315789473,
+    "uses_per_game": 1.0402631578947368
+   }
+  ],
+  "Mist Rune": [
+   {
+    "label": "Mist Mage (4)",
+    "copies": 4,
+    "n_slots": 4,
+    "cape": null,
+    "deck_wr": 59.94736842105263,
+    "value": 11.315789473684212,
+    "uses_per_game": 0.7805263157894737,
+    "vs_basics": 5.105263157894733
+   }
+  ],
+  "Mithril Arrows": [
+   {
+    "label": "Lean Ranged (4)",
+    "copies": 4,
+    "n_slots": 4,
+    "cape": null,
+    "deck_wr": 52.8421052631579,
+    "value": 16.078947368421055,
+    "uses_per_game": 0.6755263157894736
+   }
+  ],
+  "Mithril Bar": [
+   {
+    "label": "Lean Melee: 2 of 13 blanked",
+    "copies": 13,
+    "n_slots": 2,
+    "cape": null,
+    "deck_wr": 36.89473684210526,
+    "value": 3.6315789473684177,
+    "uses_per_game": 1.8755263157894737
+   }
+  ],
+  "Mithril Darts": [
+   {
+    "label": "Thrown Ranged (4)",
+    "copies": 4,
+    "n_slots": 4,
+    "cape": null,
+    "deck_wr": 53.68421052631579,
+    "value": 3.05263157894737,
+    "uses_per_game": 0.8878947368421053
+   }
+  ],
+  "Mithril Knives": [
+   {
+    "label": "Thrown Ranged (4)",
+    "copies": 4,
+    "n_slots": 4,
+    "cape": null,
+    "deck_wr": 53.68421052631579,
+    "value": 4.921052631578945,
+    "uses_per_game": 0.7023684210526315
+   }
+  ],
+  "Mithril Mace": [
+   {
+    "label": "Mace Melee (4)",
+    "copies": 4,
+    "n_slots": 4,
+    "cape": null,
+    "deck_wr": 37.473684210526315,
+    "value": 9.473684210526315,
+    "uses_per_game": 0.751578947368421
+   }
+  ],
+  "Mithril Scimitar": [
+   {
+    "label": "Lean Melee (4)",
+    "copies": 4,
+    "n_slots": 4,
+    "cape": null,
+    "deck_wr": 36.89473684210526,
+    "value": 13.89473684210526,
+    "uses_per_game": 0.9213157894736842
+   }
+  ],
+  "Mithril Sword": [
+   {
+    "label": "Lean Melee (4)",
+    "copies": 4,
+    "n_slots": 4,
+    "cape": null,
+    "deck_wr": 36.89473684210526,
+    "value": 10.736842105263154,
+    "uses_per_game": 0.7426315789473684
+   }
+  ],
+  "Mithril Throwing Axe": [
+   {
+    "label": "Thrown Ranged (2)",
+    "copies": 2,
+    "n_slots": 2,
+    "cape": null,
+    "deck_wr": 53.68421052631579,
+    "value": 5.44736842105263,
+    "uses_per_game": 0.27157894736842103
+   }
+  ],
+  "Mud Flurry": [
+   {
+    "label": "Mud Mage (4)",
+    "copies": 4,
+    "n_slots": 4,
+    "cape": null,
+    "deck_wr": 59.026315789473685,
+    "value": 13.473684210526315,
+    "uses_per_game": 1.076578947368421
+   }
+  ],
+  "Mud Rune": [
+   {
+    "label": "Mud Mage (4)",
+    "copies": 4,
+    "n_slots": 4,
+    "cape": null,
+    "deck_wr": 59.026315789473685,
+    "value": 9.868421052631582,
+    "uses_per_game": 0.7910526315789473,
+    "vs_basics": 4.921052631578945
+   }
+  ],
+  "Normal Logs": [
+   {
+    "label": "Lean Ranged: 2 of 9 blanked",
+    "copies": 9,
+    "n_slots": 2,
+    "cape": null,
+    "deck_wr": 52.8421052631579,
+    "value": 1.6578947368421098,
+    "uses_per_game": 0.9442105263157895
+   }
+  ],
+  "Parry": [
+   {
+    "label": "Lean Melee (3)",
+    "copies": 3,
+    "n_slots": 3,
+    "cape": null,
+    "deck_wr": 36.89473684210526,
+    "value": 4.105263157894733,
+    "uses_per_game": 0.13131578947368422
+   }
+  ],
+  "Rapid": [
+   {
+    "label": "Lean Ranged (4)",
+    "copies": 4,
+    "n_slots": 4,
+    "cape": null,
+    "deck_wr": 52.8421052631579,
+    "value": 4.421052631578952,
+    "uses_per_game": 0.618421052631579
+   }
+  ],
+  "Ricochet": [
+   {
+    "label": "Lean Ranged (3)",
+    "copies": 3,
+    "n_slots": 3,
+    "cape": null,
+    "deck_wr": 52.8421052631579,
+    "value": 12.763157894736842,
+    "uses_per_game": 0.5057894736842106
+   }
+  ],
+  "Rigour": [
+   {
+    "label": "Thrown Ranged (3)",
+    "copies": 3,
+    "n_slots": 3,
+    "cape": null,
+    "deck_wr": 53.68421052631579,
+    "value": 10.315789473684205,
+    "uses_per_game": 0.7855263157894737
+   }
+  ],
+  "Rune Arrows": [
+   {
+    "label": "Yew Ranged (3)",
+    "copies": 3,
+    "n_slots": 3,
+    "cape": null,
+    "deck_wr": 53.026315789473685,
+    "value": 3.55263157894737,
+    "uses_per_game": 0.2236842105263158
+   }
+  ],
+  "Rune Bar": [
+   {
+    "label": "Rune Melee: 2 of 7 blanked",
+    "copies": 7,
+    "n_slots": 2,
+    "cape": null,
+    "deck_wr": 43.21052631578947,
+    "value": 4.2631578947368425,
+    "uses_per_game": 1.3760526315789474
+   }
+  ],
+  "Rune Dagger": [
+   {
+    "label": "Rune Melee (1)",
+    "copies": 1,
+    "n_slots": 1,
+    "cape": null,
+    "deck_wr": 43.21052631578947,
+    "value": 1.7894736842105274,
+    "uses_per_game": 0.15657894736842104
+   }
+  ],
+  "Rune Knives": [
+   {
+    "label": "Rune Thrown (3)",
+    "copies": 3,
+    "n_slots": 3,
+    "cape": null,
+    "deck_wr": 59.81578947368421,
+    "value": 7.94736842105263,
+    "uses_per_game": 0.4363157894736842
+   }
+  ],
+  "Rune Platebody": [
+   {
+    "label": "Rune Melee (2)",
+    "copies": 2,
+    "n_slots": 2,
+    "cape": null,
+    "deck_wr": 43.21052631578947,
+    "value": 1.1052631578947327,
+    "uses_per_game": 0.04789473684210526
+   }
+  ],
+  "Rune Pouch": [
+   {
+    "label": "Lean Mage (4)",
+    "copies": 4,
+    "n_slots": 4,
+    "cape": null,
+    "deck_wr": 45.026315789473685,
+    "value": 2.578947368421055,
+    "uses_per_game": 1.2023684210526315
+   }
+  ],
+  "Rune Scimitar": [
+   {
+    "label": "Rune Melee (3)",
+    "copies": 3,
+    "n_slots": 3,
+    "cape": null,
+    "deck_wr": 43.21052631578947,
+    "value": 10.131578947368418,
+    "uses_per_game": 0.4236842105263158
+   }
+  ],
+  "Rune Throwing Axe": [
+   {
+    "label": "Rune Thrown (2)",
+    "copies": 2,
+    "n_slots": 2,
+    "cape": null,
+    "deck_wr": 59.81578947368421,
+    "value": 5.921052631578952,
+    "uses_per_game": 0.22763157894736843
+   }
+  ],
+  "Seercull": [
+   {
+    "label": "Lean Ranged (2)",
+    "copies": 2,
+    "n_slots": 2,
+    "cape": null,
+    "deck_wr": 52.8421052631579,
+    "value": 7.342105263157897,
+    "uses_per_game": 0.34
+   }
+  ],
+  "Sharp Eye": [
+   {
+    "label": "Lean Ranged (3)",
+    "copies": 3,
+    "n_slots": 3,
+    "cape": null,
+    "deck_wr": 52.8421052631579,
+    "value": 5.631578947368425,
+    "uses_per_game": 0.6131578947368421
+   }
+  ],
+  "Slash": [
+   {
+    "label": "Lean Melee (4)",
+    "copies": 4,
+    "n_slots": 4,
+    "cape": null,
+    "deck_wr": 36.89473684210526,
+    "value": 5.9999999999999964,
+    "uses_per_game": 0.8168421052631579
+   }
+  ],
+  "Smoke Flurry": [
+   {
+    "label": "Smoke Mage (4)",
+    "copies": 4,
+    "n_slots": 4,
+    "cape": null,
+    "deck_wr": 52.473684210526315,
+    "value": 9.078947368421055,
+    "uses_per_game": 0.9036842105263158
+   }
+  ],
+  "Smoke Rune": [
+   {
+    "label": "Smoke Mage (4)",
+    "copies": 4,
+    "n_slots": 4,
+    "cape": null,
+    "deck_wr": 52.473684210526315,
+    "value": 15.473684210526315,
+    "uses_per_game": 0.9113157894736842,
+    "vs_basics": 7.368421052631575
+   }
+  ],
+  "Stab": [
+   {
+    "label": "Lean Melee (4)",
+    "copies": 4,
+    "n_slots": 4,
+    "cape": null,
+    "deck_wr": 36.89473684210526,
+    "value": 3.473684210526315,
+    "uses_per_game": 0.4789473684210526
+   }
+  ],
+  "Staff of Fire": [
+   {
+    "label": "Fire Mage (3)",
+    "copies": 3,
+    "n_slots": 3,
+    "cape": null,
+    "deck_wr": 52.63157894736842,
+    "value": 4.078947368421048,
+    "uses_per_game": 0.75
+   }
+  ],
+  "Staff of Light": [
+   {
+    "label": "Lean Mage (2)",
+    "copies": 2,
+    "n_slots": 2,
+    "cape": null,
+    "deck_wr": 45.026315789473685,
+    "value": 2.8947368421052673,
+    "uses_per_game": 0.4281578947368421
+   }
+  ],
+  "Staff of Water": [
+   {
+    "label": "Water Mage (3)",
+    "copies": 3,
+    "n_slots": 3,
+    "cape": null,
+    "deck_wr": 44.1578947368421,
+    "value": 4.105263157894733,
+    "uses_per_game": 0.7502631578947369
+   }
+  ],
+  "Steam Flurry": [
+   {
+    "label": "Steam Mage (4)",
+    "copies": 4,
+    "n_slots": 4,
+    "cape": null,
+    "deck_wr": 58.71052631578947,
+    "value": 13.421052631578945,
+    "uses_per_game": 1.0547368421052632
+   }
+  ],
+  "Steam Rune": [
+   {
+    "label": "Steam Mage (4)",
+    "copies": 4,
+    "n_slots": 4,
+    "cape": null,
+    "deck_wr": 58.71052631578947,
+    "value": 14.368421052631575,
+    "uses_per_game": 0.9126315789473685,
+    "vs_basics": 7.368421052631575
+   }
+  ],
+  "Vanaka": [
+   {
+    "label": "Lean Melee (1)",
+    "copies": 1,
+    "n_slots": 1,
+    "cape": null,
+    "deck_wr": 36.89473684210526,
+    "value": 0.5526315789473628,
+    "uses_per_game": 0.18289473684210528
+   }
+  ],
+  "Water Blast": [
+   {
+    "label": "Water Mage (3)",
+    "copies": 3,
+    "n_slots": 3,
+    "cape": null,
+    "deck_wr": 44.1578947368421,
+    "value": 12.473684210526311,
+    "uses_per_game": 0.7081578947368421
+   }
+  ],
+  "Water Bolt": [
+   {
+    "label": "Mist Mage (4)",
+    "copies": 4,
+    "n_slots": 4,
+    "cape": null,
+    "deck_wr": 59.94736842105263,
+    "value": 12.605263157894733,
+    "uses_per_game": 0.8102631578947368
+   }
+  ],
+  "Water Rune": [
+   {
+    "label": "Water Mage: 2 of 12 blanked",
+    "copies": 12,
+    "n_slots": 2,
+    "cape": null,
+    "deck_wr": 44.1578947368421,
+    "value": 1.2894736842105203,
+    "uses_per_game": 1.8371052631578948
+   }
+  ],
+  "Water Strike": [
+   {
+    "label": "Mist Mage (4)",
+    "copies": 4,
+    "n_slots": 4,
+    "cape": null,
+    "deck_wr": 59.94736842105263,
+    "value": 9.0,
+    "uses_per_game": 1.07
+   }
+  ],
+  "Willow Logs": [
+   {
+    "label": "Lean Ranged: 2 of 11 blanked",
+    "copies": 11,
+    "n_slots": 2,
+    "cape": null,
+    "deck_wr": 52.8421052631579,
+    "value": 3.8421052631578974,
+    "uses_per_game": 1.8460526315789474
+   }
+  ],
+  "Wizard Robe": [
+   {
+    "label": "Lean Mage (2)",
+    "copies": 2,
+    "n_slots": 2,
+    "cape": null,
+    "deck_wr": 45.026315789473685,
+    "value": -1.3684210526315752,
+    "uses_per_game": 0.15578947368421053
+   }
+  ],
+  "Wizards' Tower": [
+   {
+    "label": "Lean Mage (2)",
+    "copies": 2,
+    "n_slots": 2,
+    "cape": null,
+    "deck_wr": 45.026315789473685,
+    "value": 0.5,
+    "uses_per_game": 0.22710526315789473
+   }
+  ],
+  "Wooden Shield": [
+   {
+    "label": "Lean Ranged (3)",
+    "copies": 3,
+    "n_slots": 3,
+    "cape": null,
+    "deck_wr": 52.8421052631579,
+    "value": 4.815789473684212,
+    "uses_per_game": 0.7378947368421053
+   }
+  ],
+  "Yew Logs": [
+   {
+    "label": "Yew Ranged: 2 of 6 blanked",
+    "copies": 6,
+    "n_slots": 2,
+    "cape": null,
+    "deck_wr": 53.026315789473685,
+    "value": 7.7631578947368425,
+    "uses_per_game": 1.4039473684210526
+   }
+  ],
+  "Yew Shortbow": [
+   {
+    "label": "Yew Ranged (3)",
+    "copies": 3,
+    "n_slots": 3,
+    "cape": null,
+    "deck_wr": 53.026315789473685,
+    "value": 17.894736842105267,
+    "uses_per_game": 0.44026315789473686
+   }
+  ],
+  "Staff of Air": [
+   {
+    "label": "Lean Mage: Staff of Light 2 -> Staff of Air 2",
+    "copies": 2,
+    "n_slots": 2,
+    "cape": null,
+    "deck_wr": 45.078947368421055,
+    "value": 2.947368421052637,
+    "uses_per_game": 0.4792105263157895,
+    "vs_replaced": 0.05263157894736992
+   }
+  ],
+  "Staff of Earth": [
+   {
+    "label": "Earth Mage: Iban's Staff 3 -> Staff of Earth 3",
+    "copies": 3,
+    "n_slots": 3,
+    "cape": null,
+    "deck_wr": 32.078947368421055,
+    "value": 2.0000000000000036,
+    "uses_per_game": 0.7528947368421053,
+    "vs_replaced": -17.763157894736842
+   }
+  ],
+  "Superheat": [
+   {
+    "label": "Fire Mage: Lobster 3 -> Superheat 3",
+    "copies": 3,
+    "n_slots": 3,
+    "cape": null,
+    "deck_wr": 47.8421052631579,
+    "value": 1.0,
+    "uses_per_game": 0.24184210526315789,
+    "vs_replaced": -4.78947368421052
+   }
+  ],
+  "Gunnar's Crusade": [
+   {
+    "label": "Lean Melee: Stab 2 -> Gunnar's Crusade 2",
+    "copies": 2,
+    "n_slots": 2,
+    "cape": null,
+    "deck_wr": 35.36842105263158,
+    "value": 0.3157894736842124,
+    "uses_per_game": 0.20789473684210527,
+    "vs_replaced": -1.5263157894736779
+   }
+  ],
+  "Shortbow": [
+   {
+    "label": "Lean Ranged: Magic Shortbow 3 -> Shortbow 3",
+    "copies": 3,
+    "n_slots": 3,
+    "cape": null,
+    "deck_wr": 40.0,
+    "value": 6.684210526315788,
+    "uses_per_game": 0.578421052631579,
+    "vs_replaced": -12.842105263157897
+   }
+  ],
+  "Willow Shortbow": [
+   {
+    "label": "Lean Ranged: Magic Shortbow 3 -> Willow Shortbow 3",
+    "copies": 3,
+    "n_slots": 3,
+    "cape": null,
+    "deck_wr": 57.921052631578945,
+    "value": 24.605263157894733,
+    "uses_per_game": 0.6007894736842105,
+    "vs_replaced": 5.078947368421048
+   }
+  ],
+  "Green D'hide Body": [
+   {
+    "label": "Lean Ranged: Leather Body 2 -> Green D'hide Body 2",
+    "copies": 2,
+    "n_slots": 2,
+    "cape": null,
+    "deck_wr": 52.0,
+    "value": -1.3947368421052602,
+    "uses_per_game": 0.02973684210526316,
+    "vs_replaced": -0.8421052631578974
+   }
+  ],
+  "Black D'hide Body": [
+   {
+    "label": "Lean Ranged: Leather Body 2, Wooden Shield 1 -> Black D'hide Body 2, Leather 1",
+    "copies": 2,
+    "n_slots": 2,
+    "cape": null,
+    "deck_wr": 48.8421052631579,
+    "value": -2.8157894736842053,
+    "uses_per_game": 0.007368421052631579,
+    "vs_replaced": -4.0
+   }
+  ],
+  "Mithril Platebody": [
+   {
+    "label": "Lean Melee: Bronze Platebody 2 -> Mithril Platebody 2",
+    "copies": 2,
+    "n_slots": 2,
+    "cape": null,
+    "deck_wr": 38.10526315789474,
+    "value": 1.3947368421052673,
+    "uses_per_game": 0.08605263157894737,
+    "vs_replaced": 1.2105263157894797
+   }
+  ],
+  "Mystic Robe Top": [
+   {
+    "label": "Lean Mage: Wizard Robe 2 -> Mystic Robe Top 2",
+    "copies": 2,
+    "n_slots": 2,
+    "cape": null,
+    "deck_wr": 44.8421052631579,
+    "value": -1.5526315789473628,
+    "uses_per_game": 0.025789473684210525,
+    "vs_replaced": -0.1842105263157876
+   }
+  ],
+  "Shrimp": [
+   {
+    "label": "Fire Mage: Lobster 4 -> Shrimp 4",
+    "copies": 4,
+    "n_slots": 4,
+    "cape": null,
+    "deck_wr": 45.94736842105263,
+    "value": 1.6578947368421026,
+    "uses_per_game": 0.796578947368421,
+    "vs_replaced": -6.684210526315788
+   }
+  ],
+  "Swordfish": [
+   {
+    "label": "Fire Mage: Lobster 4 -> Swordfish 4",
+    "copies": 4,
+    "n_slots": 4,
+    "cape": null,
+    "deck_wr": 54.71052631578947,
+    "value": 10.421052631578945,
+    "uses_per_game": 1.025,
+    "vs_replaced": 2.078947368421055
+   }
+  ],
+  "Shark": [
+   {
+    "label": "Fire Mage: Lobster 4 -> Shark 4",
+    "copies": 4,
+    "n_slots": 4,
+    "cape": null,
+    "deck_wr": 57.3421052631579,
+    "value": 13.05263157894737,
+    "uses_per_game": 1.0436842105263158,
+    "vs_replaced": 4.71052631578948
+   }
+  ],
+  "Karambwan": [
+   {
+    "label": "Fire Mage: Lobster 2 -> Karambwan 2",
+    "copies": 2,
+    "n_slots": 2,
+    "cape": null,
+    "deck_wr": 50.81578947368421,
+    "value": 2.2894736842105274,
+    "uses_per_game": 0.43473684210526314,
+    "vs_replaced": -1.8157894736842053
+   }
+  ],
+  "Protect from Magic": [
+   {
+    "label": "Lean Melee: Stab 2 -> Protect from Magic 2",
+    "copies": 2,
+    "n_slots": 2,
+    "cape": null,
+    "deck_wr": 37.60526315789474,
+    "value": 2.55263157894737,
+    "uses_per_game": 0.3107894736842105,
+    "vs_replaced": 0.7105263157894797
+   }
+  ],
+  "Protect from Missiles": [
+   {
+    "label": "Lean Melee: Stab 2 -> Protect from Missiles 2",
+    "copies": 2,
+    "n_slots": 2,
+    "cape": null,
+    "deck_wr": 35.73684210526316,
+    "value": 0.6842105263157876,
+    "uses_per_game": 0.05552631578947369,
+    "vs_replaced": -1.1578947368421026
+   }
+  ],
+  "Protect from Melee": [
+   {
+    "label": "Lean Mage: Wooden Shield 2 -> Protect from Melee 2",
+    "copies": 2,
+    "n_slots": 2,
+    "cape": null,
+    "deck_wr": 44.0,
+    "value": 1.026315789473685,
+    "uses_per_game": 0.07921052631578947,
+    "vs_replaced": -1.026315789473685
+   }
+  ],
+  "Mystic Will": [
+   {
+    "label": "Lean Mage: Augury 2 -> Mystic Will 2",
+    "copies": 2,
+    "n_slots": 2,
+    "cape": null,
+    "deck_wr": 41.68421052631579,
+    "value": 3.473684210526315,
+    "uses_per_game": 0.47526315789473683,
+    "vs_replaced": -3.3421052631578974
+   }
+  ],
+  "Piety": [
+   {
+    "label": "Lean Melee: Burst of Strength 3 -> Piety 3",
+    "copies": 3,
+    "n_slots": 3,
+    "cape": null,
+    "deck_wr": 37.026315789473685,
+    "value": 5.447368421052634,
+    "uses_per_game": 0.7394736842105263,
+    "vs_replaced": 0.1315789473684248
+   }
+  ],
+  "Smite": [
+   {
+    "label": "Lean Melee: Burst of Strength 2 -> Smite 2",
+    "copies": 2,
+    "n_slots": 2,
+    "cape": null,
+    "deck_wr": 34.36842105263158,
+    "value": 0.4473684210526372,
+    "uses_per_game": 0.4163157894736842,
+    "vs_replaced": -2.526315789473678
+   }
+  ],
+  "Redemption": [
+   {
+    "label": "Lean Melee: Burst of Strength 2 -> Redemption 2",
+    "copies": 2,
+    "n_slots": 2,
+    "cape": null,
+    "deck_wr": 36.44736842105263,
+    "value": 2.526315789473685,
+    "uses_per_game": 0.3828947368421053,
+    "vs_replaced": -0.4473684210526301
+   }
+  ],
+  "Rune Mace": [
+   {
+    "label": "Rune Melee: Rune Scimitar 3, Slash 2 -> Rune Mace 3, Crush 2",
+    "copies": 3,
+    "n_slots": 3,
+    "cape": null,
+    "deck_wr": 42.21052631578947,
+    "value": 9.473684210526315,
+    "uses_per_game": 0.44263157894736843,
+    "vs_replaced": -1.0
+   }
+  ],
+  "Rune Darts": [
+   {
+    "label": "Rune Thrown: Rune Knives 3 -> Rune Darts 3",
+    "copies": 3,
+    "n_slots": 3,
+    "cape": null,
+    "deck_wr": 57.26315789473684,
+    "value": 5.39473684210526,
+    "uses_per_game": 0.44763157894736844,
+    "vs_replaced": -2.55263157894737
+   }
+  ],
+  "Dragon Dagger": [
+   {
+    "label": "Lean Melee: Vanaka 1 -> Dragon Dagger 1",
+    "copies": 1,
+    "n_slots": 1,
+    "cape": null,
+    "deck_wr": 38.81578947368421,
+    "value": 2.473684210526315,
+    "uses_per_game": 0.24078947368421053,
+    "vs_replaced": 1.9210526315789522
+   }
+  ],
+  "Granite Maul": [
+   {
+    "label": "Lean Melee: Vanaka 1 -> Granite Maul 1",
+    "copies": 1,
+    "n_slots": 1,
+    "cape": null,
+    "deck_wr": 38.3421052631579,
+    "value": 2.0,
+    "uses_per_game": 0.19421052631578947,
+    "vs_replaced": 1.4473684210526372
+   }
+  ],
+  "Dark Bow": [
+   {
+    "label": "Lean Ranged: Wooden Shield 1 -> Dark Bow 1",
+    "copies": 1,
+    "n_slots": 1,
+    "cape": null,
+    "deck_wr": 56.078947368421055,
+    "value": 4.684210526315795,
+    "uses_per_game": 0.2578947368421053,
+    "vs_replaced": 3.2368421052631575
+   }
+  ],
+  "Staff of the Dead": [
+   {
+    "label": "Lean Mage: Banker 1 -> Staff of the Dead 1",
+    "copies": 1,
+    "n_slots": 1,
+    "cape": null,
+    "deck_wr": 50.78947368421053,
+    "value": 5.842105263157897,
+    "uses_per_game": 0.26263157894736844,
+    "vs_replaced": 5.7631578947368425
+   }
+  ],
+  "Wise Old Man": [
+   {
+    "label": "Lean Melee: Vanaka 1 -> Wise Old Man 1",
+    "copies": 1,
+    "n_slots": 1,
+    "cape": null,
+    "deck_wr": 37.026315789473685,
+    "value": 0.6842105263157876,
+    "uses_per_game": 0.22736842105263158,
+    "vs_replaced": 0.1315789473684248
+   }
+  ],
+  "Fire Blast": [
+   {
+    "label": "Fire Mage: Lobster 2, Kiteshield 1, Wooden Shield 1 -> Death Rune 2, Fire Blast 2",
+    "copies": 2,
+    "n_slots": 4,
+    "cape": null,
+    "deck_wr": 47.86842105263158,
+    "value": 4.026315789473685,
+    "uses_per_game": 0.30078947368421055,
+    "vs_replaced": -4.763157894736835
+   }
+  ],
+  "Fire Wave": [
+   {
+    "label": "Fire Mage: Lobster 2, Kiteshield 1, Wooden Shield 1 -> Blood Rune 2, Fire Wave 2",
+    "copies": 2,
+    "n_slots": 4,
+    "cape": null,
+    "deck_wr": 45.26315789473684,
+    "value": 1.4210526315789451,
+    "uses_per_game": 0.24763157894736842,
+    "vs_replaced": -7.368421052631575
+   }
+  ],
+  "Earth Blast": [
+   {
+    "label": "Earth Mage: Air Strike 4 -> Death Rune 2, Earth Blast 2",
+    "copies": 2,
+    "n_slots": 4,
+    "cape": null,
+    "deck_wr": 43.21052631578947,
+    "value": 1.8157894736842124,
+    "uses_per_game": 0.29078947368421054,
+    "vs_replaced": -6.631578947368425
+   }
+  ],
+  "Earth Wave": [
+   {
+    "label": "Earth Mage: Air Strike 4 -> Blood Rune 2, Earth Wave 2",
+    "copies": 2,
+    "n_slots": 4,
+    "cape": null,
+    "deck_wr": 43.05263157894737,
+    "value": 1.6578947368421098,
+    "uses_per_game": 0.2055263157894737,
+    "vs_replaced": -6.789473684210527
+   }
+  ],
+  "Water Wave": [
+   {
+    "label": "Water Mage: Death Rune 3, Water Blast 3 -> Blood Rune 3, Water Wave 3",
+    "copies": 3,
+    "n_slots": 6,
+    "cape": null,
+    "deck_wr": 44.10526315789474,
+    "value": 12.236842105263161,
+    "uses_per_game": 0.5771052631578948,
+    "vs_replaced": -0.05263157894736281
+   }
+  ],
+  "Tinderbox": [
+   {
+    "label": "Lean Mage: Wooden Shield 2 -> Tinderbox 2",
+    "copies": 2,
+    "n_slots": 2,
+    "cape": null,
+    "deck_wr": 42.973684210526315,
+    "value": 0.0,
+    "uses_per_game": 0.031315789473684214,
+    "vs_replaced": -2.05263157894737
+   }
+  ],
+  "Smith's Hammer": [
+   {
+    "label": "Lean Melee: Stab 3 -> Smith's Hammer 3",
+    "copies": 3,
+    "n_slots": 3,
+    "cape": null,
+    "deck_wr": 36.76315789473684,
+    "value": 2.7894736842105274,
+    "uses_per_game": 0.6610526315789473,
+    "vs_replaced": -0.1315789473684177
+   }
+  ],
+  "Anti-dragon Shield": [
+   {
+    "label": "Lean Melee: Kiteshield 3 -> Anti-dragon Shield 3",
+    "copies": 3,
+    "n_slots": 3,
+    "cape": null,
+    "deck_wr": 34.05263157894737,
+    "value": 2.4210526315789487,
+    "uses_per_game": 0.6157894736842106,
+    "vs_replaced": -2.8421052631578902
+   }
+  ],
+  "Horvik": [
+   {
+    "label": "Lean Melee: Lobster 1, Doric 1 -> Horvik 2",
+    "copies": 2,
+    "n_slots": 2,
+    "cape": null,
+    "deck_wr": 35.1578947368421,
+    "value": 0.47368421052631504,
+    "uses_per_game": 0.285,
+    "vs_replaced": -1.7368421052631575
+   }
+  ],
+  "Thessalia": [
+   {
+    "label": "Lean Ranged: Lowe 1, Wooden Shield 1 -> Thessalia 2",
+    "copies": 2,
+    "n_slots": 2,
+    "cape": null,
+    "deck_wr": 50.6578947368421,
+    "value": -0.15789473684210975,
+    "uses_per_game": 0.22710526315789473,
+    "vs_replaced": -2.1842105263157947
+   }
+  ],
+  "Brother Jered": [
+   {
+    "label": "Lean Melee + Piety/Smite: Stab 2 -> Brother Jered 2",
+    "copies": 2,
+    "n_slots": 2,
+    "cape": null,
+    "deck_wr": 35.1,
+    "value": 0.22500000000000142,
+    "uses_per_game": 0.27325,
+    "vs_replaced": -2.2250000000000014
+   }
+  ],
+  "Wilderness": [
+   {
+    "label": "Lean Melee: Stab 2 -> Wilderness 2",
+    "copies": 2,
+    "n_slots": 2,
+    "cape": null,
+    "deck_wr": 35.473684210526315,
+    "value": 0.4210526315789451,
+    "uses_per_game": 0.10552631578947369,
+    "vs_replaced": -1.4210526315789451
+   }
+  ],
+  "Lumbridge": [
+   {
+    "label": "Lean Melee: Stab 2 -> Lumbridge 2",
+    "copies": 2,
+    "n_slots": 2,
+    "cape": null,
+    "deck_wr": 34.6578947368421,
+    "value": -0.39473684210526727,
+    "uses_per_game": 0.3057894736842105,
+    "vs_replaced": -2.2368421052631575
+   }
+  ],
+  "Grand Exchange": [
+   {
+    "label": "Lean Melee: Stab 2 -> Grand Exchange 2",
+    "copies": 2,
+    "n_slots": 2,
+    "cape": null,
+    "deck_wr": 34.421052631578945,
+    "value": -0.6315789473684248,
+    "uses_per_game": 0.3531578947368421,
+    "vs_replaced": -2.473684210526315
+   }
+  ],
+  "Duel Arena": [
+   {
+    "label": "Lean Mage: Wizards' Tower 2 -> Duel Arena 2",
+    "copies": 2,
+    "n_slots": 2,
+    "cape": null,
+    "deck_wr": 44.73684210526316,
+    "value": 0.21052631578947256,
+    "uses_per_game": 0.1368421052631579,
+    "vs_replaced": -0.28947368421052744
+   }
+  ],
+  "Mage Arena": [
+   {
+    "label": "Lean Mage: Wizards' Tower 2 -> Mage Arena 2",
+    "copies": 2,
+    "n_slots": 2,
+    "cape": null,
+    "deck_wr": 47.21052631578947,
+    "value": 2.6842105263157876,
+    "uses_per_game": 0.19605263157894737,
+    "vs_replaced": 2.1842105263157876
+   }
+  ],
+  "Varrock": [
+   {
+    "label": "Lean Melee: Stab 3 -> Varrock 1, Varrock Teleport Tablet 2",
+    "copies": 1,
+    "n_slots": 3,
+    "cape": null,
+    "deck_wr": 33.94736842105263,
+    "value": -0.02631578947368496,
+    "uses_per_game": 0.10026315789473685,
+    "vs_replaced": -2.94736842105263
+   }
+  ],
+  "Varrock Teleport Tablet": [
+   {
+    "label": "Lean Melee: Stab 3 -> Varrock 1, Varrock Teleport Tablet 2 (tablets blanked)",
+    "copies": 2,
+    "n_slots": 2,
+    "cape": null,
+    "deck_wr": 33.94736842105263,
+    "value": -0.05263157894736992,
+    "uses_per_game": 0.22210526315789475,
+    "vs_replaced": -2.94736842105263
+   }
+  ],
+  "Varrock Teleport": [
+   {
+    "label": "Smoke Mage: Wizards' Tower 2, Wooden Shield 1, Rune Pouch 2 -> Law Rune 2, Varrock Teleport 2, Varrock 1",
+    "copies": 2,
+    "n_slots": 4,
+    "cape": null,
+    "deck_wr": 44.578947368421055,
+    "value": -1.6842105263157876,
+    "uses_per_game": 0.1792105263157895,
+    "vs_replaced": -7.89473684210526
+   }
+  ],
+  "Law Rune": [
+   {
+    "label": "Smoke Mage + Varrock Teleport: 2 Law blanked",
+    "copies": 2,
+    "n_slots": 2,
+    "cape": null,
+    "deck_wr": 44.578947368421055,
+    "value": -1.2631578947368425,
+    "uses_per_game": 0.4392105263157895,
+    "vs_replaced": -7.89473684210526
+   }
+  ],
+  "Magical Longsword": [
+   {
+    "label": "Mage/Melee+ (4)",
+    "copies": 4,
+    "n_slots": 4,
+    "cape": null,
+    "deck_wr": 26.25,
+    "value": 11.475,
+    "uses_per_game": 0.701
+   }
+  ],
+  "Saradomin Sword": [
+   {
+    "label": "Mage/Melee+ (2)",
+    "copies": 2,
+    "n_slots": 2,
+    "cape": null,
+    "deck_wr": 26.25,
+    "value": 2.5500000000000007,
+    "uses_per_game": 0.20275
+   }
+  ],
+  "Shieldbow": [
+   {
+    "label": "Melee/Ranged+ (3)",
+    "copies": 3,
+    "n_slots": 3,
+    "cape": null,
+    "deck_wr": 34.65,
+    "value": 6.849999999999998,
+    "uses_per_game": 0.42775
+   }
+  ],
+  "Air Battlestaff": [
+   {
+    "label": "Mage/Ranged+ (3)",
+    "copies": 3,
+    "n_slots": 3,
+    "cape": null,
+    "deck_wr": 47.2,
+    "value": 11.625,
+    "uses_per_game": 0.41675
+   }
+  ],
+  "Enchanted Bar": [
+   {
+    "label": "Mage/Melee+ + Enchanted Bar",
+    "copies": 4,
+    "n_slots": 4,
+    "cape": null,
+    "deck_wr": 32.65,
+    "value": 19.025,
+    "uses_per_game": 0.98175,
+    "vs_replaced": 6.399999999999999,
+    "vs_basics": 8.424999999999997
+   }
+  ],
+  "Mithril Grapple": [
+   {
+    "label": "Melee/Ranged+ + Grapple",
+    "copies": 4,
+    "n_slots": 4,
+    "cape": null,
+    "deck_wr": 42.275,
+    "value": 15.2,
+    "uses_per_game": 0.88675,
+    "vs_replaced": 7.625,
+    "vs_basics": 6.449999999999996
+   }
+  ],
+  "Enchanted Logs": [
+   {
+    "label": "Mage/Ranged+ + Enchanted Logs",
+    "copies": 4,
+    "n_slots": 4,
+    "cape": null,
+    "deck_wr": 48.275,
+    "value": 25.724999999999998,
+    "uses_per_game": 0.6955,
+    "vs_replaced": 1.0749999999999957,
+    "vs_basics": 8.299999999999997
+   }
+  ],
+  "Void Knight Top": [
+   {
+    "label": "Mage/Melee+ + Void",
+    "copies": 2,
+    "n_slots": 2,
+    "cape": null,
+    "deck_wr": 30.325,
+    "value": 3.8249999999999993,
+    "uses_per_game": 0.43325,
+    "vs_replaced": 4.074999999999999
+   }
+  ],
+  "Cook's Assistant": [
+   {
+    "label": "Lean Melee: Stab 4 -> Cook's Assistant 2, Lobster 2",
+    "copies": 2,
+    "n_slots": 2,
+    "cape": null,
+    "deck_wr": 35.10526315789474,
+    "value": -0.3157894736842053,
+    "uses_per_game": 0.1431578947368421,
+    "vs_replaced": -1.7894736842105203
+   }
+  ],
+  "Doric's Quest": [
+   {
+    "label": "Lean Melee: Stab 2 -> Doric's Quest 2",
+    "copies": 2,
+    "n_slots": 2,
+    "cape": null,
+    "deck_wr": 35.36842105263158,
+    "value": 0.3157894736842124,
+    "uses_per_game": 0.015,
+    "vs_replaced": -1.5263157894736779
+   },
+   {
+    "label": "Quest deck + Quest Point Cape",
+    "copies": 2,
+    "n_slots": 2,
+    "cape": "Quest Point Cape",
+    "deck_wr": 28.15,
+    "value": 2.9499999999999993,
+    "uses_per_game": 0.23475
+   }
+  ],
+  "Prince Ali Rescue": [
+   {
+    "label": "Lean Melee: Stab 2 -> Prince Ali Rescue 2",
+    "copies": 2,
+    "n_slots": 2,
+    "cape": null,
+    "deck_wr": 35.078947368421055,
+    "value": 0.02631578947368496,
+    "uses_per_game": 0.016842105263157894,
+    "vs_replaced": -1.8157894736842053
+   }
+  ],
+  "Vampyre Slayer": [
+   {
+    "label": "Lean Melee: Stab 2 -> Vampyre Slayer 2",
+    "copies": 2,
+    "n_slots": 2,
+    "cape": null,
+    "deck_wr": 35.1578947368421,
+    "value": 0.10526315789473273,
+    "uses_per_game": 0.22026315789473686,
+    "vs_replaced": -1.7368421052631575
+   },
+   {
+    "label": "Quest deck + Quest Point Cape",
+    "copies": 2,
+    "n_slots": 2,
+    "cape": "Quest Point Cape",
+    "deck_wr": 28.15,
+    "value": 0.4499999999999993,
+    "uses_per_game": 0.0
+   }
+  ],
+  "Ernest the Chicken": [
+   {
+    "label": "Lean Melee: Stab 2 -> Ernest the Chicken 2",
+    "copies": 2,
+    "n_slots": 2,
+    "cape": null,
+    "deck_wr": 34.81578947368421,
+    "value": -0.23684210526315752,
+    "uses_per_game": 0.09815789473684211,
+    "vs_replaced": -2.0789473684210478
+   }
+  ],
+  "Demon Slayer": [
+   {
+    "label": "Lean Melee: Stab 2 -> Demon Slayer 2",
+    "copies": 2,
+    "n_slots": 2,
+    "cape": null,
+    "deck_wr": 35.26315789473684,
+    "value": 0.21052631578947256,
+    "uses_per_game": 0.1418421052631579,
+    "vs_replaced": -1.6315789473684177
+   }
+  ],
+  "Dragon Slayer": [
+   {
+    "label": "Lean Melee: Stab 2 -> Dragon Slayer 2",
+    "copies": 2,
+    "n_slots": 2,
+    "cape": null,
+    "deck_wr": 35.10526315789474,
+    "value": 0.05263157894736992,
+    "uses_per_game": 0.011052631578947368,
+    "vs_replaced": -1.7894736842105203
+   }
+  ],
+  "Romeo & Juliet": [
+   {
+    "label": "Lean Melee: Stab 2 -> Romeo & Juliet 2",
+    "copies": 2,
+    "n_slots": 2,
+    "cape": null,
+    "deck_wr": 35.5,
+    "value": 0.4473684210526301,
+    "uses_per_game": 0.0,
+    "vs_replaced": -1.3947368421052602
+   },
+   {
+    "label": "Quest deck + Quest Point Cape",
+    "copies": 3,
+    "n_slots": 3,
+    "cape": "Quest Point Cape",
+    "deck_wr": 28.15,
+    "value": 3.8999999999999986,
+    "uses_per_game": 0.548
+   }
+  ],
+  "Goblin Diplomacy": [
+   {
+    "label": "Lean Melee: Stab 2 -> Goblin Diplomacy 2",
+    "copies": 2,
+    "n_slots": 2,
+    "cape": null,
+    "deck_wr": 35.13157894736842,
+    "value": 0.07894736842104777,
+    "uses_per_game": 0.0,
+    "vs_replaced": -1.7631578947368425
+   },
+   {
+    "label": "Quest deck + Quest Point Cape",
+    "copies": 2,
+    "n_slots": 2,
+    "cape": "Quest Point Cape",
+    "deck_wr": 28.15,
+    "value": 2.599999999999998,
+    "uses_per_game": 0.3945
+   }
+  ],
+  "Sheep Shearer": [
+   {
+    "label": "Lean Mage: Banker 1, Wooden Shield 1 -> Sheep Shearer 2",
+    "copies": 2,
+    "n_slots": 2,
+    "cape": null,
+    "deck_wr": 44.13157894736842,
+    "value": 0.39473684210526017,
+    "uses_per_game": 0.391578947368421,
+    "vs_replaced": -0.8947368421052673
+   }
+  ],
+  "Rune Mysteries": [
+   {
+    "label": "Lean Mage: Wooden Shield 2 -> Rune Mysteries 2",
+    "copies": 2,
+    "n_slots": 2,
+    "cape": null,
+    "deck_wr": 43.23684210526316,
+    "value": 0.2631578947368425,
+    "uses_per_game": 0.02763157894736842,
+    "vs_replaced": -1.7894736842105274
+   }
+  ],
+  "The Restless Ghost": [
+   {
+    "label": "Lean Melee + Piety/Smite: Stab 2 -> Restless Ghost 2",
+    "copies": 2,
+    "n_slots": 2,
+    "cape": null,
+    "deck_wr": 34.825,
+    "value": -0.04999999999999716,
+    "uses_per_game": 0.00275,
+    "vs_replaced": -2.5
+   }
+  ]
+ },
+ "capes": {
+  "Quest Point Cape": {
+   "host": "Quest deck",
+   "with_cape": 28.15,
+   "without": 30.6,
+   "value": -2.450000000000003,
+   "cape_win_share": 43.96092362344583
+  },
+  "Attack Cape": {
+   "host": "Lean Melee",
+   "with_cape": 44.0,
+   "without": 36.89473684210526,
+   "value": 7.10526315789474,
+   "cape_win_share": 47.188995215311
+  },
+  "Ranged Cape": {
+   "host": "Lean Ranged",
+   "with_cape": 51.86842105263158,
+   "without": 52.8421052631579,
+   "value": -0.973684210526315,
+   "cape_win_share": 26.78843226788432
+  },
+  "Magic Cape": {
+   "host": "Lean Mage",
+   "with_cape": 52.026315789473685,
+   "without": 45.026315789473685,
+   "value": 7.0,
+   "cape_win_share": 66.41375821952454
+  },
+  "Defence Cape": {
+   "host": "Lean Melee + Protects",
+   "with_cape": 42.55,
+   "without": 38.125,
+   "value": 4.424999999999997,
+   "cape_win_share": 23.91304347826087
+  },
+  "Prayer Cape": {
+   "host": "Lean Melee + Piety/Smite",
+   "with_cape": 47.575,
+   "without": 37.325,
+   "value": 10.25,
+   "cape_win_share": 41.56594850236469
+  },
+  "Cooking Cape": {
+   "host": "Lean Melee + food",
+   "with_cape": 51.05,
+   "without": 41.9,
+   "value": 9.149999999999999,
+   "cape_win_share": 30.264446620959845
+  },
+  "Smithing Cape": {
+   "host": "Lean Melee",
+   "with_cape": 47.3421052631579,
+   "without": 36.89473684210526,
+   "value": 10.447368421052637,
+   "cape_win_share": 57.254030016675934
+  },
+  "Woodcutting Cape": {
+   "host": "Lean Ranged",
+   "with_cape": 57.23684210526316,
+   "without": 52.8421052631579,
+   "value": 4.39473684210526,
+   "cape_win_share": 23.908045977011493
+  },
+  "Runecrafting Cape": {
+   "host": "Lean Mage",
+   "with_cape": 53.421052631578945,
+   "without": 45.026315789473685,
+   "value": 8.39473684210526,
+   "cape_win_share": 43.251231527093594
+  }
+ }
+}

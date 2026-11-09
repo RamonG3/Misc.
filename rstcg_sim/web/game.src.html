@@ -1,0 +1,1315 @@
+<title>RuneScape TCG Duel</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&amp;family=Alegreya+Sans:ital,wght@0,400;0,500;0,700;1,400&amp;display=swap" rel="stylesheet">
+<style>
+/* A duel across a card table: the bot's mat on top, yours below, the cape race between them.
+   Cards reuse the Set 1 template look: parchment body, dark header, gold trim, style-coloured frame. */
+:root {
+  --table: #14100d; --table-2: #1b1511; --mat: #201a15; --mat-2: #281f19; --line: #3d3127; --line-2: #54442f;
+  --parch: #f1e7cf; --parch-2: #e3d5b5; --parch-line: #b9a982; --ink: #241f1a; --ink-2: #5a4e40;
+  --gold: #c9a54b; --gold-hi: #f3d27a; --text: #ece3cd; --muted: #b0a283; --faint: #8a7d64;
+  --melee: #8e2b23; --ranged: #3e6b34; --magic: #2d4f8c; --neutral: #5e5a52; --material: #7a6648; --legend: #b08a2e;
+  --hurt: #ef6a55; --heal: #7fca83; --you: #f0cd6e; --bot: #a9c1e4;
+  --display: 'Cinzel', 'Trajan Pro', Georgia, serif;
+  --body: 'Alegreya Sans', 'Gill Sans', 'Segoe UI', system-ui, sans-serif;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+body {
+  background-color: var(--table);
+  background-image: radial-gradient(ellipse 140% 70% at 50% 0%, #241c15 0%, var(--table) 70%);
+  background-repeat: no-repeat;
+  color: var(--text); font-family: var(--body); font-size: 15px; line-height: 1.35;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  -webkit-tap-highlight-color: transparent;
+}
+button { font: inherit; color: inherit; cursor: pointer; }
+button:focus-visible, [tabindex]:focus-visible, select:focus-visible, input:focus-visible { outline: 2px solid var(--gold-hi); outline-offset: 2px; }
+h1, h2, h3 { font-family: var(--display); font-weight: 700; text-wrap: balance; margin: 0; }
+.num { font-variant-numeric: tabular-nums; }
+
+/* ---------- header ---------- */
+.top { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; padding-block: 12px 10px; max-width: 1280px; margin: 0 auto; }
+.brand { font-family: var(--display); font-weight: 700; font-size: 19px; color: var(--gold-hi); letter-spacing: 0.04em; }
+.brand span { color: var(--muted); font-size: 13px; letter-spacing: 0.16em; text-transform: uppercase; margin-left: 6px; }
+.top nav { display: flex; gap: 8px; flex-wrap: wrap; }
+.btn { border: 1px solid var(--line-2); background: var(--mat-2); border-radius: 8px; padding: 7px 12px; font-size: 14px; }
+.btn:hover { border-color: var(--gold); }
+.btn.primary { background: linear-gradient(#d8b55a, #b8923a); color: #241a0c; border-color: #e6c873; font-weight: 700; }
+.btn.primary:hover { background: linear-gradient(#e6c46a, #c39c41); }
+.btn.quiet { background: transparent; }
+
+/* ---------- setup ---------- */
+.setup { max-width: 1080px; margin: 0 auto; padding-block: 8px 40px; display: grid; gap: 18px; }
+.hero { display: grid; gap: 6px; padding-block: 6px 4px; }
+.hero h1 { font-size: clamp(26px, 4.4vw, 40px); color: var(--gold-hi); }
+.hero p { margin: 0; color: var(--muted); max-width: 62ch; }
+.picks { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); gap: 18px; }
+.panel { background: var(--mat); border: 1px solid var(--line); border-radius: 12px; padding: 14px; display: grid; gap: 10px; align-content: start; min-width: 0; }
+.panel h2 { font-size: 15px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--gold); }
+.panel .hint { margin: 0; color: var(--muted); font-size: 13.5px; }
+.deckgroup { display: grid; gap: 6px; }
+.deckgroup h3 { font-family: var(--body); font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--faint); font-weight: 700; margin-top: 4px; }
+.decks { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 6px; }
+.deckbtn { text-align: left; border: 1px solid var(--line); background: var(--mat-2); border-radius: 8px; padding: 8px 10px; display: grid; gap: 2px; min-width: 0; }
+.deckbtn:hover { border-color: var(--line-2); }
+.deckbtn[aria-pressed="true"] { border-color: var(--gold); background: #33281d; box-shadow: inset 0 0 0 1px var(--gold); }
+.deckbtn b { font-family: var(--display); font-size: 14px; color: var(--parch); }
+.deckbtn small { color: var(--muted); font-size: 12.5px; }
+.tag { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; font-weight: 700; }
+.dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+.capes-pick { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 6px; }
+.capebtn { text-align: left; border: 1px solid var(--line); background: var(--mat-2); border-radius: 8px; padding: 8px 10px; display: grid; gap: 2px; }
+.capebtn[aria-pressed="true"] { border-color: var(--gold); background: #33281d; box-shadow: inset 0 0 0 1px var(--gold); }
+.capebtn b { font-family: var(--display); font-size: 13.5px; color: var(--parch); }
+.capebtn small { color: var(--muted); font-size: 12.5px; }
+.capebtn .fit { color: var(--gold-hi); font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; font-weight: 700; }
+.row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+.seg { display: inline-flex; border: 1px solid var(--line-2); border-radius: 8px; overflow: hidden; }
+.seg button { border: 0; background: var(--mat-2); padding: 7px 12px; font-size: 14px; }
+.seg button + button { border-left: 1px solid var(--line-2); }
+.seg button[aria-pressed="true"] { background: #4a3a22; color: var(--gold-hi); font-weight: 700; }
+select { background: var(--mat-2); color: var(--text); border: 1px solid var(--line-2); border-radius: 8px; padding: 7px 10px; font: inherit; max-width: 100%; }
+.startbar { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; justify-content: space-between; background: var(--mat); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; }
+.startbar .summary { color: var(--muted); min-width: 0; }
+.startbar .summary b { color: var(--parch); }
+.fanmade { color: var(--faint); font-size: 12.5px; margin: 0; }
+
+/* ---------- duel layout ---------- */
+.duel { max-width: 1280px; margin: 0 auto; display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 14px; padding-bottom: 20px; }
+.board { display: grid; gap: 10px; min-width: 0; align-content: start; }
+.side { min-width: 0; display: grid; gap: 10px; align-content: start; position: sticky; top: calc(env(safe-area-inset-top, 0px) + 8px); max-height: calc(100vh - 24px); }
+@media (max-width: 980px) {
+  .duel { grid-template-columns: minmax(0, 1fr); }
+  .side { position: static; max-height: none; }
+  .picks { grid-template-columns: minmax(0, 1fr); }
+}
+
+/* ---------- player mats ---------- */
+.zone { background: var(--mat); border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; display: grid; gap: 8px; min-width: 0; }
+.zone.active { border-color: #6b5634; box-shadow: 0 0 0 1px #6b5634, 0 0 24px rgba(201, 165, 75, 0.12); }
+.zone-head { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+.who { display: grid; gap: 1px; min-width: 0; }
+.who .name { font-family: var(--display); font-weight: 700; font-size: 17px; }
+.zone-you .who .name { color: var(--you); }
+.zone-bot .who .name { color: var(--bot); }
+.who .deckname { font-size: 12.5px; color: var(--muted); }
+.life { display: flex; align-items: baseline; gap: 6px; padding: 4px 10px; border-radius: 8px; background: #17120e; border: 1px solid var(--line); position: relative; }
+.life .n { font-family: var(--display); font-weight: 700; font-size: 26px; line-height: 1; color: var(--parch); }
+.life .l { font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
+.life .bar { position: absolute; left: 6px; right: 6px; bottom: 3px; height: 2px; background: #3a2e24; border-radius: 2px; overflow: hidden; }
+.life .bar i { display: block; height: 100%; background: var(--gold); }
+.life.low .n { color: var(--hurt); }
+.life.flash-hurt { animation: hurt 0.6s ease-out; }
+.life.flash-heal { animation: healf 0.6s ease-out; }
+@keyframes hurt { 0% { background: #5a1c14; } 100% { background: #17120e; } }
+@keyframes healf { 0% { background: #1f4a22; } 100% { background: #17120e; } }
+.counts { display: flex; gap: 12px; flex-wrap: wrap; color: var(--muted); font-size: 13.5px; align-items: center; }
+.counts b { color: var(--text); font-weight: 700; }
+.linkish { background: none; border: 0; padding: 0; color: var(--muted); text-decoration: underline dotted; text-underline-offset: 3px; font-size: 13.5px; }
+.linkish:hover { color: var(--gold-hi); }
+.pips { display: inline-flex; gap: 3px; vertical-align: middle; }
+.pips i { width: 9px; height: 9px; border-radius: 50%; border: 1.5px solid var(--gold); display: inline-block; }
+.pips i.on { background: var(--gold-hi); border-color: var(--gold-hi); }
+.backs { display: inline-flex; gap: 2px; vertical-align: middle; }
+.backs i { width: 10px; height: 14px; border-radius: 2px; background: linear-gradient(135deg, #5a4630, #3a2c1e); border: 1px solid #7a6040; display: inline-block; }
+
+.slots { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 6px; }
+@media (max-width: 1180px) { .slots { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (max-width: 560px) { .slots { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.slot { background: var(--mat-2); border: 1px solid var(--line); border-radius: 8px; padding: 5px 8px; min-width: 0; display: grid; gap: 1px; }
+.slot .k { font-size: 10.5px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--faint); font-weight: 700; }
+.slot .v { font-size: 14px; color: var(--parch); overflow-wrap: anywhere; }
+.slot .s { font-size: 12.5px; color: var(--muted); }
+.slot.empty .v { color: var(--faint); }
+.slot.hot { border-color: #6b5634; }
+.mats { display: flex; gap: 5px; flex-wrap: wrap; min-height: 26px; align-items: center; }
+.mats .none { color: var(--faint); font-size: 13px; }
+.chip { display: inline-flex; align-items: center; gap: 5px; padding: 2px 8px 2px 4px; border-radius: 999px; background: #2e241c; border: 1px solid var(--line-2); font-size: 13px; color: var(--parch); white-space: nowrap; }
+.chip svg { width: 16px; height: 16px; flex: none; }
+.chip b { font-variant-numeric: tabular-nums; }
+.effects { display: flex; gap: 5px; flex-wrap: wrap; }
+.effect { font-size: 12px; padding: 2px 8px; border-radius: 999px; border: 1px solid #4b5e3a; color: #cfe6c0; background: #1f2a19; }
+
+/* ---------- middle strip ---------- */
+.strip { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 10px; align-items: stretch; }
+.banner { background: #241c15; border: 1px solid var(--line-2); border-radius: 12px; padding: 8px 12px; display: grid; gap: 4px; align-content: center; min-width: 0; }
+.banner .t { font-family: var(--display); font-weight: 700; font-size: 16px; color: var(--gold-hi); }
+.banner .t.botturn { color: var(--bot); }
+.banner .sub { color: var(--muted); font-size: 13.5px; }
+.thinking::after { content: ''; display: inline-block; width: 1.4em; text-align: left; animation: dots 1.2s steps(4) infinite; }
+@keyframes dots { 0% { content: ''; } 25% { content: '.'; } 50% { content: '..'; } 75% { content: '...'; } }
+.race { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(200px, 1fr); gap: 8px; min-width: 0; }
+@media (max-width: 720px) { .strip { grid-template-columns: minmax(0, 1fr); } .race { grid-auto-flow: row; grid-auto-columns: auto; } }
+.cape { background: linear-gradient(180deg, #2a1f17, #221a14); border: 1px solid var(--line-2); border-radius: 12px; padding: 8px 10px; display: grid; gap: 4px; min-width: 0; position: relative; }
+.cape.can { border-color: var(--gold-hi); box-shadow: 0 0 0 1px var(--gold-hi), 0 0 18px rgba(243, 210, 122, 0.25); }
+.cape .nm { font-family: var(--display); font-weight: 700; font-size: 14px; color: var(--parch); display: flex; align-items: center; gap: 6px; }
+.cape .nm svg { width: 16px; height: 16px; flex: none; }
+.cape .req { font-size: 12.5px; color: var(--muted); }
+.cape .owner { font-size: 10.5px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--faint); font-weight: 700; }
+.prog { display: grid; grid-template-columns: 34px minmax(0, 1fr) 40px; gap: 6px; align-items: center; font-size: 12.5px; }
+.prog .lab { color: var(--muted); }
+.prog .track { height: 6px; border-radius: 6px; background: #3a2e24; overflow: hidden; }
+.prog .track i { display: block; height: 100%; }
+.prog.you .track i { background: var(--you); }
+.prog.bot .track i { background: var(--bot); }
+.prog .val { text-align: right; color: var(--text); font-variant-numeric: tabular-nums; }
+.worn { font-size: 13px; color: var(--parch); display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.worn .pips i { width: 12px; height: 12px; }
+.location { font-size: 13px; color: var(--muted); }
+.location b { color: var(--parch); }
+
+/* ---------- cards ---------- */
+.hand-wrap { background: #1a1410; border: 1px solid var(--line); border-radius: 12px; padding: 10px 10px 8px; display: grid; gap: 6px; min-width: 0; }
+.hand-wrap .k { font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--faint); font-weight: 700; display: flex; justify-content: space-between; gap: 8px; }
+@media (max-width: 560px) { .hand-wrap .k span + span { display: none; } }
+.hand { display: flex; gap: 8px; overflow-x: auto; padding: 6px 2px 8px; scrollbar-width: thin; }
+.card { --frame: var(--neutral); flex: none; width: 116px; height: 206px; border-radius: 10px; padding: 4px; background: var(--frame); border: 0; text-align: left; position: relative; transition: transform 0.12s ease, box-shadow 0.12s ease, opacity 0.12s; color: var(--ink); }
+.card .in { height: 100%; border-radius: 7px; overflow: hidden; background: var(--parch); border: 1px solid rgba(0, 0, 0, 0.45); display: flex; flex-direction: column; }
+.card .hd { background: #2a2420; padding: 4px 6px 3px; display: grid; gap: 0; }
+.card .hd .nm { font-family: var(--display); font-weight: 700; font-size: 11.5px; color: var(--gold-hi); line-height: 1.12; }
+.card .hd .req { font-size: 9.5px; color: #e9dfc7; letter-spacing: 0.03em; line-height: 1.2; }
+.card .ty { background: #3b342d; color: #e9dfc7; font-size: 8.8px; letter-spacing: 0.09em; text-transform: uppercase; padding: 2px 6px; border-top: 1px solid #c9a54b; border-bottom: 1px solid #c9a54b; display: flex; justify-content: space-between; gap: 4px; }
+.card .st { font-family: var(--display); font-weight: 700; font-size: 12.5px; padding: 4px 6px 0; color: var(--ink); }
+.card .tx { font-size: 10.5px; line-height: 1.22; padding: 2px 6px 4px; color: var(--ink); overflow: hidden; }
+.card .art { height: 50px; flex: none; background: #3b342d; border-top: 1px solid #c9a54b; display: flex; align-items: center; justify-content: center; overflow: hidden; position: relative; }
+.card .art img { display: block; }
+.card .art.item img { max-width: 92%; max-height: 44px; object-fit: contain; filter: drop-shadow(0 2px 3px rgba(0,0,0,.5)); }
+.card .art.scene img, .card .art.portrait img { width: 100%; height: 100%; object-fit: cover; }
+.card .art.portrait img { object-position: 50% 14%; }
+.card .art.tall .bg { position: absolute; inset: -8px; width: calc(100% + 16px); height: calc(100% + 16px); object-fit: cover; filter: blur(6px) brightness(.7); }
+.card .art.tall .fg { position: relative; height: 100%; width: auto; }
+.card .art .mat { width: 34px; height: 34px; }
+.card .art .mat svg { width: 100%; height: 100%; }
+.card .art .none { width: 26px; height: 26px; color: #c9a54b; opacity: .35; }
+.card .ty { border-top: 1px solid #c9a54b; }
+.card.big .art { height: 74px; } .card.big .art.item img { max-height: 66px; }
+.card .glyph { position: absolute; right: 8px; bottom: 7px; width: 20px; height: 20px; opacity: 0.35; }
+.card.melee { --frame: var(--melee); } .card.ranged { --frame: var(--ranged); } .card.magic { --frame: var(--magic); }
+.card.material { --frame: var(--material); } .card.legend { --frame: var(--legend); }
+.card.playable { cursor: pointer; box-shadow: 0 0 0 2px var(--gold-hi), 0 6px 16px rgba(0, 0, 0, 0.5); }
+.card.playable:hover { transform: translateY(-4px); }
+.card.selected { transform: translateY(-8px); box-shadow: 0 0 0 3px #fff3c4, 0 10px 22px rgba(0, 0, 0, 0.6); }
+.card.dim { opacity: 0.62; }
+.card.discardable { cursor: pointer; box-shadow: 0 0 0 2px var(--hurt); }
+.card.fresh::before { content: 'New'; position: absolute; top: -7px; left: 8px; background: var(--gold-hi); color: #241a0c; font-size: 9.5px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; padding: 1px 6px; border-radius: 6px; z-index: 1; }
+.card .why { position: absolute; left: 4px; right: 4px; bottom: 4px; font-size: 9.5px; line-height: 1.15; color: #fff; background: rgba(20, 14, 10, 0.86); padding: 3px 5px; border-radius: 0 0 7px 7px; display: none; }
+.card.dim:hover .why, .card.dim:focus-visible .why { display: block; }
+.card.big { width: 168px; height: 236px; }
+.card.big .hd .nm { font-size: 15px; } .card.big .hd .req { font-size: 11.5px; } .card.big .ty { font-size: 10px; }
+.card.big .st { font-size: 15px; } .card.big .tx { font-size: 12.5px; }
+
+/* ---------- actions ---------- */
+.actions { background: #241c15; border: 1px solid var(--line-2); border-radius: 12px; padding: 10px; display: grid; gap: 8px; min-height: 74px; align-content: start; }
+.actions .k { font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--faint); font-weight: 700; }
+.acts { display: flex; gap: 6px; flex-wrap: wrap; }
+.act { border: 1px solid #6b5634; background: linear-gradient(#3a2d20, #2e241a); border-radius: 8px; padding: 7px 11px; display: grid; gap: 0; text-align: left; min-width: 0; }
+.act:hover { border-color: var(--gold-hi); }
+.act b { font-size: 14px; color: var(--parch); font-weight: 700; }
+.act small { font-size: 12px; color: var(--muted); }
+.act small .dmg { color: var(--gold-hi); font-weight: 700; }
+.act small .lethal { color: var(--hurt); font-weight: 700; }
+.act.free { border-color: #4b6e45; }
+.act.free b::after { content: 'free'; margin-left: 6px; font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: #a8dca0; border: 1px solid #4b6e45; border-radius: 4px; padding: 0 4px; vertical-align: 2px; }
+.act.claim { border-color: var(--gold-hi); background: linear-gradient(#5a4520, #3e2f18); }
+.act.end { margin-left: auto; background: transparent; border-color: var(--line-2); }
+.act.end b { color: var(--muted); }
+.act.cancel { background: transparent; border-color: var(--line-2); }
+.waiting { color: var(--muted); font-size: 14px; padding: 4px 2px; }
+
+/* ---------- log ---------- */
+.logbox { background: var(--mat); border: 1px solid var(--line); border-radius: 12px; display: grid; grid-template-rows: auto minmax(0, 1fr); min-height: 0; max-height: 100%; }
+.logbox .k { padding: 9px 12px 7px; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--faint); font-weight: 700; border-bottom: 1px solid var(--line); display: flex; justify-content: space-between; }
+.log { overflow-y: auto; padding: 6px 12px 10px; display: grid; gap: 3px; align-content: start; font-size: 13.5px; min-height: 160px; max-height: calc(100vh - 140px); }
+@media (max-width: 980px) { .log { max-height: 280px; } }
+.log .turn { margin-top: 8px; font-family: var(--display); font-weight: 700; font-size: 12px; letter-spacing: 0.06em; color: var(--faint); border-top: 1px solid var(--line); padding-top: 6px; }
+.log .turn:first-child { margin-top: 0; border-top: 0; padding-top: 0; }
+.log .e { color: var(--muted); }
+.log .e.you { color: #e8dcc0; }
+.log .e.bot { color: #c5d2e4; }
+.log .e .res { color: var(--gold-hi); font-weight: 700; }
+.log .e.note { padding-left: 10px; border-left: 2px solid var(--line-2); }
+
+/* ---------- overlays ---------- */
+.veil { position: fixed; inset: 0; background: rgba(8, 6, 4, 0.72); display: grid; place-items: center; z-index: 20; padding: max(16px, env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px)) max(16px, env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px)); }
+.dialog { background: #241c15; border: 1px solid var(--gold); border-radius: 14px; padding: 16px; width: min(560px, 100%); max-height: 100%; overflow-y: auto; display: grid; gap: 12px; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6); }
+.dialog h2 { font-size: 20px; color: var(--gold-hi); }
+.dialog p { margin: 0; color: var(--text); }
+.dialog .muted { color: var(--muted); }
+.dialog ul { margin: 0; padding-left: 18px; display: grid; gap: 6px; }
+.dialog li { color: var(--text); }
+.choices { display: grid; gap: 6px; }
+.choice { border: 1px solid #6b5634; background: linear-gradient(#3a2d20, #2e241a); border-radius: 10px; padding: 9px 12px; text-align: left; display: grid; gap: 2px; }
+.choice:hover { border-color: var(--gold-hi); }
+.choice b { color: var(--parch); }
+.choice small { color: var(--muted); font-size: 13px; }
+.choice.no { background: transparent; border-color: var(--line-2); }
+.cardlist { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 4px 12px; font-size: 14px; }
+.cardlist span { color: var(--muted); }
+.cardlist b { color: var(--parch); font-weight: 500; }
+.result-title { font-size: 30px !important; }
+.fx { position: fixed; z-index: 30; pointer-events: none; font-family: var(--display); font-weight: 700; font-size: 22px; animation: rise 1.1s ease-out forwards; text-shadow: 0 2px 6px rgba(0, 0, 0, 0.8); }
+.fx.hurt { color: var(--hurt); } .fx.heal { color: var(--heal); } .fx.soak { color: #d8d0bd; font-size: 15px; }
+@keyframes rise { 0% { transform: translate(-50%, 0); opacity: 0; } 15% { opacity: 1; } 100% { transform: translate(-50%, -46px); opacity: 0; } }
+@media (prefers-reduced-motion: reduce) {
+  .fx { animation-duration: 0.01s; } .card, .card.playable:hover { transition: none; transform: none; }
+  .life.flash-hurt, .life.flash-heal, .thinking::after { animation: none; }
+}
+</style>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="g-ingot" viewBox="0 0 24 24"><path d="M4 16 7 8h10l3 8z" fill="currentColor" stroke="#1b140e" stroke-width="1.2" stroke-linejoin="round"/><path d="M7 8 9 11h6l2-3" fill="none" stroke="#fff" stroke-opacity=".35" stroke-width="1"/></symbol>
+    <symbol id="g-log" viewBox="0 0 24 24"><rect x="3" y="8" width="16" height="8" rx="4" fill="currentColor" stroke="#1b140e" stroke-width="1.2"/><ellipse cx="18" cy="12" rx="3" ry="4" fill="#d9b98a" stroke="#1b140e" stroke-width="1.2"/><ellipse cx="18" cy="12" rx="1.2" ry="1.8" fill="none" stroke="#8a6a3e" stroke-width="0.8"/></symbol>
+    <symbol id="g-rune" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5" fill="#cfc6b3" stroke="#1b140e" stroke-width="1.2"/><circle cx="12" cy="12" r="5" fill="currentColor"/></symbol>
+    <symbol id="g-cloth" viewBox="0 0 24 24"><path d="M5 6h14l-2 12H7z" fill="currentColor" stroke="#1b140e" stroke-width="1.2" stroke-linejoin="round"/><path d="M8 9h8M8.5 12h7" stroke="#fff" stroke-opacity=".3"/></symbol>
+    <symbol id="g-cape" viewBox="0 0 24 24"><path d="M8 3h8l1.5 3L20 21H4L6.5 6Z" fill="currentColor" stroke="#1b140e" stroke-width="1.3" stroke-linejoin="round"/><path d="M8 3c1 2 7 2 8 0" fill="none" stroke="#1b140e" stroke-width="1.3"/><path d="M5.2 17h13.6" stroke="#c9a54b" stroke-width="1.6"/></symbol>
+    <symbol id="g-sword" viewBox="0 0 24 24"><path d="M19 3 9 13l2 2L21 5V3z" fill="currentColor"/><path d="M6 14l4 4M5 19l3-3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+    <symbol id="g-bow" viewBox="0 0 24 24"><path d="M6 3c9 3 12 9 12 18" fill="none" stroke="currentColor" stroke-width="2"/><path d="M6 3v18" stroke="currentColor" stroke-width="1"/><path d="M4 12h14l-2-2m2 2-2 2" stroke="currentColor" stroke-width="1.5" fill="none"/></symbol>
+    <symbol id="g-staff" viewBox="0 0 24 24"><path d="M6 21 17 7" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="18" cy="6" r="3" fill="currentColor"/></symbol>
+    <symbol id="g-shield" viewBox="0 0 24 24"><path d="M12 3 5 6v6c0 4 3 7 7 9 4-2 7-5 7-9V6z" fill="currentColor"/></symbol>
+    <symbol id="g-spark" viewBox="0 0 24 24"><path d="M12 2l2.5 7.5L22 12l-7.5 2.5L12 22l-2.5-7.5L2 12l7.5-2.5z" fill="currentColor"/></symbol>
+    <symbol id="g-scroll" viewBox="0 0 24 24"><path d="M6 4h11a2 2 0 0 1 2 2v13H8a2 2 0 0 1-2-2z" fill="currentColor"/><path d="M9 9h7M9 12h7M9 15h5" stroke="#f1e7cf" stroke-width="1.3"/></symbol>
+    <symbol id="g-fish" viewBox="0 0 24 24"><path d="M3 12c4-6 11-6 15 0-4 6-11 6-15 0zm15 0 4-4v8z" fill="currentColor"/></symbol>
+    <symbol id="g-person" viewBox="0 0 24 24"><circle cx="12" cy="7" r="4" fill="currentColor"/><path d="M4 21c0-5 4-8 8-8s8 3 8 8z" fill="currentColor"/></symbol>
+    <symbol id="g-map" viewBox="0 0 24 24"><path d="M3 6l6-2 6 2 6-2v14l-6 2-6-2-6 2z" fill="currentColor"/></symbol>
+  </defs>
+</svg>
+
+<div id="app"></div>
+<div id="fxlayer" aria-hidden="true"></div>
+
+<script>/*__DATA__*/</script>
+<script>/*__ENGINE__*/</script>
+<script>/*__BOT__*/</script>
+<script>
+(function () {
+  'use strict';
+  const R = window.RSTCG;
+  R.setData(window.RSTCG_DATA);
+  const { CARDS, CAPES, DECKS } = R;
+  const { HeuristicBot, deck_style } = window.RSTCGBot;
+  const $ = (s) => document.querySelector(s);
+  const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+  const STORE = 'rstcg-duel-v1';
+  const store = {
+    get(k) { try { return JSON.parse(localStorage.getItem(k) || 'null'); } catch (e) { return null; } },
+    set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { /* storage unavailable */ } },
+    del(k) { try { localStorage.removeItem(k); } catch (e) { /* storage unavailable */ } },
+  };
+
+  // ---------- words for cards ----------
+  const S = { melee: 'Melee', ranged: 'Ranged', magic: 'Magic', none: 'pure' };
+  const FAM = { rune: 'rune', bar: 'bar', log: 'log', cloth: 'cloth', leather: 'leather', any: 'material' };
+  const TIER = { 1: 'Bronze', 2: 'Mithril', 3: 'Rune' };
+  const short = (m) => (m === 'Elemental Rune' ? 'Air/Water/Earth/Fire' : m.replace(/ (Bar|Rune|Logs)$/, ''));
+  const countsText = (m, k) => (m === 'Elemental Rune'
+    ? `Counts as ${k} of the Air, Water, Earth or Fire rune you have the most of in play.` : `Counts as ${k} ${m}s.`);
+  const plural = (n, w) => `${n} ${w}${n === 1 ? '' : 's'}`;
+  const an = (w) => (/^[aeiou]/i.test(w) ? `an ${w}` : `a ${w}`);
+  const deckObj = (name) => DECKS.find((d) => d.name === name);
+
+  function reqText(c) {
+    const parts = c.req.map(([m, k]) => `${k} ${short(m)}`);
+    for (const [f, k] of c.fam_req) parts.push(`${plural(k, FAM[f])} in play`);
+    if (c.families) parts.push(`${c.families} material types`);
+    return parts.join(' + ');
+  }
+  function specText(c) {
+    const free = R.FREE_SPECS.has(c.spec) ? ', free' : '';
+    return {
+      war_god: `Favour of the War God (${c.spec_cost}): swing and end their prayer`,
+      sanctuary: `Sanctuary (${c.spec_cost}${free}): attacks against you deal ${c.spec_val} less until your next turn`,
+      sunder: `Sunder (${c.spec_cost}): swing +${c.spec_val}; their shield breaks`,
+      snapshot: `Snapshot (${c.spec_cost}): 2 shots in one action`,
+      soulshot: `Soulshot (${c.spec_cost}): a shot +${c.spec_val} that ignores armor and reactions`,
+      light: `Power of Light (${c.spec_cost}${free}): Melee damage you take is halved until your next turn`,
+      iban: `Iban Blast (${c.spec_cost}): ${c.spec_val} Magic damage`,
+      lightning: `Saradomin's Lightning (${c.spec_cost}): swing, then ${c.spec_val} Magic damage`,
+    }[c.spec] || '';
+  }
+  const SPEC_NAME = { war_god: 'Favour of the War God', sanctuary: 'Sanctuary', sunder: 'Sunder', snapshot: 'Snapshot',
+    soulshot: 'Soulshot', light: 'Power of Light', iban: 'Iban Blast', lightning: "Saradomin's Lightning" };
+  function stepText([kind, arg]) {
+    if (kind === 'discard') return arg ? `Discard ${an(arg)}` : 'Discard any card';
+    if (kind === 'spend') return 'Put a material from play into your discard';
+    if (kind === 'have') return `Have ${plural(arg[1], FAM[arg[0]])} in play`;
+    return { weapon: 'Have a weapon', armor: 'Have armor', shield: 'Have a shield' }[kind];
+  }
+  function rewardText(c) {
+    return {
+      heal: `Heal ${c.reward_val}`, draw: `Draw ${c.reward_val}`, fetch_rune: 'Put a rune from your deck into play',
+      fetch_bar: 'Put a bar from your deck into play', fetch_prayer: 'Search your deck for a prayer',
+      lose_action: "Your opponent's next turn has 1 action", damage: `${c.reward_val} damage that ignores armor and reactions`,
+      chicken: "Your opponent's weapon becomes a chicken", silverlight: 'Equip the best weapon in your deck',
+      dragon_slayer: 'Put an armor and a shield from your deck into play',
+      none: c.name === 'Romeo & Juliet' ? "Nothing. It's Romeo & Juliet." : 'Nothing',
+    }[c.effect] || '';
+  }
+  const CAPE_REQ = {
+    'Quest Point Cape': (n) => `Have ${n} quest points`,
+    'Attack Cape': (n) => `${n} Melee hits that deal damage (Punches count)`,
+    'Ranged Cape': (n) => `${n} Ranged hits that deal damage`,
+    'Magic Cape': (n) => `${n} Magic hits that deal damage`,
+    'Defence Cape': (n) => `Your shields block ${n} damage in total`,
+    'Prayer Cape': (n) => `Play ${n} elite prayers`,
+    'Cooking Cape': (n) => `Eat ${n} food`,
+    'Smithing Cape': (n) => `Have ${n} bars in play`,
+    'Woodcutting Cape': (n) => `Have ${n} logs in play`,
+    'Runecrafting Cape': (n) => `Have ${n} runes in play`,
+  };
+  const capeReq = (cape) => CAPE_REQ[cape](CAPES[cape].need);
+  const CAPE_COLOR = { 'Quest Point Cape': '#5a7fd0', 'Attack Cape': '#b03a2e', 'Ranged Cape': '#4f8a3c', 'Magic Cape': '#3d5fb0',
+    'Defence Cape': '#7d8a9c', 'Prayer Cape': '#e8e2cf', 'Cooking Cape': '#9a5a8c', 'Smithing Cape': '#c48a3a',
+    'Woodcutting Cape': '#6a8a3a', 'Runecrafting Cape': '#c8a43a' };
+
+  function cardInfo(c) {
+    const t = [];
+    let type = '';
+    let stat = '';
+    switch (c.kind) {
+      case 'material':
+        type = `Material · ${FAM[c.mat] || c.mat}`;
+        t.push(c.combo.length ? `Counts as 1 ${c.combo[0]} and 1 ${c.combo[1]} at once.` : 'Stays in play. Never spent.');
+        break;
+      case 'spell':
+        type = 'Spell';
+        stat = c.damage ? `${c.damage} Magic` : 'No damage';
+        if (c.heals) t.push(`Heal ${c.heals}.`);
+        if (c.wears) t.push(`Their weapon loses ${c.wears} durability (or ammo ${plural(c.wears, 'shot')}).`);
+        if (c.fetch) t.push(`Play ${c.fetch} from your deck${c.draws ? ', then draw a card' : ''}.`);
+        else if (c.draws) t.push(`Draw ${c.draws}.`);
+        break;
+      case 'weapon':
+        type = `Weapon · ${c.wclass || 'blade'}${c.legendary ? ' · Legendary' : ''}`;
+        stat = `Hit ${c.hit}${c.hits > 1 ? ' ×' + c.hits : ''} · Dur ${c.durability}`;
+        if (c.styles.length > 1) t.push(`Swings as ${c.styles.map((s) => S[s]).join(' or ')}.`);
+        else if (c.styles.length === 1 && c.styles[0] !== 'melee') t.push(`Hits as ${S[c.styles[0]]}.`);
+        if (c.hits > 1) t.push(`Each swing hits ${c.hits} times.`);
+        if (c.two_handed) t.push('Two-handed.');
+        if (c.free_swing_after_spell) t.push('After you cast a spell, one free swing that turn.');
+        if (c.spec) t.push(specText(c) + '.');
+        if (c.legendary) t.push("Can't attack the turn it's played. Breaks shields it hits.");
+        break;
+      case 'thrown':
+        type = `Thrown · ${c.wclass}`;
+        stat = `Hit ${c.hit} · ${c.durability} throws`;
+        t.push('Ranged. One throw per swing.');
+        break;
+      case 'staff':
+        type = 'Staff';
+        stat = `Swing ${c.hit} Magic · Dur ${c.durability}`;
+        for (const [m, k] of c.counts_as) t.push(countsText(m, k));
+        if (c.spec) t.push(specText(c) + '.');
+        break;
+      case 'bow':
+        type = c.style === 'magic' ? 'Battlestaff · bow' : c.bash_hit ? 'Bow · hybrid' : 'Bow';
+        stat = `Hit ${c.hit} · ${TIER[c.arrow_tier]} arrows`;
+        t.push('Comes with 4 Bronze shots. Never breaks.');
+        if (c.bash_hit) t.push(`Bash ${c.bash_hit} Melee (dur ${c.durability}). Soak ${c.soak}, two-handed.`);
+        for (const [m, k] of c.counts_as) t.push(countsText(m, k));
+        if (c.spec) t.push(specText(c) + '.');
+        break;
+      case 'arrows':
+        type = `Arrows · ${TIER[c.arrow_tier]}`;
+        stat = `+${c.arrow_bonus} per shot`;
+        t.push('4 shots for your bow.');
+        break;
+      case 'ability':
+        type = 'Ability · Melee';
+        stat = `Swing +${c.damage}`;
+        t.push(`With ${an(c.allowed.join(' or '))}.`);
+        if (c.ignores_armor) t.push('Ignores armor.');
+        if (c.durability > 1) t.push(`Uses ${c.durability} durability.`);
+        break;
+      case 'rapid': type = 'Ability · Ranged'; stat = '2 shots'; t.push('Fire 2 shots, or throw twice, as one action.'); break;
+      case 'longrange': type = 'Ability · Ranged'; stat = '1 shot −1'; t.push('Melee damage you take −2 until your next turn.'); break;
+      case 'destroy':
+        type = c.item ? 'Item' : c.style === 'magic' ? 'Spell' : 'Ability';
+        if (c.damage) stat = `${c.damage} damage`;
+        t.push(c.damage ? `${c.damage} damage, then destroy one of your opponent's ${FAM[c.destroys]}s if they have one.`
+          : `Destroy one of your opponent's ${FAM[c.destroys]}s.`);
+        if (c.needs_melee_weapon) t.push('Needs a Melee weapon equipped.');
+        break;
+      case 'pouch': type = 'Item'; t.push('Put a rune of your choice from your deck into play.'); break;
+      case 'armor': {
+        type = `Armor · ${S[c.style] || 'any style'}`;
+        stat = c.armor.map(([s, m]) => `${S[s]} ${m > 0 ? '+' : '−'}${Math.abs(m)}`).join(' · ');
+        t.push('Changes the damage you take.');
+        if (c.bonus) t.push(`Your attacks +${c.bonus}.`);
+        if (c.families) t.push(`Needs ${c.families} material types in play.`);
+        break;
+      }
+      case 'shield': type = 'Shield'; stat = `Soak ${c.soak}`; t.push(c.free ? 'Free to play.' : 'Soaks damage until it breaks.');
+        if (c.unshatter) t.push('Shatter doesn’t break it: Legendary hits and Sunder only use up what they hit for.'); break;
+      case 'hammer': type = 'Item'; stat = `+${c.bonus}`; t.push(`+${c.bonus} durability to your weapon (not a Legendary), or +${c.bonus} soak to your shield.`); break;
+      case 'teleport': type = 'Item · teleport'; t.push(`Play ${c.fetch} from your deck.`); break;
+      case 'food': type = 'Food'; stat = `Heal ${c.heal}`; t.push(c.stacks_with_food ? 'Eat it with other food.' : 'One food a turn.'); t.push('Shuffles discards under your deck.'); break;
+      case 'prayer': type = 'Reaction · Prayer'; stat = `Block ${S[c.prayer]}`; t.push(`On their turn: block one ${S[c.prayer]} attack.`); break;
+      case 'reversal': type = 'Reaction'; stat = `${S[c.reacts_to]} → ${S[c.converts_to]}`; t.push(`On their turn: a ${S[c.reacts_to]} attack comes back as ${S[c.converts_to]}.`); break;
+      case 'buff':
+        type = c.duration ? 'Elite prayer' : 'Prayer';
+        stat = c.effect === 'smite' ? 'Smite' : c.effect === 'redemption' ? 'Redemption' : `${S[c.prayer]} +${c.bonus}`;
+        if (c.effect === 'smite') t.push(`All your attacks +${c.bonus}. When your attack deals damage, their prayer ends.`);
+        if (c.effect === 'redemption') t.push(`When damage leaves you at 1–10 cards, heal ${c.reward_val}.`);
+        t.push(c.duration ? 'Lasts 3 of your turns. Free.' : 'Lasts until replaced. Free.');
+        break;
+      case 'npc': {
+        type = 'NPC';
+        const NPC_WORD = { item: 'item', buff: 'prayer', prayer: 'Protect prayer', any: 'card' };
+        type = c.legendary ? 'NPC · Legendary' : 'NPC';
+        const what = c.recovers.map((r) => NPC_WORD[r] || FAM[r] || r).join(' or ');
+        t.push(`Recover ${an(what)} from your discard.`);
+        if (c.recovers.some((r) => FAM[r] || r === 'any')) t.push('Materials go back into play.');
+        break;
+      }
+      case 'location':
+        type = 'Location';
+        t.push({
+          "Wizards' Tower": 'Magic damage +2, for both players.', Wilderness: 'All damage +2, for both players.',
+          Lumbridge: 'The first time damage would empty a player’s deck, they keep its last card. Once per player.',
+          Varrock: 'Either player, as an action: discard a card from hand to heal 3.',
+          'Mage Arena': 'Magic damage +2, Ranged damage −2, for both players.',
+          'Duel Arena': 'No food, no prayers of any kind. Active prayers end when it arrives.',
+          'Grand Exchange': 'Once a turn, free: discard a card from hand to draw a card. Either player.',
+        }[c.name] || '');
+        break;
+      case 'quest':
+        type = `Quest · ${c.qp} QP`;
+        c.steps.forEach((s, k) => t.push(`${k + 1}. ${stepText(s)}`));
+        t.push(`Reward: ${rewardText(c)}`);
+        break;
+      default: break;
+    }
+    return { type, stat, text: t, req: reqText(c) };
+  }
+  function frameClass(c) {
+    if (c.legendary) return 'legend';
+    if (c.kind === 'material') return 'material';
+    return ['melee', 'ranged', 'magic'].includes(c.style) ? c.style : 'neutral';
+  }
+  const GLYPH = { weapon: 'sword', ability: 'sword', destroy: 'sword', thrown: 'sword', bow: 'bow', arrows: 'bow', rapid: 'bow',
+    longrange: 'bow', spell: 'spark', staff: 'staff', shield: 'shield', armor: 'shield', food: 'fish', prayer: 'spark',
+    buff: 'spark', reversal: 'shield', quest: 'scroll', npc: 'person', location: 'map', pouch: 'rune', hammer: 'sword', teleport: 'map' };
+  const MAT_COLOR = { 'Bronze Bar': '#b0773c', 'Mithril Bar': '#5b6fa8', 'Rune Bar': '#3d9fb0', 'Enchanted Bar': '#7a5bb0',
+    'Mithril Grapple': '#5b8f8a', 'Normal Logs': '#9a7448', 'Willow Logs': '#8f9d55', 'Yew Logs': '#6e4a2a',
+    'Enchanted Logs': '#8a6ab0', 'Air Rune': '#f4f4f4', 'Fire Rune': '#d8503a', 'Water Rune': '#3f7fd0', 'Earth Rune': '#6c8a3a',
+    'Chaos Rune': '#e0a030', 'Death Rune': '#202020', 'Blood Rune': '#a01818', 'Smoke Rune': '#8c8c8c', 'Dust Rune': '#b8a070', 'Law Rune': '#3a4fb0', 'Mist Rune': '#a9c4e0', 'Lava Rune': '#c8602a', 'Steam Rune': '#b8b8c8', 'Mud Rune': '#7a6040',
+    Cloth: '#7d5a8c', Leather: '#8a5a30' };
+  function matIcon(name) {
+    const c = CARDS[name];
+    const g = c.mat === 'bar' ? 'ingot' : c.mat === 'log' ? 'log' : c.mat === 'rune' ? 'rune' : 'cloth';
+    return `<svg style="color:${MAT_COLOR[name] || '#999'}"><use href="#g-${g}"/></svg>`;
+  }
+  const ART = window.RSTCG_ART || {};
+  function artHTML(name, c) {
+    const a = ART[name];
+    if (a && a.mode === 'tall') return `<div class="art tall"><img class="bg" src="${a.src}" alt=""><img class="fg" src="${a.src}" alt=""></div>`;
+    if (a) return `<div class="art ${a.mode}"><img src="${a.src}" alt="" loading="lazy" decoding="async"></div>`;
+    if (c.kind === 'material') return `<div class="art"><span class="mat">${matIcon(name)}</span></div>`;
+    return `<div class="art"><svg class="none"><use href="#g-${GLYPH[c.kind] || 'spark'}"/></svg></div>`;
+  }
+  function cardHTML(name, cls = '', extra = '') {
+    const c = CARDS[name];
+    const info = cardInfo(c);
+    const glyph = '';   // the art strip shows the card now
+    return `<div class="in"><div class="hd"><span class="nm">${esc(name)}</span>${info.req ? `<span class="req">${esc(info.req)}</span>` : ''}</div>
+      ${artHTML(name, c)}
+      <div class="ty"><span>${esc(info.type)}</span></div>
+      ${info.stat ? `<div class="st">${esc(info.stat)}</div>` : ''}
+      <div class="tx">${info.text.map(esc).join('<br>')}</div></div>${glyph}${extra}`;
+  }
+
+  // ---------- state ----------
+  const ui = {
+    screen: 'setup', g: null, you: 0, pending: null, selected: null, overlay: null,
+    replaying: false, queue: [], decisions: [], config: null, flash: [0, 0], fresh: new Set(), lastHand: [],
+    setup: Object.assign({ youDeck: 'Melee', youCape: 'Smithing Cape', botDeck: 'random', seat: 'random' }, store.get('rstcg-setup') || {}),
+    speed: (store.get('rstcg-speed') || 'normal'),
+  };
+  const delay = () => (ui.speed === 'fast' ? 180 : 750);
+  const tournament = DECKS.filter((d) => d.group === 'Tournament decks').map((d) => d.name);
+
+  function newConfig() {
+    const s = ui.setup;
+    const seed = Math.floor(Math.random() * 2 ** 31);
+    const botDeck = s.botDeck === 'random' ? tournament[Math.floor(Math.random() * tournament.length)] : s.botDeck;
+    const fits = deckObj(botDeck).capes;
+    return {
+      seed, botSeed: (seed * 7 + 13) % 2147483647, youDeck: s.youDeck, youCape: s.youCape, botDeck,
+      botCape: fits[Math.floor(Math.random() * fits.length)],
+      youFirst: s.seat === 'first' ? true : s.seat === 'second' ? false : Math.random() < 0.5,
+    };
+  }
+
+  // ---------- agents ----------
+  function decide(type, data) {
+    if (ui.replaying) {
+      if (ui.queue.length) {
+        const d = ui.queue.shift();
+        const v = d.v;
+        if (type === 'choose') {
+          const hit = data.legal.find((a) => JSON.stringify(a) === JSON.stringify(v));
+          if (hit) { ui.decisions.push(d); return Promise.resolve(hit); }
+        } else if (type === 'react' && (v === null || data.opts.includes(v))) { ui.decisions.push(d); return Promise.resolve(v); }
+        else if (type === 'discard' && ui.g.players[ui.you].hand.includes(v)) { ui.decisions.push(d); return Promise.resolve(v); }
+        ui.queue = [];             // the saved game no longer fits: carry on live from here
+      }
+      ui.replaying = false;
+    }
+    return new Promise((resolve) => {
+      ui.pending = Object.assign({ type }, data, {
+        resolve: (v) => {
+          ui.pending = null;
+          ui.selected = null;
+          ui.overlay = null;
+          ui.decisions.push({ t: type, v });
+          saveGame();
+          resolve(v);
+        },
+      });
+      if (type === 'choose') {
+        const hand = ui.g.players[ui.you].hand;
+        const before = [...ui.lastHand];
+        ui.fresh = new Set();
+        for (const n of hand) { const k = before.indexOf(n); if (k >= 0) before.splice(k, 1); else ui.fresh.add(n); }
+      }
+      if (type === 'react') ui.overlay = 'react';
+      render();
+    });
+  }
+  const human = {
+    choose: (g, i, legal) => decide('choose', { legal: [...legal, ['pass']] }),
+    react: (g, j, amount, style, src, opts) => decide('react', { amount, style, src, opts }),
+    discard_choice: (g, i) => decide('discard', {}),
+  };
+  function botAgent(bot) {
+    return {
+      setup: (g) => bot.setup(g),
+      async choose(g, i, legal) {
+        if (!ui.replaying) { render(); await sleep(delay()); }
+        return bot.choose(g, i, legal);
+      },
+      async react(g, j, amount, style, src, opts) {
+        const r = bot.react(g, j, amount, style, src, opts);
+        if (r && !ui.replaying) await sleep(delay() * 0.7);
+        return r;
+      },
+      discard_choice(g, i) {
+        const n = bot.discard_choice(g, i);
+        g.log.push({ text: `Bot discards ${n} (hand limit)`, who: i });
+        return n;
+      },
+    };
+  }
+
+  // ---------- narration ----------
+  function describe(g, i, a) {
+    const you = i === ui.you;
+    const p = g.players[i];
+    const v = (base, third) => (you ? base : third);
+    const who = you ? 'You' : 'Bot';
+    const w = p.weapon_card();
+    switch (a[0]) {
+      case 'draw': return `${who} ${v('draw', 'draws')} a card`;
+      case 'punch': return `${who} ${v('punch', 'punches')}`;
+      case 'swing': return `${who} ${v('swing', 'swings')} ${w.name}${w.styles.length > 1 || (w.kind === 'bow' && w.bash_hit) ? ` as ${S[a[1]]}` : ''}`;
+      case 'free_swing': return `${who} ${v('take', 'takes')} a free swing with ${w.name}`;
+      case 'spec': return `${who} ${v('use', 'uses')} ${SPEC_NAME[w.spec]} (${w.name})`;
+      case 'claim': return `${who} ${v('claim', 'claims')} the ${a[1]}`;
+      case 'varrock': return `${who} ${v('rest', 'rests')} in Varrock, discarding ${a[1]}`;
+      case 'exchange': return `${who} ${v('trade', 'trades')} ${a[1]} at the Grand Exchange`;
+      case 'quest': {
+        const q = CARDS[p.quest.name];
+        const [kind] = q.steps[p.quest.step];
+        const tail = a[1] ? (kind === 'spend' ? `, giving up ${a[1]}` : `, discarding ${a[1]}`) : '';
+        return `${who} ${v('do', 'does')} step ${p.quest.step + 1} of ${q.name}${tail}`;
+      }
+      case 'play': {
+        const [, n, t] = a;
+        const c = CARDS[n];
+        const map = {
+          material: v('play', 'plays'), spell: v('cast', 'casts'), weapon: v('equip', 'equips'), thrown: v('equip', 'equips'),
+          bow: v('equip', 'equips'), staff: v('equip', 'equips'), arrows: v('load', 'loads'), ability: v('use', 'uses'),
+          rapid: v('fire', 'fires'), longrange: v('fire', 'fires'), armor: v('put on', 'puts on'), shield: v('raise', 'raises'),
+          food: v('eat', 'eats'), buff: v('pray', 'prays'), teleport: v('use', 'uses'), quest: v('start', 'starts'), location: v('travel to', 'travels to'),
+        };
+        if (c.kind === 'npc') return `${who} ${v('call', 'calls')} ${n} to recover ${t}`;
+        if (c.kind === 'destroy') return t ? `${who} ${v('use', 'uses')} ${n} on ${you ? "the bot's" : 'your'} ${t}` : `${who} ${v('use', 'uses')} ${n}`;
+        if (c.kind === 'pouch') return `${who} ${v('use', 'uses')} ${n} to fetch ${an(t)}`;
+        if (c.kind === 'hammer') return `${who} ${v('use', 'uses')} ${n} on ${you ? 'your' : 'its'} ${t === 'weapon' ? p.weapon.name : p.shield.name}`;
+        return `${who} ${map[c.kind] || v('play', 'plays')} ${n}`;
+      }
+      default: return `${who} ${a[0]}`;
+    }
+  }
+  function wrapApply(g) {
+    const orig = g.apply.bind(g);
+    g.apply = async (i, a) => {
+      if (a[0] === 'pass') return;
+      const entry = { text: describe(g, i, a), who: i, action: true };
+      g.log.push(entry);
+      const e0 = g.events.length;
+      const opp0 = g.players[1 - i].lp;
+      if (!ui.replaying) render();
+      await orig(i, a);
+      const evs = g.events.slice(e0);
+      const mine = evs.filter((e) => e.type === 'hit' && e.by === i && e.src !== 'reversal');
+      if (mine.length) {
+        const dmg = mine.reduce((s, e) => s + e.amount, 0);
+        const soak = mine.reduce((s, e) => s + e.soaked, 0);
+        entry.result = `${dmg} damage${soak ? `, ${soak} soaked` : ''}`;
+      }
+      const heal = evs.filter((e) => e.type === 'heal' && e.who === i).reduce((s, e) => s + e.amount, 0);
+      if (heal) entry.result = `heals ${heal}`;
+      if (!ui.replaying) { spawnFx(evs); render(); }
+      void opp0;
+    };
+  }
+
+  // ---------- running a duel ----------
+  function buildGame(config) {
+    const you = config.youFirst ? 0 : 1;
+    const decks = []; const capes = []; const names = []; const agents = [];
+    decks[you] = deckObj(config.youDeck).cards; decks[1 - you] = deckObj(config.botDeck).cards;
+    capes[you] = config.youCape; capes[1 - you] = config.botCape;
+    names[you] = 'You'; names[1 - you] = 'Bot';
+    agents[you] = human; agents[1 - you] = botAgent(new HeuristicBot(config.botSeed));
+    const g = new R.Game(decks, agents, config.seed, { capes }, names);
+    wrapApply(g);
+    ui.you = you;
+    return g;
+  }
+  async function runDuel(config, decisions) {
+    ui.config = config;
+    ui.decisions = [];
+    ui.queue = decisions ? [...decisions] : [];
+    ui.replaying = !!(decisions && decisions.length);
+    ui.pending = null; ui.selected = null; ui.overlay = null; ui.lastHand = []; ui.fresh = new Set();
+    ui.screen = 'duel';
+    const g = buildGame(config);
+    ui.g = g;
+    ui.lastHand = [...g.players[ui.you].hand];
+    if (!ui.replaying) saveGame();
+    render();
+    const token = (ui.token = {});
+    while (g.winner === null && g.turn < 400) {
+      if (ui.token !== token) return;          // a newer duel replaced this one
+      const i = g.active;
+      g.log.push({ turn: true, text: `Round ${Math.floor(g.turn / 2) + 1} · ${i === ui.you ? 'Your turn' : "Bot's turn"}`, who: i });
+      if (i !== ui.you) ui.lastHand = [...g.players[ui.you].hand];
+      await g.play_turn();
+      if (ui.token !== token) return;
+      if (i === ui.you) ui.lastHand = [...g.players[ui.you].hand];
+      if (!ui.replaying) render();
+    }
+    if (g.winner === null) g.end_reason = 'timeout';
+    ui.replaying = false;
+    ui.pending = null;
+    ui.overlay = 'over';
+    store.del(STORE);
+    render();
+  }
+  function saveGame() {
+    if (ui.config && ui.g && ui.g.winner === null) store.set(STORE, { config: ui.config, decisions: ui.decisions });
+  }
+
+  // ---------- effects ----------
+  function spawnFx(evs) {
+    const now = Date.now();
+    for (const e of evs) {
+      if (e.type === 'hit') {
+        if (e.amount > 0) { float(e.target, `−${e.amount}`, 'hurt'); ui.flash[e.target] = now + 600; ui.flashKind = ui.flashKind || []; ui.flashKind[e.target] = 'hurt'; }
+        else if (e.soaked > 0) float(e.target, `${e.soaked} soaked`, 'soak');
+      } else if (e.type === 'heal' && e.amount > 0) {
+        float(e.who, `+${e.amount}`, 'heal'); ui.flash[e.who] = now + 600; ui.flashKind = ui.flashKind || []; ui.flashKind[e.who] = 'heal';
+      }
+    }
+  }
+  let fxQueue = [];
+  function float(seat, text, kind) { fxQueue.push({ seat, text, kind }); }
+  function flushFx() {
+    const layer = $('#fxlayer');
+    if (!layer) return;
+    let k = 0;
+    for (const f of fxQueue) {
+      const el = document.getElementById(`life-${f.seat}`);
+      if (!el) continue;
+      const r = el.getBoundingClientRect();
+      const d = document.createElement('div');
+      d.className = `fx ${f.kind}`;
+      d.textContent = f.text;
+      d.style.left = `${r.left + r.width / 2 + (k % 2 ? 18 : -10)}px`;
+      d.style.top = `${r.top - 6 - k * 4}px`;
+      layer.appendChild(d);
+      setTimeout(() => d.remove(), 1200);
+      k++;
+    }
+    fxQueue = [];
+  }
+
+  // ---------- previews ----------
+  function dmgPreview(g, i, amount, style, opts = {}) {
+    const [to, soak] = g.compute_damage(i, amount, style, !!opts.ignore_armor, !!opts.ignore_prayer, opts.src || 'weapon');
+    const hits = opts.hits || 1;
+    const total = to * hits;
+    const lethal = total >= g.opp(i).lp;
+    return `<span class="${lethal ? 'lethal' : 'dmg'}">${lethal ? 'Lethal: ' : ''}${total} damage</span>${soak ? ` · ${soak * hits} soaked` : ''}`;
+  }
+  function actionPreview(g, i, a) {
+    const p = g.players[i];
+    const w = p.weapon_card();
+    if (a[0] === 'punch') return dmgPreview(g, i, g.rules.punch_damage, 'melee', { ignore_armor: true, ignore_prayer: true, src: 'punch' });
+    if (a[0] === 'swing' || a[0] === 'free_swing') {
+      if (w.kind === 'bow') return a[1] === 'ranged' ? dmgPreview(g, i, w.hit + p.ammo.bonus, 'ranged', { src: 'bow' }) + ` · ${plural(p.ammo.shots, 'shot')} left` : dmgPreview(g, i, w.bash_hit, 'melee');
+      if (w.kind === 'thrown') return dmgPreview(g, i, w.hit, 'ranged', { src: 'thrown' });
+      if (w.kind === 'staff') return dmgPreview(g, i, w.hit, 'magic', { src: 'autocast' });
+      return dmgPreview(g, i, w.hit, a[1], { hits: w.hits });
+    }
+    if (a[0] === 'spec') {
+      const s = w.spec;
+      if (s === 'iban') return dmgPreview(g, i, w.spec_val, 'magic', { src: 'spec' });
+      if (s === 'sunder') return dmgPreview(g, i, w.hit + w.spec_val, 'melee', { src: 'spec' }) + ', breaks their shield';
+      if (s === 'war_god') return dmgPreview(g, i, w.hit, 'melee', { src: 'spec' }) + ', ends their prayer';
+      if (s === 'lightning') return dmgPreview(g, i, w.hit, 'melee', { src: 'spec' }) + ' + ' + dmgPreview(g, i, w.spec_val, 'magic', { src: 'spec' });
+      if (s === 'snapshot') return `2 shots of ${w.hit + p.ammo.bonus}`;
+      if (s === 'soulshot') return dmgPreview(g, i, w.hit + p.ammo.bonus + w.spec_val, 'ranged', { ignore_armor: true, src: 'spec' }) + ', no reactions';
+      if (s === 'sanctuary') return `Attacks on you −${w.spec_val} until your next turn`;
+      if (s === 'light') return 'Melee damage on you halved until your next turn';
+      return '';
+    }
+    if (a[0] === 'play') {
+      const c = CARDS[a[1]];
+      if (c.kind === 'spell') {
+        const bits = [];
+        if (c.damage) bits.push(dmgPreview(g, i, c.damage, 'magic', { src: 'spell' }));
+        else if (c.wears) bits.push(`Their weapon −${c.wears}`);
+        if (c.heals) bits.push(`heal ${Math.min(c.heals, g.rules.max_lp - p.lp)}`);
+        if (c.fetch) bits.push(g.location === c.fetch ? `${c.fetch} already in play` : p.deck.includes(c.fetch) ? `plays ${c.fetch}` : `no ${c.fetch} in your deck`);
+        if (c.draws && !c.damage) bits.push(`draw ${c.draws}`);
+        return bits.join(', ');
+      }
+      if (c.kind === 'ability') return dmgPreview(g, i, w.hit + c.damage, 'melee', { ignore_armor: c.ignores_armor, src: 'ability' });
+      if (c.kind === 'rapid' || c.kind === 'longrange') {
+        const thrown = w.kind === 'thrown';
+        const shot = w.hit + (thrown ? 0 : p.ammo.bonus) + (c.kind === 'longrange' ? -1 : 0);
+        const left = thrown ? p.weapon.dur : p.ammo.shots;
+        return c.kind === 'rapid' && left >= 2 ? `2 × ` + dmgPreview(g, i, shot, 'ranged', { src: 'ability' }) : dmgPreview(g, i, shot, 'ranged', { src: 'ability' });
+      }
+      if (c.kind === 'food') return `Heal ${Math.min(c.heal, g.rules.max_lp - p.lp, p.discard.length)}`;
+      if (['weapon', 'thrown', 'staff', 'bow'].includes(c.kind) && p.weapon) return `Replaces ${p.weapon.name}`;
+      if (c.kind === 'armor' && p.armor) return `Replaces ${p.armor}`;
+      if (c.kind === 'shield' && p.shield && !p.shield.virtual) return `Replaces ${p.shield.name}`;
+      if (c.kind === 'buff' && p.buff) return `Replaces ${p.buff}`;
+      if (c.kind === 'quest' && p.quest) return `Abandons ${p.quest.name}`;
+      if (c.kind === 'arrows' && p.ammo) return `Replaces ${p.ammo.shots} shots`;
+    }
+    return '';
+  }
+  function whyNot(g, i, name) {
+    const c = CARDS[name];
+    const p = g.players[i];
+    const w = p.weapon_card();
+    if (c.kind === 'prayer' || c.kind === 'reversal') return 'Played on the bot’s turn, in answer to an attack.';
+    if (g.turn === 0 && ['spell', 'ability', 'rapid', 'longrange'].includes(c.kind)) return 'No attacks on the very first turn.';
+    if (c.req.length && !p.meets(c.req, c.kind === 'staff')) return `Needs ${reqText(c)} in play.`;
+    if (c.fam_req.length) return `Needs ${reqText(c)}.`;
+    if (c.kind === 'ability') return `Needs ${an(c.allowed.join(' or '))} equipped.`;
+    if (c.kind === 'arrows') return w && w.kind === 'bow' ? 'Your bow can’t fire these.' : 'Needs a bow equipped.';
+    if (c.kind === 'rapid' || c.kind === 'longrange') return 'Needs a loaded bow or a thrown weapon.';
+    if (c.kind === 'food') return p.lp >= g.rules.max_lp ? 'Your deck is full.' : !p.discard.length ? 'Nothing in your discard to heal from.' : 'You already ate this turn.';
+    if (c.kind === 'shield') return 'Your weapon is two-handed.';
+    if (c.kind === 'npc') return 'Nothing in your discard it can recover.';
+    if (c.kind === 'destroy') return c.needs_melee_weapon && !(w && w.kind === 'weapon') ? 'Needs a Melee weapon equipped.' : 'The bot has nothing it can destroy.';
+    if (c.kind === 'location') return 'Already in play.';
+    if ((c.kind === 'food' || c.kind === 'buff') && g.location === 'Duel Arena') return 'The Duel Arena allows no food or prayers.';
+    if (c.kind === 'hammer') return 'Needs a weapon with durability (not a Legendary) or a shield.';
+    if (c.kind === 'buff') return 'Already active.';
+    if (c.kind === 'quest') return p.completed.includes(name) ? 'Already completed.' : 'Already in progress.';
+    if (c.kind === 'armor' && c.families) return `Needs ${c.families} material types in play.`;
+    return 'Not playable right now.';
+  }
+  function actLabel(g, i, a) {
+    const p = g.players[i];
+    const w = p.weapon_card();
+    switch (a[0]) {
+      case 'draw': return ['Draw a card', 'Costs 1 card of life'];
+      case 'punch': return ['Punch', actionPreview(g, i, a)];
+      case 'swing': return [`Swing ${w.name}${w.styles.length > 1 || (w.kind === 'bow' && w.bash_hit) ? ` (${S[a[1]]})` : ''}`, actionPreview(g, i, a)];
+      case 'free_swing': return [`Free swing (${S[a[1]]})`, actionPreview(g, i, a)];
+      case 'spec': return [`${SPEC_NAME[w.spec]}`, `${w.spec_cost} energy · ` + actionPreview(g, i, a)];
+      case 'claim': return [`Claim the ${a[1]}`, 'Survive 3 of your turns wearing it to win'];
+      case 'quest': {
+        const q = CARDS[p.quest.name];
+        const st = q.steps[p.quest.step];
+        return [a[1] ? `Quest: ${st[0] === 'spend' ? 'give up' : 'discard'} ${a[1]}` : `Quest: ${stepText(st)}`, `${q.name}, step ${p.quest.step + 1} of ${q.steps.length}`];
+      }
+      case 'varrock': return [`Rest in Varrock: discard ${a[1]}`, `Heal ${Math.min(3, g.rules.max_lp - p.lp, p.discard.length + 1)}`];
+      case 'exchange': return [`Trade ${a[1]} at the Grand Exchange`, 'Discard it, draw a card · once a turn'];
+      case 'pass': return ['End turn', g.actions_left ? `${plural(g.actions_left, 'action')} unused` : ''];
+      case 'play': {
+        const c = CARDS[a[1]];
+        const verb = { material: 'Play', spell: 'Cast', weapon: 'Equip', thrown: 'Equip', bow: 'Equip', staff: 'Equip', arrows: 'Load',
+          ability: 'Use', rapid: 'Fire', longrange: 'Fire', armor: 'Wear', shield: 'Raise', food: 'Eat', buff: 'Pray',
+          quest: 'Start', location: 'Travel to' }[c.kind] || 'Play';
+        if (c.kind === 'npc') return [`Recover ${a[2]}`, `${a[1]}: ${CARDS[a[2]].kind === 'material' ? 'back into play' : 'back to your hand'}`];
+        if (c.kind === 'destroy') {
+          const st = ['melee', 'ranged', 'magic'].includes(c.style) ? c.style : 'none';
+          const dm = c.damage ? dmgPreview(g, i, c.damage, st, { src: 'spell' }) : '';
+          return a[2] ? [`${a[1]}: destroy their ${a[2]}`, dm || a[1]] : [a[1], dm || 'Nothing to destroy'];
+        }
+        if (c.kind === 'pouch') return [`Fetch ${an(a[2])}`, 'From your deck into play'];
+        if (c.kind === 'hammer') return [`Hammer your ${a[2] === 'weapon' ? p.weapon.name : p.shield.name}`,
+          a[2] === 'weapon' ? `+${c.bonus} durability (${p.weapon.dur} → ${p.weapon.dur + c.bonus})` : `+${c.bonus} soak (${p.shield.soak} → ${p.shield.soak + c.bonus})`];
+        if (c.kind === 'teleport') return [`Use ${a[1]}`, g.location === c.fetch ? `${c.fetch} is already in play: does nothing`
+          : p.deck.includes(c.fetch) ? `Plays ${c.fetch} from your deck` : `No ${c.fetch} in your deck: does nothing`];
+        return [`${verb} ${a[1]}`, actionPreview(g, i, a)];
+      }
+      default: return [a[0], ''];
+    }
+  }
+
+  // ---------- rendering ----------
+  window.__rstcg = { get ui() { return ui; }, describe: (...a) => describe(...a), actLabel: (...a) => actLabel(...a), cardInfo: (c) => cardInfo(c), render: () => render() };   // test hook
+  function render() {
+    const app = $('#app');
+    if (ui.screen === 'setup') app.innerHTML = setupHTML();
+    else app.innerHTML = duelHTML();
+    const log = $('#log');
+    if (log) log.scrollTop = log.scrollHeight;
+    flushFx();
+  }
+
+  function header(inDuel) {
+    return `<header class="top"><div class="brand">RuneScape TCG<span>Duel vs the bot</span></div><nav>
+      <button class="btn" data-do="rules">How to play</button>
+      ${inDuel ? `<button class="btn" data-do="speed">Bot speed: ${ui.speed === 'fast' ? 'Fast' : 'Normal'}</button>
+      <button class="btn" data-do="newduel">New duel</button>` : ''}</nav></header>`;
+  }
+
+  function setupHTML() {
+    const s = ui.setup;
+    const groups = [...new Set(DECKS.map((d) => d.group))];
+    const styleDot = (name) => deckStyles(name).map((st) => `<span class="tag" style="color:var(--${st === 'magic' ? 'bot' : st === 'ranged' ? 'heal' : 'hurt'})"><i class="dot" style="background:var(--${st})"></i>${S[st]}</span>`).join(' ');
+    const blurb = DECK_BLURB;
+    const deckBtns = groups.map((gr) => `<div class="deckgroup"><h3>${esc(gr)}</h3><div class="decks">${DECKS.filter((d) => d.group === gr).map((d) => `
+      <button class="deckbtn" data-do="pickdeck" data-v="${esc(d.name)}" aria-pressed="${s.youDeck === d.name}"><b>${esc(d.name)}</b>
+      <small>${styleDot(d.name)} · ${esc(blurb(d.name))}</small></button>`).join('')}</div></div>`).join('');
+    const fits = deckObj(s.youDeck).capes;
+    const capeBtns = Object.keys(CAPES).map((c) => `<button class="capebtn" data-do="pickcape" data-v="${esc(c)}" aria-pressed="${s.youCape === c}">
+      <b><svg style="width:14px;height:14px;vertical-align:-2px;color:${CAPE_COLOR[c]}"><use href="#g-cape"/></svg> ${esc(c)}</b><small>${esc(capeReq(c))}</small>
+      ${fits.includes(c) ? '<span class="fit">Built for your deck</span>' : ''}</button>`).join('');
+    const botOpts = [`<option value="random" ${s.botDeck === 'random' ? 'selected' : ''}>A random tournament deck</option>`,
+      ...DECKS.map((d) => `<option value="${esc(d.name)}" ${s.botDeck === d.name ? 'selected' : ''}>${esc(d.name)}</option>`)].join('');
+    const saved = store.get(STORE);
+    const seg = (k, v, label) => `<button data-do="seat" data-v="${v}" aria-pressed="${s.seat === v}">${label}</button>`;
+    return `${header(false)}<main class="setup">
+      <div class="hero"><h1>Pick a deck and a cape</h1>
+      <p>Your deck is your life: damage discards from its top, and the first player to run out loses. You can also win by claiming a cape and surviving 3 of your turns in it. Capes are chosen blind, and either player can claim either one.</p></div>
+      <div class="picks">
+        <section class="panel"><h2>Your deck</h2>${deckBtns}
+          <div class="row"><button class="linkish" data-do="viewdeck" data-v="${esc(s.youDeck)}">See the 60 cards in ${esc(s.youDeck)}</button></div></section>
+        <div style="display:grid;gap:18px;align-content:start;min-width:0">
+          <section class="panel"><h2>Your cape</h2><p class="hint">The bot picks its cape without seeing yours. Both are revealed when the duel starts.</p>
+            <div class="capes-pick">${capeBtns}</div></section>
+          <section class="panel"><h2>Opponent</h2>
+            <label class="row" for="botdeck"><span class="hint">The bot plays</span></label>
+            <select id="botdeck" data-change="botdeck">${botOpts}</select>
+            <div class="row"><span class="hint">Who goes first</span><div class="seg">${seg('seat', 'random', 'Coin flip')}${seg('seat', 'first', 'You')}${seg('seat', 'second', 'Bot')}</div></div>
+            <p class="hint">The first player doesn’t draw and can’t attack on turn 1.</p>
+          </section>
+        </div>
+      </div>
+      <div class="startbar"><div class="summary"><b>${esc(s.youDeck)}</b> with the <b>${esc(s.youCape)}</b>, against ${s.botDeck === 'random' ? 'a random tournament deck' : `<b>${esc(s.botDeck)}</b>`}.</div>
+        <div class="row">${saved ? '<button class="btn" data-do="resume">Resume your last duel</button>' : ''}<button class="btn primary" data-do="start">Start the duel</button></div></div>
+      <p class="fanmade">A fan-made card game design. Not affiliated with Jagex. Rules and numbers come from the balance simulator, Round 18.</p>
+    </main>${overlayHTML()}`;
+  }
+
+  function lifeHTML(g, i) {
+    const p = g.players[i];
+    const flash = ui.flash[i] > Date.now() ? ` flash-${(ui.flashKind || [])[i] || 'hurt'}` : '';
+    return `<div class="life${p.lp <= 10 ? ' low' : ''}${flash}" id="life-${i}" title="Cards left in the deck: your life"><span class="n num">${p.lp}</span><span class="l">deck</span>
+      <div class="bar"><i style="width:${Math.max(0, Math.min(100, (100 * p.lp) / 60))}%"></i></div></div>`;
+  }
+  function slot(k, v, s, hot) {
+    return `<div class="slot${v ? '' : ' empty'}${hot ? ' hot' : ''}"><span class="k">${k}</span><span class="v">${v || 'None'}</span>${s ? `<span class="s">${s}</span>` : ''}</div>`;
+  }
+  function zoneHTML(g, i) {
+    const p = g.players[i];
+    const you = i === ui.you;
+    const w = p.weapon_card();
+    let wv = '';
+    let ws = '';
+    if (w) {
+      wv = esc(w.name);
+      if (w.kind === 'bow') {
+        ws = `Hit ${w.hit}${p.ammo ? ` · ${p.ammo.card ? esc(p.ammo.card) : 'Bronze shots'} +${p.ammo.bonus} · ${plural(p.ammo.shots, 'shot')}` : ' · no ammo'}`;
+        if (w.bash_hit) ws += ` · bash ${w.bash_hit}, dur ${p.weapon.dur}`;
+      } else ws = `${w.kind === 'staff' ? 'Swing' : 'Hit'} ${w.hit}${w.hits > 1 ? ' ×' + w.hits : ''} · ${w.kind === 'thrown' ? plural(p.weapon.dur, 'throw') : `dur ${p.weapon.dur}`}`;
+      if (w.legendary && p.weapon.played === g.turn) ws += ' · can’t attack this turn';
+    }
+    const sh = p.shield ? `${esc(p.shield.name)}${p.shield.virtual ? ' (bow)' : ''}` : '';
+    const ar = p.armor ? esc(p.armor) : '';
+    const arS = p.armor ? CARDS[p.armor].armor.map(([s, m]) => `${S[s]} ${m > 0 ? '+' : '−'}${Math.abs(m)}`).join(' · ') : '';
+    const buff = p.buff ? esc(p.buff) : '';
+    const buffS = p.buff ? (CARDS[p.buff].duration ? `${plural(p.buff_left, 'turn')} left` : 'Until replaced') : '';
+    let quest = '';
+    let questS = '';
+    if (p.quest) {
+      const q = CARDS[p.quest.name];
+      quest = `${esc(q.name)} ${p.quest.step}/${q.steps.length}`;
+      questS = `Next: ${esc(stepText(q.steps[p.quest.step]))}`;
+    }
+    const cape = p.cape_name ? `${esc(p.cape_name)}` : '';
+    const capeS = p.cape_name ? `<span class="pips">${[0, 1, 2].map((k) => `<i class="${k < p.cape ? 'on' : ''}"></i>`).join('')}</span> ${p.cape}/3 counters` : '';
+    const fx = [];
+    if (p.sanctuary) fx.push(`Sanctuary: attacks on ${you ? 'you' : 'the bot'} −${p.sanctuary}`);
+    if (p.light) fx.push('Power of Light: Melee halved');
+    if (p.longrange) fx.push('Longrange: Melee −2');
+    if (p.free_swing_ready) fx.push('Free swing ready');
+    if (p.lost_actions) fx.push('Next turn: 1 action');
+    const mats = Object.entries(p.materials).sort((a, b) => (CARDS[a[0]].mat > CARDS[b[0]].mat ? 1 : -1))
+      .map(([m, k]) => `<span class="chip" title="${esc(cardInfo(CARDS[m]).text.join(' '))}">${matIcon(m)}${esc(m)} <b>×${k}</b></span>`).join('') || '<span class="none">No materials in play yet</span>';
+    const pips = `<span class="pips" title="Special energy">${[0, 1, 2, 3].map((k) => `<i class="${k < p.energy ? 'on' : ''}"></i>`).join('')}</span>`;
+    const hand = you ? `Hand <b>${p.hand.length}</b>` : `Hand <span class="backs">${p.hand.map(() => '<i></i>').join('')}</span> <b>${p.hand.length}</b>`;
+    return `<section class="zone ${you ? 'zone-you' : 'zone-bot'}${g.active === i && g.winner === null ? ' active' : ''}" aria-label="${you ? 'Your side' : "Bot's side"}">
+      <div class="zone-head"><div class="who"><span class="name">${you ? 'You' : 'Bot'}</span><span class="deckname">${esc(you ? ui.config.youDeck : ui.config.botDeck)}</span></div>
+        ${lifeHTML(g, i)}
+        <div class="counts"><span>${hand}</span><button class="linkish" data-do="viewdiscard" data-v="${i}">Discard ${p.discard.length}</button>
+          <span>Energy ${pips}</span><span>QP <b>${p.qp}</b></span></div></div>
+      <div class="slots">${slot('Weapon', wv, ws)}${slot('Shield', sh, p.shield ? `Soak ${p.shield.soak}` : '')}${slot('Armor', ar, arS)}
+        ${slot('Prayer', buff, buffS)}${slot('Quest', quest, questS)}${slot('Cape', cape, capeS, !!cape)}</div>
+      <div class="mats">${mats}</div>${fx.length ? `<div class="effects">${fx.map((f) => `<span class="effect">${esc(f)}</span>`).join('')}</div>` : ''}</section>`;
+  }
+
+  function stripHTML(g) {
+    const yourTurn = g.active === ui.you;
+    let title;
+    let sub;
+    if (g.winner !== null) { title = 'Duel over'; sub = ''; }
+    else if (yourTurn) {
+      title = `Round ${Math.floor(g.turn / 2) + 1} · Your turn`;
+      const p = g.players[ui.you];
+      if (ui.pending && ui.pending.type === 'discard') sub = `Hand limit 7: discard ${plural(p.hand.length - g.rules.hand_max, 'card')}.`;
+      else if (ui.pending && ui.pending.type === 'choose') {
+        const free = g.rules.free_plays_max - g.free_plays_used;
+        sub = `<span class="pips">${[0, 1].map((k) => `<i class="${k < g.actions_left ? 'on' : ''}"></i>`).join('')}</span> ${plural(g.actions_left, 'action')} left · free plays left ${free}${p.free_steps < g.rules.free_quest_steps && p.quest ? ' · 1 free quest step' : ''}${g.turn === 0 ? ' · no attacks on the first turn' : ''}`;
+      } else sub = '…';
+    } else {
+      title = `Round ${Math.floor(g.turn / 2) + 1} · Bot’s turn`;
+      sub = ui.pending && ui.pending.type === 'react' ? 'The bot is attacking you.' : '<span class="thinking">The bot is thinking</span>';
+    }
+    const race = g.cape_table.map((c) => {
+      const claimed = c in g.cape_claimed;
+      const owner = (g.rules.capes || []).map((x, k) => (x === c ? k : -1)).filter((k) => k >= 0);
+      const ownerTxt = owner.length === 2 ? 'Both picked' : owner[0] === ui.you ? 'Your pick' : 'Bot’s pick';
+      const can = !claimed && g.claimable(ui.you).includes(c);
+      const rows = [ui.you, 1 - ui.you].map((k) => {
+        const [have, need] = g.progress(g.players[k], c);
+        return `<div class="prog ${k === ui.you ? 'you' : 'bot'}"><span class="lab">${k === ui.you ? 'You' : 'Bot'}</span><span class="track"><i style="width:${Math.min(100, (100 * have) / need)}%"></i></span><span class="val">${Math.min(have, 999)}/${need}</span></div>`;
+      }).join('');
+      let body = rows;
+      if (claimed) {
+        const k = g.cape_claimed[c];
+        const pl = g.players[k];
+        body = `<div class="worn"><b>${k === ui.you ? 'You wear it' : 'The bot wears it'}</b> <span class="pips">${[0, 1, 2].map((x) => `<i class="${x < pl.cape ? 'on' : ''}"></i>`).join('')}</span> ${pl.cape}/3 counters</div>
+          <span class="req">${k === ui.you ? 'You win at the start of your turn when it reaches 3.' : 'It wins at the start of its turn on 3. Empty its deck first.'}</span>`;
+      }
+      return `<div class="cape${can ? ' can' : ''}"><span class="owner">${ownerTxt}${can ? ' · ready to claim' : ''}</span><span class="nm"><svg style="color:${CAPE_COLOR[c]}"><use href="#g-cape"/></svg>${esc(c)}</span>
+        <span class="req">${esc(capeReq(c))}</span>${body}</div>`;
+    }).join('');
+    const loc = g.location ? `<div class="location">Location: <b>${esc(g.location)}</b> (${g.location_owner === ui.you ? 'yours' : 'the bot’s'}) · ${esc(cardInfo(CARDS[g.location]).text[0])}</div>` : '';
+    return `<div class="strip"><div class="banner"><span class="t${yourTurn ? '' : ' botturn'}">${title}</span><span class="sub">${sub}</span>${loc}</div>
+      <div class="race">${race}</div></div>`;
+  }
+
+  function handHTML(g) {
+    const p = g.players[ui.you];
+    const pend = ui.pending;
+    const playable = new Set();
+    const usable = new Set();             // Varrock and the Grand Exchange can use any card in hand
+    if (pend && pend.type === 'choose') for (const a of pend.legal) {
+      if (a[0] === 'play') playable.add(a[1]);
+      if (a[0] === 'varrock' || a[0] === 'exchange') usable.add(a[1]);
+    }
+    const cards = p.hand.map((n, k) => {
+      const c = CARDS[n];
+      let cls = `card ${frameClass(c)}`;
+      let attrs = '';
+      let extra = '';
+      if (pend && pend.type === 'discard') { cls += ' discardable'; attrs = `data-do="discard" data-v="${esc(n)}" role="button" tabindex="0" aria-label="Discard ${esc(n)}"`; }
+      else if (pend && pend.type === 'choose') {
+        if (playable.has(n) || usable.has(n)) { if (playable.has(n)) cls += ' playable'; attrs = `data-do="select" data-v="${esc(n)}" role="button" tabindex="0" aria-label="${esc(n)}"`; }
+        else { cls += ' dim'; attrs = `data-do="peek" data-v="${esc(n)}" role="button" tabindex="0" aria-label="${esc(n)}: ${esc(whyNot(g, ui.you, n))}"`; }
+        if (ui.selected === n) cls += ' selected';
+      }
+      if (ui.fresh.has(n) && pend && pend.type === 'choose') cls += ' fresh';
+      return `<div class="${cls}" ${attrs} data-k="${k}">${cardHTML(n, '', extra)}</div>`;
+    }).join('');
+    return `<div class="hand-wrap"><div class="k"><span>Your hand · ${p.hand.length}/7</span><span>Gold edge: playable. Tap a card to see what it can do.</span></div><div class="hand" id="hand">${cards || '<span class="waiting">Your hand is empty.</span>'}</div></div>`;
+  }
+
+  function actionsHTML(g) {
+    const pend = ui.pending;
+    if (g.winner !== null) return `<div class="actions"><div class="acts"><button class="act" data-do="newduel"><b>New duel</b><small>Pick decks again</small></button><button class="act" data-do="rematch"><b>Rematch</b><small>Same decks, new shuffle</small></button></div></div>`;
+    if (!pend) return `<div class="actions"><div class="waiting">${g.active === ui.you ? '…' : '<span class="thinking">The bot is playing</span>'}</div></div>`;
+    if (pend.type === 'discard') return `<div class="actions"><div class="k">Hand limit</div><div class="waiting">Tap a card in your hand to discard it.</div></div>`;
+    if (pend.type === 'react') return `<div class="actions"><div class="waiting">Choose a reaction.</div></div>`;
+    const btn = (a, k, extraCls = '') => {
+      const [b, s] = actLabel(g, ui.you, a);
+      const free = a[0] !== 'pass' && a[0] !== 'claim' && g.is_free(ui.you, a, g.free_plays_used);
+      const cls = `act${free ? ' free' : ''}${a[0] === 'claim' ? ' claim' : ''}${a[0] === 'pass' ? ' end' : ''}${extraCls}`;
+      return `<button class="${cls}" data-do="act" data-v="${k}"><b>${esc(b)}</b>${s ? `<small>${s}</small>` : ''}</button>`;
+    };
+    if (ui.selected && ui.selected !== '__quest') {
+      const opts = pend.legal.map((a, k) => [a, k]).filter(([a]) => ['play', 'varrock', 'exchange'].includes(a[0]) && a[1] === ui.selected);
+      if (!opts.length) {
+        return `<div class="actions"><div class="k">${esc(ui.selected)}</div><div class="acts"><div class="waiting">Can’t play it now: ${esc(whyNot(g, ui.you, ui.selected))}</div>
+          <button class="act cancel" data-do="unselect"><b>Back</b></button></div></div>`;
+      }
+      return `<div class="actions"><div class="k">${esc(ui.selected)}</div><div class="acts">${opts.map(([a, k]) => btn(a, k)).join('')}
+        <button class="act cancel" data-do="unselect"><b>Back</b><small>Pick something else</small></button></div></div>`;
+    }
+    const base = pend.legal.map((a, k) => [a, k]).filter(([a]) => !['play', 'varrock', 'exchange'].includes(a[0]));
+    const quest = base.filter(([a]) => a[0] === 'quest');
+    if (ui.selected === '__quest') {
+      return `<div class="actions"><div class="k">Quest step</div><div class="acts">${quest.map(([a, k]) => btn(a, k)).join('')}
+        <button class="act cancel" data-do="unselect"><b>Back</b></button></div></div>`;
+    }
+    const others = base.filter(([a]) => a[0] !== 'quest' && a[0] !== 'pass');
+    const pass = base.find(([a]) => a[0] === 'pass');
+    let questBtn = '';
+    if (quest.length === 1) questBtn = btn(quest[0][0], quest[0][1]);
+    else if (quest.length > 1) {
+      const p = g.players[ui.you];
+      const q = CARDS[p.quest.name];
+      const free = p.free_steps < g.rules.free_quest_steps;
+      questBtn = `<button class="act${free ? ' free' : ''}" data-do="questpick"><b>Quest: ${esc(stepText(q.steps[p.quest.step]))}</b><small>${esc(q.name)}, step ${p.quest.step + 1} of ${q.steps.length} · pick the card</small></button>`;
+    }
+    return `<div class="actions"><div class="k">Actions</div><div class="acts">${others.map(([a, k]) => btn(a, k)).join('')}${questBtn}${pass ? btn(pass[0], pass[1]) : ''}</div></div>`;
+  }
+
+  function logHTML(g) {
+    const items = g.log.slice(-160).map((e) => {
+      if (e.turn === true) return `<div class="turn">${esc(e.text)}</div>`;
+      const cls = e.who === null || e.who === undefined ? '' : e.who === ui.you ? 'you' : 'bot';
+      return `<div class="e ${cls}${e.action ? '' : ' note'}">${esc(e.text)}${e.result ? ` <span class="res">· ${esc(e.result)}</span>` : ''}</div>`;
+    }).join('');
+    return `<div class="logbox"><div class="k"><span>Duel log</span><span>Newest at the bottom</span></div><div class="log" id="log" aria-live="polite">${items}</div></div>`;
+  }
+
+  function duelHTML() {
+    const g = ui.g;
+    return `${header(true)}<div class="duel"><div class="board">${zoneHTML(g, 1 - ui.you)}${stripHTML(g)}${zoneHTML(g, ui.you)}${actionsHTML(g)}${handHTML(g)}</div>
+      <aside class="side">${logHTML(g)}</aside></div>${overlayHTML()}`;
+  }
+
+  function overlayHTML() {
+    const o = ui.overlay;
+    if (!o) return '';
+    const g = ui.g;
+    const wrap = (inner, closable = true) => `<div class="veil" ${closable ? 'data-do="close"' : ''}><div class="dialog" role="dialog" aria-modal="true" data-stop>${inner}</div></div>`;
+    if (o === 'rules') return wrap(`<h2>How to play</h2><ul>
+      <li><b>Your deck is your life.</b> Damage discards cards from the top of it. Healing shuffles cards from your discard pile back underneath. If damage empties your deck, or you have to draw from an empty deck, you lose.</li>
+      <li><b>Each turn</b> you draw 1 card (the first player skips this on turn 1), then take 2 actions: play a card, draw a card, swing your weapon, or Punch for 2 Melee. The first player can’t attack on turn 1.</li>
+      <li><b>Materials</b> (runes, bars, logs) stay in play and unlock bigger cards. They’re checked, never spent.</li>
+      <li><b>Free plays</b> don’t use an action: buff prayers, the Wooden Shield, free special attacks, and one quest step a turn. Up to 3 free plays a turn.</li>
+      <li><b>Reactions</b> (Protect prayers, Mirror Shield, Ricochet, Parry) are played on the bot’s turn, in answer to an attack. One per round. Protect prayers block the attack; the others send it back as another style.</li>
+      <li><b>Special energy:</b> you gain 1 at the start of each of your turns, up to 4. A special attack spends it.</li>
+      <li><b>Capes:</b> both capes are on the table. Meet a cape’s condition and claim it as an action. Survive 3 of your turns wearing it and you win. Either player can claim either cape, and you can wear one.</li>
+      <li><b>Legendary weapons</b> can’t attack on the turn they’re played, and break any shield they hit.</li>
+      <li><b>Hand limit:</b> 7 cards at the end of your turn.</li></ul>
+      <p class="muted">The rules follow the Set 1 rules doc and the balance simulator. End turn is a convenience the rules don’t mention yet.</p>
+      <div class="row"><button class="btn primary" data-do="close">Got it</button></div>`);
+    if (o.startsWith && o.startsWith('deck:')) {
+      const name = o.slice(5);
+      const d = deckObj(name);
+      const order = ['material', 'spell', 'weapon', 'thrown', 'bow', 'staff', 'arrows', 'ability', 'rapid', 'longrange', 'armor', 'shield', 'buff', 'prayer', 'reversal', 'food', 'npc', 'destroy', 'pouch', 'hammer', 'teleport', 'location', 'quest'];
+      const rows = Object.entries(d.cards).sort((a, b) => order.indexOf(CARDS[a[0]].kind) - order.indexOf(CARDS[b[0]].kind));
+      return wrap(`<h2>${esc(name)}</h2><p class="muted">${esc(DECK_BLURB(name))} · ${Object.values(d.cards).reduce((s, x) => s + x, 0)} cards</p>
+        <div class="cardlist">${rows.map(([n, k]) => `<div><span>${k}×</span> <b>${esc(n)}</b></div>`).join('')}</div>
+        <div class="row"><button class="btn" data-do="close">Close</button></div>`);
+    }
+    if (o.startsWith && o.startsWith('discard:')) {
+      const i = +o.slice(8);
+      const p = g.players[i];
+      const counts = {};
+      for (const n of p.discard) counts[n] = (counts[n] || 0) + 1;
+      const rows = Object.entries(counts).sort((a, b) => b[1] - a[1]);
+      return wrap(`<h2>${i === ui.you ? 'Your discard pile' : 'The bot’s discard pile'}</h2>
+        <p class="muted">${plural(p.discard.length, 'card')}. Healing shuffles these back under the deck.</p>
+        <div class="cardlist">${rows.map(([n, k]) => `<div><span>${k}×</span> <b>${esc(n)}</b></div>`).join('') || '<span>Empty.</span>'}</div>
+        <div class="row"><button class="btn" data-do="close">Close</button></div>`);
+    }
+    if (o === 'react' && ui.pending && ui.pending.type === 'react') {
+      const pd = ui.pending;
+      const att = 1 - ui.you;
+      const last = [...g.log].reverse().find((e) => e.action);
+      const [take, soak] = g.compute_damage(att, pd.amount, pd.style);
+      const opts = pd.opts.map((name) => {
+        const c = CARDS[name];
+        let what;
+        if (c.kind === 'prayer') {
+          what = `Block it: you take nothing instead of ${take}${soak ? `, and your shield keeps its ${soak} soak` : ''}`;
+        } else {
+          const [back, bs] = g.compute_damage(ui.you, pd.amount, c.converts_to);
+          what = `Send ${pd.amount} back as ${S[c.converts_to]}: the bot takes ${back}${bs ? ` (${bs} soaked)` : ''}`;
+        }
+        return `<button class="choice" data-do="react" data-v="${esc(name)}"><b>${esc(name)}</b><small>${esc(what)}</small></button>`;
+      }).join('');
+      const head = pd.src === 'reversal' ? 'Your attack comes back' : 'The bot attacks';
+      return wrap(`<h2>${head}</h2><p>${esc(last ? last.text : 'Incoming attack')}: <b>${pd.amount} ${S[pd.style]}</b> coming at you.</p>
+        <p class="muted">Taking it costs you ${take} card${take === 1 ? '' : 's'}${soak ? ` and ${soak} shield soak` : ''}. You have one reaction this round.</p>
+        <div class="choices">${opts}<button class="choice no" data-do="react" data-v=""><b>Take it</b><small>Keep your reaction for later this round</small></button></div>`, false);
+    }
+    if (o === 'over') {
+      const youWon = g.winner === ui.you;
+      const p = g.players[ui.you];
+      const b = g.players[1 - ui.you];
+      const why = {
+        damage: youWon ? 'The bot’s deck ran out.' : 'Your deck ran out.',
+        deck_out: youWon ? 'The bot had to draw from an empty deck.' : 'You had to draw from an empty deck.',
+        cape: youWon ? `You wore the ${p.cape_name} for 3 turns.` : `The bot wore the ${b.cape_name} for 3 turns.`,
+        timeout: 'Nobody won after 400 turns.',
+      }[g.end_reason] || '';
+      const title = g.winner === null ? 'A draw' : youWon ? 'You win' : 'The bot wins';
+      return wrap(`<h2 class="result-title">${title}</h2><p>${esc(why)}</p>
+        <p class="muted">${Math.floor(g.turn / 2) + 1} rounds. Your deck ended at ${p.lp}, the bot’s at ${b.lp}.</p>
+        <div class="row"><button class="btn primary" data-do="rematch">Rematch</button><button class="btn" data-do="newduel">New duel</button><button class="btn quiet" data-do="close">See the board</button></div>`);
+    }
+    return '';
+  }
+
+  const BLURBS = {
+    'Air Mage': 'Starter: Air spells, Staff of Air, Augury', Melee: 'Starter: bronze and mithril blades, Slash and Stab',
+    Ranged: 'Starter: shortbows, arrows, Rapid and Longrange', 'Lean Melee': 'Blades, Slash and Stab, Parry',
+    'Lean Mage': "Air spells, Iban's Staff, Mirror Shield", 'Lean Ranged': 'Magic Shortbow and Seercull specials, Ricochet',
+    'Smoke Mage': 'Air and Fire spells through Smoke Runes', 'Thrown Ranged': 'Darts, knives and axes from bars, Rigour',
+    'Mage/Ranged+': 'Air spells and bows, Air Battlestaff, Void top', 'Mage/Melee+': 'Magical Longsword, Saradomin Sword, Enchanted Bars',
+    'Melee/Ranged+': 'Blades and bows, Shieldbow, Mithril Grapple', 'Melee/Thrown': 'Blades and thrown weapons, all on bars',
+    'Quest Melee': 'Lean Melee with quests, for the Quest Point Cape', 'Defence Melee': 'Lean Melee with Protect prayers, for the Defence Cape',
+    'Prayer Melee': 'Lean Melee with Piety and Smite, for the Prayer Cape', 'Cooking Melee': 'Lean Melee with extra fish, for the Cooking Cape',
+    'Mace Melee': 'Bronze and Mithril Maces with Crush', 'Rune Melee': 'Built for tier 3: Rune Scimitar and Rune Platebody',
+    'Rune Thrown': 'Built for tier 3: Rune knives and axes, Rigour', 'Earth Mage': 'Earth spells wear down their weapon',
+    'Water Mage': 'Water spells heal you as they hit, Staff of Water', 'Mist Mage': 'Air and Water spells through Mist Runes',
+    'Dust Mage': 'Air and Earth spells through Dust Runes; flurries wear their weapon', 'Varrock Melee': 'Lean Melee that teleports to Varrock to rest',
+    'Hammer Mace': "Mace Melee with Smith's Hammer for more swings",
+  };
+  function deckStyles(name) {           // the styles a deck attacks with, most-used first
+    const tally = {};
+    for (const [n, k] of Object.entries(deckObj(name).cards)) {
+      const c = CARDS[n];
+      if (['weapon', 'thrown', 'bow', 'staff', 'spell', 'ability', 'rapid', 'longrange'].includes(c.kind)) {
+        const st = c.kind === 'bow' && c.style === 'magic' ? 'magic' : c.style;
+        if (S[st]) tally[st] = (tally[st] || 0) + k;
+      }
+    }
+    const all = Object.keys(tally).sort((a, b) => tally[b] - tally[a]);
+    return all.filter((s) => tally[s] >= 5).length ? all.filter((s) => tally[s] >= 5) : all.slice(0, 1);
+  }
+  function DECK_BLURB(name) {
+    if (BLURBS[name]) return BLURBS[name];
+    const [base, leg] = name.split(' + ');
+    return `${base} with the ${leg}`;
+  }
+
+  // ---------- input ----------
+  document.addEventListener('click', (e) => {
+    const t = e.target.closest('[data-do]');
+    if (!t) return;
+    if (t.dataset.do === 'close' && e.target.closest('[data-stop]') && !e.target.closest('button[data-do="close"]')) return;
+    const v = t.dataset.v;
+    act(t.dataset.do, v);
+  });
+  document.addEventListener('keydown', (e) => {
+    if ((e.key === 'Enter' || e.key === ' ') && e.target.matches && e.target.matches('[role="button"][data-do]')) {
+      e.preventDefault();
+      act(e.target.dataset.do, e.target.dataset.v);
+    }
+    if (e.key === 'Escape') {
+      if (ui.overlay && ui.overlay !== 'react') { ui.overlay = null; render(); }
+      else if (ui.selected) { ui.selected = null; render(); }
+    }
+  });
+  document.addEventListener('change', (e) => {
+    if (e.target.dataset.change === 'botdeck') { ui.setup.botDeck = e.target.value; store.set('rstcg-setup', ui.setup); render(); }
+  });
+
+  function act(what, v) {
+    const pend = ui.pending;
+    switch (what) {
+      case 'rules': ui.overlay = 'rules'; break;
+      case 'close': if (ui.overlay === 'react') return; ui.overlay = null; break;
+      case 'speed': ui.speed = ui.speed === 'fast' ? 'normal' : 'fast'; store.set('rstcg-speed', ui.speed); break;
+      case 'pickdeck': {
+        ui.setup.youDeck = v;
+        const fits = deckObj(v).capes;
+        if (!fits.includes(ui.setup.youCape)) ui.setup.youCape = fits[0];
+        store.set('rstcg-setup', ui.setup);
+        break;
+      }
+      case 'pickcape': ui.setup.youCape = v; store.set('rstcg-setup', ui.setup); break;
+      case 'seat': ui.setup.seat = v; store.set('rstcg-setup', ui.setup); break;
+      case 'viewdeck': ui.overlay = 'deck:' + v; break;
+      case 'viewdiscard': ui.overlay = 'discard:' + v; break;
+      case 'start': ui.overlay = null; runDuel(newConfig()); return;
+      case 'resume': {
+        const saved = store.get(STORE);
+        ui.overlay = null;
+        if (saved) runDuel(saved.config, saved.decisions);
+        return;
+      }
+      case 'rematch': {
+        const c = ui.config;
+        ui.overlay = null;
+        const fresh = newConfig();
+        runDuel(Object.assign(fresh, { youDeck: c.youDeck, youCape: c.youCape, botDeck: c.botDeck, botCape: deckObj(c.botDeck).capes[Math.floor(Math.random() * deckObj(c.botDeck).capes.length)] }));
+        return;
+      }
+      case 'newduel':
+        ui.token = null;
+        ui.screen = 'setup'; ui.overlay = null; ui.pending = null; ui.g = null; ui.config = null;
+        store.del(STORE);
+        break;
+      case 'select':
+        if (pend && pend.type === 'choose') ui.selected = ui.selected === v ? null : v;
+        break;
+      case 'unselect': ui.selected = null; break;
+      case 'peek':
+        if (pend && pend.type === 'choose') ui.selected = ui.selected === v ? null : v;
+        break;
+      case 'questpick': ui.selected = '__quest'; break;
+      case 'act':
+        if (pend && pend.type === 'choose') { pend.resolve(pend.legal[+v]); return; }
+        break;
+      case 'react':
+        if (pend && pend.type === 'react') { pend.resolve(v || null); return; }
+        break;
+      case 'discard':
+        if (pend && pend.type === 'discard') {
+          ui.g.log.push({ text: `You discard ${v} (hand limit)`, who: ui.you });
+          pend.resolve(v);
+          return;
+        }
+        break;
+      default: break;
+    }
+    render();
+  }
+
+  // ---------- boot ----------
+  function snapshot() { return ui.config && ui.g && ui.g.winner === null ? { config: ui.config, decisions: ui.decisions } : {}; }
+  function start(data) {
+    if (data && data.config && Array.isArray(data.decisions)) runDuel(data.config, data.decisions);
+    else render();
+  }
+  try { if (window.claude && window.claude.hot && window.claude.hot.snapshot) window.claude.hot.snapshot(snapshot); } catch (e) { /* no hot reload here */ }
+  const hot = window.claude && window.claude.hot;
+  if (hot && hot.ready) hot.ready(start); else start((hot && hot.data) || {});
+})();
+</script>

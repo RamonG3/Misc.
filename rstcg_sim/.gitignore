@@ -1,0 +1,13 @@
+# Card art and other generated files are not kept in the repo (see HANDOFF.md)
+web/arena_assets.js
+web/arena_fonts.css
+# Build output (it has the art inlined)
+web/dist/
+# Test output
+web/test/ui/shots/
+web/test/page*.html
+web/test/spec_chk.json
+web/test/out_chk.json
+__pycache__/
+*.pyc
+node_modules/

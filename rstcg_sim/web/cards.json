@@ -1,0 +1,2961 @@
+{
+ "cards": {
+  "Air Battlestaff": {
+   "name": "Air Battlestaff",
+   "kind": "bow",
+   "style": "magic",
+   "req": [
+    [
+     "Willow Logs",
+     1
+    ],
+    [
+     "Air Rune",
+     1
+    ]
+   ],
+   "hit": 5,
+   "arrow_tier": 2,
+   "counts_as": [
+    [
+     "Air Rune",
+     2
+    ]
+   ]
+  },
+  "Air Blast": {
+   "name": "Air Blast",
+   "kind": "spell",
+   "style": "magic",
+   "req": [
+    [
+     "Death Rune",
+     1
+    ],
+    [
+     "Air Rune",
+     3
+    ]
+   ],
+   "damage": 13
+  },
+  "Air Bolt": {
+   "name": "Air Bolt",
+   "kind": "spell",
+   "style": "magic",
+   "req": [
+    [
+     "Chaos Rune",
+     1
+    ],
+    [
+     "Air Rune",
+     2
+    ]
+   ],
+   "damage": 10
+  },
+  "Air Rune": {
+   "name": "Air Rune",
+   "kind": "material",
+   "mat": "rune"
+  },
+  "Air Strike": {
+   "name": "Air Strike",
+   "kind": "spell",
+   "style": "magic",
+   "req": [
+    [
+     "Air Rune",
+     1
+    ]
+   ],
+   "damage": 6
+  },
+  "Air Wave": {
+   "name": "Air Wave",
+   "kind": "spell",
+   "style": "magic",
+   "req": [
+    [
+     "Blood Rune",
+     1
+    ],
+    [
+     "Air Rune",
+     4
+    ]
+   ],
+   "damage": 17
+  },
+  "Ancient Mace": {
+   "name": "Ancient Mace",
+   "kind": "weapon",
+   "style": "melee",
+   "req": [
+    [
+     "Bronze Bar",
+     1
+    ],
+    [
+     "Mithril Bar",
+     2
+    ]
+   ],
+   "hit": 7,
+   "durability": 4,
+   "wclass": "mace",
+   "spec": "war_god",
+   "spec_cost": 2
+  },
+  "Anti-dragon Shield": {
+   "name": "Anti-dragon Shield",
+   "kind": "shield",
+   "soak": 7,
+   "unshatter": true
+  },
+  "Archmage Sedridor": {
+   "name": "Archmage Sedridor",
+   "kind": "npc",
+   "recovers": [
+    "rune"
+   ]
+  },
+  "Augury": {
+   "name": "Augury",
+   "kind": "buff",
+   "style": "magic",
+   "prayer": "magic",
+   "bonus": 4,
+   "duration": 3
+  },
+  "Banker": {
+   "name": "Banker",
+   "kind": "npc",
+   "recovers": [
+    "item"
+   ]
+  },
+  "Barrelchest Anchor": {
+   "name": "Barrelchest Anchor",
+   "kind": "weapon",
+   "style": "melee",
+   "req": [
+    [
+     "Bronze Bar",
+     1
+    ],
+    [
+     "Mithril Bar",
+     3
+    ]
+   ],
+   "hit": 10,
+   "durability": 3,
+   "wclass": "anchor",
+   "two_handed": true,
+   "spec": "sunder",
+   "spec_cost": 3,
+   "spec_val": 5
+  },
+  "Black D'hide Body": {
+   "name": "Black D'hide Body",
+   "kind": "armor",
+   "style": "ranged",
+   "armor": [
+    [
+     "melee",
+     -1
+    ],
+    [
+     "ranged",
+     -1
+    ],
+    [
+     "magic",
+     -4
+    ]
+   ],
+   "fam_req": [
+    [
+     "log",
+     3
+    ]
+   ]
+  },
+  "Blood Rune": {
+   "name": "Blood Rune",
+   "kind": "material",
+   "mat": "rune"
+  },
+  "Bronze Arrows": {
+   "name": "Bronze Arrows",
+   "kind": "arrows",
+   "style": "ranged",
+   "arrow_tier": 1
+  },
+  "Bronze Bar": {
+   "name": "Bronze Bar",
+   "kind": "material",
+   "mat": "bar"
+  },
+  "Bronze Dagger": {
+   "name": "Bronze Dagger",
+   "kind": "weapon",
+   "style": "melee",
+   "req": [
+    [
+     "Bronze Bar",
+     1
+    ]
+   ],
+   "hit": 4,
+   "durability": 3,
+   "wclass": "dagger"
+  },
+  "Bronze Darts": {
+   "name": "Bronze Darts",
+   "kind": "thrown",
+   "style": "ranged",
+   "req": [
+    [
+     "Bronze Bar",
+     1
+    ]
+   ],
+   "hit": 4,
+   "durability": 5,
+   "wclass": "dart"
+  },
+  "Bronze Knives": {
+   "name": "Bronze Knives",
+   "kind": "thrown",
+   "style": "ranged",
+   "req": [
+    [
+     "Bronze Bar",
+     2
+    ]
+   ],
+   "hit": 5,
+   "durability": 4,
+   "wclass": "knife"
+  },
+  "Bronze Mace": {
+   "name": "Bronze Mace",
+   "kind": "weapon",
+   "style": "melee",
+   "req": [
+    [
+     "Bronze Bar",
+     2
+    ]
+   ],
+   "hit": 7,
+   "durability": 2,
+   "wclass": "mace"
+  },
+  "Bronze Platebody": {
+   "name": "Bronze Platebody",
+   "kind": "armor",
+   "style": "melee",
+   "req": [
+    [
+     "Bronze Bar",
+     2
+    ]
+   ],
+   "armor": [
+    [
+     "melee",
+     -1
+    ],
+    [
+     "ranged",
+     -2
+    ],
+    [
+     "magic",
+     -1
+    ]
+   ],
+   "bonus": 2
+  },
+  "Bronze Scimitar": {
+   "name": "Bronze Scimitar",
+   "kind": "weapon",
+   "style": "melee",
+   "req": [
+    [
+     "Bronze Bar",
+     2
+    ]
+   ],
+   "hit": 5,
+   "durability": 3,
+   "wclass": "scimitar"
+  },
+  "Bronze Throwing Axe": {
+   "name": "Bronze Throwing Axe",
+   "kind": "thrown",
+   "style": "ranged",
+   "req": [
+    [
+     "Bronze Bar",
+     2
+    ]
+   ],
+   "hit": 8,
+   "durability": 2,
+   "wclass": "axe"
+  },
+  "Brother Jered": {
+   "name": "Brother Jered",
+   "kind": "npc",
+   "recovers": [
+    "buff",
+    "prayer"
+   ]
+  },
+  "Burst of Strength": {
+   "name": "Burst of Strength",
+   "kind": "buff",
+   "style": "melee",
+   "prayer": "melee",
+   "bonus": 1
+  },
+  "Chaos Rune": {
+   "name": "Chaos Rune",
+   "kind": "material",
+   "mat": "rune"
+  },
+  "Cook's Assistant": {
+   "name": "Cook's Assistant",
+   "kind": "quest",
+   "effect": "heal",
+   "qp": 1,
+   "steps": [
+    [
+     "discard",
+     "food"
+    ],
+    [
+     "discard",
+     "food"
+    ]
+   ],
+   "reward_val": 10
+  },
+  "Crush": {
+   "name": "Crush",
+   "kind": "ability",
+   "style": "melee",
+   "durability": 2,
+   "allowed": [
+    "mace"
+   ],
+   "damage": 6
+  },
+  "Dark Bow": {
+   "name": "Dark Bow",
+   "kind": "weapon",
+   "style": "ranged",
+   "hit": 15,
+   "durability": 1,
+   "wclass": "bow",
+   "legendary": true,
+   "styles": [
+    "ranged"
+   ],
+   "two_handed": true,
+   "hits": 2,
+   "fam_req": [
+    [
+     "log",
+     3
+    ]
+   ]
+  },
+  "Death Rune": {
+   "name": "Death Rune",
+   "kind": "material",
+   "mat": "rune"
+  },
+  "Demon Slayer": {
+   "name": "Demon Slayer",
+   "kind": "quest",
+   "effect": "silverlight",
+   "qp": 3,
+   "steps": [
+    [
+     "have",
+     [
+      "any",
+      3
+     ]
+    ],
+    [
+     "discard",
+     "material"
+    ],
+    [
+     "weapon",
+     null
+    ]
+   ]
+  },
+  "Doric": {
+   "name": "Doric",
+   "kind": "npc",
+   "recovers": [
+    "bar"
+   ]
+  },
+  "Doric's Quest": {
+   "name": "Doric's Quest",
+   "kind": "quest",
+   "effect": "fetch_bar",
+   "qp": 1,
+   "steps": [
+    [
+     "discard",
+     "material"
+    ],
+    [
+     "discard",
+     "material"
+    ]
+   ],
+   "reward_val": 1
+  },
+  "Dragon Dagger": {
+   "name": "Dragon Dagger",
+   "kind": "weapon",
+   "style": "melee",
+   "hit": 9,
+   "durability": 1,
+   "wclass": "dagger",
+   "legendary": true,
+   "hits": 2,
+   "fam_req": [
+    [
+     "bar",
+     2
+    ]
+   ]
+  },
+  "Dragon Slayer": {
+   "name": "Dragon Slayer",
+   "kind": "quest",
+   "effect": "dragon_slayer",
+   "qp": 2,
+   "steps": [
+    [
+     "shield",
+     null
+    ],
+    [
+     "armor",
+     null
+    ],
+    [
+     "spend",
+     null
+    ],
+    [
+     "weapon",
+     null
+    ]
+   ]
+  },
+  "Duel Arena": {
+   "name": "Duel Arena",
+   "kind": "location"
+  },
+  "Dust Flurry": {
+   "name": "Dust Flurry",
+   "kind": "spell",
+   "style": "magic",
+   "req": [
+    [
+     "Air Rune",
+     1
+    ],
+    [
+     "Earth Rune",
+     1
+    ]
+   ],
+   "damage": 8,
+   "wears": 1
+  },
+  "Dust Rune": {
+   "name": "Dust Rune",
+   "kind": "material",
+   "mat": "rune",
+   "combo": [
+    "Air Rune",
+    "Earth Rune"
+   ]
+  },
+  "Earth Blast": {
+   "name": "Earth Blast",
+   "kind": "spell",
+   "style": "magic",
+   "req": [
+    [
+     "Death Rune",
+     1
+    ],
+    [
+     "Earth Rune",
+     3
+    ]
+   ],
+   "damage": 12,
+   "wears": 1
+  },
+  "Earth Bolt": {
+   "name": "Earth Bolt",
+   "kind": "spell",
+   "style": "magic",
+   "req": [
+    [
+     "Chaos Rune",
+     1
+    ],
+    [
+     "Earth Rune",
+     2
+    ]
+   ],
+   "damage": 9,
+   "wears": 1
+  },
+  "Earth Rune": {
+   "name": "Earth Rune",
+   "kind": "material",
+   "mat": "rune"
+  },
+  "Earth Strike": {
+   "name": "Earth Strike",
+   "kind": "spell",
+   "style": "magic",
+   "req": [
+    [
+     "Earth Rune",
+     1
+    ]
+   ],
+   "damage": 5,
+   "wears": 1
+  },
+  "Earth Wave": {
+   "name": "Earth Wave",
+   "kind": "spell",
+   "style": "magic",
+   "req": [
+    [
+     "Blood Rune",
+     1
+    ],
+    [
+     "Earth Rune",
+     4
+    ]
+   ],
+   "damage": 16,
+   "wears": 1
+  },
+  "Enchanted Bar": {
+   "name": "Enchanted Bar",
+   "kind": "material",
+   "mat": "bar",
+   "combo": [
+    "Mithril Bar",
+    "Chaos Rune"
+   ]
+  },
+  "Enchanted Logs": {
+   "name": "Enchanted Logs",
+   "kind": "material",
+   "mat": "log",
+   "combo": [
+    "Willow Logs",
+    "Chaos Rune"
+   ]
+  },
+  "Ernest the Chicken": {
+   "name": "Ernest the Chicken",
+   "kind": "quest",
+   "effect": "chicken",
+   "qp": 4,
+   "steps": [
+    [
+     "discard",
+     null
+    ],
+    [
+     "have",
+     [
+      "any",
+      4
+     ]
+    ],
+    [
+     "discard",
+     null
+    ]
+   ]
+  },
+  "Excalibur": {
+   "name": "Excalibur",
+   "kind": "weapon",
+   "style": "melee",
+   "req": [
+    [
+     "Bronze Bar",
+     1
+    ],
+    [
+     "Mithril Bar",
+     2
+    ]
+   ],
+   "hit": 8,
+   "durability": 3,
+   "wclass": "sword",
+   "spec": "sanctuary",
+   "spec_cost": 2,
+   "spec_val": 3
+  },
+  "Fire Blast": {
+   "name": "Fire Blast",
+   "kind": "spell",
+   "style": "magic",
+   "req": [
+    [
+     "Death Rune",
+     1
+    ],
+    [
+     "Fire Rune",
+     3
+    ]
+   ],
+   "damage": 15
+  },
+  "Fire Bolt": {
+   "name": "Fire Bolt",
+   "kind": "spell",
+   "style": "magic",
+   "req": [
+    [
+     "Chaos Rune",
+     1
+    ],
+    [
+     "Fire Rune",
+     3
+    ]
+   ],
+   "damage": 12
+  },
+  "Fire Rune": {
+   "name": "Fire Rune",
+   "kind": "material",
+   "mat": "rune"
+  },
+  "Fire Strike": {
+   "name": "Fire Strike",
+   "kind": "spell",
+   "style": "magic",
+   "req": [
+    [
+     "Fire Rune",
+     2
+    ]
+   ],
+   "damage": 8
+  },
+  "Fire Wave": {
+   "name": "Fire Wave",
+   "kind": "spell",
+   "style": "magic",
+   "req": [
+    [
+     "Blood Rune",
+     1
+    ],
+    [
+     "Fire Rune",
+     4
+    ]
+   ],
+   "damage": 19
+  },
+  "Goblin Diplomacy": {
+   "name": "Goblin Diplomacy",
+   "kind": "quest",
+   "effect": "none",
+   "qp": 5,
+   "steps": [
+    [
+     "spend",
+     null
+    ],
+    [
+     "spend",
+     null
+    ],
+    [
+     "spend",
+     null
+    ]
+   ]
+  },
+  "Grand Exchange": {
+   "name": "Grand Exchange",
+   "kind": "location",
+   "free": true
+  },
+  "Granite Maul": {
+   "name": "Granite Maul",
+   "kind": "weapon",
+   "style": "melee",
+   "hit": 22,
+   "durability": 1,
+   "wclass": "maul",
+   "legendary": true,
+   "two_handed": true,
+   "fam_req": [
+    [
+     "bar",
+     3
+    ]
+   ]
+  },
+  "Green D'hide Body": {
+   "name": "Green D'hide Body",
+   "kind": "armor",
+   "style": "ranged",
+   "armor": [
+    [
+     "melee",
+     -1
+    ],
+    [
+     "ranged",
+     -1
+    ],
+    [
+     "magic",
+     -3
+    ]
+   ],
+   "fam_req": [
+    [
+     "log",
+     2
+    ]
+   ]
+  },
+  "Gunnar's Crusade": {
+   "name": "Gunnar's Crusade",
+   "kind": "destroy",
+   "style": "melee",
+   "damage": 6,
+   "destroys": "rune",
+   "needs_melee_weapon": true
+  },
+  "Horvik": {
+   "name": "Horvik",
+   "kind": "npc",
+   "recovers": [
+    "armor",
+    "shield"
+   ]
+  },
+  "Iban's Staff": {
+   "name": "Iban's Staff",
+   "kind": "staff",
+   "style": "magic",
+   "req": [
+    [
+     "Chaos Rune",
+     1
+    ],
+    [
+     "Elemental Rune",
+     1
+    ]
+   ],
+   "hit": 3,
+   "durability": 3,
+   "wclass": "staff",
+   "spec": "iban",
+   "spec_cost": 3,
+   "spec_val": 12
+  },
+  "Infinity Top": {
+   "name": "Infinity Top",
+   "kind": "armor",
+   "style": "magic",
+   "armor": [
+    [
+     "melee",
+     -4
+    ],
+    [
+     "ranged",
+     -1
+    ],
+    [
+     "magic",
+     -1
+    ]
+   ],
+   "fam_req": [
+    [
+     "rune",
+     3
+    ]
+   ]
+  },
+  "Karambwan": {
+   "name": "Karambwan",
+   "kind": "food",
+   "heal": 4,
+   "stacks_with_food": true
+  },
+  "Kiteshield": {
+   "name": "Kiteshield",
+   "kind": "shield",
+   "soak": 8
+  },
+  "Lava Flurry": {
+   "name": "Lava Flurry",
+   "kind": "spell",
+   "style": "magic",
+   "req": [
+    [
+     "Earth Rune",
+     1
+    ],
+    [
+     "Fire Rune",
+     1
+    ]
+   ],
+   "damage": 8,
+   "wears": 1
+  },
+  "Lava Rune": {
+   "name": "Lava Rune",
+   "kind": "material",
+   "mat": "rune",
+   "combo": [
+    "Fire Rune",
+    "Earth Rune"
+   ]
+  },
+  "Leather Body": {
+   "name": "Leather Body",
+   "kind": "armor",
+   "style": "ranged",
+   "armor": [
+    [
+     "melee",
+     -1
+    ],
+    [
+     "ranged",
+     -1
+    ],
+    [
+     "magic",
+     -2
+    ]
+   ],
+   "fam_req": [
+    [
+     "log",
+     1
+    ]
+   ]
+  },
+  "Lobster": {
+   "name": "Lobster",
+   "kind": "food",
+   "heal": 6
+  },
+  "Longrange": {
+   "name": "Longrange",
+   "kind": "longrange",
+   "style": "ranged"
+  },
+  "Lowe": {
+   "name": "Lowe",
+   "kind": "npc",
+   "recovers": [
+    "log",
+    "arrows"
+   ]
+  },
+  "Lumbridge": {
+   "name": "Lumbridge",
+   "kind": "location"
+  },
+  "Mage Arena": {
+   "name": "Mage Arena",
+   "kind": "location"
+  },
+  "Magic Shortbow": {
+   "name": "Magic Shortbow",
+   "kind": "bow",
+   "style": "ranged",
+   "req": [
+    [
+     "Normal Logs",
+     1
+    ],
+    [
+     "Willow Logs",
+     2
+    ]
+   ],
+   "hit": 5,
+   "arrow_tier": 2,
+   "spec": "snapshot",
+   "spec_cost": 3
+  },
+  "Magical Longsword": {
+   "name": "Magical Longsword",
+   "kind": "weapon",
+   "style": "melee",
+   "req": [
+    [
+     "Mithril Bar",
+     1
+    ],
+    [
+     "Chaos Rune",
+     1
+    ]
+   ],
+   "hit": 7,
+   "durability": 3,
+   "wclass": "longsword",
+   "styles": [
+    "melee",
+    "magic"
+   ],
+   "free_swing_after_spell": true
+  },
+  "Mirror Shield": {
+   "name": "Mirror Shield",
+   "kind": "reversal",
+   "style": "magic",
+   "reacts_to": "melee",
+   "converts_to": "magic"
+  },
+  "Mist Flurry": {
+   "name": "Mist Flurry",
+   "kind": "spell",
+   "style": "magic",
+   "req": [
+    [
+     "Air Rune",
+     1
+    ],
+    [
+     "Water Rune",
+     1
+    ]
+   ],
+   "damage": 8,
+   "heals": 2
+  },
+  "Mist Rune": {
+   "name": "Mist Rune",
+   "kind": "material",
+   "mat": "rune",
+   "combo": [
+    "Water Rune",
+    "Air Rune"
+   ]
+  },
+  "Mithril Arrows": {
+   "name": "Mithril Arrows",
+   "kind": "arrows",
+   "style": "ranged",
+   "arrow_tier": 2,
+   "arrow_bonus": 3
+  },
+  "Mithril Bar": {
+   "name": "Mithril Bar",
+   "kind": "material",
+   "mat": "bar"
+  },
+  "Mithril Darts": {
+   "name": "Mithril Darts",
+   "kind": "thrown",
+   "style": "ranged",
+   "req": [
+    [
+     "Bronze Bar",
+     1
+    ],
+    [
+     "Mithril Bar",
+     2
+    ]
+   ],
+   "hit": 6,
+   "durability": 5,
+   "wclass": "dart"
+  },
+  "Mithril Grapple": {
+   "name": "Mithril Grapple",
+   "kind": "material",
+   "mat": "bar",
+   "combo": [
+    "Mithril Bar",
+    "Willow Logs"
+   ]
+  },
+  "Mithril Knives": {
+   "name": "Mithril Knives",
+   "kind": "thrown",
+   "style": "ranged",
+   "req": [
+    [
+     "Bronze Bar",
+     1
+    ],
+    [
+     "Mithril Bar",
+     2
+    ]
+   ],
+   "hit": 7,
+   "durability": 4,
+   "wclass": "knife"
+  },
+  "Mithril Mace": {
+   "name": "Mithril Mace",
+   "kind": "weapon",
+   "style": "melee",
+   "req": [
+    [
+     "Bronze Bar",
+     1
+    ],
+    [
+     "Mithril Bar",
+     2
+    ]
+   ],
+   "hit": 10,
+   "durability": 2,
+   "wclass": "mace"
+  },
+  "Mithril Platebody": {
+   "name": "Mithril Platebody",
+   "kind": "armor",
+   "style": "melee",
+   "req": [
+    [
+     "Bronze Bar",
+     1
+    ],
+    [
+     "Mithril Bar",
+     2
+    ]
+   ],
+   "armor": [
+    [
+     "melee",
+     -1
+    ],
+    [
+     "ranged",
+     -3
+    ],
+    [
+     "magic",
+     -1
+    ]
+   ],
+   "bonus": 2
+  },
+  "Mithril Scimitar": {
+   "name": "Mithril Scimitar",
+   "kind": "weapon",
+   "style": "melee",
+   "req": [
+    [
+     "Bronze Bar",
+     1
+    ],
+    [
+     "Mithril Bar",
+     2
+    ]
+   ],
+   "hit": 9,
+   "durability": 3,
+   "wclass": "scimitar"
+  },
+  "Mithril Sword": {
+   "name": "Mithril Sword",
+   "kind": "weapon",
+   "style": "melee",
+   "req": [
+    [
+     "Bronze Bar",
+     1
+    ],
+    [
+     "Mithril Bar",
+     2
+    ]
+   ],
+   "hit": 8,
+   "durability": 3,
+   "wclass": "sword"
+  },
+  "Mithril Throwing Axe": {
+   "name": "Mithril Throwing Axe",
+   "kind": "thrown",
+   "style": "ranged",
+   "req": [
+    [
+     "Bronze Bar",
+     1
+    ],
+    [
+     "Mithril Bar",
+     2
+    ]
+   ],
+   "hit": 12,
+   "durability": 2,
+   "wclass": "axe"
+  },
+  "Mud Flurry": {
+   "name": "Mud Flurry",
+   "kind": "spell",
+   "style": "magic",
+   "req": [
+    [
+     "Water Rune",
+     1
+    ],
+    [
+     "Earth Rune",
+     1
+    ]
+   ],
+   "damage": 7,
+   "wears": 1,
+   "heals": 2
+  },
+  "Mud Rune": {
+   "name": "Mud Rune",
+   "kind": "material",
+   "mat": "rune",
+   "combo": [
+    "Water Rune",
+    "Earth Rune"
+   ]
+  },
+  "Mystic Robe Top": {
+   "name": "Mystic Robe Top",
+   "kind": "armor",
+   "style": "magic",
+   "armor": [
+    [
+     "melee",
+     -3
+    ],
+    [
+     "ranged",
+     -1
+    ],
+    [
+     "magic",
+     -1
+    ]
+   ],
+   "fam_req": [
+    [
+     "rune",
+     2
+    ]
+   ]
+  },
+  "Mystic Will": {
+   "name": "Mystic Will",
+   "kind": "buff",
+   "style": "magic",
+   "prayer": "magic",
+   "bonus": 1
+  },
+  "Normal Logs": {
+   "name": "Normal Logs",
+   "kind": "material",
+   "mat": "log"
+  },
+  "Parry": {
+   "name": "Parry",
+   "kind": "reversal",
+   "style": "melee",
+   "reacts_to": "ranged",
+   "converts_to": "melee"
+  },
+  "Piety": {
+   "name": "Piety",
+   "kind": "buff",
+   "style": "melee",
+   "prayer": "melee",
+   "bonus": 4,
+   "duration": 3
+  },
+  "Prince Ali Rescue": {
+   "name": "Prince Ali Rescue",
+   "kind": "quest",
+   "effect": "lose_action",
+   "qp": 3,
+   "steps": [
+    [
+     "armor",
+     null
+    ],
+    [
+     "discard",
+     "material"
+    ],
+    [
+     "shield",
+     null
+    ]
+   ],
+   "reward_val": 1
+  },
+  "Protect from Magic": {
+   "name": "Protect from Magic",
+   "kind": "prayer",
+   "prayer": "magic"
+  },
+  "Protect from Melee": {
+   "name": "Protect from Melee",
+   "kind": "prayer",
+   "prayer": "melee"
+  },
+  "Protect from Missiles": {
+   "name": "Protect from Missiles",
+   "kind": "prayer",
+   "prayer": "ranged"
+  },
+  "Quest Point Cape": {
+   "name": "Quest Point Cape",
+   "kind": "cape"
+  },
+  "Rapid": {
+   "name": "Rapid",
+   "kind": "rapid",
+   "style": "ranged"
+  },
+  "Redemption": {
+   "name": "Redemption",
+   "kind": "buff",
+   "effect": "redemption",
+   "reward_val": 10,
+   "duration": 3
+  },
+  "Ricochet": {
+   "name": "Ricochet",
+   "kind": "reversal",
+   "style": "ranged",
+   "reacts_to": "magic",
+   "converts_to": "ranged"
+  },
+  "Rigour": {
+   "name": "Rigour",
+   "kind": "buff",
+   "style": "ranged",
+   "prayer": "ranged",
+   "bonus": 3,
+   "duration": 3
+  },
+  "Romeo & Juliet": {
+   "name": "Romeo & Juliet",
+   "kind": "quest",
+   "effect": "none",
+   "qp": 5,
+   "steps": [
+    [
+     "discard",
+     null
+    ],
+    [
+     "discard",
+     null
+    ],
+    [
+     "discard",
+     null
+    ]
+   ]
+  },
+  "Rune Arrows": {
+   "name": "Rune Arrows",
+   "kind": "arrows",
+   "style": "ranged",
+   "arrow_tier": 3,
+   "arrow_bonus": 5
+  },
+  "Rune Bar": {
+   "name": "Rune Bar",
+   "kind": "material",
+   "mat": "bar"
+  },
+  "Rune Dagger": {
+   "name": "Rune Dagger",
+   "kind": "weapon",
+   "style": "melee",
+   "req": [
+    [
+     "Mithril Bar",
+     1
+    ],
+    [
+     "Rune Bar",
+     2
+    ]
+   ],
+   "hit": 10,
+   "durability": 4,
+   "wclass": "dagger"
+  },
+  "Rune Darts": {
+   "name": "Rune Darts",
+   "kind": "thrown",
+   "style": "ranged",
+   "req": [
+    [
+     "Mithril Bar",
+     1
+    ],
+    [
+     "Rune Bar",
+     2
+    ]
+   ],
+   "hit": 8,
+   "durability": 5,
+   "wclass": "dart"
+  },
+  "Rune Knives": {
+   "name": "Rune Knives",
+   "kind": "thrown",
+   "style": "ranged",
+   "req": [
+    [
+     "Mithril Bar",
+     1
+    ],
+    [
+     "Rune Bar",
+     2
+    ]
+   ],
+   "hit": 10,
+   "durability": 4,
+   "wclass": "knife"
+  },
+  "Rune Mace": {
+   "name": "Rune Mace",
+   "kind": "weapon",
+   "style": "melee",
+   "req": [
+    [
+     "Mithril Bar",
+     1
+    ],
+    [
+     "Rune Bar",
+     2
+    ]
+   ],
+   "hit": 20,
+   "durability": 2,
+   "wclass": "mace"
+  },
+  "Rune Mysteries": {
+   "name": "Rune Mysteries",
+   "kind": "quest",
+   "effect": "fetch_rune",
+   "qp": 1,
+   "steps": [
+    [
+     "have",
+     [
+      "rune",
+      2
+     ]
+    ],
+    [
+     "have",
+     [
+      "rune",
+      3
+     ]
+    ]
+   ],
+   "reward_val": 1
+  },
+  "Rune Platebody": {
+   "name": "Rune Platebody",
+   "kind": "armor",
+   "style": "melee",
+   "req": [
+    [
+     "Mithril Bar",
+     1
+    ],
+    [
+     "Rune Bar",
+     2
+    ]
+   ],
+   "armor": [
+    [
+     "melee",
+     -1
+    ],
+    [
+     "ranged",
+     -4
+    ],
+    [
+     "magic",
+     -1
+    ]
+   ],
+   "bonus": 2
+  },
+  "Rune Pouch": {
+   "name": "Rune Pouch",
+   "kind": "pouch",
+   "item": true
+  },
+  "Rune Scimitar": {
+   "name": "Rune Scimitar",
+   "kind": "weapon",
+   "style": "melee",
+   "req": [
+    [
+     "Mithril Bar",
+     1
+    ],
+    [
+     "Rune Bar",
+     2
+    ]
+   ],
+   "hit": 13,
+   "durability": 3,
+   "wclass": "scimitar"
+  },
+  "Rune Throwing Axe": {
+   "name": "Rune Throwing Axe",
+   "kind": "thrown",
+   "style": "ranged",
+   "req": [
+    [
+     "Mithril Bar",
+     1
+    ],
+    [
+     "Rune Bar",
+     2
+    ]
+   ],
+   "hit": 17,
+   "durability": 2,
+   "wclass": "axe"
+  },
+  "Saradomin Sword": {
+   "name": "Saradomin Sword",
+   "kind": "weapon",
+   "style": "melee",
+   "req": [
+    [
+     "Mithril Bar",
+     2
+    ],
+    [
+     "Chaos Rune",
+     1
+    ]
+   ],
+   "hit": 8,
+   "durability": 3,
+   "wclass": "godsword",
+   "styles": [
+    "melee"
+   ],
+   "two_handed": true,
+   "spec": "lightning",
+   "spec_cost": 3,
+   "spec_val": 6
+  },
+  "Seercull": {
+   "name": "Seercull",
+   "kind": "bow",
+   "style": "ranged",
+   "req": [
+    [
+     "Normal Logs",
+     1
+    ],
+    [
+     "Willow Logs",
+     2
+    ]
+   ],
+   "hit": 5,
+   "arrow_tier": 2,
+   "spec": "soulshot",
+   "spec_cost": 3,
+   "spec_val": 2
+  },
+  "Shark": {
+   "name": "Shark",
+   "kind": "food",
+   "heal": 10
+  },
+  "Sharp Eye": {
+   "name": "Sharp Eye",
+   "kind": "buff",
+   "style": "ranged",
+   "prayer": "ranged",
+   "bonus": 1
+  },
+  "Sheep Shearer": {
+   "name": "Sheep Shearer",
+   "kind": "quest",
+   "effect": "draw",
+   "qp": 1,
+   "steps": [
+    [
+     "have",
+     [
+      "any",
+      2
+     ]
+    ]
+   ],
+   "reward_val": 2
+  },
+  "Shieldbow": {
+   "name": "Shieldbow",
+   "kind": "bow",
+   "style": "ranged",
+   "req": [
+    [
+     "Willow Logs",
+     1
+    ],
+    [
+     "Mithril Bar",
+     1
+    ]
+   ],
+   "hit": 5,
+   "durability": 3,
+   "arrow_tier": 2,
+   "soak": 6,
+   "bash_hit": 6,
+   "two_handed": true
+  },
+  "Shortbow": {
+   "name": "Shortbow",
+   "kind": "bow",
+   "style": "ranged",
+   "req": [
+    [
+     "Normal Logs",
+     1
+    ]
+   ],
+   "hit": 5,
+   "arrow_tier": 1
+  },
+  "Shrimp": {
+   "name": "Shrimp",
+   "kind": "food",
+   "heal": 3
+  },
+  "Slash": {
+   "name": "Slash",
+   "kind": "ability",
+   "style": "melee",
+   "allowed": [
+    "sword",
+    "scimitar"
+   ],
+   "damage": 4
+  },
+  "Smite": {
+   "name": "Smite",
+   "kind": "buff",
+   "prayer": "any",
+   "bonus": 3,
+   "effect": "smite",
+   "duration": 3
+  },
+  "Smith's Hammer": {
+   "name": "Smith's Hammer",
+   "kind": "hammer",
+   "item": true,
+   "bonus": 3
+  },
+  "Smoke Flurry": {
+   "name": "Smoke Flurry",
+   "kind": "spell",
+   "style": "magic",
+   "req": [
+    [
+     "Air Rune",
+     1
+    ],
+    [
+     "Fire Rune",
+     2
+    ]
+   ],
+   "damage": 9
+  },
+  "Smoke Rune": {
+   "name": "Smoke Rune",
+   "kind": "material",
+   "mat": "rune",
+   "combo": [
+    "Air Rune",
+    "Fire Rune"
+   ]
+  },
+  "Stab": {
+   "name": "Stab",
+   "kind": "ability",
+   "style": "melee",
+   "allowed": [
+    "dagger",
+    "sword"
+   ],
+   "damage": 2,
+   "ignores_armor": true
+  },
+  "Staff of Air": {
+   "name": "Staff of Air",
+   "kind": "staff",
+   "style": "magic",
+   "req": [
+    [
+     "Air Rune",
+     1
+    ]
+   ],
+   "hit": 2,
+   "durability": 3,
+   "wclass": "staff",
+   "counts_as": [
+    [
+     "Air Rune",
+     2
+    ]
+   ]
+  },
+  "Staff of Earth": {
+   "name": "Staff of Earth",
+   "kind": "staff",
+   "style": "magic",
+   "req": [
+    [
+     "Earth Rune",
+     1
+    ]
+   ],
+   "hit": 2,
+   "durability": 3,
+   "wclass": "staff",
+   "counts_as": [
+    [
+     "Earth Rune",
+     2
+    ]
+   ]
+  },
+  "Staff of Fire": {
+   "name": "Staff of Fire",
+   "kind": "staff",
+   "style": "magic",
+   "req": [
+    [
+     "Fire Rune",
+     1
+    ]
+   ],
+   "hit": 2,
+   "durability": 3,
+   "wclass": "staff",
+   "counts_as": [
+    [
+     "Fire Rune",
+     2
+    ]
+   ]
+  },
+  "Staff of Light": {
+   "name": "Staff of Light",
+   "kind": "staff",
+   "style": "magic",
+   "req": [
+    [
+     "Chaos Rune",
+     1
+    ],
+    [
+     "Elemental Rune",
+     1
+    ]
+   ],
+   "hit": 2,
+   "durability": 3,
+   "wclass": "staff",
+   "counts_as": [
+    [
+     "Elemental Rune",
+     2
+    ]
+   ],
+   "spec": "light",
+   "spec_cost": 2
+  },
+  "Staff of Water": {
+   "name": "Staff of Water",
+   "kind": "staff",
+   "style": "magic",
+   "req": [
+    [
+     "Water Rune",
+     1
+    ]
+   ],
+   "hit": 2,
+   "durability": 3,
+   "wclass": "staff",
+   "counts_as": [
+    [
+     "Water Rune",
+     2
+    ]
+   ]
+  },
+  "Staff of the Dead": {
+   "name": "Staff of the Dead",
+   "kind": "weapon",
+   "style": "magic",
+   "hit": 20,
+   "durability": 1,
+   "wclass": "staff",
+   "legendary": true,
+   "styles": [
+    "magic"
+   ],
+   "fam_req": [
+    [
+     "rune",
+     3
+    ]
+   ]
+  },
+  "Steam Flurry": {
+   "name": "Steam Flurry",
+   "kind": "spell",
+   "style": "magic",
+   "req": [
+    [
+     "Water Rune",
+     1
+    ],
+    [
+     "Fire Rune",
+     1
+    ]
+   ],
+   "damage": 8,
+   "heals": 2
+  },
+  "Steam Rune": {
+   "name": "Steam Rune",
+   "kind": "material",
+   "mat": "rune",
+   "combo": [
+    "Fire Rune",
+    "Water Rune"
+   ]
+  },
+  "Superheat": {
+   "name": "Superheat",
+   "kind": "destroy",
+   "style": "magic",
+   "req": [
+    [
+     "Fire Rune",
+     2
+    ]
+   ],
+   "damage": 6,
+   "destroys": "bar"
+  },
+  "Swordfish": {
+   "name": "Swordfish",
+   "kind": "food",
+   "heal": 8
+  },
+  "The Restless Ghost": {
+   "name": "The Restless Ghost",
+   "kind": "quest",
+   "effect": "fetch_prayer",
+   "qp": 1,
+   "steps": [
+    [
+     "have",
+     [
+      "any",
+      3
+     ]
+    ],
+    [
+     "discard",
+     null
+    ]
+   ],
+   "reward_val": 1
+  },
+  "Tinderbox": {
+   "name": "Tinderbox",
+   "kind": "destroy",
+   "damage": 6,
+   "destroys": "log",
+   "item": true
+  },
+  "Vampyre Slayer": {
+   "name": "Vampyre Slayer",
+   "kind": "quest",
+   "effect": "damage",
+   "qp": 3,
+   "steps": [
+    [
+     "weapon",
+     null
+    ],
+    [
+     "discard",
+     "food"
+    ],
+    [
+     "weapon",
+     null
+    ]
+   ],
+   "reward_val": 10
+  },
+  "Vanaka": {
+   "name": "Vanaka",
+   "kind": "npc",
+   "recovers": [
+    "weapon",
+    "thrown",
+    "bow",
+    "staff"
+   ]
+  },
+  "Varrock": {
+   "name": "Varrock",
+   "kind": "location"
+  },
+  "Varrock Teleport": {
+   "name": "Varrock Teleport",
+   "kind": "teleport",
+   "item": true,
+   "fetch": "Varrock"
+  },
+  "Void Knight Top": {
+   "name": "Void Knight Top",
+   "kind": "armor",
+   "armor": [
+    [
+     "melee",
+     -1
+    ],
+    [
+     "ranged",
+     -1
+    ],
+    [
+     "magic",
+     -1
+    ]
+   ],
+   "bonus": 1,
+   "families": 2
+  },
+  "Water Blast": {
+   "name": "Water Blast",
+   "kind": "spell",
+   "style": "magic",
+   "req": [
+    [
+     "Death Rune",
+     1
+    ],
+    [
+     "Water Rune",
+     3
+    ]
+   ],
+   "damage": 12,
+   "heals": 2
+  },
+  "Water Bolt": {
+   "name": "Water Bolt",
+   "kind": "spell",
+   "style": "magic",
+   "req": [
+    [
+     "Chaos Rune",
+     1
+    ],
+    [
+     "Water Rune",
+     2
+    ]
+   ],
+   "damage": 9,
+   "heals": 2
+  },
+  "Water Rune": {
+   "name": "Water Rune",
+   "kind": "material",
+   "mat": "rune"
+  },
+  "Water Strike": {
+   "name": "Water Strike",
+   "kind": "spell",
+   "style": "magic",
+   "req": [
+    [
+     "Water Rune",
+     1
+    ]
+   ],
+   "damage": 5,
+   "heals": 2
+  },
+  "Water Wave": {
+   "name": "Water Wave",
+   "kind": "spell",
+   "style": "magic",
+   "req": [
+    [
+     "Blood Rune",
+     1
+    ],
+    [
+     "Water Rune",
+     4
+    ]
+   ],
+   "damage": 16,
+   "heals": 2
+  },
+  "Wilderness": {
+   "name": "Wilderness",
+   "kind": "location"
+  },
+  "Willow Logs": {
+   "name": "Willow Logs",
+   "kind": "material",
+   "mat": "log"
+  },
+  "Willow Shortbow": {
+   "name": "Willow Shortbow",
+   "kind": "bow",
+   "style": "ranged",
+   "req": [
+    [
+     "Normal Logs",
+     1
+    ],
+    [
+     "Willow Logs",
+     1
+    ]
+   ],
+   "hit": 6,
+   "arrow_tier": 2
+  },
+  "Wise Old Man": {
+   "name": "Wise Old Man",
+   "kind": "npc",
+   "recovers": [
+    "any"
+   ],
+   "legendary": true
+  },
+  "Wizard Robe": {
+   "name": "Wizard Robe",
+   "kind": "armor",
+   "style": "magic",
+   "armor": [
+    [
+     "melee",
+     -2
+    ],
+    [
+     "ranged",
+     -1
+    ],
+    [
+     "magic",
+     -1
+    ]
+   ],
+   "fam_req": [
+    [
+     "rune",
+     1
+    ]
+   ]
+  },
+  "Wizards' Tower": {
+   "name": "Wizards' Tower",
+   "kind": "location"
+  },
+  "Wooden Shield": {
+   "name": "Wooden Shield",
+   "kind": "shield",
+   "soak": 5,
+   "free": true
+  },
+  "Yew Logs": {
+   "name": "Yew Logs",
+   "kind": "material",
+   "mat": "log"
+  },
+  "Yew Shortbow": {
+   "name": "Yew Shortbow",
+   "kind": "bow",
+   "style": "ranged",
+   "req": [
+    [
+     "Willow Logs",
+     1
+    ],
+    [
+     "Yew Logs",
+     2
+    ]
+   ],
+   "hit": 8,
+   "arrow_tier": 3
+  }
+ },
+ "decks": [
+  {
+   "name": "Melee",
+   "group": "Starter decks",
+   "cards": {
+    "Bronze Bar": 9,
+    "Mithril Bar": 13,
+    "Bronze Dagger": 2,
+    "Bronze Scimitar": 3,
+    "Bronze Mace": 1,
+    "Mithril Sword": 2,
+    "Mithril Scimitar": 3,
+    "Excalibur": 1,
+    "Slash": 3,
+    "Stab": 2,
+    "Crush": 1,
+    "Bronze Platebody": 2,
+    "Wooden Shield": 2,
+    "Kiteshield": 2,
+    "Lobster": 1,
+    "Swordfish": 1,
+    "Burst of Strength": 2,
+    "Piety": 1,
+    "Ricochet": 2,
+    "Protect from Magic": 1,
+    "Doric": 1,
+    "Vanaka": 1,
+    "Wilderness": 1,
+    "Doric's Quest": 1,
+    "Gunnar's Crusade": 1,
+    "Smith's Hammer": 1
+   },
+   "capes": [
+    "Attack Cape"
+   ]
+  },
+  {
+   "name": "Ranged",
+   "group": "Starter decks",
+   "cards": {
+    "Normal Logs": 9,
+    "Willow Logs": 12,
+    "Shortbow": 2,
+    "Willow Shortbow": 3,
+    "Magic Shortbow": 1,
+    "Bronze Arrows": 3,
+    "Mithril Arrows": 3,
+    "Rapid": 4,
+    "Longrange": 2,
+    "Leather Body": 2,
+    "Green D'hide Body": 1,
+    "Wooden Shield": 2,
+    "Kiteshield": 3,
+    "Shrimp": 1,
+    "Lobster": 2,
+    "Sharp Eye": 2,
+    "Rigour": 1,
+    "Mirror Shield": 1,
+    "Protect from Melee": 1,
+    "Lowe": 1,
+    "Horvik": 1,
+    "Grand Exchange": 1,
+    "Sheep Shearer": 1,
+    "Tinderbox": 1
+   },
+   "capes": [
+    "Defence Cape"
+   ]
+  },
+  {
+   "name": "Air Mage",
+   "group": "Starter decks",
+   "cards": {
+    "Air Rune": 13,
+    "Chaos Rune": 5,
+    "Death Rune": 3,
+    "Air Strike": 4,
+    "Air Bolt": 4,
+    "Air Blast": 4,
+    "Staff of Air": 1,
+    "Iban's Staff": 2,
+    "Rune Pouch": 3,
+    "Wizard Robe": 2,
+    "Wooden Shield": 2,
+    "Kiteshield": 2,
+    "Shrimp": 1,
+    "Lobster": 1,
+    "Mystic Will": 2,
+    "Augury": 2,
+    "Mirror Shield": 2,
+    "Protect from Missiles": 1,
+    "Archmage Sedridor": 2,
+    "Banker": 1,
+    "Wizards' Tower": 1,
+    "Rune Mysteries": 1,
+    "Tinderbox": 1
+   },
+   "capes": [
+    "Magic Cape"
+   ]
+  },
+  {
+   "name": "Lean Melee",
+   "group": "Tournament decks",
+   "cards": {
+    "Bronze Bar": 9,
+    "Mithril Bar": 13,
+    "Bronze Dagger": 2,
+    "Bronze Scimitar": 4,
+    "Mithril Sword": 4,
+    "Mithril Scimitar": 4,
+    "Slash": 4,
+    "Stab": 4,
+    "Bronze Platebody": 2,
+    "Kiteshield": 3,
+    "Wooden Shield": 2,
+    "Lobster": 1,
+    "Doric": 1,
+    "Vanaka": 1,
+    "Parry": 3,
+    "Burst of Strength": 3
+   },
+   "capes": [
+    "Attack Cape",
+    "Smithing Cape"
+   ]
+  },
+  {
+   "name": "Lean Mage",
+   "group": "Tournament decks",
+   "cards": {
+    "Air Rune": 14,
+    "Chaos Rune": 5,
+    "Death Rune": 3,
+    "Air Strike": 4,
+    "Air Bolt": 4,
+    "Air Blast": 3,
+    "Rune Pouch": 4,
+    "Wizard Robe": 2,
+    "Kiteshield": 3,
+    "Wooden Shield": 3,
+    "Archmage Sedridor": 2,
+    "Wizards' Tower": 2,
+    "Banker": 1,
+    "Mirror Shield": 3,
+    "Staff of Light": 2,
+    "Iban's Staff": 3,
+    "Augury": 2
+   },
+   "capes": [
+    "Magic Cape",
+    "Runecrafting Cape"
+   ]
+  },
+  {
+   "name": "Lean Ranged",
+   "group": "Tournament decks",
+   "cards": {
+    "Normal Logs": 9,
+    "Willow Logs": 13,
+    "Bronze Arrows": 4,
+    "Mithril Arrows": 4,
+    "Rapid": 4,
+    "Longrange": 4,
+    "Leather Body": 2,
+    "Kiteshield": 4,
+    "Wooden Shield": 3,
+    "Lowe": 2,
+    "Ricochet": 3,
+    "Magic Shortbow": 3,
+    "Seercull": 2,
+    "Sharp Eye": 3
+   },
+   "capes": [
+    "Ranged Cape",
+    "Woodcutting Cape"
+   ]
+  },
+  {
+   "name": "Smoke Mage",
+   "group": "Tournament decks",
+   "cards": {
+    "Air Rune": 6,
+    "Fire Rune": 8,
+    "Smoke Rune": 4,
+    "Chaos Rune": 4,
+    "Air Strike": 4,
+    "Fire Strike": 4,
+    "Smoke Flurry": 4,
+    "Air Bolt": 4,
+    "Fire Bolt": 4,
+    "Rune Pouch": 2,
+    "Wizard Robe": 2,
+    "Kiteshield": 3,
+    "Wooden Shield": 1,
+    "Archmage Sedridor": 2,
+    "Wizards' Tower": 2,
+    "Mirror Shield": 3,
+    "Iban's Staff": 3
+   },
+   "capes": [
+    "Magic Cape",
+    "Runecrafting Cape"
+   ]
+  },
+  {
+   "name": "Thrown Ranged",
+   "group": "Tournament decks",
+   "cards": {
+    "Bronze Bar": 8,
+    "Mithril Bar": 14,
+    "Bronze Darts": 2,
+    "Bronze Knives": 3,
+    "Bronze Throwing Axe": 2,
+    "Mithril Darts": 4,
+    "Mithril Knives": 4,
+    "Mithril Throwing Axe": 2,
+    "Rapid": 4,
+    "Longrange": 2,
+    "Kiteshield": 3,
+    "Wooden Shield": 2,
+    "Doric": 2,
+    "Ricochet": 3,
+    "Rigour": 3,
+    "Bronze Platebody": 2
+   },
+   "capes": [
+    "Smithing Cape",
+    "Ranged Cape"
+   ]
+  },
+  {
+   "name": "Mage/Ranged+",
+   "group": "Tournament decks",
+   "cards": {
+    "Air Rune": 9,
+    "Chaos Rune": 3,
+    "Normal Logs": 5,
+    "Willow Logs": 1,
+    "Air Strike": 4,
+    "Air Bolt": 4,
+    "Rune Pouch": 2,
+    "Willow Shortbow": 3,
+    "Bronze Arrows": 2,
+    "Mithril Arrows": 4,
+    "Rapid": 2,
+    "Kiteshield": 3,
+    "Archmage Sedridor": 1,
+    "Lowe": 1,
+    "Wizards' Tower": 1,
+    "Air Battlestaff": 3,
+    "Mirror Shield": 2,
+    "Ricochet": 2,
+    "Sharp Eye": 2,
+    "Enchanted Logs": 4,
+    "Void Knight Top": 2
+   },
+   "capes": [
+    "Magic Cape",
+    "Ranged Cape"
+   ]
+  },
+  {
+   "name": "Mage/Melee+",
+   "group": "Tournament decks",
+   "cards": {
+    "Air Rune": 9,
+    "Chaos Rune": 3,
+    "Bronze Bar": 5,
+    "Mithril Bar": 1,
+    "Air Strike": 4,
+    "Air Bolt": 4,
+    "Rune Pouch": 2,
+    "Mithril Scimitar": 2,
+    "Slash": 3,
+    "Gunnar's Crusade": 1,
+    "Kiteshield": 3,
+    "Wooden Shield": 2,
+    "Lobster": 2,
+    "Archmage Sedridor": 1,
+    "Doric": 1,
+    "Wizards' Tower": 1,
+    "Magical Longsword": 4,
+    "Mirror Shield": 2,
+    "Parry": 2,
+    "Saradomin Sword": 2,
+    "Enchanted Bar": 4,
+    "Void Knight Top": 2
+   },
+   "capes": [
+    "Magic Cape",
+    "Attack Cape"
+   ]
+  },
+  {
+   "name": "Melee/Ranged+",
+   "group": "Tournament decks",
+   "cards": {
+    "Bronze Bar": 6,
+    "Mithril Bar": 1,
+    "Normal Logs": 6,
+    "Willow Logs": 5,
+    "Bronze Scimitar": 3,
+    "Mithril Scimitar": 2,
+    "Mithril Sword": 2,
+    "Slash": 3,
+    "Willow Shortbow": 3,
+    "Bronze Arrows": 2,
+    "Mithril Arrows": 4,
+    "Rapid": 2,
+    "Kiteshield": 3,
+    "Wooden Shield": 1,
+    "Doric": 1,
+    "Lowe": 1,
+    "Shieldbow": 3,
+    "Parry": 2,
+    "Ricochet": 2,
+    "Sharp Eye": 2,
+    "Mithril Grapple": 4,
+    "Void Knight Top": 2
+   },
+   "capes": [
+    "Attack Cape",
+    "Ranged Cape"
+   ]
+  },
+  {
+   "name": "Melee/Thrown",
+   "group": "Tournament decks",
+   "cards": {
+    "Bronze Bar": 9,
+    "Mithril Bar": 13,
+    "Bronze Scimitar": 3,
+    "Mithril Scimitar": 3,
+    "Mithril Sword": 2,
+    "Slash": 3,
+    "Stab": 1,
+    "Bronze Knives": 2,
+    "Mithril Darts": 3,
+    "Mithril Knives": 3,
+    "Mithril Throwing Axe": 2,
+    "Rapid": 2,
+    "Bronze Platebody": 2,
+    "Kiteshield": 3,
+    "Wooden Shield": 1,
+    "Doric": 2,
+    "Parry": 2,
+    "Ricochet": 2,
+    "Sharp Eye": 2
+   },
+   "capes": [
+    "Smithing Cape",
+    "Attack Cape"
+   ]
+  },
+  {
+   "name": "Quest Melee",
+   "group": "Cape decks",
+   "cards": {
+    "Bronze Bar": 9,
+    "Mithril Bar": 13,
+    "Bronze Scimitar": 4,
+    "Mithril Sword": 4,
+    "Mithril Scimitar": 3,
+    "Slash": 4,
+    "Bronze Platebody": 2,
+    "Kiteshield": 3,
+    "Wooden Shield": 2,
+    "Lobster": 3,
+    "Parry": 3,
+    "Burst of Strength": 3,
+    "Romeo & Juliet": 3,
+    "Goblin Diplomacy": 2,
+    "Doric's Quest": 2
+   },
+   "capes": [
+    "Quest Point Cape"
+   ]
+  },
+  {
+   "name": "Defence Melee",
+   "group": "Cape decks",
+   "cards": {
+    "Bronze Bar": 9,
+    "Mithril Bar": 13,
+    "Bronze Dagger": 1,
+    "Bronze Scimitar": 4,
+    "Mithril Sword": 4,
+    "Mithril Scimitar": 4,
+    "Slash": 4,
+    "Bronze Platebody": 2,
+    "Kiteshield": 3,
+    "Wooden Shield": 2,
+    "Lobster": 1,
+    "Doric": 1,
+    "Vanaka": 1,
+    "Parry": 4,
+    "Burst of Strength": 3,
+    "Protect from Magic": 2,
+    "Protect from Missiles": 2
+   },
+   "capes": [
+    "Defence Cape"
+   ]
+  },
+  {
+   "name": "Prayer Melee",
+   "group": "Cape decks",
+   "cards": {
+    "Bronze Bar": 9,
+    "Mithril Bar": 13,
+    "Bronze Dagger": 2,
+    "Bronze Scimitar": 4,
+    "Mithril Sword": 4,
+    "Mithril Scimitar": 4,
+    "Slash": 4,
+    "Stab": 2,
+    "Bronze Platebody": 2,
+    "Kiteshield": 3,
+    "Wooden Shield": 2,
+    "Lobster": 1,
+    "Doric": 1,
+    "Vanaka": 1,
+    "Parry": 3,
+    "Piety": 3,
+    "Smite": 2
+   },
+   "capes": [
+    "Prayer Cape"
+   ]
+  },
+  {
+   "name": "Cooking Melee",
+   "group": "Cape decks",
+   "cards": {
+    "Bronze Bar": 9,
+    "Mithril Bar": 13,
+    "Bronze Scimitar": 4,
+    "Mithril Sword": 4,
+    "Mithril Scimitar": 4,
+    "Slash": 4,
+    "Bronze Platebody": 2,
+    "Kiteshield": 3,
+    "Wooden Shield": 1,
+    "Lobster": 4,
+    "Doric": 1,
+    "Vanaka": 1,
+    "Parry": 3,
+    "Burst of Strength": 3,
+    "Swordfish": 4
+   },
+   "capes": [
+    "Cooking Cape"
+   ]
+  },
+  {
+   "name": "Mace Melee",
+   "group": "Round 17 decks",
+   "cards": {
+    "Bronze Bar": 9,
+    "Mithril Bar": 13,
+    "Bronze Scimitar": 2,
+    "Mithril Scimitar": 4,
+    "Slash": 4,
+    "Bronze Platebody": 2,
+    "Kiteshield": 3,
+    "Wooden Shield": 2,
+    "Lobster": 2,
+    "Doric": 1,
+    "Vanaka": 1,
+    "Parry": 3,
+    "Burst of Strength": 3,
+    "Bronze Mace": 3,
+    "Mithril Mace": 4,
+    "Crush": 4
+   },
+   "capes": [
+    "Attack Cape",
+    "Smithing Cape"
+   ]
+  },
+  {
+   "name": "Rune Melee",
+   "group": "Round 17 decks",
+   "cards": {
+    "Bronze Bar": 7,
+    "Mithril Bar": 12,
+    "Rune Bar": 7,
+    "Mithril Sword": 4,
+    "Mithril Scimitar": 4,
+    "Rune Scimitar": 3,
+    "Rune Dagger": 1,
+    "Slash": 4,
+    "Stab": 2,
+    "Rune Platebody": 2,
+    "Kiteshield": 3,
+    "Wooden Shield": 2,
+    "Lobster": 1,
+    "Parry": 3,
+    "Burst of Strength": 3,
+    "Doric": 1,
+    "Vanaka": 1
+   },
+   "capes": [
+    "Smithing Cape",
+    "Attack Cape"
+   ]
+  },
+  {
+   "name": "Rune Thrown",
+   "group": "Round 17 decks",
+   "cards": {
+    "Bronze Bar": 5,
+    "Mithril Bar": 14,
+    "Rune Bar": 6,
+    "Mithril Darts": 4,
+    "Mithril Knives": 4,
+    "Mithril Throwing Axe": 2,
+    "Rune Knives": 3,
+    "Rune Throwing Axe": 2,
+    "Rapid": 4,
+    "Longrange": 1,
+    "Kiteshield": 3,
+    "Wooden Shield": 2,
+    "Doric": 2,
+    "Ricochet": 3,
+    "Rigour": 3,
+    "Bronze Platebody": 2
+   },
+   "capes": [
+    "Smithing Cape",
+    "Ranged Cape"
+   ]
+  },
+  {
+   "name": "Earth Mage",
+   "group": "Round 17 decks",
+   "cards": {
+    "Earth Rune": 12,
+    "Air Rune": 4,
+    "Dust Rune": 4,
+    "Chaos Rune": 4,
+    "Earth Strike": 4,
+    "Earth Bolt": 4,
+    "Air Strike": 4,
+    "Air Bolt": 4,
+    "Iban's Staff": 3,
+    "Rune Pouch": 3,
+    "Wizard Robe": 2,
+    "Kiteshield": 3,
+    "Wooden Shield": 3,
+    "Mirror Shield": 3,
+    "Archmage Sedridor": 2,
+    "Augury": 1
+   },
+   "capes": [
+    "Magic Cape",
+    "Runecrafting Cape"
+   ]
+  },
+  {
+   "name": "Water Mage",
+   "group": "Round 18 decks",
+   "cards": {
+    "Water Rune": 14,
+    "Chaos Rune": 5,
+    "Death Rune": 3,
+    "Water Strike": 4,
+    "Water Bolt": 4,
+    "Water Blast": 3,
+    "Rune Pouch": 4,
+    "Wizard Robe": 2,
+    "Kiteshield": 3,
+    "Wooden Shield": 3,
+    "Archmage Sedridor": 2,
+    "Wizards' Tower": 2,
+    "Banker": 1,
+    "Mirror Shield": 3,
+    "Staff of Water": 3,
+    "Iban's Staff": 2,
+    "Augury": 2
+   },
+   "capes": [
+    "Magic Cape",
+    "Runecrafting Cape"
+   ]
+  },
+  {
+   "name": "Mist Mage",
+   "group": "Round 18 decks",
+   "cards": {
+    "Air Rune": 6,
+    "Water Rune": 8,
+    "Mist Rune": 4,
+    "Chaos Rune": 4,
+    "Air Strike": 4,
+    "Water Strike": 4,
+    "Mist Flurry": 4,
+    "Air Bolt": 4,
+    "Water Bolt": 4,
+    "Rune Pouch": 2,
+    "Wizard Robe": 2,
+    "Kiteshield": 3,
+    "Wooden Shield": 1,
+    "Archmage Sedridor": 2,
+    "Wizards' Tower": 2,
+    "Mirror Shield": 3,
+    "Iban's Staff": 3
+   },
+   "capes": [
+    "Magic Cape",
+    "Runecrafting Cape"
+   ]
+  },
+  {
+   "name": "Dust Mage",
+   "group": "Round 18 decks",
+   "cards": {
+    "Air Rune": 6,
+    "Earth Rune": 8,
+    "Dust Rune": 4,
+    "Chaos Rune": 4,
+    "Air Strike": 4,
+    "Earth Strike": 4,
+    "Dust Flurry": 4,
+    "Air Bolt": 4,
+    "Earth Bolt": 4,
+    "Rune Pouch": 2,
+    "Wizard Robe": 2,
+    "Kiteshield": 3,
+    "Wooden Shield": 1,
+    "Archmage Sedridor": 2,
+    "Wizards' Tower": 2,
+    "Mirror Shield": 3,
+    "Iban's Staff": 3
+   },
+   "capes": [
+    "Magic Cape",
+    "Runecrafting Cape"
+   ]
+  },
+  {
+   "name": "Varrock Melee",
+   "group": "Round 18 decks",
+   "cards": {
+    "Bronze Bar": 9,
+    "Mithril Bar": 13,
+    "Bronze Dagger": 2,
+    "Bronze Scimitar": 4,
+    "Mithril Sword": 4,
+    "Mithril Scimitar": 4,
+    "Slash": 4,
+    "Stab": 1,
+    "Bronze Platebody": 2,
+    "Kiteshield": 3,
+    "Wooden Shield": 2,
+    "Lobster": 1,
+    "Doric": 1,
+    "Vanaka": 1,
+    "Parry": 3,
+    "Burst of Strength": 3,
+    "Varrock": 1,
+    "Varrock Teleport": 2
+   },
+   "capes": [
+    "Attack Cape",
+    "Smithing Cape"
+   ]
+  },
+  {
+   "name": "Hammer Mace",
+   "group": "Round 18 decks",
+   "cards": {
+    "Bronze Bar": 9,
+    "Mithril Bar": 13,
+    "Bronze Scimitar": 2,
+    "Mithril Scimitar": 4,
+    "Slash": 1,
+    "Bronze Platebody": 2,
+    "Kiteshield": 3,
+    "Wooden Shield": 2,
+    "Lobster": 2,
+    "Doric": 1,
+    "Vanaka": 1,
+    "Parry": 3,
+    "Burst of Strength": 3,
+    "Bronze Mace": 3,
+    "Mithril Mace": 4,
+    "Crush": 4,
+    "Smith's Hammer": 3
+   },
+   "capes": [
+    "Attack Cape",
+    "Smithing Cape"
+   ]
+  },
+  {
+   "name": "Lean Melee + Dragon Dagger",
+   "group": "Legendary decks",
+   "cards": {
+    "Bronze Bar": 9,
+    "Mithril Bar": 13,
+    "Bronze Dagger": 2,
+    "Bronze Scimitar": 4,
+    "Mithril Sword": 4,
+    "Mithril Scimitar": 4,
+    "Slash": 4,
+    "Stab": 4,
+    "Bronze Platebody": 2,
+    "Kiteshield": 3,
+    "Wooden Shield": 2,
+    "Lobster": 1,
+    "Doric": 1,
+    "Parry": 3,
+    "Burst of Strength": 3,
+    "Dragon Dagger": 1
+   },
+   "capes": [
+    "Attack Cape",
+    "Smithing Cape"
+   ]
+  },
+  {
+   "name": "Lean Ranged + Dark Bow",
+   "group": "Legendary decks",
+   "cards": {
+    "Normal Logs": 9,
+    "Willow Logs": 13,
+    "Bronze Arrows": 4,
+    "Mithril Arrows": 4,
+    "Rapid": 4,
+    "Longrange": 4,
+    "Leather Body": 2,
+    "Kiteshield": 4,
+    "Wooden Shield": 2,
+    "Lowe": 2,
+    "Ricochet": 3,
+    "Magic Shortbow": 3,
+    "Seercull": 2,
+    "Sharp Eye": 3,
+    "Dark Bow": 1
+   },
+   "capes": [
+    "Ranged Cape",
+    "Woodcutting Cape"
+   ]
+  },
+  {
+   "name": "Lean Mage + Staff of the Dead",
+   "group": "Legendary decks",
+   "cards": {
+    "Air Rune": 14,
+    "Chaos Rune": 5,
+    "Death Rune": 3,
+    "Air Strike": 4,
+    "Air Bolt": 4,
+    "Air Blast": 3,
+    "Rune Pouch": 4,
+    "Wizard Robe": 2,
+    "Kiteshield": 3,
+    "Wooden Shield": 3,
+    "Archmage Sedridor": 2,
+    "Wizards' Tower": 2,
+    "Mirror Shield": 3,
+    "Staff of Light": 2,
+    "Iban's Staff": 3,
+    "Augury": 2,
+    "Staff of the Dead": 1
+   },
+   "capes": [
+    "Magic Cape",
+    "Runecrafting Cape"
+   ]
+  },
+  {
+   "name": "Thrown Ranged + Granite Maul",
+   "group": "Legendary decks",
+   "cards": {
+    "Bronze Bar": 8,
+    "Mithril Bar": 14,
+    "Bronze Darts": 2,
+    "Bronze Knives": 3,
+    "Bronze Throwing Axe": 2,
+    "Mithril Darts": 4,
+    "Mithril Knives": 4,
+    "Mithril Throwing Axe": 2,
+    "Rapid": 4,
+    "Longrange": 2,
+    "Kiteshield": 3,
+    "Wooden Shield": 1,
+    "Doric": 2,
+    "Ricochet": 3,
+    "Rigour": 3,
+    "Granite Maul": 1,
+    "Bronze Platebody": 2
+   },
+   "capes": [
+    "Smithing Cape",
+    "Ranged Cape"
+   ]
+  },
+  {
+   "name": "Smoke Mage + Staff of the Dead",
+   "group": "Legendary decks",
+   "cards": {
+    "Air Rune": 6,
+    "Fire Rune": 8,
+    "Smoke Rune": 4,
+    "Chaos Rune": 4,
+    "Air Strike": 4,
+    "Fire Strike": 4,
+    "Smoke Flurry": 4,
+    "Air Bolt": 4,
+    "Fire Bolt": 4,
+    "Rune Pouch": 2,
+    "Wizard Robe": 2,
+    "Kiteshield": 3,
+    "Archmage Sedridor": 2,
+    "Wizards' Tower": 2,
+    "Mirror Shield": 3,
+    "Iban's Staff": 3,
+    "Staff of the Dead": 1
+   },
+   "capes": [
+    "Magic Cape",
+    "Runecrafting Cape"
+   ]
+  }
+ ],
+ "capes": {
+  "Quest Point Cape": {
+   "kind": "state",
+   "what": "qp",
+   "need": 6
+  },
+  "Attack Cape": {
+   "kind": "event",
+   "what": "melee_hit",
+   "need": 6
+  },
+  "Ranged Cape": {
+   "kind": "event",
+   "what": "ranged_hit",
+   "need": 3
+  },
+  "Magic Cape": {
+   "kind": "event",
+   "what": "magic_hit",
+   "need": 3
+  },
+  "Defence Cape": {
+   "kind": "event",
+   "what": "soak",
+   "need": 12
+  },
+  "Prayer Cape": {
+   "kind": "event",
+   "what": "elite_prayer",
+   "need": 2
+  },
+  "Cooking Cape": {
+   "kind": "event",
+   "what": "food",
+   "need": 3
+  },
+  "Smithing Cape": {
+   "kind": "state",
+   "what": "bar",
+   "need": 6
+  },
+  "Woodcutting Cape": {
+   "kind": "state",
+   "what": "log",
+   "need": 7
+  },
+  "Runecrafting Cape": {
+   "kind": "state",
+   "what": "rune",
+   "need": 7
+  }
+ }
+}

@@ -1,0 +1,612 @@
+{
+ "n": 4,
+ "bot": "smart",
+ "cards": {
+  "Crumble": [
+   {
+    "label": "Earth Mage (2)",
+    "copies": 2,
+    "n_slots": 2,
+    "cape": null,
+    "deck_wr": 50.6578947368421,
+    "value": -4.60526315789474,
+    "uses_per_game": 0.2565789473684211
+   }
+  ],
+  "Iban's Staff": [
+   {
+    "label": "Lean Mage (3)",
+    "copies": 3,
+    "n_slots": 3,
+    "cape": null,
+    "deck_wr": 47.36842105263158,
+    "value": 17.10526315789474,
+    "uses_per_game": 0.6513157894736842
+   }
+  ],
+  "Leather Body": [
+   {
+    "label": "Lean Ranged (2)",
+    "copies": 2,
+    "n_slots": 2,
+    "cape": null,
+    "deck_wr": 58.55263157894737,
+    "value": 0.6578947368421098,
+    "uses_per_game": 0.16447368421052633
+   }
+  ],
+  "Longrange": [
+   {
+    "label": "Lean Ranged (4)",
+    "copies": 4,
+    "n_slots": 4,
+    "cape": null,
+    "deck_wr": 58.55263157894737,
+    "value": 3.2894736842105274,
+    "uses_per_game": 0.21710526315789475
+   }
+  ],
+  "Magic Shortbow": [
+   {
+    "label": "Lean Ranged (3)",
+    "copies": 3,
+    "n_slots": 3,
+    "cape": null,
+    "deck_wr": 58.55263157894737,
+    "value": 28.289473684210527,
+    "uses_per_game": 0.5986842105263158
+   }
+  ],
+  "Wizard Robe": [
+   {
+    "label": "Lean Mage (2)",
+    "copies": 2,
+    "n_slots": 2,
+    "cape": null,
+    "deck_wr": 47.36842105263158,
+    "value": 0.0,
+    "uses_per_game": 0.14473684210526316
+   }
+  ],
+  "Wizards' Tower": [
+   {
+    "label": "Lean Mage (2)",
+    "copies": 2,
+    "n_slots": 2,
+    "cape": null,
+    "deck_wr": 47.36842105263158,
+    "value": -4.605263157894733,
+    "uses_per_game": 0.27631578947368424
+   }
+  ],
+  "Superheat": [
+   {
+    "label": "Fire Mage: Lobster 3 -> Superheat 3",
+    "copies": 3,
+    "n_slots": 3,
+    "cape": null,
+    "deck_wr": 49.3421052631579,
+    "value": -5.921052631578945,
+    "uses_per_game": 0.21710526315789475,
+    "vs_replaced": 1.973684210526315
+   }
+  ],
+  "Gunnar's Crusade": [
+   {
+    "label": "Lean Melee: Stab 2 -> Gunnar's Crusade 2",
+    "copies": 2,
+    "n_slots": 2,
+    "cape": null,
+    "deck_wr": 34.21052631578947,
+    "value": 0.0,
+    "uses_per_game": 0.24342105263157895,
+    "vs_replaced": 0.6578947368421026
+   }
+  ],
+  "Willow Shortbow": [
+   {
+    "label": "Lean Ranged: Magic Shortbow 3 -> Willow Shortbow 3",
+    "copies": 3,
+    "n_slots": 3,
+    "cape": null,
+    "deck_wr": 60.526315789473685,
+    "value": 30.263157894736842,
+    "uses_per_game": 0.5789473684210527,
+    "vs_replaced": 1.973684210526315
+   }
+  ],
+  "Black D'hide Body": [
+   {
+    "label": "Lean Ranged: Leather Body 2, Wooden Shield 1 -> Black D'hide Body 2, Leather 1",
+    "copies": 2,
+    "n_slots": 2,
+    "cape": null,
+    "deck_wr": 54.60526315789474,
+    "value": 0.6578947368421098,
+    "uses_per_game": 0.0,
+    "vs_replaced": -3.94736842105263
+   }
+  ],
+  "Shark": [
+   {
+    "label": "Fire Mage: Lobster 4 -> Shark 4",
+    "copies": 4,
+    "n_slots": 4,
+    "cape": null,
+    "deck_wr": 54.60526315789474,
+    "value": 3.2894736842105274,
+    "uses_per_game": 0.881578947368421,
+    "vs_replaced": 7.2368421052631575
+   }
+  ],
+  "Protect from Magic": [
+   {
+    "label": "Lean Melee: Stab 2 -> Protect from Magic 2",
+    "copies": 2,
+    "n_slots": 2,
+    "cape": null,
+    "deck_wr": 36.8421052631579,
+    "value": 2.631578947368425,
+    "uses_per_game": 0.25,
+    "vs_replaced": 3.2894736842105274
+   }
+  ],
+  "Protect from Missiles": [
+   {
+    "label": "Lean Melee: Stab 2 -> Protect from Missiles 2",
+    "copies": 2,
+    "n_slots": 2,
+    "cape": null,
+    "deck_wr": 34.21052631578947,
+    "value": 0.0,
+    "uses_per_game": 0.046052631578947366,
+    "vs_replaced": 0.6578947368421026
+   }
+  ],
+  "Protect from Melee": [
+   {
+    "label": "Lean Mage: Wooden Shield 2 -> Protect from Melee 2",
+    "copies": 2,
+    "n_slots": 2,
+    "cape": null,
+    "deck_wr": 47.36842105263158,
+    "value": 3.947368421052637,
+    "uses_per_game": 0.06578947368421052,
+    "vs_replaced": 0.0
+   }
+  ],
+  "Smite": [
+   {
+    "label": "Lean Melee: Burst of Strength 2 -> Smite 2",
+    "copies": 2,
+    "n_slots": 2,
+    "cape": null,
+    "deck_wr": 29.605263157894736,
+    "value": -4.605263157894736,
+    "uses_per_game": 0.375,
+    "vs_replaced": -3.9473684210526336
+   }
+  ],
+  "Wise Old Man": [
+   {
+    "label": "Lean Melee: Vanaka 1 -> Wise Old Man 1",
+    "copies": 1,
+    "n_slots": 1,
+    "cape": null,
+    "deck_wr": 32.89473684210526,
+    "value": 0.0,
+    "uses_per_game": 0.21052631578947367,
+    "vs_replaced": -0.6578947368421098
+   }
+  ],
+  "Fire Blast": [
+   {
+    "label": "Fire Mage: Lobster 2, Kiteshield 1, Wooden Shield 1 -> Death Rune 2, Fire Blast 2",
+    "copies": 2,
+    "n_slots": 4,
+    "cape": null,
+    "deck_wr": 48.68421052631579,
+    "value": -3.2894736842105274,
+    "uses_per_game": 0.3157894736842105,
+    "vs_replaced": 1.3157894736842053
+   }
+  ],
+  "Earth Blast": [
+   {
+    "label": "Earth Mage: Air Strike 4 -> Death Rune 2, Earth Blast 2",
+    "copies": 2,
+    "n_slots": 4,
+    "cape": null,
+    "deck_wr": 50.6578947368421,
+    "value": 9.210526315789473,
+    "uses_per_game": 0.3157894736842105,
+    "vs_replaced": 0.0
+   }
+  ],
+  "Tinderbox": [
+   {
+    "label": "Lean Mage: Wooden Shield 2 -> Tinderbox 2",
+    "copies": 2,
+    "n_slots": 2,
+    "cape": null,
+    "deck_wr": 48.026315789473685,
+    "value": 4.60526315789474,
+    "uses_per_game": 0.02631578947368421,
+    "vs_replaced": 0.6578947368421026
+   }
+  ],
+  "Smith's Hammer": [
+   {
+    "label": "Lean Melee: Stab 3 -> Smith's Hammer 3",
+    "copies": 3,
+    "n_slots": 3,
+    "cape": null,
+    "deck_wr": 39.473684210526315,
+    "value": 9.210526315789473,
+    "uses_per_game": 0.6381578947368421,
+    "vs_replaced": 5.921052631578945
+   }
+  ],
+  "Anti-dragon Shield": [
+   {
+    "label": "Lean Melee: Kiteshield 3 -> Anti-dragon Shield 3",
+    "copies": 3,
+    "n_slots": 3,
+    "cape": null,
+    "deck_wr": 33.55263157894737,
+    "value": 3.9473684210526336,
+    "uses_per_game": 0.618421052631579,
+    "vs_replaced": 0.0
+   }
+  ],
+  "Horvik": [
+   {
+    "label": "Lean Melee: Lobster 1, Doric 1 -> Horvik 2",
+    "copies": 2,
+    "n_slots": 2,
+    "cape": null,
+    "deck_wr": 31.57894736842105,
+    "value": -2.6315789473684212,
+    "uses_per_game": 0.27631578947368424,
+    "vs_replaced": -1.9736842105263186
+   }
+  ],
+  "Thessalia": [
+   {
+    "label": "Lean Ranged: Lowe 1, Wooden Shield 1 -> Thessalia 2",
+    "copies": 2,
+    "n_slots": 2,
+    "cape": null,
+    "deck_wr": 55.26315789473684,
+    "value": -3.94736842105263,
+    "uses_per_game": 0.16447368421052633,
+    "vs_replaced": -3.2894736842105274
+   }
+  ],
+  "Brother Jered": [
+   {
+    "label": "Lean Melee + Piety/Smite: Stab 2 -> Brother Jered 2",
+    "copies": 2,
+    "n_slots": 2,
+    "cape": null,
+    "deck_wr": 39.375,
+    "value": 3.75,
+    "uses_per_game": 0.36875,
+    "vs_replaced": 2.5
+   }
+  ],
+  "Wilderness": [
+   {
+    "label": "Lean Melee: Stab 2 -> Wilderness 2",
+    "copies": 2,
+    "n_slots": 2,
+    "cape": null,
+    "deck_wr": 35.526315789473685,
+    "value": 1.3157894736842124,
+    "uses_per_game": 0.20394736842105263,
+    "vs_replaced": 1.973684210526315
+   }
+  ],
+  "Lumbridge": [
+   {
+    "label": "Lean Melee: Stab 2 -> Lumbridge 2",
+    "copies": 2,
+    "n_slots": 2,
+    "cape": null,
+    "deck_wr": 34.21052631578947,
+    "value": 0.0,
+    "uses_per_game": 0.3157894736842105,
+    "vs_replaced": 0.6578947368421026
+   }
+  ],
+  "Grand Exchange": [
+   {
+    "label": "Lean Melee: Stab 2 -> Grand Exchange 2",
+    "copies": 2,
+    "n_slots": 2,
+    "cape": null,
+    "deck_wr": 28.94736842105263,
+    "value": -5.2631578947368425,
+    "uses_per_game": 0.3092105263157895,
+    "vs_replaced": -4.60526315789474
+   }
+  ],
+  "Duel Arena": [
+   {
+    "label": "Lean Mage: Wizards' Tower 2 -> Duel Arena 2",
+    "copies": 2,
+    "n_slots": 2,
+    "cape": null,
+    "deck_wr": 48.68421052631579,
+    "value": -3.2894736842105274,
+    "uses_per_game": 0.19078947368421054,
+    "vs_replaced": 1.3157894736842053
+   }
+  ],
+  "Mage Arena": [
+   {
+    "label": "Lean Mage: Wizards' Tower 2 -> Mage Arena 2",
+    "copies": 2,
+    "n_slots": 2,
+    "cape": null,
+    "deck_wr": 50.0,
+    "value": -1.973684210526315,
+    "uses_per_game": 0.2565789473684211,
+    "vs_replaced": 2.6315789473684177
+   }
+  ],
+  "Varrock": [
+   {
+    "label": "Lean Melee: Stab 3 -> Varrock 1, Varrock Teleport Tablet 2",
+    "copies": 1,
+    "n_slots": 3,
+    "cape": null,
+    "deck_wr": 40.13157894736842,
+    "value": 9.868421052631575,
+    "uses_per_game": 0.06578947368421052,
+    "vs_replaced": 6.578947368421048
+   }
+  ],
+  "Varrock Teleport Tablet": [
+   {
+    "label": "Lean Melee: Stab 3 -> Varrock 1, Varrock Teleport Tablet 2 (tablets blanked)",
+    "copies": 2,
+    "n_slots": 2,
+    "cape": null,
+    "deck_wr": 40.13157894736842,
+    "value": 5.921052631578945,
+    "uses_per_game": 0.20394736842105263,
+    "vs_replaced": 6.578947368421048
+   }
+  ],
+  "Varrock Teleport": [
+   {
+    "label": "Smoke Mage: Wizards' Tower 2, Wooden Shield 1, Rune Pouch 2 -> Law Rune 2, Varrock Teleport 2, Varrock 1",
+    "copies": 2,
+    "n_slots": 4,
+    "cape": null,
+    "deck_wr": 54.60526315789474,
+    "value": 2.631578947368425,
+    "uses_per_game": 0.13157894736842105,
+    "vs_replaced": -4.605263157894733
+   }
+  ],
+  "Cook's Assistant": [
+   {
+    "label": "Lean Melee: Stab 4 -> Cook's Assistant 2, Lobster 2",
+    "copies": 2,
+    "n_slots": 2,
+    "cape": null,
+    "deck_wr": 35.526315789473685,
+    "value": -1.973684210526315,
+    "uses_per_game": 0.1513157894736842,
+    "vs_replaced": 1.973684210526315
+   }
+  ],
+  "Doric's Quest": [
+   {
+    "label": "Lean Melee: Stab 2 -> Doric's Quest 2",
+    "copies": 2,
+    "n_slots": 2,
+    "cape": null,
+    "deck_wr": 36.8421052631579,
+    "value": 2.631578947368425,
+    "uses_per_game": 0.14473684210526316,
+    "vs_replaced": 3.2894736842105274
+   },
+   {
+    "label": "Quest deck + Quest Point Cape",
+    "copies": 2,
+    "n_slots": 2,
+    "cape": "Quest Point Cape",
+    "deck_wr": 36.875,
+    "value": 7.5,
+    "uses_per_game": 0.3375
+   }
+  ],
+  "Prince Ali Rescue": [
+   {
+    "label": "Lean Melee: Stab 2 -> Prince Ali Rescue 2",
+    "copies": 2,
+    "n_slots": 2,
+    "cape": null,
+    "deck_wr": 34.21052631578947,
+    "value": 0.0,
+    "uses_per_game": 0.125,
+    "vs_replaced": 0.6578947368421026
+   }
+  ],
+  "Vampyre Slayer": [
+   {
+    "label": "Lean Melee: Stab 2 -> Vampyre Slayer 2",
+    "copies": 2,
+    "n_slots": 2,
+    "cape": null,
+    "deck_wr": 37.5,
+    "value": 3.2894736842105274,
+    "uses_per_game": 0.24342105263157895,
+    "vs_replaced": 3.94736842105263
+   },
+   {
+    "label": "Quest deck + Quest Point Cape",
+    "copies": 2,
+    "n_slots": 2,
+    "cape": "Quest Point Cape",
+    "deck_wr": 36.875,
+    "value": -6.25,
+    "uses_per_game": 0.05
+   }
+  ],
+  "Ernest the Chicken": [
+   {
+    "label": "Lean Melee: Stab 2 -> Ernest the Chicken 2",
+    "copies": 2,
+    "n_slots": 2,
+    "cape": null,
+    "deck_wr": 32.89473684210526,
+    "value": -1.3157894736842124,
+    "uses_per_game": 0.17763157894736842,
+    "vs_replaced": -0.6578947368421098
+   }
+  ],
+  "Demon Slayer": [
+   {
+    "label": "Lean Melee: Stab 2 -> Demon Slayer 2",
+    "copies": 2,
+    "n_slots": 2,
+    "cape": null,
+    "deck_wr": 30.92105263157895,
+    "value": -3.289473684210524,
+    "uses_per_game": 0.25,
+    "vs_replaced": -2.6315789473684212
+   }
+  ],
+  "Dragon Slayer": [
+   {
+    "label": "Lean Melee: Stab 2 -> Dragon Slayer 2",
+    "copies": 2,
+    "n_slots": 2,
+    "cape": null,
+    "deck_wr": 36.8421052631579,
+    "value": 2.631578947368425,
+    "uses_per_game": 0.10526315789473684,
+    "vs_replaced": 3.2894736842105274
+   }
+  ],
+  "Romeo & Juliet": [
+   {
+    "label": "Lean Melee: Stab 2 -> Romeo & Juliet 2",
+    "copies": 2,
+    "n_slots": 2,
+    "cape": null,
+    "deck_wr": 35.526315789473685,
+    "value": 1.3157894736842124,
+    "uses_per_game": 0.07236842105263158,
+    "vs_replaced": 1.973684210526315
+   },
+   {
+    "label": "Quest deck + Quest Point Cape",
+    "copies": 3,
+    "n_slots": 3,
+    "cape": "Quest Point Cape",
+    "deck_wr": 36.875,
+    "value": 8.125,
+    "uses_per_game": 0.58125
+   }
+  ],
+  "Goblin Diplomacy": [
+   {
+    "label": "Lean Melee: Stab 2 -> Goblin Diplomacy 2",
+    "copies": 2,
+    "n_slots": 2,
+    "cape": null,
+    "deck_wr": 35.526315789473685,
+    "value": 1.3157894736842124,
+    "uses_per_game": 0.07894736842105263,
+    "vs_replaced": 1.973684210526315
+   },
+   {
+    "label": "Quest deck + Quest Point Cape",
+    "copies": 2,
+    "n_slots": 2,
+    "cape": "Quest Point Cape",
+    "deck_wr": 36.875,
+    "value": 6.875,
+    "uses_per_game": 0.36875
+   }
+  ],
+  "Sheep Shearer": [
+   {
+    "label": "Lean Mage: Banker 1, Wooden Shield 1 -> Sheep Shearer 2",
+    "copies": 2,
+    "n_slots": 2,
+    "cape": null,
+    "deck_wr": 50.0,
+    "value": 0.6578947368421026,
+    "uses_per_game": 0.35526315789473684,
+    "vs_replaced": 2.6315789473684177
+   }
+  ],
+  "Rune Mysteries": [
+   {
+    "label": "Lean Mage: Wooden Shield 2 -> Rune Mysteries 2",
+    "copies": 2,
+    "n_slots": 2,
+    "cape": null,
+    "deck_wr": 46.71052631578947,
+    "value": 3.2894736842105274,
+    "uses_per_game": 0.16447368421052633,
+    "vs_replaced": -0.6578947368421098
+   }
+  ],
+  "The Restless Ghost": [
+   {
+    "label": "Lean Melee + Piety/Smite: Stab 2 -> Restless Ghost 2",
+    "copies": 2,
+    "n_slots": 2,
+    "cape": null,
+    "deck_wr": 42.5,
+    "value": 6.875,
+    "uses_per_game": 0.2,
+    "vs_replaced": 5.625
+   }
+  ]
+ },
+ "capes": {
+  "Quest Point Cape": {
+   "host": "Quest deck",
+   "with_cape": 36.875,
+   "without": 23.75,
+   "value": 13.125,
+   "cape_win_share": 62.71186440677966
+  },
+  "Ranged Cape": {
+   "host": "Lean Ranged",
+   "with_cape": 49.3421052631579,
+   "without": 58.55263157894737,
+   "value": -9.210526315789473,
+   "cape_win_share": 17.333333333333332
+  },
+  "Prayer Cape": {
+   "host": "Lean Melee + Piety/Smite",
+   "with_cape": 45.625,
+   "without": 36.875,
+   "value": 8.75,
+   "cape_win_share": 41.0958904109589
+  },
+  "Cooking Cape": {
+   "host": "Lean Melee + food",
+   "with_cape": 53.75,
+   "without": 41.875,
+   "value": 11.875,
+   "cape_win_share": 27.906976744186046
+  },
+  "Smithing Cape": {
+   "host": "Lean Melee",
+   "with_cape": 48.68421052631579,
+   "without": 33.55263157894737,
+   "value": 15.131578947368418,
+   "cape_win_share": 72.97297297297297
+  }
+ }
+}

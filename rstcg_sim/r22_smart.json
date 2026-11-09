@@ -1,0 +1,22 @@
+{
+ "Anti-dragon Shield|printed": {
+  "deck": 29.82456140350877,
+  "value": 0.0,
+  "vs_replaced": -2.8508771929824555
+ },
+ "Anti-dragon Shield|soak 7": {
+  "deck": 35.526315789473685,
+  "value": 5.7017543859649145,
+  "vs_replaced": 2.850877192982459
+ },
+ "Grand Exchange|printed": {
+  "deck": 32.45614035087719,
+  "value": -0.43859649122806843,
+  "vs_replaced": -0.21929824561403422
+ },
+ "Grand Exchange|free to play": {
+  "deck": 32.89473684210526,
+  "value": 0.0,
+  "vs_replaced": 0.21929824561403422
+ }
+}

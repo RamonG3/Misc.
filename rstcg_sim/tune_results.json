@@ -1,0 +1,1922 @@
+[
+ {
+  "params": {
+   "weapon_mult": 1.7,
+   "bow_mult": 1.7,
+   "staff_hit": 4,
+   "spell_mult": 1.15,
+   "ability_bonus": 0
+  },
+  "loss": 373.5,
+  "field_avg": {
+   "Lean Mage": 43.5,
+   "Lean Melee": 73.6,
+   "Lean Ranged": 56.7,
+   "Melee/Ranged": 48.7,
+   "Mage/Melee": 31.2,
+   "Mage/Ranged": 46.3
+  },
+  "starters": {
+   "Air Mage v Melee": 61.5,
+   "Air Mage v Ranged": 35.5,
+   "Melee v Ranged": 43.5
+  },
+  "worst_matchup": 86.5
+ },
+ {
+  "params": {
+   "weapon_mult": 1.7,
+   "bow_mult": 1.65,
+   "staff_hit": 4,
+   "spell_mult": 1.15,
+   "ability_bonus": 0
+  },
+  "loss": 373.5,
+  "field_avg": {
+   "Lean Mage": 43.5,
+   "Lean Melee": 73.6,
+   "Lean Ranged": 56.7,
+   "Melee/Ranged": 48.7,
+   "Mage/Melee": 31.2,
+   "Mage/Ranged": 46.3
+  },
+  "starters": {
+   "Air Mage v Melee": 61.5,
+   "Air Mage v Ranged": 35.5,
+   "Melee v Ranged": 43.5
+  },
+  "worst_matchup": 86.5
+ },
+ {
+  "params": {
+   "weapon_mult": 1.7,
+   "bow_mult": 1.65,
+   "staff_hit": 4,
+   "spell_mult": 1.15,
+   "ability_bonus": 0
+  },
+  "loss": 373.5,
+  "field_avg": {
+   "Lean Mage": 43.5,
+   "Lean Melee": 73.6,
+   "Lean Ranged": 56.7,
+   "Melee/Ranged": 48.7,
+   "Mage/Melee": 31.2,
+   "Mage/Ranged": 46.3
+  },
+  "starters": {
+   "Air Mage v Melee": 61.5,
+   "Air Mage v Ranged": 35.5,
+   "Melee v Ranged": 43.5
+  },
+  "worst_matchup": 86.5
+ },
+ {
+  "params": {
+   "weapon_mult": 1.7,
+   "bow_mult": 1.7,
+   "staff_hit": 4,
+   "spell_mult": 1.15,
+   "ability_bonus": 1
+  },
+  "loss": 375.3,
+  "field_avg": {
+   "Lean Mage": 42.1,
+   "Lean Melee": 75.2,
+   "Lean Ranged": 56.4,
+   "Melee/Ranged": 49.0,
+   "Mage/Melee": 31.6,
+   "Mage/Ranged": 45.7
+  },
+  "starters": {
+   "Air Mage v Melee": 59.5,
+   "Air Mage v Ranged": 35.5,
+   "Melee v Ranged": 44.5
+  },
+  "worst_matchup": 86.5
+ },
+ {
+  "params": {
+   "weapon_mult": 1.7,
+   "bow_mult": 1.7,
+   "staff_hit": 3,
+   "spell_mult": 1.15,
+   "ability_bonus": 0
+  },
+  "loss": 389.2,
+  "field_avg": {
+   "Lean Mage": 42.3,
+   "Lean Melee": 74.5,
+   "Lean Ranged": 56.1,
+   "Melee/Ranged": 49.0,
+   "Mage/Melee": 31.5,
+   "Mage/Ranged": 46.6
+  },
+  "starters": {
+   "Air Mage v Melee": 60.5,
+   "Air Mage v Ranged": 34.0,
+   "Melee v Ranged": 43.5
+  },
+  "worst_matchup": 86.5
+ },
+ {
+  "params": {
+   "weapon_mult": 1.7,
+   "bow_mult": 1.7,
+   "staff_hit": 4,
+   "spell_mult": 1.15,
+   "ability_bonus": 2
+  },
+  "loss": 390.6,
+  "field_avg": {
+   "Lean Mage": 41.1,
+   "Lean Melee": 78.1,
+   "Lean Ranged": 55.5,
+   "Melee/Ranged": 48.6,
+   "Mage/Melee": 32.0,
+   "Mage/Ranged": 44.7
+  },
+  "starters": {
+   "Air Mage v Melee": 56.0,
+   "Air Mage v Ranged": 35.5,
+   "Melee v Ranged": 45.5
+  },
+  "worst_matchup": 89.5
+ },
+ {
+  "params": {
+   "weapon_mult": 1.3,
+   "bow_mult": 1.2,
+   "staff_hit": 2,
+   "spell_mult": 0.95,
+   "ability_bonus": 2
+  },
+  "loss": 399.1,
+  "field_avg": {
+   "Lean Mage": 46.4,
+   "Lean Melee": 76.9,
+   "Lean Ranged": 45.6,
+   "Melee/Ranged": 47.9,
+   "Mage/Melee": 37.5,
+   "Mage/Ranged": 45.7
+  },
+  "starters": {
+   "Air Mage v Melee": 70.0,
+   "Air Mage v Ranged": 46.5,
+   "Melee v Ranged": 60.0
+  },
+  "worst_matchup": 87.5
+ },
+ {
+  "params": {
+   "weapon_mult": 1.3,
+   "bow_mult": 1.2,
+   "staff_hit": 2,
+   "spell_mult": 0.95,
+   "ability_bonus": 2
+  },
+  "loss": 399.1,
+  "field_avg": {
+   "Lean Mage": 46.4,
+   "Lean Melee": 76.9,
+   "Lean Ranged": 45.6,
+   "Melee/Ranged": 47.9,
+   "Mage/Melee": 37.5,
+   "Mage/Ranged": 45.7
+  },
+  "starters": {
+   "Air Mage v Melee": 70.0,
+   "Air Mage v Ranged": 46.5,
+   "Melee v Ranged": 60.0
+  },
+  "worst_matchup": 87.5
+ },
+ {
+  "params": {
+   "weapon_mult": 1.35,
+   "bow_mult": 1.2,
+   "staff_hit": 2,
+   "spell_mult": 0.95,
+   "ability_bonus": 2
+  },
+  "loss": 399.1,
+  "field_avg": {
+   "Lean Mage": 46.4,
+   "Lean Melee": 76.9,
+   "Lean Ranged": 45.6,
+   "Melee/Ranged": 47.9,
+   "Mage/Melee": 37.5,
+   "Mage/Ranged": 45.7
+  },
+  "starters": {
+   "Air Mage v Melee": 70.0,
+   "Air Mage v Ranged": 46.5,
+   "Melee v Ranged": 60.0
+  },
+  "worst_matchup": 87.5
+ },
+ {
+  "params": {
+   "weapon_mult": 1.3,
+   "bow_mult": 1.25,
+   "staff_hit": 2,
+   "spell_mult": 0.95,
+   "ability_bonus": 2
+  },
+  "loss": 399.1,
+  "field_avg": {
+   "Lean Mage": 46.4,
+   "Lean Melee": 76.9,
+   "Lean Ranged": 45.6,
+   "Melee/Ranged": 47.9,
+   "Mage/Melee": 37.5,
+   "Mage/Ranged": 45.7
+  },
+  "starters": {
+   "Air Mage v Melee": 70.0,
+   "Air Mage v Ranged": 46.5,
+   "Melee v Ranged": 60.0
+  },
+  "worst_matchup": 87.5
+ },
+ {
+  "params": {
+   "weapon_mult": 1.3,
+   "bow_mult": 1.2,
+   "staff_hit": 2,
+   "spell_mult": 0.95,
+   "ability_bonus": 2
+  },
+  "loss": 399.1,
+  "field_avg": {
+   "Lean Mage": 46.4,
+   "Lean Melee": 76.9,
+   "Lean Ranged": 45.6,
+   "Melee/Ranged": 47.9,
+   "Mage/Melee": 37.5,
+   "Mage/Ranged": 45.7
+  },
+  "starters": {
+   "Air Mage v Melee": 70.0,
+   "Air Mage v Ranged": 46.5,
+   "Melee v Ranged": 60.0
+  },
+  "worst_matchup": 87.5
+ },
+ {
+  "params": {
+   "weapon_mult": 1.3,
+   "bow_mult": 1.2,
+   "staff_hit": 2,
+   "spell_mult": 1.0,
+   "ability_bonus": 2
+  },
+  "loss": 410.1,
+  "field_avg": {
+   "Lean Mage": 49.0,
+   "Lean Melee": 76.1,
+   "Lean Ranged": 45.3,
+   "Melee/Ranged": 47.8,
+   "Mage/Melee": 37.0,
+   "Mage/Ranged": 44.8
+  },
+  "starters": {
+   "Air Mage v Melee": 71.5,
+   "Air Mage v Ranged": 48.5,
+   "Melee v Ranged": 60.0
+  },
+  "worst_matchup": 87.5
+ },
+ {
+  "params": {
+   "weapon_mult": 1.3,
+   "bow_mult": 1.2,
+   "staff_hit": 2,
+   "spell_mult": 1.0,
+   "ability_bonus": 2
+  },
+  "loss": 410.1,
+  "field_avg": {
+   "Lean Mage": 49.0,
+   "Lean Melee": 76.1,
+   "Lean Ranged": 45.3,
+   "Melee/Ranged": 47.8,
+   "Mage/Melee": 37.0,
+   "Mage/Ranged": 44.8
+  },
+  "starters": {
+   "Air Mage v Melee": 71.5,
+   "Air Mage v Ranged": 48.5,
+   "Melee v Ranged": 60.0
+  },
+  "worst_matchup": 87.5
+ },
+ {
+  "params": {
+   "weapon_mult": 1.3,
+   "bow_mult": 1.3,
+   "staff_hit": 5,
+   "spell_mult": 0.85,
+   "ability_bonus": 0
+  },
+  "loss": 426.9,
+  "field_avg": {
+   "Lean Mage": 53.8,
+   "Lean Melee": 72.8,
+   "Lean Ranged": 49.0,
+   "Melee/Ranged": 49.4,
+   "Mage/Melee": 31.2,
+   "Mage/Ranged": 43.8
+  },
+  "starters": {
+   "Air Mage v Melee": 72.5,
+   "Air Mage v Ranged": 42.0,
+   "Melee v Ranged": 55.0
+  },
+  "worst_matchup": 84.5
+ },
+ {
+  "params": {
+   "weapon_mult": 1.3,
+   "bow_mult": 1.3,
+   "staff_hit": 5,
+   "spell_mult": 0.8,
+   "ability_bonus": 0
+  },
+  "loss": 429.2,
+  "field_avg": {
+   "Lean Mage": 51.4,
+   "Lean Melee": 73.3,
+   "Lean Ranged": 49.4,
+   "Melee/Ranged": 49.5,
+   "Mage/Melee": 32.0,
+   "Mage/Ranged": 44.4
+  },
+  "starters": {
+   "Air Mage v Melee": 71.0,
+   "Air Mage v Ranged": 37.5,
+   "Melee v Ranged": 55.0
+  },
+  "worst_matchup": 84.5
+ },
+ {
+  "params": {
+   "weapon_mult": 1.3,
+   "bow_mult": 1.2,
+   "staff_hit": 5,
+   "spell_mult": 0.8,
+   "ability_bonus": 0
+  },
+  "loss": 429.2,
+  "field_avg": {
+   "Lean Mage": 51.4,
+   "Lean Melee": 73.3,
+   "Lean Ranged": 49.4,
+   "Melee/Ranged": 49.5,
+   "Mage/Melee": 32.0,
+   "Mage/Ranged": 44.4
+  },
+  "starters": {
+   "Air Mage v Melee": 71.0,
+   "Air Mage v Ranged": 37.5,
+   "Melee v Ranged": 55.0
+  },
+  "worst_matchup": 84.5
+ },
+ {
+  "params": {
+   "weapon_mult": 1.3,
+   "bow_mult": 1.3,
+   "staff_hit": 5,
+   "spell_mult": 0.8,
+   "ability_bonus": 0
+  },
+  "loss": 429.2,
+  "field_avg": {
+   "Lean Mage": 51.4,
+   "Lean Melee": 73.3,
+   "Lean Ranged": 49.4,
+   "Melee/Ranged": 49.5,
+   "Mage/Melee": 32.0,
+   "Mage/Ranged": 44.4
+  },
+  "starters": {
+   "Air Mage v Melee": 71.0,
+   "Air Mage v Ranged": 37.5,
+   "Melee v Ranged": 55.0
+  },
+  "worst_matchup": 84.5
+ },
+ {
+  "params": {
+   "weapon_mult": 2.05,
+   "bow_mult": 1.65,
+   "staff_hit": 2,
+   "spell_mult": 1.2,
+   "ability_bonus": 0
+  },
+  "loss": 432.4,
+  "field_avg": {
+   "Lean Mage": 38.0,
+   "Lean Melee": 81.2,
+   "Lean Ranged": 53.2,
+   "Melee/Ranged": 50.0,
+   "Mage/Melee": 35.6,
+   "Mage/Ranged": 42.0
+  },
+  "starters": {
+   "Air Mage v Melee": 42.0,
+   "Air Mage v Ranged": 35.0,
+   "Melee v Ranged": 52.5
+  },
+  "worst_matchup": 87.5
+ },
+ {
+  "params": {
+   "weapon_mult": 2.05,
+   "bow_mult": 1.65,
+   "staff_hit": 2,
+   "spell_mult": 1.2,
+   "ability_bonus": 0
+  },
+  "loss": 432.4,
+  "field_avg": {
+   "Lean Mage": 38.0,
+   "Lean Melee": 81.2,
+   "Lean Ranged": 53.2,
+   "Melee/Ranged": 50.0,
+   "Mage/Melee": 35.6,
+   "Mage/Ranged": 42.0
+  },
+  "starters": {
+   "Air Mage v Melee": 42.0,
+   "Air Mage v Ranged": 35.0,
+   "Melee v Ranged": 52.5
+  },
+  "worst_matchup": 87.5
+ },
+ {
+  "params": {
+   "weapon_mult": 1.3,
+   "bow_mult": 1.25,
+   "staff_hit": 4,
+   "spell_mult": 1.0,
+   "ability_bonus": 4
+  },
+  "loss": 474.2,
+  "field_avg": {
+   "Lean Mage": 50.9,
+   "Lean Melee": 80.9,
+   "Lean Ranged": 42.9,
+   "Melee/Ranged": 46.0,
+   "Mage/Melee": 37.1,
+   "Mage/Ranged": 42.2
+  },
+  "starters": {
+   "Air Mage v Melee": 68.5,
+   "Air Mage v Ranged": 52.0,
+   "Melee v Ranged": 63.0
+  },
+  "worst_matchup": 90.5
+ },
+ {
+  "params": {
+   "weapon_mult": 2.05,
+   "bow_mult": 1.65,
+   "staff_hit": 2,
+   "spell_mult": 1.15,
+   "ability_bonus": 0
+  },
+  "loss": 487.1,
+  "field_avg": {
+   "Lean Mage": 35.2,
+   "Lean Melee": 81.7,
+   "Lean Ranged": 53.4,
+   "Melee/Ranged": 50.6,
+   "Mage/Melee": 36.3,
+   "Mage/Ranged": 42.8
+  },
+  "starters": {
+   "Air Mage v Melee": 39.5,
+   "Air Mage v Ranged": 33.0,
+   "Melee v Ranged": 52.5
+  },
+  "worst_matchup": 87.5
+ },
+ {
+  "params": {
+   "weapon_mult": 1.95,
+   "bow_mult": 1.65,
+   "staff_hit": 2,
+   "spell_mult": 1.15,
+   "ability_bonus": 0
+  },
+  "loss": 487.1,
+  "field_avg": {
+   "Lean Mage": 35.2,
+   "Lean Melee": 81.7,
+   "Lean Ranged": 53.4,
+   "Melee/Ranged": 50.6,
+   "Mage/Melee": 36.3,
+   "Mage/Ranged": 42.8
+  },
+  "starters": {
+   "Air Mage v Melee": 39.5,
+   "Air Mage v Ranged": 33.0,
+   "Melee v Ranged": 52.5
+  },
+  "worst_matchup": 87.5
+ },
+ {
+  "params": {
+   "weapon_mult": 1.3,
+   "bow_mult": 1.25,
+   "staff_hit": 5,
+   "spell_mult": 1.0,
+   "ability_bonus": 4
+  },
+  "loss": 521.5,
+  "field_avg": {
+   "Lean Mage": 56.7,
+   "Lean Melee": 79.6,
+   "Lean Ranged": 42.2,
+   "Melee/Ranged": 44.4,
+   "Mage/Melee": 36.3,
+   "Mage/Ranged": 40.8
+  },
+  "starters": {
+   "Air Mage v Melee": 71.0,
+   "Air Mage v Ranged": 54.5,
+   "Melee v Ranged": 63.0
+  },
+  "worst_matchup": 90.5
+ },
+ {
+  "params": {
+   "weapon_mult": 1.25,
+   "bow_mult": 1.25,
+   "staff_hit": 5,
+   "spell_mult": 1.0,
+   "ability_bonus": 4
+  },
+  "loss": 521.5,
+  "field_avg": {
+   "Lean Mage": 56.7,
+   "Lean Melee": 79.6,
+   "Lean Ranged": 42.2,
+   "Melee/Ranged": 44.4,
+   "Mage/Melee": 36.3,
+   "Mage/Ranged": 40.8
+  },
+  "starters": {
+   "Air Mage v Melee": 71.0,
+   "Air Mage v Ranged": 54.5,
+   "Melee v Ranged": 63.0
+  },
+  "worst_matchup": 90.5
+ },
+ {
+  "params": {
+   "weapon_mult": 1.3,
+   "bow_mult": 1.2,
+   "staff_hit": 5,
+   "spell_mult": 1.0,
+   "ability_bonus": 4
+  },
+  "loss": 521.5,
+  "field_avg": {
+   "Lean Mage": 56.7,
+   "Lean Melee": 79.6,
+   "Lean Ranged": 42.2,
+   "Melee/Ranged": 44.4,
+   "Mage/Melee": 36.3,
+   "Mage/Ranged": 40.8
+  },
+  "starters": {
+   "Air Mage v Melee": 71.0,
+   "Air Mage v Ranged": 54.5,
+   "Melee v Ranged": 63.0
+  },
+  "worst_matchup": 90.5
+ },
+ {
+  "params": {
+   "weapon_mult": 1.25,
+   "bow_mult": 1.25,
+   "staff_hit": 5,
+   "spell_mult": 1.0,
+   "ability_bonus": 4
+  },
+  "loss": 521.5,
+  "field_avg": {
+   "Lean Mage": 56.7,
+   "Lean Melee": 79.6,
+   "Lean Ranged": 42.2,
+   "Melee/Ranged": 44.4,
+   "Mage/Melee": 36.3,
+   "Mage/Ranged": 40.8
+  },
+  "starters": {
+   "Air Mage v Melee": 71.0,
+   "Air Mage v Ranged": 54.5,
+   "Melee v Ranged": 63.0
+  },
+  "worst_matchup": 90.5
+ },
+ {
+  "params": {
+   "weapon_mult": 1.3,
+   "bow_mult": 1.25,
+   "staff_hit": 5,
+   "spell_mult": 1.0,
+   "ability_bonus": 4
+  },
+  "loss": 521.5,
+  "field_avg": {
+   "Lean Mage": 56.7,
+   "Lean Melee": 79.6,
+   "Lean Ranged": 42.2,
+   "Melee/Ranged": 44.4,
+   "Mage/Melee": 36.3,
+   "Mage/Ranged": 40.8
+  },
+  "starters": {
+   "Air Mage v Melee": 71.0,
+   "Air Mage v Ranged": 54.5,
+   "Melee v Ranged": 63.0
+  },
+  "worst_matchup": 90.5
+ },
+ {
+  "params": {
+   "weapon_mult": 2.15,
+   "bow_mult": 1.65,
+   "staff_hit": 2,
+   "spell_mult": 1.2,
+   "ability_bonus": 0
+  },
+  "loss": 539.2,
+  "field_avg": {
+   "Lean Mage": 35.6,
+   "Lean Melee": 83.9,
+   "Lean Ranged": 51.9,
+   "Melee/Ranged": 51.8,
+   "Mage/Melee": 36.5,
+   "Mage/Ranged": 40.3
+  },
+  "starters": {
+   "Air Mage v Melee": 36.0,
+   "Air Mage v Ranged": 35.0,
+   "Melee v Ranged": 55.0
+  },
+  "worst_matchup": 88.5
+ },
+ {
+  "params": {
+   "weapon_mult": 1.6,
+   "bow_mult": 1.2,
+   "staff_hit": 5,
+   "spell_mult": 1.1,
+   "ability_bonus": 2
+  },
+  "loss": 564.5,
+  "field_avg": {
+   "Lean Mage": 55.5,
+   "Lean Melee": 83.7,
+   "Lean Ranged": 36.4,
+   "Melee/Ranged": 44.7,
+   "Mage/Melee": 40.5,
+   "Mage/Ranged": 39.2
+  },
+  "starters": {
+   "Air Mage v Melee": 59.0,
+   "Air Mage v Ranged": 60.5,
+   "Melee v Ranged": 69.0
+  },
+  "worst_matchup": 90.0
+ },
+ {
+  "params": {
+   "weapon_mult": 1.4,
+   "bow_mult": 1.35,
+   "staff_hit": 5,
+   "spell_mult": 1.0,
+   "ability_bonus": 3
+  },
+  "loss": 583.7,
+  "field_avg": {
+   "Lean Mage": 43.9,
+   "Lean Melee": 75.8,
+   "Lean Ranged": 59.1,
+   "Melee/Ranged": 48.8,
+   "Mage/Melee": 27.9,
+   "Mage/Ranged": 44.5
+  },
+  "starters": {
+   "Air Mage v Melee": 68.5,
+   "Air Mage v Ranged": 30.0,
+   "Melee v Ranged": 41.5
+  },
+  "worst_matchup": 90.5
+ },
+ {
+  "params": {
+   "weapon_mult": 1.3,
+   "bow_mult": 1.35,
+   "staff_hit": 5,
+   "spell_mult": 1.0,
+   "ability_bonus": 4
+  },
+  "loss": 607.5,
+  "field_avg": {
+   "Lean Mage": 46.8,
+   "Lean Melee": 73.3,
+   "Lean Ranged": 60.3,
+   "Melee/Ranged": 47.4,
+   "Mage/Melee": 26.4,
+   "Mage/Ranged": 45.8
+  },
+  "starters": {
+   "Air Mage v Melee": 71.0,
+   "Air Mage v Ranged": 30.0,
+   "Melee v Ranged": 40.5
+  },
+  "worst_matchup": 90.5
+ },
+ {
+  "params": {
+   "weapon_mult": 1.55,
+   "bow_mult": 1.35,
+   "staff_hit": 2,
+   "spell_mult": 1.05,
+   "ability_bonus": 4
+  },
+  "loss": 613.8,
+  "field_avg": {
+   "Lean Mage": 34.8,
+   "Lean Melee": 83.8,
+   "Lean Ranged": 55.8,
+   "Melee/Ranged": 48.7,
+   "Mage/Melee": 34.0,
+   "Mage/Ranged": 42.9
+  },
+  "starters": {
+   "Air Mage v Melee": 44.0,
+   "Air Mage v Ranged": 26.0,
+   "Melee v Ranged": 49.5
+  },
+  "worst_matchup": 90.0
+ },
+ {
+  "params": {
+   "weapon_mult": 2.05,
+   "bow_mult": 1.65,
+   "staff_hit": 2,
+   "spell_mult": 1.1,
+   "ability_bonus": 0
+  },
+  "loss": 644.3,
+  "field_avg": {
+   "Lean Mage": 29.7,
+   "Lean Melee": 82.6,
+   "Lean Ranged": 55.0,
+   "Melee/Ranged": 52.6,
+   "Mage/Melee": 37.0,
+   "Mage/Ranged": 43.1
+  },
+  "starters": {
+   "Air Mage v Melee": 35.5,
+   "Air Mage v Ranged": 28.0,
+   "Melee v Ranged": 52.5
+  },
+  "worst_matchup": 87.5
+ },
+ {
+  "params": {
+   "weapon_mult": 2.05,
+   "bow_mult": 1.65,
+   "staff_hit": 2,
+   "spell_mult": 1.1,
+   "ability_bonus": 0
+  },
+  "loss": 644.3,
+  "field_avg": {
+   "Lean Mage": 29.7,
+   "Lean Melee": 82.6,
+   "Lean Ranged": 55.0,
+   "Melee/Ranged": 52.6,
+   "Mage/Melee": 37.0,
+   "Mage/Ranged": 43.1
+  },
+  "starters": {
+   "Air Mage v Melee": 35.5,
+   "Air Mage v Ranged": 28.0,
+   "Melee v Ranged": 52.5
+  },
+  "worst_matchup": 87.5
+ },
+ {
+  "params": {
+   "weapon_mult": 1.8,
+   "bow_mult": 1.6,
+   "staff_hit": 5,
+   "spell_mult": 1.0,
+   "ability_bonus": 0
+  },
+  "loss": 675.2,
+  "field_avg": {
+   "Lean Mage": 35.4,
+   "Lean Melee": 78.8,
+   "Lean Ranged": 59.3,
+   "Melee/Ranged": 52.6,
+   "Mage/Melee": 30.2,
+   "Mage/Ranged": 43.7
+  },
+  "starters": {
+   "Air Mage v Melee": 47.5,
+   "Air Mage v Ranged": 22.0,
+   "Melee v Ranged": 39.5
+  },
+  "worst_matchup": 86.5
+ },
+ {
+  "params": {
+   "weapon_mult": 1.3,
+   "bow_mult": 1.4,
+   "staff_hit": 5,
+   "spell_mult": 0.8,
+   "ability_bonus": 0
+  },
+  "loss": 684.6,
+  "field_avg": {
+   "Lean Mage": 45.1,
+   "Lean Melee": 67.0,
+   "Lean Ranged": 59.9,
+   "Melee/Ranged": 52.2,
+   "Mage/Melee": 25.5,
+   "Mage/Ranged": 50.3
+  },
+  "starters": {
+   "Air Mage v Melee": 71.0,
+   "Air Mage v Ranged": 21.5,
+   "Melee v Ranged": 42.5
+  },
+  "worst_matchup": 84.5
+ },
+ {
+  "params": {
+   "weapon_mult": 1.3,
+   "bow_mult": 1.4,
+   "staff_hit": 5,
+   "spell_mult": 0.8,
+   "ability_bonus": 0
+  },
+  "loss": 684.6,
+  "field_avg": {
+   "Lean Mage": 45.1,
+   "Lean Melee": 67.0,
+   "Lean Ranged": 59.9,
+   "Melee/Ranged": 52.2,
+   "Mage/Melee": 25.5,
+   "Mage/Ranged": 50.3
+  },
+  "starters": {
+   "Air Mage v Melee": 71.0,
+   "Air Mage v Ranged": 21.5,
+   "Melee v Ranged": 42.5
+  },
+  "worst_matchup": 84.5
+ },
+ {
+  "params": {
+   "weapon_mult": 1.55,
+   "bow_mult": 1.2,
+   "staff_hit": 2,
+   "spell_mult": 0.8,
+   "ability_bonus": 1
+  },
+  "loss": 689.4,
+  "field_avg": {
+   "Lean Mage": 28.9,
+   "Lean Melee": 86.9,
+   "Lean Ranged": 46.2,
+   "Melee/Ranged": 55.4,
+   "Mage/Melee": 40.4,
+   "Mage/Ranged": 42.2
+  },
+  "starters": {
+   "Air Mage v Melee": 38.5,
+   "Air Mage v Ranged": 34.5,
+   "Melee v Ranged": 66.0
+  },
+  "worst_matchup": 91.5
+ },
+ {
+  "params": {
+   "weapon_mult": 1.85,
+   "bow_mult": 1.85,
+   "staff_hit": 4,
+   "spell_mult": 1.15,
+   "ability_bonus": 4
+  },
+  "loss": 690.7,
+  "field_avg": {
+   "Lean Mage": 33.8,
+   "Lean Melee": 79.9,
+   "Lean Ranged": 62.2,
+   "Melee/Ranged": 51.0,
+   "Mage/Melee": 28.8,
+   "Mage/Ranged": 44.3
+  },
+  "starters": {
+   "Air Mage v Melee": 42.0,
+   "Air Mage v Ranged": 25.5,
+   "Melee v Ranged": 38.5
+  },
+  "worst_matchup": 90.5
+ },
+ {
+  "params": {
+   "weapon_mult": 1.7,
+   "bow_mult": 1.8,
+   "staff_hit": 4,
+   "spell_mult": 1.15,
+   "ability_bonus": 0
+  },
+  "loss": 704.8,
+  "field_avg": {
+   "Lean Mage": 39.0,
+   "Lean Melee": 69.2,
+   "Lean Ranged": 65.6,
+   "Melee/Ranged": 51.7,
+   "Mage/Melee": 25.4,
+   "Mage/Ranged": 49.1
+  },
+  "starters": {
+   "Air Mage v Melee": 61.5,
+   "Air Mage v Ranged": 25.5,
+   "Melee v Ranged": 29.5
+  },
+  "worst_matchup": 86.5
+ },
+ {
+  "params": {
+   "weapon_mult": 1.7,
+   "bow_mult": 1.2,
+   "staff_hit": 5,
+   "spell_mult": 1.2,
+   "ability_bonus": 0
+  },
+  "loss": 707.1,
+  "field_avg": {
+   "Lean Mage": 60.8,
+   "Lean Melee": 81.8,
+   "Lean Ranged": 35.1,
+   "Melee/Ranged": 41.8,
+   "Mage/Melee": 41.8,
+   "Mage/Ranged": 38.7
+  },
+  "starters": {
+   "Air Mage v Melee": 68.0,
+   "Air Mage v Ranged": 64.0,
+   "Melee v Ranged": 71.0
+  },
+  "worst_matchup": 87.5
+ },
+ {
+  "params": {
+   "weapon_mult": 2.0,
+   "bow_mult": 1.55,
+   "staff_hit": 3,
+   "spell_mult": 1.1,
+   "ability_bonus": 0
+  },
+  "loss": 711.3,
+  "field_avg": {
+   "Lean Mage": 31.0,
+   "Lean Melee": 82.7,
+   "Lean Ranged": 56.5,
+   "Melee/Ranged": 52.7,
+   "Mage/Melee": 34.9,
+   "Mage/Ranged": 42.2
+  },
+  "starters": {
+   "Air Mage v Melee": 37.5,
+   "Air Mage v Ranged": 23.5,
+   "Melee v Ranged": 46.5
+  },
+  "worst_matchup": 87.5
+ },
+ {
+  "params": {
+   "weapon_mult": 1.8,
+   "bow_mult": 1.2,
+   "staff_hit": 7,
+   "spell_mult": 0.9,
+   "ability_bonus": 2
+  },
+  "loss": 731.5,
+  "field_avg": {
+   "Lean Mage": 52.2,
+   "Lean Melee": 89.5,
+   "Lean Ranged": 36.7,
+   "Melee/Ranged": 49.3,
+   "Mage/Melee": 39.7,
+   "Mage/Ranged": 32.6
+  },
+  "starters": {
+   "Air Mage v Melee": 46.0,
+   "Air Mage v Ranged": 59.5,
+   "Melee v Ranged": 73.5
+  },
+  "worst_matchup": 94.0
+ },
+ {
+  "params": {
+   "weapon_mult": 2.3,
+   "bow_mult": 1.65,
+   "staff_hit": 4,
+   "spell_mult": 1.2,
+   "ability_bonus": 3
+  },
+  "loss": 732.9,
+  "field_avg": {
+   "Lean Mage": 34.4,
+   "Lean Melee": 86.6,
+   "Lean Ranged": 49.9,
+   "Melee/Ranged": 52.5,
+   "Mage/Melee": 39.1,
+   "Mage/Ranged": 37.5
+  },
+  "starters": {
+   "Air Mage v Melee": 25.0,
+   "Air Mage v Ranged": 38.0,
+   "Melee v Ranged": 60.0
+  },
+  "worst_matchup": 90.5
+ },
+ {
+  "params": {
+   "weapon_mult": 1.95,
+   "bow_mult": 1.7,
+   "staff_hit": 5,
+   "spell_mult": 1.05,
+   "ability_bonus": 2
+  },
+  "loss": 767.3,
+  "field_avg": {
+   "Lean Mage": 33.9,
+   "Lean Melee": 86.5,
+   "Lean Ranged": 54.2,
+   "Melee/Ranged": 51.8,
+   "Mage/Melee": 35.5,
+   "Mage/Ranged": 38.1
+  },
+  "starters": {
+   "Air Mage v Melee": 30.5,
+   "Air Mage v Ranged": 28.0,
+   "Melee v Ranged": 56.0
+  },
+  "worst_matchup": 90.5
+ },
+ {
+  "params": {
+   "weapon_mult": 2.4,
+   "bow_mult": 1.8,
+   "staff_hit": 4,
+   "spell_mult": 1.2,
+   "ability_bonus": 0
+  },
+  "loss": 823.6,
+  "field_avg": {
+   "Lean Mage": 29.5,
+   "Lean Melee": 83.1,
+   "Lean Ranged": 59.0,
+   "Melee/Ranged": 54.6,
+   "Mage/Melee": 33.9,
+   "Mage/Ranged": 39.9
+  },
+  "starters": {
+   "Air Mage v Melee": 26.5,
+   "Air Mage v Ranged": 27.5,
+   "Melee v Ranged": 48.5
+  },
+  "worst_matchup": 89.5
+ },
+ {
+  "params": {
+   "weapon_mult": 2.4,
+   "bow_mult": 1.5,
+   "staff_hit": 5,
+   "spell_mult": 1.15,
+   "ability_bonus": 3
+  },
+  "loss": 846.3,
+  "field_avg": {
+   "Lean Mage": 34.9,
+   "Lean Melee": 88.5,
+   "Lean Ranged": 48.7,
+   "Melee/Ranged": 52.8,
+   "Mage/Melee": 39.7,
+   "Mage/Ranged": 35.4
+  },
+  "starters": {
+   "Air Mage v Melee": 23.0,
+   "Air Mage v Ranged": 35.5,
+   "Melee v Ranged": 62.0
+  },
+  "worst_matchup": 92.5
+ },
+ {
+  "params": {
+   "weapon_mult": 1.7,
+   "bow_mult": 1.2,
+   "staff_hit": 7,
+   "spell_mult": 1.1,
+   "ability_bonus": 4
+  },
+  "loss": 858.7,
+  "field_avg": {
+   "Lean Mage": 59.5,
+   "Lean Melee": 88.0,
+   "Lean Ranged": 32.5,
+   "Melee/Ranged": 44.0,
+   "Mage/Melee": 41.9,
+   "Mage/Ranged": 34.1
+  },
+  "starters": {
+   "Air Mage v Melee": 57.0,
+   "Air Mage v Ranged": 67.5,
+   "Melee v Ranged": 75.5
+  },
+  "worst_matchup": 94.5
+ },
+ {
+  "params": {
+   "weapon_mult": 2.3,
+   "bow_mult": 1.4,
+   "staff_hit": 6,
+   "spell_mult": 0.95,
+   "ability_bonus": 1
+  },
+  "loss": 874.8,
+  "field_avg": {
+   "Lean Mage": 35.3,
+   "Lean Melee": 89.2,
+   "Lean Ranged": 41.7,
+   "Melee/Ranged": 55.6,
+   "Mage/Melee": 44.1,
+   "Mage/Ranged": 34.1
+  },
+  "starters": {
+   "Air Mage v Melee": 24.0,
+   "Air Mage v Ranged": 43.0,
+   "Melee v Ranged": 69.5
+  },
+  "worst_matchup": 96.0
+ },
+ {
+  "params": {
+   "weapon_mult": 1.45,
+   "bow_mult": 1.4,
+   "staff_hit": 4,
+   "spell_mult": 0.7,
+   "ability_bonus": 1
+  },
+  "loss": 899.6,
+  "field_avg": {
+   "Lean Mage": 24.5,
+   "Lean Melee": 81.9,
+   "Lean Ranged": 60.6,
+   "Melee/Ranged": 56.9,
+   "Mage/Melee": 32.3,
+   "Mage/Ranged": 43.8
+  },
+  "starters": {
+   "Air Mage v Melee": 41.0,
+   "Air Mage v Ranged": 17.5,
+   "Melee v Ranged": 51.5
+  },
+  "worst_matchup": 93.5
+ },
+ {
+  "params": {
+   "weapon_mult": 1.5,
+   "bow_mult": 1.75,
+   "staff_hit": 7,
+   "spell_mult": 1.1,
+   "ability_bonus": 3
+  },
+  "loss": 918.7,
+  "field_avg": {
+   "Lean Mage": 47.6,
+   "Lean Melee": 66.7,
+   "Lean Ranged": 67.3,
+   "Melee/Ranged": 49.0,
+   "Mage/Melee": 20.3,
+   "Mage/Ranged": 49.1
+  },
+  "starters": {
+   "Air Mage v Melee": 75.5,
+   "Air Mage v Ranged": 30.5,
+   "Melee v Ranged": 24.0
+  },
+  "worst_matchup": 90.5
+ },
+ {
+  "params": {
+   "weapon_mult": 2.3,
+   "bow_mult": 1.55,
+   "staff_hit": 6,
+   "spell_mult": 1.05,
+   "ability_bonus": 4
+  },
+  "loss": 980.7,
+  "field_avg": {
+   "Lean Mage": 33.7,
+   "Lean Melee": 88.2,
+   "Lean Ranged": 50.3,
+   "Melee/Ranged": 54.1,
+   "Mage/Melee": 38.7,
+   "Mage/Ranged": 35.0
+  },
+  "starters": {
+   "Air Mage v Melee": 22.0,
+   "Air Mage v Ranged": 27.5,
+   "Melee v Ranged": 62.5
+  },
+  "worst_matchup": 93.5
+ },
+ {
+  "params": {
+   "weapon_mult": 1.3,
+   "bow_mult": 1.35,
+   "staff_hit": 5,
+   "spell_mult": 0.8,
+   "ability_bonus": 0
+  },
+  "loss": 1010.6,
+  "field_avg": {
+   "Lean Mage": 41.2,
+   "Lean Melee": 64.3,
+   "Lean Ranged": 68.3,
+   "Melee/Ranged": 52.8,
+   "Mage/Melee": 21.5,
+   "Mage/Ranged": 51.9
+  },
+  "starters": {
+   "Air Mage v Melee": 71.0,
+   "Air Mage v Ranged": 15.5,
+   "Melee v Ranged": 31.0
+  },
+  "worst_matchup": 85.0
+ },
+ {
+  "params": {
+   "weapon_mult": 1.4,
+   "bow_mult": 1.85,
+   "staff_hit": 2,
+   "spell_mult": 1.15,
+   "ability_bonus": 2
+  },
+  "loss": 1016.0,
+  "field_avg": {
+   "Lean Mage": 39.8,
+   "Lean Melee": 59.0,
+   "Lean Ranged": 70.6,
+   "Melee/Ranged": 52.3,
+   "Mage/Melee": 23.3,
+   "Mage/Ranged": 55.0
+  },
+  "starters": {
+   "Air Mage v Melee": 70.5,
+   "Air Mage v Ranged": 23.0,
+   "Melee v Ranged": 19.5
+  },
+  "worst_matchup": 86.5
+ },
+ {
+  "params": {
+   "weapon_mult": 1.75,
+   "bow_mult": 1.45,
+   "staff_hit": 3,
+   "spell_mult": 0.8,
+   "ability_bonus": 1
+  },
+  "loss": 1024.5,
+  "field_avg": {
+   "Lean Mage": 22.5,
+   "Lean Melee": 86.2,
+   "Lean Ranged": 54.2,
+   "Melee/Ranged": 58.6,
+   "Mage/Melee": 37.5,
+   "Mage/Ranged": 41.0
+  },
+  "starters": {
+   "Air Mage v Melee": 29.5,
+   "Air Mage v Ranged": 20.5,
+   "Melee v Ranged": 58.5
+  },
+  "worst_matchup": 93.0
+ },
+ {
+  "params": {
+   "weapon_mult": 2.05,
+   "bow_mult": 1.25,
+   "staff_hit": 2,
+   "spell_mult": 1.15,
+   "ability_bonus": 4
+  },
+  "loss": 1036.6,
+  "field_avg": {
+   "Lean Mage": 43.1,
+   "Lean Melee": 91.2,
+   "Lean Ranged": 31.8,
+   "Melee/Ranged": 49.1,
+   "Mage/Melee": 49.6,
+   "Mage/Ranged": 35.2
+  },
+  "starters": {
+   "Air Mage v Melee": 31.0,
+   "Air Mage v Ranged": 57.5,
+   "Melee v Ranged": 82.5
+  },
+  "worst_matchup": 97.5
+ },
+ {
+  "params": {
+   "weapon_mult": 1.2,
+   "bow_mult": 1.7,
+   "staff_hit": 4,
+   "spell_mult": 0.8,
+   "ability_bonus": 4
+  },
+  "loss": 1071.5,
+  "field_avg": {
+   "Lean Mage": 32.9,
+   "Lean Melee": 66.0,
+   "Lean Ranged": 68.5,
+   "Melee/Ranged": 56.0,
+   "Mage/Melee": 23.5,
+   "Mage/Ranged": 53.1
+  },
+  "starters": {
+   "Air Mage v Melee": 65.5,
+   "Air Mage v Ranged": 13.5,
+   "Melee v Ranged": 28.5
+  },
+  "worst_matchup": 85.5
+ },
+ {
+  "params": {
+   "weapon_mult": 2.25,
+   "bow_mult": 1.7,
+   "staff_hit": 4,
+   "spell_mult": 1.0,
+   "ability_bonus": 2
+  },
+  "loss": 1186.2,
+  "field_avg": {
+   "Lean Mage": 24.1,
+   "Lean Melee": 88.5,
+   "Lean Ranged": 52.7,
+   "Melee/Ranged": 57.1,
+   "Mage/Melee": 40.2,
+   "Mage/Ranged": 37.4
+  },
+  "starters": {
+   "Air Mage v Melee": 17.5,
+   "Air Mage v Ranged": 24.0,
+   "Melee v Ranged": 58.5
+  },
+  "worst_matchup": 96.5
+ },
+ {
+  "params": {
+   "weapon_mult": 1.55,
+   "bow_mult": 2.0,
+   "staff_hit": 7,
+   "spell_mult": 1.15,
+   "ability_bonus": 0
+  },
+  "loss": 1213.2,
+  "field_avg": {
+   "Lean Mage": 49.3,
+   "Lean Melee": 56.7,
+   "Lean Ranged": 71.8,
+   "Melee/Ranged": 51.7,
+   "Mage/Melee": 18.8,
+   "Mage/Ranged": 51.7
+  },
+  "starters": {
+   "Air Mage v Melee": 81.5,
+   "Air Mage v Ranged": 26.5,
+   "Melee v Ranged": 18.0
+  },
+  "worst_matchup": 88.5
+ },
+ {
+  "params": {
+   "weapon_mult": 1.95,
+   "bow_mult": 1.25,
+   "staff_hit": 6,
+   "spell_mult": 0.7,
+   "ability_bonus": 1
+  },
+  "loss": 1252.8,
+  "field_avg": {
+   "Lean Mage": 32.2,
+   "Lean Melee": 93.8,
+   "Lean Ranged": 40.8,
+   "Melee/Ranged": 56.1,
+   "Mage/Melee": 44.7,
+   "Mage/Ranged": 32.4
+  },
+  "starters": {
+   "Air Mage v Melee": 21.0,
+   "Air Mage v Ranged": 36.5,
+   "Melee v Ranged": 78.5
+  },
+  "worst_matchup": 97.0
+ },
+ {
+  "params": {
+   "weapon_mult": 2.4,
+   "bow_mult": 1.85,
+   "staff_hit": 6,
+   "spell_mult": 0.95,
+   "ability_bonus": 2
+  },
+  "loss": 1276.7,
+  "field_avg": {
+   "Lean Mage": 25.2,
+   "Lean Melee": 87.0,
+   "Lean Ranged": 58.9,
+   "Melee/Ranged": 56.6,
+   "Mage/Melee": 33.8,
+   "Mage/Ranged": 38.5
+  },
+  "starters": {
+   "Air Mage v Melee": 18.0,
+   "Air Mage v Ranged": 18.0,
+   "Melee v Ranged": 51.0
+  },
+  "worst_matchup": 95.5
+ },
+ {
+  "params": {
+   "weapon_mult": 1.85,
+   "bow_mult": 1.65,
+   "staff_hit": 2,
+   "spell_mult": 0.85,
+   "ability_bonus": 0
+  },
+  "loss": 1281.1,
+  "field_avg": {
+   "Lean Mage": 17.3,
+   "Lean Melee": 83.7,
+   "Lean Ranged": 61.8,
+   "Melee/Ranged": 58.8,
+   "Mage/Melee": 32.6,
+   "Mage/Ranged": 45.8
+  },
+  "starters": {
+   "Air Mage v Melee": 27.5,
+   "Air Mage v Ranged": 13.0,
+   "Melee v Ranged": 47.5
+  },
+  "worst_matchup": 94.0
+ },
+ {
+  "params": {
+   "weapon_mult": 2.1,
+   "bow_mult": 1.2,
+   "staff_hit": 6,
+   "spell_mult": 0.75,
+   "ability_bonus": 2
+  },
+  "loss": 1321.0,
+  "field_avg": {
+   "Lean Mage": 32.7,
+   "Lean Melee": 94.4,
+   "Lean Ranged": 38.9,
+   "Melee/Ranged": 56.9,
+   "Mage/Melee": 45.0,
+   "Mage/Ranged": 32.1
+  },
+  "starters": {
+   "Air Mage v Melee": 22.0,
+   "Air Mage v Ranged": 37.0,
+   "Melee v Ranged": 82.0
+  },
+  "worst_matchup": 98.0
+ },
+ {
+  "params": {
+   "weapon_mult": 1.9,
+   "bow_mult": 1.1,
+   "staff_hit": 2,
+   "spell_mult": 0.9,
+   "ability_bonus": 3
+  },
+  "loss": 1364.0,
+  "field_avg": {
+   "Lean Mage": 25.1,
+   "Lean Melee": 92.9,
+   "Lean Ranged": 47.3,
+   "Melee/Ranged": 53.0,
+   "Mage/Melee": 43.7,
+   "Mage/Ranged": 38.0
+  },
+  "starters": {
+   "Air Mage v Melee": 19.0,
+   "Air Mage v Ranged": 27.0,
+   "Melee v Ranged": 76.5
+  },
+  "worst_matchup": 95.0
+ },
+ {
+  "params": {
+   "weapon_mult": 1.3,
+   "bow_mult": 1.85,
+   "staff_hit": 2,
+   "spell_mult": 0.95,
+   "ability_bonus": 4
+  },
+  "loss": 1438.0,
+  "field_avg": {
+   "Lean Mage": 27.1,
+   "Lean Melee": 66.1,
+   "Lean Ranged": 73.1,
+   "Melee/Ranged": 56.6,
+   "Mage/Melee": 21.7,
+   "Mage/Ranged": 55.4
+  },
+  "starters": {
+   "Air Mage v Melee": 62.5,
+   "Air Mage v Ranged": 9.5,
+   "Melee v Ranged": 19.0
+  },
+  "worst_matchup": 90.5
+ },
+ {
+  "params": {
+   "weapon_mult": 1.25,
+   "bow_mult": 1.85,
+   "staff_hit": 3,
+   "spell_mult": 0.9,
+   "ability_bonus": 3
+  },
+  "loss": 1465.2,
+  "field_avg": {
+   "Lean Mage": 27.1,
+   "Lean Melee": 63.2,
+   "Lean Ranged": 74.9,
+   "Melee/Ranged": 57.8,
+   "Mage/Melee": 20.3,
+   "Mage/Ranged": 56.7
+  },
+  "starters": {
+   "Air Mage v Melee": 63.0,
+   "Air Mage v Ranged": 10.5,
+   "Melee v Ranged": 18.0
+  },
+  "worst_matchup": 91.0
+ },
+ {
+  "params": {
+   "weapon_mult": 1.3,
+   "bow_mult": 1.9,
+   "staff_hit": 4,
+   "spell_mult": 1.1,
+   "ability_bonus": 3
+  },
+  "loss": 1592.6,
+  "field_avg": {
+   "Lean Mage": 38.3,
+   "Lean Melee": 53.8,
+   "Lean Ranged": 76.3,
+   "Melee/Ranged": 56.4,
+   "Mage/Melee": 17.9,
+   "Mage/Ranged": 57.3
+  },
+  "starters": {
+   "Air Mage v Melee": 76.5,
+   "Air Mage v Ranged": 15.0,
+   "Melee v Ranged": 12.0
+  },
+  "worst_matchup": 91.0
+ },
+ {
+  "params": {
+   "weapon_mult": 2.2,
+   "bow_mult": 1.05,
+   "staff_hit": 5,
+   "spell_mult": 1.2,
+   "ability_bonus": 4
+  },
+  "loss": 1616.2,
+  "field_avg": {
+   "Lean Mage": 54.7,
+   "Lean Melee": 93.1,
+   "Lean Ranged": 21.2,
+   "Melee/Ranged": 48.5,
+   "Mage/Melee": 52.9,
+   "Mage/Ranged": 29.6
+  },
+  "starters": {
+   "Air Mage v Melee": 32.5,
+   "Air Mage v Ranged": 74.0,
+   "Melee v Ranged": 91.5
+  },
+  "worst_matchup": 99.5
+ },
+ {
+  "params": {
+   "weapon_mult": 1.35,
+   "bow_mult": 1.8,
+   "staff_hit": 5,
+   "spell_mult": 0.8,
+   "ability_bonus": 2
+  },
+  "loss": 1646.2,
+  "field_avg": {
+   "Lean Mage": 31.1,
+   "Lean Melee": 59.8,
+   "Lean Ranged": 75.8,
+   "Melee/Ranged": 59.4,
+   "Mage/Melee": 17.6,
+   "Mage/Ranged": 56.3
+  },
+  "starters": {
+   "Air Mage v Melee": 69.5,
+   "Air Mage v Ranged": 8.0,
+   "Melee v Ranged": 16.0
+  },
+  "worst_matchup": 91.0
+ },
+ {
+  "params": {
+   "weapon_mult": 1.4,
+   "bow_mult": 1.75,
+   "staff_hit": 5,
+   "spell_mult": 0.7,
+   "ability_bonus": 0
+  },
+  "loss": 1648.1,
+  "field_avg": {
+   "Lean Mage": 26.4,
+   "Lean Melee": 61.4,
+   "Lean Ranged": 77.8,
+   "Melee/Ranged": 61.2,
+   "Mage/Melee": 18.3,
+   "Mage/Ranged": 54.9
+  },
+  "starters": {
+   "Air Mage v Melee": 60.0,
+   "Air Mage v Ranged": 6.5,
+   "Melee v Ranged": 17.0
+  },
+  "worst_matchup": 94.0
+ },
+ {
+  "params": {
+   "weapon_mult": 1.35,
+   "bow_mult": 1.75,
+   "staff_hit": 2,
+   "spell_mult": 0.85,
+   "ability_bonus": 2
+  },
+  "loss": 1651.5,
+  "field_avg": {
+   "Lean Mage": 23.3,
+   "Lean Melee": 60.9,
+   "Lean Ranged": 76.9,
+   "Melee/Ranged": 60.2,
+   "Mage/Melee": 20.3,
+   "Mage/Ranged": 58.4
+  },
+  "starters": {
+   "Air Mage v Melee": 59.5,
+   "Air Mage v Ranged": 7.0,
+   "Melee v Ranged": 16.0
+  },
+  "worst_matchup": 94.5
+ },
+ {
+  "params": {
+   "weapon_mult": 2.15,
+   "bow_mult": 1.55,
+   "staff_hit": 5,
+   "spell_mult": 0.75,
+   "ability_bonus": 0
+  },
+  "loss": 1764.0,
+  "field_avg": {
+   "Lean Mage": 15.4,
+   "Lean Melee": 88.5,
+   "Lean Ranged": 60.3,
+   "Melee/Ranged": 59.7,
+   "Mage/Melee": 35.4,
+   "Mage/Ranged": 40.7
+  },
+  "starters": {
+   "Air Mage v Melee": 14.0,
+   "Air Mage v Ranged": 8.5,
+   "Melee v Ranged": 51.5
+  },
+  "worst_matchup": 97.5
+ },
+ {
+  "params": {
+   "weapon_mult": 2.3,
+   "bow_mult": 1.1,
+   "staff_hit": 2,
+   "spell_mult": 0.9,
+   "ability_bonus": 4
+  },
+  "loss": 1866.1,
+  "field_avg": {
+   "Lean Mage": 21.7,
+   "Lean Melee": 93.8,
+   "Lean Ranged": 43.2,
+   "Melee/Ranged": 57.2,
+   "Mage/Melee": 49.6,
+   "Mage/Ranged": 34.5
+  },
+  "starters": {
+   "Air Mage v Melee": 8.0,
+   "Air Mage v Ranged": 27.0,
+   "Melee v Ranged": 83.5
+  },
+  "worst_matchup": 98.0
+ },
+ {
+  "params": {
+   "weapon_mult": 2.3,
+   "bow_mult": 1.1,
+   "staff_hit": 6,
+   "spell_mult": 0.7,
+   "ability_bonus": 4
+  },
+  "loss": 1867.7,
+  "field_avg": {
+   "Lean Mage": 24.4,
+   "Lean Melee": 94.2,
+   "Lean Ranged": 44.6,
+   "Melee/Ranged": 57.8,
+   "Mage/Melee": 47.7,
+   "Mage/Ranged": 31.3
+  },
+  "starters": {
+   "Air Mage v Melee": 10.0,
+   "Air Mage v Ranged": 23.5,
+   "Melee v Ranged": 83.5
+  },
+  "worst_matchup": 99.5
+ },
+ {
+  "params": {
+   "weapon_mult": 1.25,
+   "bow_mult": 1.8,
+   "staff_hit": 3,
+   "spell_mult": 0.7,
+   "ability_bonus": 0
+  },
+  "loss": 1890.1,
+  "field_avg": {
+   "Lean Mage": 20.9,
+   "Lean Melee": 57.2,
+   "Lean Ranged": 79.9,
+   "Melee/Ranged": 63.6,
+   "Mage/Melee": 19.4,
+   "Mage/Ranged": 59.0
+  },
+  "starters": {
+   "Air Mage v Melee": 59.5,
+   "Air Mage v Ranged": 4.0,
+   "Melee v Ranged": 13.5
+  },
+  "worst_matchup": 97.0
+ },
+ {
+  "params": {
+   "weapon_mult": 2.2,
+   "bow_mult": 1.3,
+   "staff_hit": 4,
+   "spell_mult": 0.75,
+   "ability_bonus": 4
+  },
+  "loss": 1955.4,
+  "field_avg": {
+   "Lean Mage": 21.0,
+   "Lean Melee": 95.1,
+   "Lean Ranged": 39.6,
+   "Melee/Ranged": 60.9,
+   "Mage/Melee": 50.8,
+   "Mage/Ranged": 32.6
+  },
+  "starters": {
+   "Air Mage v Melee": 8.0,
+   "Air Mage v Ranged": 29.0,
+   "Melee v Ranged": 85.0
+  },
+  "worst_matchup": 99.5
+ },
+ {
+  "params": {
+   "weapon_mult": 2.15,
+   "bow_mult": 1.0,
+   "staff_hit": 2,
+   "spell_mult": 0.85,
+   "ability_bonus": 4
+  },
+  "loss": 2023.3,
+  "field_avg": {
+   "Lean Mage": 26.9,
+   "Lean Melee": 96.0,
+   "Lean Ranged": 30.1,
+   "Melee/Ranged": 60.6,
+   "Mage/Melee": 56.6,
+   "Mage/Ranged": 29.8
+  },
+  "starters": {
+   "Air Mage v Melee": 7.0,
+   "Air Mage v Ranged": 51.5,
+   "Melee v Ranged": 90.5
+  },
+  "worst_matchup": 100.0
+ },
+ {
+  "params": {
+   "weapon_mult": 1.95,
+   "bow_mult": 2.0,
+   "staff_hit": 5,
+   "spell_mult": 0.7,
+   "ability_bonus": 1
+  },
+  "loss": 2071.1,
+  "field_avg": {
+   "Lean Mage": 12.5,
+   "Lean Melee": 81.4,
+   "Lean Ranged": 71.2,
+   "Melee/Ranged": 60.5,
+   "Mage/Melee": 27.4,
+   "Mage/Ranged": 47.0
+  },
+  "starters": {
+   "Air Mage v Melee": 13.5,
+   "Air Mage v Ranged": 5.0,
+   "Melee v Ranged": 30.5
+  },
+  "worst_matchup": 98.0
+ },
+ {
+  "params": {
+   "weapon_mult": 2.1,
+   "bow_mult": 1.9,
+   "staff_hit": 5,
+   "spell_mult": 0.7,
+   "ability_bonus": 1
+  },
+  "loss": 2086.2,
+  "field_avg": {
+   "Lean Mage": 11.6,
+   "Lean Melee": 82.4,
+   "Lean Ranged": 69.8,
+   "Melee/Ranged": 61.3,
+   "Mage/Melee": 28.6,
+   "Mage/Ranged": 46.3
+  },
+  "starters": {
+   "Air Mage v Melee": 11.5,
+   "Air Mage v Ranged": 5.0,
+   "Melee v Ranged": 34.5
+  },
+  "worst_matchup": 98.0
+ },
+ {
+  "params": {
+   "weapon_mult": 1.7,
+   "bow_mult": 1.95,
+   "staff_hit": 2,
+   "spell_mult": 0.75,
+   "ability_bonus": 0
+  },
+  "loss": 2099.4,
+  "field_avg": {
+   "Lean Mage": 10.7,
+   "Lean Melee": 73.5,
+   "Lean Ranged": 76.0,
+   "Melee/Ranged": 61.5,
+   "Mage/Melee": 25.1,
+   "Mage/Ranged": 53.2
+  },
+  "starters": {
+   "Air Mage v Melee": 21.5,
+   "Air Mage v Ranged": 4.5,
+   "Melee v Ranged": 20.0
+  },
+  "worst_matchup": 98.0
+ }
+]
