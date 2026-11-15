@@ -22,7 +22,7 @@ It is one web app, so PC and phone play each other.
 7. **Your opponent's deck list stays hidden** during a duel.
 8. **Accounts come after a test with friends:** build phases 0 to 2, test Challenge a friend with real people, then do accounts.
 
-**The project** (created 2026-11-15): "RuneScape TCG", id `udmaqoxyhiwpvxkrugwr`, region us-east-2, URL `https://udmaqoxyhiwpvxkrugwr.supabase.co`, publishable key `sb_publishable_eaN07rbCUAT_-FtdXkB2Iw_IjdGi_bJ` (public by design; the game ships it). So far it holds only `keepalive`, a one-row table the keep-alive reads. The keep-alive is `.github/workflows/supabase-keepalive.yml` in the Misc. repo (twice a week); delete it once the project is on Pro.
+**The project** (created 2026-11-15): "RuneScape TCG", id `udmaqoxyhiwpvxkrugwr`, region us-east-2, URL `https://udmaqoxyhiwpvxkrugwr.supabase.co`, publishable key `sb_publishable_eaN07rbCUAT_-FtdXkB2Iw_IjdGi_bJ` (public by design; the game ships it). So far it holds only `keepalive`, a one-row table the keep-alive reads. The keep-alive is its own private repo, `RamonG3/rstcg-keepalive`: a GitHub Action reads that row on Mondays and Thursdays (first run checked 2026-11-15). Delete the repo once the project is on Pro.
 
 ## Why the server referees
 
