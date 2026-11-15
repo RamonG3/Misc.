@@ -1,6 +1,6 @@
 # Brief: online play for the RuneScape TCG Arena
 
-**Status (2026-11-15): planned; the Supabase project exists, nothing else is built yet.** Ramon has made the main decisions (below). This file sets out what he wants, how it will work, and what is still open. Read `HANDOFF.md` for the wider project and `CLAUDE.md` for how the Arena's code fits together.
+**Status (2026-11-15): phase 0 is built and live.** The server referee runs on Supabase and passed its tests and a live smoke test; the game itself has no online screens yet (that is phase 1). Ramon has made the main decisions (below). This file sets out what he wants, how it works, what is built, and what is still open. Read `HANDOFF.md` for the wider project and `CLAUDE.md` for how the Arena's code fits together.
 
 ## What I want
 
@@ -22,7 +22,49 @@ It is one web app, so PC and phone play each other.
 7. **Your opponent's deck list stays hidden** during a duel.
 8. **Accounts come after a test with friends:** build phases 0 to 2, test Challenge a friend with real people, then do accounts.
 
-**The project** (created 2026-11-15): "RuneScape TCG", id `udmaqoxyhiwpvxkrugwr`, region us-east-2, URL `https://udmaqoxyhiwpvxkrugwr.supabase.co`, publishable key `sb_publishable_eaN07rbCUAT_-FtdXkB2Iw_IjdGi_bJ` (public by design; the game ships it). So far it holds only `keepalive`, a one-row table the keep-alive reads. The keep-alive is its own private repo, `RamonG3/rstcg-keepalive`: a GitHub Action reads that row on Mondays and Thursdays (first run checked 2026-11-15). Delete the repo once the project is on Pro.
+**The project** (created 2026-11-15): "RuneScape TCG", id `udmaqoxyhiwpvxkrugwr`, region us-east-2, URL `https://udmaqoxyhiwpvxkrugwr.supabase.co`, publishable key `sb_publishable_eaN07rbCUAT_-FtdXkB2Iw_IjdGi_bJ` (public by design; the game ships it). Besides the online tables (below) it holds `keepalive`, a one-row table the keep-alive reads. The keep-alive is its own private repo, `RamonG3/rstcg-keepalive`: a GitHub Action reads that row on Mondays and Thursdays (first run checked 2026-11-15). Delete the repo once the project is on Pro.
+
+## Phase 0: what's built (2026-11-15)
+
+**On the server (live):**
+- **Tables** (migration `server/supabase/migrations/20261115230722_online_v1.sql`):
+  - `profiles`: your name. 3 to 12 letters, digits, spaces, `_` or `-`; unique whatever the capitals; "You" and "Bot" are taken. Players write their own row.
+  - `matches`: a room or a duel: code, host, guest, seats (who plays first), names, version, the move count, the pending decision and its deadline, strikes, result. Players can read only their own; Realtime tells them when their row changes.
+  - `match_secrets` (the seed and both decks) and `moves`: no player can read or write them.
+  - Seven database functions the referee calls (create, find, load, mine, start, append, cancel); only the server's secret key can run them. `duel_append` adds a move only if nobody else got in first.
+- **The `duel` Edge Function** (`server/supabase/functions/duel/index.js`), at `https://udmaqoxyhiwpvxkrugwr.supabase.co/functions/v1/duel`. Every call is a POST from a signed-in player:
+  - `hello` → your name, your open room or duel, the version, and `intact` (the deployed rules still play a fixed test duel exactly as the build did).
+  - `challenge {deck, cape, version}` → a room and its code. `peek {code}` → who is challenging. `join {code, deck, cape, version}` → the coin toss, the seed, and the duel starts. `cancel {match}`.
+  - `view {match, since}` → what you may see. `move {match, seq, move}` → the same, after your move. `move {t: 'concede'}` works at any time.
+- **The referee** (`web/referee.js`) rebuilds the duel from the seed and the move list on every call, on the synchronous engine.
+  - A view holds the duel as you may see it, the decision now pending (with your choices, if it's yours), strikes, the result, and with `since`, each move you haven't seen with the picture after it (up to 40; past that, the whole duel afresh with its log).
+  - Each player's own name becomes "You" in the log, so the engine's sentences read as they do against the bot.
+- **The clock:** 60 seconds to choose or discard, 20 to react, plus 5 for animations and lag, plus 12 more for the first decision (the intro). The next call from either player after a deadline settles it: the turn ends (choose), no reaction (react), or the newest card in hand goes (discard), and it counts as a strike. The third strike loses the duel.
+- **Deck check:** `web/deckrules.js` holds the deck rules for both the Arena and the server (60 cards, at most 4 of a card except basic materials, at most 1 Legendary, real cards only). The server can't check ownership until accounts.
+- **Version stamp:** the first 10 hex digits of sha256(`engine.js` + newline + `cards.json`); now `d5389b9ea6`. The app will have to send the same one (phase 1: `build_arena.py` works it out the same way).
+
+**Two things the tests found:**
+- **Rune Pouch gave the deck order away.** Its targets are listed in the order the runes sit in your deck. The referee sorts them before sending; the engine is untouched.
+- **The database reorders deck lists** (jsonb sorts keys), and the engine builds a deck in list order before shuffling. The referee always sorts deck lists by name before building the duel, so storage can't change a duel.
+
+**Tested:**
+- `node web/test/referee_test.js` (2,000 duels + 150 driven, about 20 s): every field of the engine's Player and Game is sorted into "public" or "hidden" (a new field fails the test until it is sorted); at every decision, everything the player can't see is dealt again at random and the picture and choices must not change; the log never names a card the player hasn't seen; replays match; illegal, out-of-turn, wrong-player, wrong-kind and stale moves are refused; timeouts, strikes, forfeits and concedes end duels correctly. Deliberately leaking a hand, the top card, the Rune Pouch order or a "drew X" line each made it fail.
+- `node server/test_local.mjs` (about 6 s): the function itself in node, with a pretend database, playing whole duels between two "devices" that see only what the server sends; plus a check that the generated (and the minified) copy gives exactly the same views as `web/referee.js`.
+- **Live smoke test** (`server/smoke.sql`, run through the Supabase connector because Claude's container and desktop shell can't reach supabase.co): names and their rules, the policies, challenge → peek → join, 24 moves, out-of-turn moves refused, a timeout settled after the deadline, concede, and reads of the secret tables refused. 126 ms per call on average. The test users were deleted afterwards.
+
+**Deploying:** after a change to the rules, the cards or the server code, the function must be deployed again (until then the app and server disagree on the version):
+- **Automatic, once set up:** `.github/workflows/rstcg-referee.yml` runs both tests on every push that touches them, and deploys if the repo has the secret `SUPABASE_ACCESS_TOKEN`.
+- **By hand:** from `rstcg_sim/server`, `node build.js`, then `npx supabase functions deploy duel --project-ref udmaqoxyhiwpvxkrugwr --use-api` (needs `npx supabase login` once).
+- **From a Claude session:** `NODE_PATH=<terser> node server/build.js --min`, then the connector's `deploy_edge_function` with `index.js` and the six `gen/` files (about 60 KB; check `hello` says `intact: true`).
+- Duels in progress on an older version stop with a message; deploy between play sessions.
+
+**Ramon's to-do before phase 1 can be tried on a phone:**
+1. **Turn on anonymous sign-ins:** Supabase dashboard → the "RuneScape TCG" project → Authentication → Sign In / Providers → "Allow anonymous sign-ins". (It's off; the connector can't change it.)
+2. **Optional, for automatic deploys:** make a personal access token at supabase.com/dashboard/account/tokens and add it to the Misc. repo as the Actions secret `SUPABASE_ACCESS_TOKEN`.
+
+**Also installed:** `pg_net` (database HTTP calls), for the smoke test and perhaps a scheduled clock sweep later.
+
+**Phase 1 starts here:** `online.js` (sign in anonymously, pick a name by inserting your `profiles` row, call the function, subscribe to your `matches` row), `runOnlineDuel` playing each view's steps through the existing animations, the Play Online screen, and a two-browser test. The Supabase JS client has to be bundled (no CDN).
 
 ## Why the server referees
 
@@ -164,8 +206,8 @@ So the server can afford to rebuild the duel from scratch on every move.
 Even if every move costs three function calls (the move, plus each player fetching their view), a duel is about 110 calls. That leaves room for about 4,500 duels a month.
 
 **The catch: free projects pause after a week with no activity.** Online play would then stop until someone resumes the project in the dashboard. Two fixes:
-- A weekly keep-alive ping, such as a scheduled GitHub Action in the Misc. repo (free). It has to sit on the repo's default branch to run on a schedule.
-- The Pro plan at $25 a month, which never pauses.
+- A keep-alive ping: done, in its own repo (`RamonG3/rstcg-keepalive`, Mondays and Thursdays).
+- The Pro plan at $25 a month, which never pauses (Ramon's plan for later).
 
 **Other facts:**
 - An Edge Function gets 2 seconds of CPU per request. Rebuilding a duel takes milliseconds.
@@ -176,7 +218,7 @@ Even if every move costs three function calls (the move, plus each player fetchi
 - **Cloudflare Durable Objects:** one live object per duel room, on the free plan since April 2025, sleeping when idle and waking on the next request. A good fit for a referee, but it needs a Cloudflare account and its own deploy tool, while Supabase is already connected.
 - **Peer to peer (WebRTC):** can't hide cards, because both devices would run the duel.
 
-## Data (first cut)
+## Data (as first planned; see "Phase 0: what's built" for what was made)
 
 - **`profiles`:** user id, name, created. With accounts, it also holds progress.
 - **`matches`:**
@@ -199,7 +241,7 @@ Even if every move costs three function calls (the move, plus each player fetchi
 - **Network code:** a new module `online.js`, inlined by `build_arena.py` like the others.
   - The Supabase JavaScript client is bundled into the build. No CDN.
   - Offline play makes no network calls.
-- **Server code:** `server/duel/` holds the Edge Function. A build step copies the current `engine.js` and `cards.json` into it.
+- **Server code:** `server/supabase/functions/duel/` holds the Edge Function. `node server/build.js` copies the current `engine.js` (synchronous), `cards.json`, `referee.js` and `deckrules.js` into its `gen/` folder.
 - **Saves:** a new key, `rstcg-online-v1`, holds your online id and name and the duel you're in. Don't touch the existing keys.
 - **Online play only works from the Netlify app** (runescapetcg.netlify.app, installed or in the browser).
   - The claude.ai artifact blocks connections to other sites.
@@ -207,7 +249,7 @@ Even if every move costs three function calls (the move, plus each player fetchi
 
 ## Phases
 
-0. **Groundwork:**
+0. **Groundwork (done 2026-11-15; see "Phase 0: what's built"):**
    - the Supabase project and its keep-alive;
    - tables and policies;
    - anonymous sign-in and names;
@@ -234,6 +276,10 @@ Even if every move costs three function calls (the move, plus each player fetchi
 ## Still open for Ramon
 
 - **When accounts come (phase 3):** Google, email, or both? When two devices both have progress, keep the one with more cards, or always ask?
+- **The reaction tell.** The engine only asks for a reaction when the defender holds a card that can answer that attack, so online the attacker can tell: if the duel stops to wait for the other player during your own turn, they have a Protect prayer or a reversal for it. Against the bot it never shows, because the bot answers at once. Choices:
+  - Accept it (MTG Arena has the same tell). This is what is built.
+  - Make every attack the defender could in principle answer look the same: a short pause of varying length each time, whether or not they hold a card (the defender's device answers "no" by itself when they have nothing). Fairer, but every such attack waits a moment. No rules change: the engine isn't touched.
+- **"3 minutes away, the other player may claim the win."** Not built as such: the three-timeouts rule already ends a duel for a player who has gone, after about three of their decisions (at least 3 minutes). Say if you still want a separate claim button.
 
 ## Done means (phases 0 to 2)
 

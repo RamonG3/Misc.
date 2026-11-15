@@ -6,6 +6,7 @@ This file describes where things stand. `CLAUDE.md` covers how the code fits tog
 
 - **The Arena (latest build, claude.ai artifact):** https://claude.ai/artifact/DTVmjFMHpVvqVYmtS29tRm (version 22, built from `web/dist/arena.html`).
 - **The installable app (Netlify):** https://runescapetcg.netlify.app, deployed from `web/dist/netlify/` (see "Phone version" below).
+- **The online server (Supabase):** project "RuneScape TCG" (`udmaqoxyhiwpvxkrugwr`, https://udmaqoxyhiwpvxkrugwr.supabase.co), Edge Function `duel`. See `ONLINE_BRIEF.md`.
 - **Rules doc:** https://claude.ai/artifact/AA5kzzcL6QWhBjmwqwhntj
 - **Player rulebook:** https://claude.ai/artifact/87VaH6ai4i5UXEdbRrHkfC
 - **Card templates / design canvas:** https://claude.ai/artifact/NdJNNtUEMTV8FUHc7zTPUg. The card back is the "Crest", artboard `BackCrest.dc.html`.
@@ -107,7 +108,9 @@ Ramon decided: landscape only, the same file as the PC version, an installable a
 
 ### 3. Later
 - **Card art** for the 64 cards in `rstcg_missing_art.csv`. Rune Arrows art exists on Drive but isn't downloaded yet.
-- **Online play against other people.** Planned (2026-11-15), nothing built yet. `ONLINE_BRIEF.md` has the two modes (Find a match, Challenge a friend) and Ramon's decisions: the server referees from day one, a name now with accounts and cloud progress soon after, your own decks online, and GP as for bots. It also has the design (Supabase), the phases and the questions still open.
+- **Online play against other people.** Phase 0 (the server) is built and live (2026-11-15); the game has no online screens yet. `ONLINE_BRIEF.md` has the two modes (Find a match, Challenge a friend), Ramon's decisions (the server referees from day one, a name now with accounts soon after, your own decks online, GP as for bots), what's built, how to test and deploy it, Ramon's two set-up steps (turn on anonymous sign-ins; optionally a deploy token), and the next phase.
+  - Supabase project "RuneScape TCG" (`udmaqoxyhiwpvxkrugwr`): tables `profiles`, `matches`, `match_secrets`, `moves`; Edge Function `duel`. Keep-alive: `RamonG3/rstcg-keepalive`.
+  - Code: `web/referee.js` (the referee), `web/deckrules.js` (deck rules, now shared with the Arena), `server/` (the function, migrations, build, tests, `smoke.sql`).
 - **Rebuild decks from the full tested pool,** to see what independent deckbuilding does to balance.
 - **Print-and-play:** `print/build_pnp.py` + `print/render.js` → PDFs. Done for the 3 starters.
 

@@ -33,6 +33,7 @@ parts = {
     "/*__BOT__*/": open(os.path.join(HERE, "bot.js")).read(),
     "/*__AUDIO__*/": open(os.path.join(HERE, "arena_audio.js")).read(),
     "/*__WIZ__*/": open(os.path.join(HERE, "deckwiz.js")).read(),
+    "/*__DECKRULES__*/": read("deckrules.js"),
     "/*__ENGINESYNC__*/": engine_without_waiting(read("engine.js")),
     "/*__BOTLEVELS__*/": read("bot_levels.js"),
 }

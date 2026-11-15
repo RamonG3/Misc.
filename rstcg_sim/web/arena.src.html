@@ -679,6 +679,7 @@ html, body { touch-action: manipulation; }
 <script>/*__BOTLEVELS__*/</script>
 <script>/*__AUDIO__*/</script>
 <script>/*__WIZ__*/</script>
+<script>/*__DECKRULES__*/</script>
 <script>
 (function () {
   'use strict';
@@ -2588,16 +2589,8 @@ html, body { touch-action: manipulation; }
 
   // ---------- decks you can pick, and whether a list is legal ----------
   const PICKABLE = DECKS.filter((d) => d.group === 'Starter decks' || d.group === 'Tournament decks');
-  const isBasic = (n) => CARDS[n] && CARDS[n].kind === 'material' && (!SET1[n] || SET1[n].rarity === 'C');   // common materials: any number
-  function deckCheck(cards) {
-    const total = Object.values(cards).reduce((s, k) => s + k, 0);
-    const problems = [];
-    if (total !== 60) problems.push(`${total}/60 cards`);
-    for (const [n, k] of Object.entries(cards)) if (k > 4 && !isBasic(n)) problems.push(`${k} × ${n} (max 4)`);
-    const leg = Object.keys(cards).filter((n) => SET1[n] && SET1[n].rarity === 'L');
-    if (leg.length > 1) problems.push(`${leg.length} Legendaries (max 1)`);
-    return { ok: !problems.length, total, problems };
-  }
+  const DRULES = window.RSTCGDeckRules.make(CARDS, SET1);    // the deck rules (deckrules.js, shared with the online referee)
+  const isBasic = DRULES.isBasic;                                  // common materials: any number
   function deckArt(d) {             // the deck's signature: its most-played weapon, else its most-played card with art
     const rank = (n) => (['weapon', 'bow', 'staff', 'thrown'].includes(CARDS[n].kind) ? 0 : CARDS[n].kind === 'material' ? 9 : 3);
     const names = Object.keys(d.cards).filter((n) => ART[n]).sort((a, b) => rank(a) - rank(b) || d.cards[b] - d.cards[a]);
@@ -2800,7 +2793,7 @@ html, body { touch-action: manipulation; }
     };
     // the chosen deck at a glance
     const mats = Object.entries(d.cards).filter(([n]) => CARDS[n].kind === 'material').sort((a, b) => b[1] - a[1]);
-    const nMat = mats.reduce((t, [, k]) => t + k, 0), total = deckCheck(d.cards).total;
+    const nMat = mats.reduce((t, [, k]) => t + k, 0), total = deckRules(d.cards, false).total;
     const kinds = { Weapons: ['weapon', 'bow', 'staff', 'thrown'], 'Spells & abilities': ['spell', 'ability', 'rapid', 'longrange', 'destroy'], Gear: ['shield', 'armor', 'arrows', 'buff', 'prayer', 'reversal'], Other: null };
     const kindCount = {};
     for (const [n, k] of Object.entries(d.cards)) {
@@ -3015,14 +3008,14 @@ html, body { touch-action: manipulation; }
   // cards; decks are separate lists that share the collection (a deck can use up to what you own).
   // =====================================================================================
   const RAR = { C: { name: 'Common', col: '#c9c2b2' }, U: { name: 'Uncommon', col: '#5fb0e0' }, R: { name: 'Rare', col: '#b77cf0' }, L: { name: 'Legendary', col: '#ff9d2e' } };
-  const rarityOf = (n) => (SET1[n] ? SET1[n].rarity : 'C');
+  const rarityOf = DRULES.rarityOf;
   const POOL = Object.keys(CARDS).filter((n) => SET1[n] && CARDS[n].kind !== 'cape' && !/\(cut/.test(n))
     .sort((a, b) => (SET1[a].num || '').localeCompare(SET1[b].num || ''));          // every card you can own, in set order
   const PACK_POOL = { C: [], U: [], R: [], L: [] };
   for (const n of POOL) if (!isBasic(n)) PACK_POOL[rarityOf(n)].push(n);
   const PACK_SLOTS = ['C', 'C', 'C', 'U', 'U', 'R'];          // 6 cards: 3 Common, 2 Uncommon, 1 Rare (sometimes Legendary)
   const LEGEND_ODDS = 1 / 8;                   // the rare slot is a Legendary about one pack in eight
-  const MAX_COPIES = 4;
+  const MAX_COPIES = window.RSTCGDeckRules.MAX_COPIES;
   const owned = (n) => (isBasic(n) ? Infinity : (profile.coll[n] || 0));
   const slug = (s) => s.toLowerCase().replace(/[^a-z0-9]+/g, '-');
   function starterState() {
@@ -3039,22 +3032,16 @@ html, body { touch-action: manipulation; }
   ensureCollection();
   const myDeck = (id) => profile.decks.find((d) => d.id === id);
   const collected = () => POOL.filter((n) => owned(n) > 0).length;
-  // Deck rules: exactly 60, at most 4 of a card (basic materials excepted), at most 1 Legendary, and
-  // (for your decks) no more copies than you own.
-  function deckRules(cards, mine = true) {
-    const total = Object.values(cards).reduce((s, k) => s + k, 0);
-    const over = Object.entries(cards).filter(([n, k]) => k > MAX_COPIES && !isBasic(n)).map(([n]) => n);
-    const legends = Object.entries(cards).filter(([n]) => rarityOf(n) === 'L').reduce((s, [, k]) => s + k, 0);
-    const short = mine ? Object.entries(cards).filter(([n, k]) => k > owned(n)).map(([n]) => n) : [];
-    return { total, sixty: total === 60, copies: !over.length, legend: legends <= 1, owns: !short.length, over, legends, short,
-      ok: total === 60 && !over.length && legends <= 1 && !short.length };
-  }
+  // Deck rules (deckrules.js): exactly 60, at most 4 of a card (basic materials excepted), at most 1 Legendary,
+  // only cards in the game, and (for your decks) no more copies than you own.
+  function deckRules(cards, mine = true) { return DRULES.check(cards, mine ? owned : null); }
   function deckProblems(r) {
     const p = [];
     if (!r.sixty) p.push(r.total < 60 ? `${60 - r.total} card${60 - r.total === 1 ? '' : 's'} short of 60` : `${r.total - 60} card${r.total - 60 === 1 ? '' : 's'} over 60`);
     if (!r.copies) p.push(`More than ${MAX_COPIES} of ${r.over.join(', ')}`);
     if (!r.legend) p.push(`${r.legends} Legendaries (1 allowed)`);
     if (!r.owns) p.push(`Not enough copies owned: ${r.short.join(', ')}`);
+    if (!r.known) p.push(`Not in the game: ${r.unknown.join(', ')}`);
     return p;
   }
   // Cards whose materials aren't in the deck at all (Air Strike with no Air Runes): worth a warning.

@@ -1,0 +1,47 @@
+# RuneScape TCG: test the online referee, and deploy it to Supabase (Edge Function "duel").
+#
+# Runs when the rules, the referee or the server code change. The tests always run. The deploy runs only
+# when the repository has the secret SUPABASE_ACCESS_TOKEN (a personal access token from
+# supabase.com/dashboard/account/tokens): GitHub -> RamonG3/misc. -> Settings -> Secrets and variables -> Actions.
+#
+# A new engine or card data gets a new version stamp: duels already in progress on the old one stop, and
+# out-of-date apps are asked to reload. Deploy between play sessions.
+name: RuneScape TCG referee
+
+on:
+  push:
+    paths:
+      - 'rstcg_sim/web/engine.js'
+      - 'rstcg_sim/web/cards.json'
+      - 'rstcg_sim/web/referee.js'
+      - 'rstcg_sim/web/deckrules.js'
+      - 'rstcg_sim/server/**'
+      - '.github/workflows/rstcg-referee.yml'
+  workflow_dispatch:
+
+jobs:
+  test-and-deploy:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: rstcg_sim
+    env:
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Referee tests (leaks, replays, refused moves)
+        run: node web/test/referee_test.js 1000 100
+      - name: The function against a pretend database
+        run: node server/test_local.mjs 30
+      - name: Deploy
+        if: env.SUPABASE_ACCESS_TOKEN != ''
+        working-directory: rstcg_sim/server
+        run: |
+          node build.js
+          npx --yes supabase@latest functions deploy duel --project-ref udmaqoxyhiwpvxkrugwr --use-api
+      - name: No token, no deploy
+        if: env.SUPABASE_ACCESS_TOKEN == ''
+        run: echo "Tests passed. Add the SUPABASE_ACCESS_TOKEN secret to deploy the referee from here."

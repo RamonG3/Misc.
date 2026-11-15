@@ -12,3 +12,6 @@ web/test/out_chk.json
 __pycache__/
 *.pyc
 node_modules/
+# The online referee's generated copy of the engine and data (node server/build.js makes it)
+server/supabase/functions/duel/gen/
+server/supabase/.temp/
