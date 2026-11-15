@@ -1,0 +1,15 @@
+{
+  "name": "rstcg-arena",
+  "private": true,
+  "description": "RuneScape TCG: balance simulator (Python) and the Arena browser game (web/)",
+  "scripts": {
+    "build": "python3 web/build_arena.py",
+    "test": "node web/test/ui/run_all.js",
+    "test:duels": "node web/test/arena_play.js 3",
+    "bots": "node web/test/bot_arena.js 40 greedy greedy",
+    "wizard": "node web/test/wiz_test.js"
+  },
+  "devDependencies": {
+    "playwright": "1.63.0"
+  }
+}
