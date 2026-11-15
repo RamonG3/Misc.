@@ -32,7 +32,7 @@ button:focus-visible, [tabindex]:focus-visible { outline: 3px solid var(--gold-p
   background-image: radial-gradient(ellipse at 50% 46%, rgba(0,0,0,0) 35%, rgba(0,0,0,.6) 100%),
     repeating-linear-gradient(45deg, rgba(201,165,75,.035) 0 1px, transparent 1px 22px),
     repeating-linear-gradient(-45deg, rgba(201,165,75,.035) 0 1px, transparent 1px 22px); }
-.backdrop { position: absolute; left: -60px; top: -60px; width: 2040px; height: 1200px; object-fit: cover; object-position: 50% 30%;
+.backdrop { position: absolute; left: -60px; top: -60px; width: calc(100% + 120px); height: calc(100% + 120px); object-fit: cover; object-position: 50% 30%;
   filter: blur(9px) brightness(.42) saturate(.9); }
 .backdrop-veil { position: absolute; inset: 0; background: radial-gradient(ellipse at 50% 46%, rgba(12,9,7,.15) 30%, rgba(12,9,7,.78) 100%); }
 @keyframes fadein { from { opacity: 0; } to { opacity: 1; } }
@@ -140,7 +140,7 @@ button:focus-visible, [tabindex]:focus-visible { outline: 3px solid var(--gold-p
 .tut-hi { outline: 4px solid #ffd76a; outline-offset: 5px; border-radius: 12px; animation: tutpulse 1.2s ease-in-out infinite; }
 @keyframes tutpulse { 50% { outline-color: rgba(255,215,106,.35); outline-offset: 10px; } }
 .mi .side.free { background: #17240f; border: 1.5px solid #79c25a; color: #b9e3a5; }
-.ptut { left: 530px; top: 20px; width: 860px; }
+.ptut { left: calc(50% - 430px); top: 20px; width: 860px; }
 
 /* ---------- HandCard ---------- */
 .hc { position: absolute; width: 230px; height: 322px; border-radius: 8px; transform-origin: 50% 100%; transition: transform .15s ease-out, top .15s ease-out, box-shadow .15s; }
@@ -296,6 +296,22 @@ button:focus-visible, [tabindex]:focus-visible { outline: 3px solid var(--gold-p
 .btn-d[aria-pressed="true"] { background: var(--gold); color: #1a1410; }
 #zoom { position: absolute; z-index: 100; pointer-events: none; filter: drop-shadow(0 20px 40px rgba(0,0,0,.8)); display: none; }
 #zoom.on { display: block; animation: zin .12s ease-out; }
+/* holding a phone upright: ask for landscape (html.portrait is set in stageFor) */
+#rotate { display: none; position: fixed; inset: 0; z-index: 1000; background: radial-gradient(ellipse at 50% 40%, #2a2017 0%, #0a0806 75%);
+  flex-direction: column; align-items: center; justify-content: center; gap: 18px; padding: 30px; text-align: center; color: var(--cream); font-family: var(--body); }
+.portrait #rotate { display: flex; }
+#rotate img { width: 96px; height: 96px; filter: drop-shadow(0 0 16px rgba(243,210,122,.45)); }
+#rotate img:not([src]) { display: none; }
+#rotate b { font-family: var(--display); font-weight: 700; font-size: 24px; letter-spacing: .04em; color: var(--gold-hi); }
+#rotate span { font-size: 17px; color: var(--muted); }
+.rot-phone { animation: rotphone 2.4s ease-in-out infinite; }
+@keyframes rotphone { 0%, 25% { transform: rotate(0); } 55%, 85% { transform: rotate(-90deg); } 100% { transform: rotate(0); } }
+@media (prefers-reduced-motion: reduce) { .rot-phone { animation: none; transform: rotate(-90deg); } }
+#zoom.big { transform-origin: 0 0; box-shadow: 0 0 0 3000px rgba(8,6,4,.6); border-radius: 18px; animation: none; }
+/* fingers: hand cards and collection cards are dragged, never scrolled or pinched; nothing offers the browser's long-press menu */
+.hc, .cc { touch-action: none; }
+#viewport, #viewport img { -webkit-touch-callout: none; }
+html, body { touch-action: manipulation; }
 @keyframes zin { from { transform: scale(.85); opacity: 0; } }
 #fx { position: absolute; inset: 0; z-index: 90; pointer-events: none; }
 .float { position: absolute; font-family: var(--display); font-weight: 700; font-size: 54px; line-height: 1; animation: rise 1.3s ease-out forwards; text-shadow: 0 3px 0 rgba(0,0,0,.6), 0 0 18px currentColor; }
@@ -405,6 +421,12 @@ button:focus-visible, [tabindex]:focus-visible { outline: 3px solid var(--gold-p
 .setrow { display: flex; align-items: center; gap: 14px; padding: 14px 0; border-top: 1px solid rgba(201,165,75,.2); }
 .setrow > span { flex: 1; font-size: 18px; }
 .setrow small { display: block; font-size: 14px; color: var(--faint); }
+/* phones: the How to Play and Settings dialogs in bigger type, using the extra width */
+.phone .modal { width: 1240px; }
+.phone .modal h3 { font-size: 26px; }
+.phone .modal p, .phone .modal li { font-size: 23px; }
+.phone .setrow > span { font-size: 23px; }
+.phone .setrow small { font-size: 18px; }
 .res { position: absolute; inset: 0; background-color: #15110d; }
 .res.lose { background-color: #0f1014; }
 .rays { position: absolute; left: 460px; top: -260px; width: 1000px; height: 1000px; border-radius: 50%; background: repeating-conic-gradient(from 0deg, rgba(243,210,122,.10) 0deg 6deg, transparent 6deg 18deg); -webkit-mask-image: radial-gradient(circle, #000 20%, transparent 68%); mask-image: radial-gradient(circle, #000 20%, transparent 68%); animation: spin 90s linear infinite; }
@@ -487,6 +509,22 @@ button:focus-visible, [tabindex]:focus-visible { outline: 3px solid var(--gold-p
 .cc-ct { position: absolute; left: 0; right: 0; bottom: 0; height: 30px; display: flex; align-items: center; justify-content: space-between; padding: 0 8px; border-radius: 8px; background: #1a1410; border: 1px solid rgba(201,165,75,.4); font-size: 12px; font-weight: 800; color: var(--muted); }
 .cc-ct b { font-family: var(--display); font-size: 15px; color: var(--gold-hi); }
 .cc-minus { position: absolute; right: -8px; top: -8px; width: 30px; height: 30px; padding: 0; border-radius: 50%; border: 2px solid var(--gold); background: #2b221b; color: var(--gold-hi); font-weight: 800; font-size: 18px; line-height: 1; box-shadow: 0 3px 8px rgba(0,0,0,.6); }
+/* the card grid on a short stage: smaller tiles, so two rows fit (see cardGridLayout) */
+.ccg.small .cc { width: var(--tw); height: var(--th); }
+.ccg.small .cc-card { width: var(--tw); height: var(--ch); }
+.ccg.small .cc-card > .cf { transform: scale(var(--ts)); }
+.ccg.small .cc-ct { height: 26px; padding: 0 6px; font-size: 10.5px; }
+.ccg.small .cc-ct b { font-size: 13px; }
+/* fingers: bigger things to tap (html.touch is set from the pointer type) */
+.touch .cc-minus { width: 44px; height: 44px; right: -12px; top: -12px; font-size: 24px; }
+/* a short stage (phones, laptops): deck lists in bigger type */
+.short .dl { min-height: 38px; font-size: 19px; }
+.short .dl b { font-size: 20px; width: 32px; }
+.touch .dl { min-height: 50px; }
+.touch .dl button { width: 46px; height: 42px; font-size: 22px; }
+.touch .chipf { height: 44px; padding: 0 16px; font-size: 15px; }
+.touch .btn-d.pg { width: 64px !important; height: 56px !important; }
+.touch .mi { height: 76px; }
 .dl { display: flex; align-items: center; gap: 8px; min-height: 30px; padding: 0 6px; border-radius: 6px; font-size: 14px; color: var(--cream); }
 .dl:hover { background: rgba(255,255,255,.04); }
 .wizlist .dl { min-height: 44px; font-size: 19px; gap: 10px; }
@@ -630,6 +668,8 @@ button:focus-visible, [tabindex]:focus-visible { outline: 3px solid var(--gold-p
 </head>
 <body>
 <div id="viewport"><div id="stage"><div id="board"></div><div id="reveal"></div><div id="fx"></div><div id="zoom"></div><div id="drag"></div></div></div>
+<div id="rotate" role="alert"><img alt=""><svg class="rot-phone" width="120" height="120" viewBox="0 0 120 120" aria-hidden="true"><rect x="38" y="14" width="44" height="92" rx="8" fill="#1a1410" stroke="#f3d27a" stroke-width="4"/><circle cx="60" cy="96" r="3.5" fill="#f3d27a"/></svg>
+  <b>Turn your phone sideways</b><span>The Arena is played in landscape.</span></div>
 <script>/*__DATA__*/</script>
 <script>/*__ASSETS__*/</script>
 <script>/*__ENGINE__*/</script>
@@ -945,6 +985,7 @@ button:focus-visible, [tabindex]:focus-visible { outline: 3px solid var(--gold-p
       const ex = e.getContext('2d'); ex.beginPath(); ex.arc(240, 240, 234, 0, Math.PI * 2); ex.clip();
       ex.drawImage(cv, (cx - 120) * 2, (cy - 120) * 2, 480, 480, 0, 0, 480, 480);
       EMBLEM = e.toDataURL('image/png');
+      const rot = document.querySelector('#rotate img'); if (rot) rot.src = EMBLEM;
     });
   }
 
@@ -1188,8 +1229,14 @@ button:focus-visible, [tabindex]:focus-visible { outline: 3px solid var(--gold-p
   const TABLE = { w: 1920, h: 780, tilt: 30, pers: 1500 };
   const ROW = { bot: 8, you: 522, h: 250 }, STRIP = { top: 272, h: 236 };
   const rowTop = (i) => (i === ui.you ? ROW.you : ROW.bot);
-  let stageH = 1080;                                   // 1080 on a 16:9 screen; shorter on a wide phone held sideways
+  // The stage is sized to the screen (see stageFor): menus fill any shape edge to edge, from 4:3 to 21:9, and
+  // are taller in stage pixels on big screens than on small ones, so text and buttons stay readable on a phone.
+  // The duel is always 1920 wide; its height follows the screen's shape.
+  let stageH = 1080, stageW = 1920;
   const SH = () => stageH;
+  const SW = () => stageW;
+  const TOUCH = () => document.documentElement.classList.contains('touch');
+  const tapWord = (cap) => (TOUCH() ? (cap ? 'Tap' : 'tap') : cap ? 'Click' : 'click');
   const planeBottom = () => SH() - 276;
   function proj(x, y) {                                // a point on the table -> where it shows on the stage (the CSS 3D maths)
     const th = TABLE.tilt * Math.PI / 180, P = TABLE.pers, oy = SH() * 1.1;
@@ -2432,13 +2479,13 @@ button:focus-visible, [tabindex]:focus-visible { outline: 3px solid var(--gold-p
             <span style="font-weight:700;font-size:15px;color:var(--bot-hi)">${esc(last ? last.text : 'Incoming attack')} · <span style="color:var(--hurt)">${take} to your deck</span>${soak ? ` · ${soak} soaked` : ''}</span></div></div>
         ${opts}
         <button type="button" class="btn-d" data-do="react" data-v="" style="height:58px;font-size:20px">Take it</button>
-        <span class="lbl" style="color:var(--faint)">1 reaction per round · drag a glowing card up or click it</span></div>`;
+        <span class="lbl" style="color:var(--faint)">1 reaction per round · drag a glowing card up or ${tapWord()} it</span></div>`;
   }
   function discardHTML(g) {
     const p = g.players[ui.you];
     const over = p.hand.length - g.rules.hand_max;
     return `<div class="panel" style="position:absolute;left:740px;top:${SH() - 420}px;width:440px;padding:14px 18px;z-index:40;border:2px solid var(--hurt);text-align:center">
-      <span class="ttl" style="font-size:22px">Hand limit ${g.rules.hand_max}</span><div style="margin-top:6px;font-size:15px">Drag ${plural(over, 'card')} to your discard pile, or click ${over === 1 ? 'it' : 'them'}</div></div>`;
+      <span class="ttl" style="font-size:22px">Hand limit ${g.rules.hand_max}</span><div style="margin-top:6px;font-size:15px">Drag ${plural(over, 'card')} to your discard pile, or ${tapWord()} ${over === 1 ? 'it' : 'them'}</div></div>`;
   }
   function coreMenuHTML(g) {
     const m = ui.menu;
@@ -2592,7 +2639,7 @@ button:focus-visible, [tabindex]:focus-visible { outline: 3px solid var(--gold-p
       const r = (a) => a[0] + Math.random() * (a[1] - a[0]);
       MOTES[MENU_BG] = Array.from({ length: fx.n }, () => ({ core: fx.core || '#fff', x: Math.random() * 1920, t: r(fx.t), s: r(fx.s), dx: r(fx.dx), o: r(fx.o), c: fx.c[Math.floor(Math.random() * fx.c.length)], off: Math.random() * 40 }));
     }
-    const motes = MOTES[MENU_BG].map((m) => `<span class="mote" style="left:${m.x.toFixed(0)}px;--s:${m.s.toFixed(1)}px;--t:${m.t.toFixed(1)}s;--d:${ph(m.t, m.off)};--dx:${m.dx.toFixed(0)}px;--o:${m.o.toFixed(2)};--c:${m.c};--core:${m.core}"></span>`).join('');
+    const motes = MOTES[MENU_BG].map((m) => `<span class="mote" style="left:${(m.x / 19.2).toFixed(1)}%;--s:${m.s.toFixed(1)}px;--t:${m.t.toFixed(1)}s;--d:${ph(m.t, m.off)};--dx:${m.dx.toFixed(0)}px;--o:${m.o.toFixed(2)};--c:${m.c};--core:${m.core}"></span>`).join('');
     return { motes: `<div class="motes">${motes}</div>`, light: `<div class="menu-light" style="--lc:${fx.light};animation-delay:${ph(68)}"></div>`,
       bgDelay: ph(104), sheenDelay: ph(8, 3), ringDelay: ph(70), glowDelay: ph(6), breatheDelay: ph(3.4) };
   }
@@ -2601,23 +2648,25 @@ button:focus-visible, [tabindex]:focus-visible { outline: 3px solid var(--gold-p
     if (!MENU_BG) { const k = Object.keys(AS.backdrop); MENU_BG = k.length ? k[Math.floor(Math.random() * k.length)] : ''; }
     const saved = store.get(STORE);
     const life = menuLife();
+    const short = SH() < 1000;                       // not enough height for one long column: two columns, smaller crest
     const resume = saved && saved.config
       ? `<button type="button" class="btn-g breathe" data-do="resume" style="animation-delay:${life.breatheDelay};width:460px;height:104px;font-size:30px;justify-content:flex-start;padding:0 28px;gap:20px">${ICN.resume}<span style="display:flex;flex-direction:column;align-items:flex-start;gap:4px">Resume duel<small style="font-family:var(--body);font-size:15px;font-weight:700;letter-spacing:.04em;color:#ffe2b8">${esc(saved.config.youDeck)} vs ${esc(saved.config.botDeck)}</small></span></button>` : '';
     const play = saved
       ? `<button type="button" class="mi" data-do="play">${ICN.swords.replace(/40/g, '28').replace('#fff3d1', '#f3d27a')}New duel vs Bot</button>`
       : `<button type="button" class="btn-g breathe" data-do="play" style="width:460px;height:104px;font-size:34px;justify-content:flex-start;padding:0 28px;gap:20px;animation-delay:${life.breatheDelay}">${ICN.swords}Play vs Bot</button>`;
     return `<div class="table"></div>
-      ${MENU_BG ? `<div style="position:absolute;inset:0;overflow:hidden"><img class="menu-bg" src="${AS.backdrop[MENU_BG]}" alt="" style="position:absolute;left:0;top:0;width:1920px;height:1080px;object-fit:cover;animation-delay:${life.bgDelay}">${life.light}</div>` : ''}
+      ${MENU_BG ? `<div style="position:absolute;inset:0;overflow:hidden"><img class="menu-bg" src="${AS.backdrop[MENU_BG]}" alt="" style="position:absolute;left:0;top:0;width:100%;height:100%;object-fit:cover;animation-delay:${life.bgDelay}">${life.light}</div>` : ''}
       <div style="position:absolute;inset:0;background:linear-gradient(90deg,rgba(12,9,7,.94) 0%,rgba(12,9,7,.78) 34%,rgba(12,9,7,.15) 66%,rgba(12,9,7,.35) 100%)"></div>
       <div style="position:absolute;inset:0;background:radial-gradient(ellipse at 70% 50%,rgba(0,0,0,0) 40%,rgba(0,0,0,.55) 100%)"></div>
       ${life.motes}
       <div style="position:absolute;right:48px;top:36px">${gpChip(26)}</div>
+      <div style="position:absolute;left:0;top:0;width:900px;height:300px;${short ? 'transform:scale(.72);transform-origin:30px 20px' : ''}">
       <div class="crest-ring" style="animation-delay:${life.ringDelay}"></div>
       ${EMBLEM ? `<img class="crest-glow" src="${EMBLEM}" alt="" style="position:absolute;left:96px;top:70px;width:210px;height:210px;animation-delay:${life.glowDelay}">` : ''}
       ${ICON.logo ? `<div class="logo-wrap"><img src="${ICON.logo}" alt="RuneScape"><div class="logo-sheen" style="-webkit-mask-image:url(${ICON.logo});mask-image:url(${ICON.logo});animation-delay:${life.sheenDelay}"></div></div>` : ''}
       <div style="position:absolute;left:340px;top:236px;display:flex;align-items:center;gap:14px"><span style="width:60px;height:1px;background:var(--gold)"></span>
-        <span style="font-family:var(--display);font-weight:600;font-size:20px;letter-spacing:.36em;color:var(--cream)">TRADING CARD GAME</span><span style="width:60px;height:1px;background:var(--gold)"></span></div>
-      <nav aria-label="Main menu" style="position:absolute;left:110px;top:${saved ? 320 : 340}px;display:flex;flex-direction:column;gap:14px">
+        <span style="font-family:var(--display);font-weight:600;font-size:20px;letter-spacing:.36em;color:var(--cream)">TRADING CARD GAME</span><span style="width:60px;height:1px;background:var(--gold)"></span></div></div>
+      <nav aria-label="Main menu" style="position:absolute;left:${short ? 90 : 110}px;top:${short ? 228 : saved ? 320 : 340}px;${short ? 'display:grid;grid-template-columns:repeat(2,460px);align-items:end' : 'display:flex;flex-direction:column'};gap:14px">
         ${resume}${play}
         <button type="button" class="mi" disabled>${ICN.globe}Play Online<span class="soon">COMING LATER</span></button>
         <button type="button" class="mi" data-do="decks">${ICN.decks}Decks<span class="side">${profile.decks.length}</span></button>
@@ -2626,12 +2675,58 @@ button:focus-visible, [tabindex]:focus-visible { outline: 3px solid var(--gold-p
         <button type="button" class="mi" data-do="how">${ICN.book}How to Play</button>
         <button type="button" class="mi" data-do="settings">${ICN.gear}Settings</button>
       </nav>
-      <div style="position:absolute;left:110px;bottom:40px;display:flex;align-items:center;gap:12px;font-size:13px;font-weight:700;letter-spacing:.14em;color:var(--faint)">
+      <div style="position:absolute;left:${short ? 90 : 110}px;bottom:${short ? 28 : 40}px;display:flex;align-items:center;gap:12px;font-size:13px;font-weight:700;letter-spacing:.14em;color:var(--faint)">
         <span>SET 1</span><span style="width:4px;height:4px;border-radius:50%;background:var(--faint)"></span><span>COLLECTED ${collected()} / ${POOL.length}</span>
         <span style="width:4px;height:4px;border-radius:50%;background:var(--faint)"></span><span>RECORD ${profile.wins} W · ${profile.losses} L</span></div>
       ${MENU_BG ? `<span style="position:absolute;right:48px;bottom:40px;font-size:13px;font-weight:700;letter-spacing:.14em;color:rgba(233,223,199,.6)">${esc(MENU_BG.toUpperCase())}</span>` : ''}
       ${modalHTML()}`;
   }
+
+  // ---------- Champion's thinking time, measured on this device (Settings) ----------
+  // A fixed practice duel, Champion against Guard, run off screen on the same engine and with the same
+  // breathing room as a real duel. Nothing is saved and the result doesn't touch your profile.
+  const bench = { running: false, n: 0, ms: 0, max: 0, token: null };
+  const BENCH_MOVES = 40;
+  const secs = (ms) => (ms / 1000).toFixed(ms < 995 ? 2 : 1) + ' s';
+  function benchText() {
+    if (!bench.n) return bench.running ? 'Thinking…' : '';
+    const avg = secs(bench.ms / bench.n);
+    return bench.running ? `${bench.n} / ${BENCH_MOVES} moves · ${avg} a move so far`
+      : `${avg} a move on average, ${secs(bench.max)} at most (${bench.n} moves)`;
+  }
+  async function benchChampion() {
+    if (bench.running) return;
+    const token = (bench.token = {});
+    Object.assign(bench, { running: true, n: 0, ms: 0, max: 0 });
+    const show = () => { const el = document.getElementById('benchOut'); if (el) el.textContent = benchText(); };
+    render();
+    const starters = DECKS.filter((d) => d.group === 'Starter decks');
+    const hard = LV.makeBot('hard', 9091, { pause: 12 });
+    const timed = {
+      setup: (g) => hard.setup(g),
+      choose: async (g, i, legal) => {
+        const t0 = performance.now();
+        const a = await hard.choose(g, i, legal);
+        if (legal.length > 1) { const ms = performance.now() - t0; bench.n++; bench.ms += ms; bench.max = Math.max(bench.max, ms); show(); }
+        return a;
+      },
+      react: (...a) => hard.react(...a),
+      discard_choice: (...a) => hard.discard_choice(...a),
+    };
+    await sleep(50);
+    let seed = 20261115;
+    try {
+      while (bench.token === token && bench.n < BENCH_MOVES) {     // a short duel may not be enough moves: play another
+        const a = starters[seed % starters.length], b = starters[(seed + 1) % starters.length];
+        const g = new R.Game([a.cards, b.cards], [timed, new HeuristicBot(seed)], seed, { capes: [a.capes[0], b.capes[0]] }, ['Champion', 'Guard']);
+        while (g.winner === null && g.turn < 400 && bench.token === token && bench.n < BENCH_MOVES) await g.play_turn();
+        seed++;
+      }
+    } finally {
+      if (bench.token === token) { bench.running = false; bench.token = null; if (ui.modal === 'settings') render(); }
+    }
+  }
+  const benchStop = () => { bench.token = null; bench.running = false; };
 
   // ---------- How to Play and Settings ----------
   function modalHTML() {
@@ -2665,7 +2760,7 @@ button:focus-visible, [tabindex]:focus-visible { outline: 3px solid var(--gold-p
         <ul><li>Each player picks a cape in secret before the duel. Both are revealed when it starts, and either player can claim either one.</li>
           <li>Meet a cape's goal to claim it, then wear it for ${R0.cape_turns} of your turns to win.</li></ul>
         <h3>Playing here</h3>
-        <ul><li>Drag a card onto the board to play it, or click it to see your options. Hover any card to read it full size.</li>
+        <ul><li>Drag a card onto the board to play it, or ${tapWord()} it to see your options. ${TOUCH() ? 'Press and hold' : 'Hover over'} any card to read it full size.</li>
           <li>A win pays ${PAY.win} GP and a loss ${PAY.loss} GP. Conceding pays nothing.</li></ul>`;
     } else {
       const seg = (key, val, label) => `<button type="button" class="btn-d" data-do="set" data-v="${key}:${val}" aria-pressed="${(key === 'speed' ? ui.speed : settings[key]) === val}" style="height:44px;padding:0 18px;font-size:15px">${label}</button>`;
@@ -2675,10 +2770,12 @@ button:focus-visible, [tabindex]:focus-visible { outline: 3px solid var(--gold-p
         <div class="setrow"><span>Music<small>Three menu songs and three battle songs that build when a deck runs low</small></span>${['off', 'low', 'med', 'high'].map((x) => seg('music', x, x === 'med' ? 'Medium' : x[0].toUpperCase() + x.slice(1))).join('')}</div>
         <div class="setrow"><span>Tips<small>Short explanations the first time something new happens in a duel</small></span>${seg('tips', 'on', 'On')}${seg('tips', 'off', 'Off')}<button type="button" class="btn-d" data-do="tipsreset" style="height:44px;padding:0 14px;font-size:14px">Show again</button></div>
         <div class="setrow"><span>Sound effects</span>${['off', 'low', 'med', 'high'].map((x) => seg('sfx', x, x === 'med' ? 'Medium' : x[0].toUpperCase() + x.slice(1))).join('')}</div>
+        <div class="setrow"><span>Champion's thinking time<small>Times the hardest bot on this device, in a practice duel played out of sight</small></span><span id="benchOut" style="flex:0 0 auto;font-size:15px;color:var(--faint)">${benchText()}</span>
+          <button type="button" class="btn-d" data-do="benchbot" style="height:44px;padding:0 18px;font-size:15px" ${bench.running ? 'disabled' : ''}>${bench.n && !bench.running ? 'Test again' : 'Test'}</button></div>
         <div class="setrow"><span>Reset progress<small>Back to ${START_GP} GP, no record, and only the three starter decks (now ${profile.gp} GP · ${profile.wins} W · ${profile.losses} L · ${collected()} cards collected)</small></span>
-          <button type="button" class="btn-d" data-do="reset" style="height:44px;padding:0 18px;font-size:15px;${ui.confirmReset ? 'border-color:var(--hurt);color:var(--hurt)' : ''}">${ui.confirmReset ? 'Click again to reset' : 'Reset'}</button></div>`;
+          <button type="button" class="btn-d" data-do="reset" style="height:44px;padding:0 18px;font-size:15px;${ui.confirmReset ? 'border-color:var(--hurt);color:var(--hurt)' : ''}">${ui.confirmReset ? `${tapWord(1)} again to reset` : 'Reset'}</button></div>`;
     }
-    return `<div class="over" data-do="closemodal"><div class="panel modal" data-stop role="dialog" aria-modal="true">${body}</div></div>`;
+    return `<div class="over" data-do="closemodal"><div class="panel modal" data-stop role="dialog" aria-modal="true" style="max-height:${Math.min(960, SH() - 40)}px">${body}</div></div>`;
   }
 
   // ---------- pick a deck, pick a cape (blind), pick an opponent ----------
@@ -2710,7 +2807,7 @@ button:focus-visible, [tabindex]:focus-visible { outline: 3px solid var(--gold-p
       const key = Object.keys(kinds).find((x) => kinds[x] && kinds[x].includes(CARDS[n].kind)) || 'Other';
       kindCount[key] = (kindCount[key] || 0) + k;
     }
-    const summary = `<div class="panel" style="position:absolute;left:60px;top:640px;width:946px;height:140px;padding:18px 22px;display:flex;align-items:center;gap:24px">
+    const summary = `<div class="panel" style="flex:none;height:140px;padding:18px 22px;display:flex;align-items:center;gap:24px">
       <div style="display:flex;flex-direction:column;gap:8px;min-width:0"><span class="lbl">Materials</span><div style="display:flex;gap:10px;align-items:center">${mats.slice(0, 4).map(([m, k]) => `${ART[m] ? `<img src="${ART[m].src}" alt="${esc(m)}" title="${esc(m)}" style="height:30px;width:30px;object-fit:contain;${ART[m].mode === 'px' ? 'image-rendering:pixelated' : ''}">` : ''}<b style="font-family:var(--display);font-size:22px;color:var(--gold-hi)">${k}</b>`).join('')}</div></div>
       <div style="width:1px;height:80px;background:rgba(201,165,75,.3)"></div>
       <div style="flex:1;display:flex;flex-direction:column;gap:8px;min-width:0"><span class="lbl">${total} cards</span>
@@ -2729,7 +2826,7 @@ button:focus-visible, [tabindex]:focus-visible { outline: 3px solid var(--gold-p
         <span class="ct-nm">${esc(c)}</span><span class="ct-cond">${ic ? `<img src="${ic}" alt="">` : ''}${def.need}<small>${word}</small></span></button>`;
     };
     const cdef = CAPES[s.youCape];
-    const capeInfo = `<div class="panel" style="position:absolute;left:1060px;top:640px;width:800px;height:140px;padding:18px 24px;display:flex;align-items:center;gap:20px">
+    const capeInfo = `<div class="panel" style="flex:none;height:140px;padding:18px 24px;display:flex;align-items:center;gap:20px">
       ${AS.cape[s.youCape] ? `<img src="${AS.cape[s.youCape].src}" alt="" style="height:100px;max-width:80px;object-fit:contain">` : ''}
       <div style="display:flex;flex-direction:column;gap:6px"><span class="ttl" style="font-size:22px">${esc(s.youCape)}</span>
         <span style="font-size:17px">${esc((CAPE_HOW[cdef.what] || ((n) => `Reach ${n}`))(cdef.need))} to claim it, then wear it for ${R.RULES.cape_turns} of your turns to win.</span>
@@ -2737,38 +2834,46 @@ button:focus-visible, [tabindex]:focus-visible { outline: 3px solid var(--gold-p
     // you vs the bot
     const bd = s.botDeck === 'random' ? null : deckObj(s.botDeck);
     const bst = bd ? deckStyle(bd.name) : null;
-    const opp = ui.oppOpen ? `<div class="panel oppl" data-stop style="left:${1060 - 320}px;bottom:${1080 - 820}px">
+    const opp = ui.oppOpen ? `<div class="panel oppl" data-stop style="left:${Math.max(0, Math.min(680, SW() - 120 - 640))}px;bottom:calc(100% - 10px)">
         <button type="button" data-do="pickbot" data-v="random" aria-pressed="${s.botDeck === 'random'}"><b style="width:20px;text-align:center;color:var(--gold-hi)">?</b>Random</button>
         ${PICKABLE.map((x) => { const xs = deckStyle(x.name); return `<button type="button" data-do="pickbot" data-v="${esc(x.name)}" aria-pressed="${s.botDeck === x.name}">${ICON[xs] ? `<img src="${ICON[xs]}" alt="">` : ''}${esc(x.name)}</button>`; }).join('')}</div>` : '';
     // how good the bot is
     const lv = levelOf(s.level);
-    const levels = `<div style="margin-left:auto;display:flex;flex-direction:column;gap:8px"><span class="lbl">Bot difficulty</span>
+    const levels = `<div style="margin-left:${SW() < 1500 ? '0;flex-basis:auto' : 'auto'};display:flex;flex-direction:column;gap:8px"><span class="lbl">Bot difficulty</span>
       <div style="display:flex;gap:10px" role="group" aria-label="Bot difficulty">${LV.LEVELS.map((l) => { const pic = ART[LEVEL_ART[l.id]]; return `<button type="button" class="ct lv" data-do="picklevel" data-v="${l.id}" aria-pressed="${lv === l.id}" title="${esc(l.blurb)}">
         <div class="ct-art">${pic ? `<img src="${pic.src}" alt="">` : ''}</div><span class="ct-nm">${esc(l.name)}</span><span class="ct-cond"><small>${LEVEL_WORD[l.id]}</small></span></button>`; }).join('')}</div></div>`;
-    const vs = `<div class="panel" style="position:absolute;left:60px;top:810px;width:1800px;height:230px;padding:26px 34px;display:flex;align-items:center;gap:36px">
+    const short = SH() < 1000, narrow = SW() < 1500;     // narrow: the matchup on one row, difficulty and Start on the next
+    const tight = !narrow && SW() < 1820;                 // one row, but only just: no "VS", shorter labels
+    const vsH = narrow ? 330 : short ? 196 : 230;
+    const side = Math.max(60, Math.round((SW() - 1800) / 2));   // on an ultrawide the picker stays 1800 wide, centred
+    const vs = `<div class="panel" style="position:absolute;left:${side}px;right:${side}px;bottom:${short ? 22 : 40}px;height:${vsH}px;padding:${short ? 16 : 26}px ${tight ? 26 : 34}px;display:flex;align-items:center;gap:${narrow ? '14px 36px;flex-wrap:wrap;align-content:center' : tight ? '22px' : '36px'}">
       <div style="display:flex;align-items:center;gap:18px"><div class="av" style="box-shadow:0 0 0 4px ${FRAME[st] || FRAME.neutral}">${ICON[st] ? `<img src="${ICON[st]}" alt="">` : ''}</div>
         <div style="display:flex;flex-direction:column;gap:8px"><span class="ttl" style="font-size:30px">You</span><div style="display:flex;align-items:center;gap:10px"><span class="who" style="width:auto;padding:0 8px;background:${FRAME[st] || FRAME.neutral};color:#fff3d1">${esc(d.name.toUpperCase())}</span>${AS.cape[s.youCape] ? `<img src="${AS.cape[s.youCape].src}" alt="${esc(s.youCape)}" style="height:40px">` : ''}</div></div></div>
-      <span class="ttl" style="font-size:54px;color:var(--gold);opacity:.7">VS</span>
+      ${tight ? '' : '<span class="ttl" style="font-size:54px;color:var(--gold);opacity:.7">VS</span>'}
       <div style="display:flex;align-items:center;gap:18px"><div class="av" style="box-shadow:0 0 0 4px ${bst ? FRAME[bst] : 'var(--bot)'}">${bst && ICON[bst] ? `<img src="${ICON[bst]}" alt="">` : '<b style="font-family:var(--display);font-size:44px;color:var(--bot)">?</b>'}</div>
         <div style="display:flex;flex-direction:column;gap:8px"><span class="ttl" style="font-size:30px">${bd ? esc(bd.name) : 'Random deck'}</span>
           <div style="display:flex;align-items:center;gap:10px"><span class="who bot">BOT</span><span style="position:relative;display:inline-block"><img src="${CREST}" alt="Bot's cape, hidden" style="display:block;width:32px;height:45px;border-radius:4px"><b style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:var(--display);font-size:22px;color:var(--gold-hi);text-shadow:0 0 6px #000">?</b></span>
-            <button type="button" class="btn-d" data-do="opp" aria-expanded="${!!ui.oppOpen}" style="height:40px;padding:0 14px;font-size:14px;margin-left:6px">Change opponent ${ui.oppOpen ? '▴' : '▾'}</button></div></div></div>
+            <button type="button" class="btn-d" data-do="opp" aria-expanded="${!!ui.oppOpen}" style="height:40px;padding:0 14px;font-size:14px;margin-left:6px;white-space:nowrap" aria-label="Change opponent">${tight ? 'Change' : 'Change opponent'} ${ui.oppOpen ? '▴' : '▾'}</button></div></div></div>
       ${levels}
       <div style="margin-left:auto;display:flex;flex-direction:column;align-items:flex-end;gap:12px">
-        <button type="button" class="btn-g" data-do="start" style="width:350px;height:110px;font-size:36px">START DUEL</button>
-        <span class="lbl" style="color:var(--faint)">both capes flip face up when the duel starts</span></div></div>`;
+        <button type="button" class="btn-g" data-do="start" style="width:${tight ? 290 : 350}px;height:110px;font-size:${tight ? 32 : 36}px">START DUEL</button>
+        ${tight ? '' : '<span class="lbl" style="color:var(--faint)">both capes flip face up when the duel starts</span>'}</div>${opp}</div>`;
     return `<div class="table"></div>
       <div style="position:absolute;left:60px;top:34px;right:60px;display:flex;align-items:center;gap:20px">
         <button type="button" class="btn-d" data-do="menu" style="width:52px;height:52px" aria-label="Back to menu">${ICN.back}</button>
         <span class="ttl" style="font-size:40px">Duel vs Bot</span><span class="lbl" style="margin-left:8px">pick a deck · pick a cape blind</span>
         <span style="margin-left:auto">${gpChip(22)}</span></div>
-      <div style="position:absolute;left:60px;top:120px;display:flex;align-items:center;gap:12px"><span class="cn">1</span><span class="ttl" style="font-size:24px">Your deck</span></div>
-      <div class="scrolly" style="position:absolute;left:52px;top:162px;width:972px;height:466px;padding:8px;display:grid;grid-template-columns:repeat(6,146px);grid-auto-rows:214px;gap:16px 14px;align-content:start">${profile.decks.map(box).join('')}</div>
-      ${summary}
-      <div style="position:absolute;left:1060px;top:120px;display:flex;align-items:center;gap:12px"><span class="cn">2</span><span class="ttl" style="font-size:24px">Your cape</span>
-        <span style="display:inline-flex;align-items:center;gap:6px;margin-left:10px;padding:3px 10px;border-radius:12px;background:#1a1410;border:1px solid rgba(201,165,75,.4);font-size:12px;font-weight:800;letter-spacing:.12em;color:var(--muted)">${ICN.lock}HIDDEN FROM BOT</span></div>
-      <div style="position:absolute;left:1060px;top:170px;width:800px;display:grid;grid-template-columns:repeat(5,152px);gap:16px 10px">${capeNames.map(capeBtn).join('')}</div>
-      ${capeInfo}${vs}${opp}`;
+      <div class="${short ? 'scrolly ' : ''}pick-body" style="position:absolute;left:${side - 8}px;right:${side - 8}px;top:${short ? 100 : 112}px;bottom:${vsH + (short ? 36 : 62)}px;padding:8px;display:flex;flex-wrap:wrap;align-content:flex-start;gap:${short ? 28 : 30}px 46px">
+        <section style="flex:1 1 640px;min-width:0;display:flex;flex-direction:column;gap:12px" aria-label="Your deck">
+          <div style="height:30px;display:flex;align-items:center;gap:12px"><span class="cn">1</span><span class="ttl" style="font-size:24px">Your deck</span></div>
+          <div class="${short ? '' : 'scrolly'}" style="flex:none;height:${short ? 'auto' : '466px'};margin:0 -8px;padding:8px;display:grid;grid-template-columns:repeat(auto-fill,146px);grid-auto-rows:214px;gap:16px 14px;align-content:start">${profile.decks.map(box).join('')}</div>
+          ${summary}</section>
+        <section style="flex:0 0 800px;display:flex;flex-direction:column;gap:12px" aria-label="Your cape">
+          <div style="height:30px;display:flex;align-items:center;gap:12px"><span class="cn">2</span><span class="ttl" style="font-size:24px">Your cape</span>
+            <span style="display:inline-flex;align-items:center;gap:6px;margin-left:10px;padding:3px 10px;border-radius:12px;background:#1a1410;border:1px solid rgba(201,165,75,.4);font-size:12px;font-weight:800;letter-spacing:.12em;color:var(--muted)">${ICN.lock}HIDDEN FROM BOT</span></div>
+          <div style="display:grid;grid-template-columns:repeat(5,152px);gap:16px 10px;margin-top:8px;flex:none">${capeNames.map(capeBtn).join('')}</div>
+          <div style="flex:1;min-height:0"></div>${capeInfo}</section></div>
+      ${vs}`;
   }
 
   // ---------- the duel is over: results and GP ----------
@@ -2821,7 +2926,7 @@ button:focus-visible, [tabindex]:focus-visible { outline: 3px solid var(--gold-p
   function tutResultHTML(r) {
     const gift = r.won && !profile.tutorialPack;
     return `<div class="res"></div>
-      <div style="position:absolute;inset:0;background-image:radial-gradient(ellipse at 50% 42%,rgba(243,210,122,.28) 0%,rgba(0,0,0,0) 45%),radial-gradient(ellipse at 50% 46%,rgba(0,0,0,0) 35%,rgba(0,0,0,.72) 100%)"></div><div class="rays"></div>
+      <div style="position:absolute;inset:0;background-image:radial-gradient(ellipse at 50% 42%,rgba(243,210,122,.28) 0%,rgba(0,0,0,0) 45%),radial-gradient(ellipse at 50% 46%,rgba(0,0,0,0) 35%,rgba(0,0,0,.72) 100%)"></div>${boxed(`<div class="rays"></div>
       <div class="resin" style="position:absolute;left:0;right:0;top:110px;display:flex;flex-direction:column;align-items:center;gap:20px">
         ${EMBLEM ? `<img src="${EMBLEM}" alt="" style="width:130px;height:130px;filter:drop-shadow(0 0 20px rgba(243,210,122,.6))">` : ''}
         <span style="font-family:var(--display);font-weight:700;font-size:96px;letter-spacing:.06em;line-height:1;color:var(--gold-hi);text-shadow:0 0 40px rgba(243,210,122,.6),0 6px 0 #4d3a12">${r.won ? 'TUTORIAL COMPLETE' : 'TUTORIAL'}</span>
@@ -2829,7 +2934,7 @@ button:focus-visible, [tabindex]:focus-visible { outline: 3px solid var(--gold-p
         ${gift ? `<div style="display:flex;align-items:center;gap:16px;padding:14px 26px;border-radius:16px;background:#17240f;border:2px solid #79c25a;font-size:24px;font-weight:800;color:#b9e3a5">${ICN.packs}A free pack to start your collection</div>` : ''}</div>
       <div style="position:absolute;left:0;right:0;top:860px;display:flex;justify-content:center;gap:20px">
         ${gift ? '<button type="button" class="btn-g" data-do="tutpack" style="width:380px;height:84px;font-size:28px">Open your free pack</button>' : '<button type="button" class="btn-g" data-do="play" style="width:320px;height:84px;font-size:28px">Play vs Bot</button>'}
-        <button type="button" class="btn-d" data-do="menu" style="width:240px;height:84px;font-size:22px">Main menu</button></div>`;
+        <button type="button" class="btn-d" data-do="menu" style="width:240px;height:84px;font-size:22px">Main menu</button></div>`)}`;
   }
   function resultHTML() {
     const r = ui.result;
@@ -2869,7 +2974,7 @@ button:focus-visible, [tabindex]:focus-visible { outline: 3px solid var(--gold-p
          ${r.config && myDeck(r.config.youDeckId) ? `<button type="button" class="btn-d" data-do="edit" data-v="${esc(r.config.youDeckId)}" style="width:240px;height:80px;font-size:20px">Tune deck</button>` : ''}`;
     return `<div class="res${won ? '' : ' lose'}"></div>
       <div style="position:absolute;inset:0;background-image:radial-gradient(ellipse at 50% ${won ? 42 : 40}%,${won ? 'rgba(243,210,122,.28)' : 'rgba(156,195,230,.14)'} 0%,rgba(0,0,0,0) 45%),radial-gradient(ellipse at 50% 46%,rgba(0,0,0,0) 35%,rgba(0,0,0,.72) 100%),repeating-linear-gradient(45deg,rgba(201,165,75,.035) 0 1px,transparent 1px 22px)"></div>
-      ${won ? '<div class="rays"></div>' : ''}
+      ${boxed(`${won ? '<div class="rays"></div>' : ''}
       <div class="resin" style="position:absolute;left:0;right:0;top:90px;display:flex;flex-direction:column;align-items:center;gap:14px">
         ${EMBLEM ? `<img src="${EMBLEM}" alt="" style="width:120px;height:120px;${won ? 'filter:drop-shadow(0 0 20px rgba(243,210,122,.6))' : 'filter:grayscale(.7) brightness(.7)'}">` : ''}
         <span style="font-family:var(--display);font-weight:700;font-size:120px;letter-spacing:.08em;line-height:1;color:${won ? 'var(--gold-hi)' : '#b8c4cf'};text-shadow:${won ? '0 0 40px rgba(243,210,122,.6),0 6px 0 #4d3a12' : '0 6px 0 #1c2530'}">${title}</span>
@@ -2878,7 +2983,7 @@ button:focus-visible, [tabindex]:focus-visible { outline: 3px solid var(--gold-p
       ${deck('Your deck', r.youLp, true, !won)}${deck('Bot deck', r.botLp, false, won)}
       ${coins}${pile}${counter}
       <div style="position:absolute;left:0;right:0;top:930px;display:flex;justify-content:center;gap:20px">${buttons}
-        <button type="button" class="btn-d" data-do="menu" style="width:220px;height:80px;font-size:20px">Main menu</button></div>
+        <button type="button" class="btn-d" data-do="menu" style="width:220px;height:80px;font-size:20px">Main menu</button></div>`)}
       ${r.g ? '<button type="button" class="btn-d" data-do="seeboard" style="position:absolute;right:48px;bottom:40px;height:44px;padding:0 16px;font-size:14px">View the final board</button>' : ''}`;
   }
 
@@ -3028,13 +3133,14 @@ button:focus-visible, [tabindex]:focus-visible { outline: 3px solid var(--gold-p
     if (!myDeck(ui.deckSel)) ui.deckSel = decks.length ? decks[0].id : null;
     const d = myDeck(ui.deckSel);
     const tb = (act, icon, label, extra = '') => `<button type="button" class="btn-d" data-do="${act}" style="height:48px;padding:0 18px;font-size:15px;${extra}">${icon}${label}</button>`;
-    const tools = `<div style="position:absolute;left:60px;top:122px;display:flex;gap:12px">
+    const pw = SW() < 1500 ? 460 : 570;            // the detail panel on the right
+    const tools = `<div style="position:absolute;left:60px;top:122px;right:${pw + 94}px;display:flex;flex-wrap:wrap;gap:12px">
       ${tb('decknew', '<svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M7 1v12M1 7h12" stroke="#f3d27a" stroke-width="2.2"/></svg>', 'New')}
       ${tb('wizard', '<svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><path d="M2 16L12 6M10 4l4 4" stroke="#f3d27a" stroke-width="2" stroke-linecap="round"/><path d="M14 1v3M12.5 2.5h3M16 9v2M15 10h2M6 1v2M5 2h2" stroke="#ffe08a" stroke-width="1.4"/></svg>', 'Deck Wizard', 'border-color:var(--gold-hi);color:var(--gold-hi)')}
       ${d ? tb('deckcopy', '<svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><rect x="1" y="4" width="10" height="11" rx="1.5" fill="none" stroke="#f3d27a" stroke-width="1.8"/><rect x="5" y="1" width="10" height="11" rx="1.5" fill="#2b221b" stroke="#f3d27a" stroke-width="1.8"/></svg>', 'Copy') : ''}
       ${d ? tb('deckrename', '<svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M2 14l1-4 8-8 3 3-8 8z" fill="none" stroke="#f3d27a" stroke-width="1.8" stroke-linejoin="round"/></svg>', 'Rename') : ''}
-      ${d && decks.length > 1 ? tb('deckdel', '<svg width="14" height="16" viewBox="0 0 14 16" aria-hidden="true"><path d="M1 4h12M5 4V2h4v2M3 4l1 11h6l1-11" fill="none" stroke="#ffb4a2" stroke-width="1.8"/></svg>', ui.confirmDel ? 'Click again to delete' : 'Delete', 'border-color:#b5532f;color:#ffb4a2') : ''}</div>`;
-    const grid = `<div class="scrolly" style="position:absolute;left:60px;top:196px;width:1196px;height:860px;padding:10px 16px 20px 0;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));grid-auto-rows:390px;gap:28px;align-content:start">
+      ${d && decks.length > 1 ? tb('deckdel', '<svg width="14" height="16" viewBox="0 0 14 16" aria-hidden="true"><path d="M1 4h12M5 4V2h4v2M3 4l1 11h6l1-11" fill="none" stroke="#ffb4a2" stroke-width="1.8"/></svg>', ui.confirmDel ? `${tapWord(1)} again to delete` : 'Delete', 'border-color:#b5532f;color:#ffb4a2') : ''}</div>`;
+    const grid = `<div class="scrolly" style="position:absolute;left:60px;top:${pw < 570 && SW() < 1400 ? 256 : 196}px;right:${pw + 94}px;bottom:24px;padding:10px 16px 20px 0;display:grid;grid-template-columns:repeat(auto-fill,minmax(${pw < 570 ? 220 : 260}px,1fr));grid-auto-rows:390px;gap:28px;align-content:start">
       ${decks.map((dk) => deckTile(dk, { sel: dk.id === ui.deckSel })).join('')}
       <button type="button" data-do="decknew" style="height:390px;border-radius:12px;border:2px dashed rgba(201,165,75,.45);background:rgba(0,0,0,.2);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;color:var(--muted);font-family:var(--display);font-weight:700;font-size:20px">
         <span style="width:70px;height:70px;border-radius:50%;border:2px solid var(--gold);display:flex;align-items:center;justify-content:center"><svg width="26" height="26" viewBox="0 0 26 26" aria-hidden="true"><path d="M13 3v20M3 13h20" stroke="#f3d27a" stroke-width="3"/></svg></span>New deck</button></div>`;
@@ -3044,7 +3150,7 @@ button:focus-visible, [tabindex]:focus-visible { outline: 3px solid var(--gold-p
       const [ci, cw] = cdef ? (CAPE_COND[cdef.what] || (() => ['', '']))() : ['', ''];
       const probs = deckProblems(r);
       const nameEl = ui.renaming ? `<input id="deckname" data-input="deckname" type="text" maxlength="28" value="${esc(ui.renameText)}" aria-label="Deck name" style="width:100%;height:46px;padding:0 10px;border-radius:8px;border:1.5px solid var(--gold-hi);background:#1a1410;color:var(--parch);font-family:var(--display);font-weight:700;font-size:26px">` : `<span class="ttl" style="font-size:34px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(d.name)}</span>`;
-      detail = `<div class="panel" style="position:absolute;left:1290px;top:122px;width:570px;height:920px;padding:28px;display:flex;flex-direction:column;gap:22px">
+      detail = `<div class="panel scrolly" style="position:absolute;right:60px;top:122px;width:${pw}px;bottom:38px;padding:28px;display:flex;flex-direction:column;gap:${SH() < 1000 ? 16 : 22}px">
         <div style="display:flex;align-items:center;gap:16px">${deckIcon(d.cards, 44)}<div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:4px">${nameEl}<span class="lbl">${d.starter ? 'Starter' : 'Your deck'} · ${r.ok ? 'legal' : 'not legal yet'}</span></div>${ui.renaming ? '<button type="button" class="btn-d" data-do="renamedone" style="height:46px;padding:0 16px;font-size:15px">Save</button>' : okBadge(r.ok)}</div>
         <div style="display:flex;flex-direction:column;gap:8px"><div style="display:flex;justify-content:space-between"><span class="lbl">Cards</span><b style="font-family:var(--display);font-size:20px;color:${r.sixty ? 'var(--gold-hi)' : 'var(--hurt)'}">${r.total} / 60</b></div>
           <div style="height:14px;border-radius:7px;background:#3a2f25;overflow:hidden"><span style="display:block;width:${Math.min(100, 100 * r.total / 60)}%;height:100%;background:${r.sixty ? '#79c25a' : '#e0a64a'}"></span></div></div>
@@ -3106,25 +3212,65 @@ button:focus-visible, [tabindex]:focus-visible { outline: 3px solid var(--gold-p
     if (!e.cards[n]) delete e.cards[n];
     e.dirty = true; e.leave = false;
   }
+  // The card grid of the deck editor and the wizard, sized to the stage: as many columns and rows as fit, with
+  // the panel on the right. On a short stage the filters fold into one row with a Filters button, and the
+  // cards are drawn a little smaller so two rows still fit. A 1920x1080 stage gets the original 6 x 2.
+  function cardGridLayout(fullTop) {
+    const short = SH() < 1000, narrow = SW() < 1500;
+    const pw = SW() < 1300 ? 430 : short || narrow ? 480 : 590;
+    const lw = SW() - 160 - pw;
+    const small = short;
+    const top = short ? 166 : fullTop;
+    const pagerTop = short ? SH() - 64 : SH() - 150;
+    let ts = 0.44, cg = 36, rg = 22;                // the card's scale in its tile (a full card face is 375 x 525)
+    if (small) {                                    // three rows if they fit at a readable size, else two
+      cg = 28; rg = 18;
+      const avail = pagerTop - 14 - top;
+      for (const n of [3, 2]) { const k = ((avail + rg) / n - rg - 28) / 525; if (k >= 0.3 || n === 2) { ts = Math.min(0.36, k); break; } }
+    }
+    const tw = Math.round(375 * ts), th = Math.round(525 * ts) + (small ? 28 : 35);
+    const cols = Math.max(2, Math.floor((lw + cg) / (tw + cg)));
+    const rows = Math.max(1, Math.floor((pagerTop - 14 - top + rg) / (th + rg) + 0.02));
+    const vars = small ? `--tw:${tw}px;--th:${th}px;--ts:${ts.toFixed(3)};--ch:${Math.round(525 * ts)}px;` : '';
+    return { short, pw, lw, small, tw, cg, rg, top, pagerTop, cols, rows, per: cols * rows, px: SW() - 60 - pw, vars };
+  }
+  const chipF = (act, v, on, inner) => `<button type="button" class="chipf" data-do="${act}" data-v="${v}" aria-pressed="${on}">${inner}</button>`;
+  const searchBox = (id, ph, val, label, width) => `<label style="position:relative;${width ? `width:${width}px;flex:none` : 'flex:1'};display:block"><span class="sr">${label}</span>
+          <input id="${id}" data-input="${id}" type="search" placeholder="${ph}" value="${esc(val)}" style="width:100%;height:44px;padding:0 14px 0 42px;border-radius:10px;border:1.5px solid rgba(201,165,75,.5);background:#1a1410;color:var(--parch);font-family:var(--body);font-size:16px">
+          <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true" style="position:absolute;left:14px;top:13px"><circle cx="7.5" cy="7.5" r="5.5" fill="none" stroke="#cdbf9f" stroke-width="2"/><path d="M12 12l5 5" stroke="#cdbf9f" stroke-width="2"/></svg></label>`;
+  function pagerHTML(L, act, page, pages, note) {
+    return `<div style="position:absolute;left:60px;top:${L.pagerTop}px;width:${L.lw}px;display:flex;align-items:center;justify-content:center;gap:14px">
+        <button type="button" class="btn-d pg" data-do="${act}" data-v="-1" ${page ? '' : 'disabled style="opacity:.4"'} style="width:44px;height:44px" aria-label="Previous page"><svg width="14" height="14" viewBox="0 0 18 18" aria-hidden="true"><path d="M12 2L5 9l7 7" fill="none" stroke="#f3d27a" stroke-width="2.5"/></svg></button>
+        <span style="font-family:var(--display);font-weight:700;font-size:16px;color:var(--muted)">${page + 1} / ${pages}</span>
+        <button type="button" class="btn-d pg" data-do="${act}" data-v="1" ${page < pages - 1 ? '' : 'disabled style="opacity:.4"'} style="width:44px;height:44px" aria-label="Next page"><svg width="14" height="14" viewBox="0 0 18 18" aria-hidden="true"><path d="M6 2l7 7-7 7" fill="none" stroke="#f3d27a" stroke-width="2.5"/></svg></button>
+        ${note ? `<span class="lbl" style="position:absolute;right:0;color:var(--faint)">${note}</span>` : ''}</div>`;
+  }
+  const filterIcon = '<svg width="18" height="16" viewBox="0 0 18 16" aria-hidden="true"><path d="M1 2h16M4 8h10M7 14h4" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>';
   function editorHTML() {
     const e = ui.ed;
     const list = edList();
-    const pages = Math.max(1, Math.ceil(list.length / PER_PAGE));
+    const L = cardGridLayout(300);
+    const pages = Math.max(1, Math.ceil(list.length / L.per));
     e.page = Math.min(e.page, pages - 1);
-    const shown = list.slice(e.page * PER_PAGE, e.page * PER_PAGE + PER_PAGE);
-    const chip = (act, v, on, inner) => `<button type="button" class="chipf" data-do="${act}" data-v="${v}" aria-pressed="${on}">${inner}</button>`;
-    const filters = `<div style="position:absolute;left:60px;top:104px;width:1170px;display:flex;flex-direction:column;gap:12px">
-      <div style="display:flex;gap:12px;align-items:center">
-        <label style="position:relative;flex:1;display:block"><span class="sr">Search cards by name</span>
-          <input id="edq" data-input="edq" type="search" placeholder="Search by name" value="${esc(e.q)}" style="width:100%;height:44px;padding:0 14px 0 42px;border-radius:10px;border:1.5px solid rgba(201,165,75,.5);background:#1a1410;color:var(--parch);font-family:var(--body);font-size:16px">
-          <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true" style="position:absolute;left:14px;top:13px"><circle cx="7.5" cy="7.5" r="5.5" fill="none" stroke="#cdbf9f" stroke-width="2"/><path d="M12 12l5 5" stroke="#cdbf9f" stroke-width="2"/></svg></label>
-        <button type="button" class="chipf" data-do="edunowned" aria-pressed="${e.unowned}" style="height:44px;border-radius:10px"><svg width="30" height="18" viewBox="0 0 30 18" aria-hidden="true"><rect x="1" y="1" width="28" height="16" rx="8" fill="#1a1410"/><circle cx="${e.unowned ? 21 : 9}" cy="9" r="6" fill="${e.unowned ? '#f3d27a' : '#8f8268'}"/></svg>Show unowned</button></div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center"><span class="lbl" style="width:52px">Style</span>
+    const shown = list.slice(e.page * L.per, e.page * L.per + L.per);
+    const chip = chipF;
+    const nOff = (4 - e.styles.size) + (4 - e.rars.size) + (e.type === 'all' ? 0 : 1);
+    const filterRows = `<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center"><span class="lbl" style="width:52px">Style</span>
         ${['melee', 'ranged', 'magic'].map((s) => chip('edstyle', s, e.styles.has(s), `${ICON[s] ? `<img src="${ICON[s]}" alt="">` : ''}${S[s]}`)).join('')}${chip('edstyle', 'neutral', e.styles.has('neutral'), 'Neutral')}
         <span style="width:1px;height:26px;background:rgba(201,165,75,.3);margin:0 6px"></span><span class="lbl" style="width:60px">Rarity</span>
         ${['C', 'U', 'R', 'L'].map((r) => chip('edrar', r, e.rars.has(r), `${rarDot(r)}${r}`)).join('')}
-        <span style="margin-left:auto;font-size:14px;font-weight:800;color:var(--muted)">${list.length} card${list.length === 1 ? '' : 's'}</span></div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center"><span class="lbl" style="width:52px">Type</span>${Object.entries(TYPES).map(([k, [label]]) => chip('edtype', k, e.type === k, esc(label))).join('')}</div></div>`;
+        ${L.short ? '' : `<span style="margin-left:auto;font-size:14px;font-weight:800;color:var(--muted)">${list.length} card${list.length === 1 ? '' : 's'}</span>`}</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center"><span class="lbl" style="width:52px">Type</span>${Object.entries(TYPES).map(([k, [label]]) => chip('edtype', k, e.type === k, esc(label))).join('')}</div>`;
+    const unownedBtn = `<button type="button" class="chipf" data-do="edunowned" aria-pressed="${e.unowned}" style="height:44px;border-radius:10px"><svg width="30" height="18" viewBox="0 0 30 18" aria-hidden="true"><rect x="1" y="1" width="28" height="16" rx="8" fill="#1a1410"/><circle cx="${e.unowned ? 21 : 9}" cy="9" r="6" fill="${e.unowned ? '#f3d27a' : '#8f8268'}"/></svg>${L.short ? 'Unowned' : 'Show unowned'}</button>`;
+    const filters = L.short ? `<div style="position:absolute;left:60px;top:100px;width:${L.lw}px;display:flex;gap:12px;align-items:center">
+        ${searchBox('edq', 'Search by name', e.q, 'Search cards by name')}
+        <button type="button" class="chipf" data-do="edfilt" aria-pressed="${!!e.filtOpen}" aria-expanded="${!!e.filtOpen}" style="height:44px;border-radius:10px">${filterIcon}Filters${nOff ? ` <b style="font-family:var(--display);color:var(--gold-hi)">${nOff}</b>` : ''}</button>${unownedBtn}
+        <span style="font-size:14px;font-weight:800;color:var(--muted);white-space:nowrap">${list.length} card${list.length === 1 ? '' : 's'}</span>
+        ${e.filtOpen ? `<div class="panel fpop" data-stop style="position:absolute;left:0;top:56px;z-index:30;width:${Math.min(L.lw, 1170)}px;padding:16px 18px;display:flex;flex-direction:column;gap:12px">${filterRows}
+          <button type="button" class="btn-d" data-do="edfilt" style="align-self:flex-end;height:44px;padding:0 20px;font-size:15px">Done</button></div>` : ''}</div>`
+      : `<div style="position:absolute;left:60px;top:104px;width:${L.lw}px;display:flex;flex-direction:column;gap:12px">
+      <div style="display:flex;gap:12px;align-items:center">${searchBox('edq', 'Search by name', e.q, 'Search cards by name')}${unownedBtn}</div>
+      ${filterRows}</div>`;
     const tile = (n) => {
       const have = owned(n), inDeck = e.cards[n] || 0, room = capOf(n, e.cards);
       const dim = have <= 0;
@@ -3133,13 +3279,9 @@ button:focus-visible, [tabindex]:focus-visible { outline: 3px solid var(--gold-p
         <div class="cc-ct"><span>DECK <b>${inDeck}</b></span><span>OWNED <b>${have === Infinity ? '∞' : have}</b></span></div>
         ${inDeck ? `<button type="button" class="cc-minus" data-do="edrem" data-v="${esc(n)}" aria-label="Remove one ${esc(n)}">−</button>` : ''}</div>`;
     };
-    const grid = `<div style="position:absolute;left:60px;top:300px;width:1170px;display:grid;grid-template-columns:repeat(6,165px);column-gap:36px;row-gap:22px">${shown.map(tile).join('')}
+    const grid = `<div class="ccg${L.small ? ' small' : ''}" style="${L.vars}position:absolute;left:60px;top:${L.top}px;width:${L.lw}px;display:grid;grid-template-columns:repeat(${L.cols},${L.tw}px);column-gap:${L.cg}px;row-gap:${L.rg}px">${shown.map(tile).join('')}
       ${shown.length ? '' : '<div style="grid-column:1/-1;padding:120px 0;text-align:center;font-size:20px;color:var(--faint)">No cards match these filters.</div>'}</div>
-      <div style="position:absolute;left:60px;top:930px;width:1170px;display:flex;align-items:center;justify-content:center;gap:14px">
-        <button type="button" class="btn-d" data-do="edpage" data-v="-1" ${e.page ? '' : 'disabled style="opacity:.4"'} style="width:44px;height:44px" aria-label="Previous page"><svg width="14" height="14" viewBox="0 0 18 18" aria-hidden="true"><path d="M12 2L5 9l7 7" fill="none" stroke="#f3d27a" stroke-width="2.5"/></svg></button>
-        <span style="font-family:var(--display);font-weight:700;font-size:16px;color:var(--muted)">${e.page + 1} / ${pages}</span>
-        <button type="button" class="btn-d" data-do="edpage" data-v="1" ${e.page < pages - 1 ? '' : 'disabled style="opacity:.4"'} style="width:44px;height:44px" aria-label="Next page"><svg width="14" height="14" viewBox="0 0 18 18" aria-hidden="true"><path d="M6 2l7 7-7 7" fill="none" stroke="#f3d27a" stroke-width="2.5"/></svg></button>
-        <span class="lbl" style="position:absolute;right:0;color:var(--faint)">click or drag to add · right-click to remove</span></div>`;
+      ${pagerHTML(L, 'edpage', e.page, pages, L.short ? '' : TOUCH() ? 'tap or drag to add · hold to read a card' : 'click or drag to add · right-click to remove')}`;
     // the deck
     const r = deckRules(e.cards), bars = deckBars(e.cards, 22), warn = missingMats(e.cards);
     const check = (ok, label) => `<span style="display:flex;align-items:center;gap:6px;padding:6px 8px;border-radius:8px;background:${ok ? '#17240f' : '#3a1712'};color:${ok ? '#b9e3a5' : '#ffb4a2'}">${ok ? '<svg width="14" height="14" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8.5l3.5 3.5L13 4" fill="none" stroke="#79c25a" stroke-width="2.5"/></svg>' : '<svg width="14" height="14" viewBox="0 0 18 18" aria-hidden="true"><path d="M5 5l8 8M13 5l-8 8" stroke="#ff9b85" stroke-width="2.5"/></svg>'}${label}</span>`;
@@ -3154,7 +3296,7 @@ button:focus-visible, [tabindex]:focus-visible { outline: 3px solid var(--gold-p
       <span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(warn[0][0])} ×${warn[0][1]} needs ${esc(warn[0][2].join(' + '))}: <span style="color:var(--hurt)">none in deck</span></span>${warn.length > 1 ? `<span style="color:var(--muted)">+${warn.length - 1} more</span>` : ''}</div>` : '';
     const capeList = e.capeOpen ? `<div class="panel" data-stop style="position:absolute;left:0;bottom:64px;width:100%;padding:10px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;z-index:5">${Object.keys(CAPES).map((c) => `<button type="button" class="opt" data-do="edcape" data-v="${esc(c)}" style="${c === e.cape ? 'border-color:var(--gold-hi)' : ''}"><b style="display:flex;align-items:center;gap:8px">${AS.cape[c] ? `<img src="${AS.cape[c].src}" alt="" style="height:26px;width:20px;object-fit:contain">` : ''}${esc(c)}</b></button>`).join('')}</div>` : '';
     const saveNote = !e.dirty ? 'Saved' : r.ok ? 'Ready to duel' : deckProblems(r)[0] + ' (you can still save it)';
-    const panel = `<div class="panel" style="position:absolute;left:1270px;top:104px;width:590px;height:946px;padding:20px 22px;display:flex;flex-direction:column;gap:14px">
+    const panel = `<div class="panel" style="position:absolute;left:${L.px}px;top:${L.short ? 96 : 104}px;width:${L.pw}px;bottom:${L.short ? 20 : 30}px;padding:${L.short ? '16px 18px' : '20px 22px'};display:flex;flex-direction:column;gap:${L.short ? 10 : 14}px">
       <div style="display:flex;align-items:center;gap:12px">${deckIcon(e.cards, 34)}<label style="flex:1"><span class="sr">Deck name</span><input id="edname" data-input="edname" type="text" maxlength="28" value="${esc(e.name)}" style="width:100%;height:42px;padding:0 10px;border-radius:8px;border:1px solid rgba(201,165,75,.35);background:transparent;color:var(--gold-hi);font-family:var(--display);font-weight:700;font-size:24px"></label>${okBadge(r.ok, 34)}</div>
       <div style="display:flex;flex-direction:column;gap:6px"><div style="display:flex;justify-content:space-between;align-items:baseline"><span class="lbl">Cards</span><span style="font-family:var(--display);font-weight:700;font-size:22px;color:${r.sixty ? 'var(--gold-hi)' : 'var(--hurt)'}">${r.total}<span style="color:var(--faint);font-size:16px"> / 60</span></span></div>
         <div style="position:relative;height:14px;border-radius:7px;background:#3a2f25;overflow:hidden"><span style="display:block;width:${Math.min(100, 100 * r.total / 60)}%;height:100%;background:${barCol}"></span></div></div>
@@ -3162,7 +3304,7 @@ button:focus-visible, [tabindex]:focus-visible { outline: 3px solid var(--gold-p
       ${warnRow}
       <div style="display:flex;flex-direction:column;gap:6px"><span class="lbl">Materials vs rest</span>${bars.mats}<div style="display:flex;gap:12px;font-size:12px;font-weight:800;color:var(--muted)">${bars.matLegend}</div></div>
       <div style="display:flex;flex-direction:column;gap:6px"><span class="lbl">Style</span>${bars.style}</div>
-      <div class="scrolly dropdeck" data-drop="deck" style="flex:1;min-height:0;display:flex;flex-direction:column;gap:1px;padding-top:4px;border-top:1px solid rgba(201,165,75,.25)">${rows || '<div style="padding:40px 10px;text-align:center;color:var(--faint);font-size:16px">Click cards on the left, or drag them here.</div>'}</div>
+      <div class="scrolly dropdeck" data-drop="deck" style="flex:1;min-height:0;display:flex;flex-direction:column;gap:1px;padding-top:4px;border-top:1px solid rgba(201,165,75,.25)">${rows || `<div style="padding:40px 10px;text-align:center;color:var(--faint);font-size:16px">${tapWord(1)} cards on the left, or drag them here.</div>`}</div>
       <div style="position:relative;display:flex;align-items:center;gap:12px;padding-top:10px;border-top:1px solid rgba(201,165,75,.25)">${capeList}
         ${AS.cape[e.cape] ? `<img src="${AS.cape[e.cape].src}" alt="" style="height:52px;max-width:44px;object-fit:contain">` : ''}
         <button type="button" data-do="edcapes" style="display:flex;flex-direction:column;align-items:flex-start;background:none;border:0;padding:0;text-align:left"><span class="lbl" style="font-size:10px">Suggested cape · not one of the 60</span><span style="font-family:var(--display);font-weight:700;font-size:17px;color:var(--gold-hi)">${esc(e.cape)} ${e.capeOpen ? '▴' : '▾'}</span></button>
@@ -3219,17 +3361,22 @@ button:focus-visible, [tabindex]:focus-visible { outline: 3px solid var(--gold-p
       <span class="ttl" style="font-size:36px">Deck Wizard</span><span class="lbl">${w.state === 'result' ? 'Your new deck' : 'Pick up to 2 cards to build around'}</span><span style="margin-left:auto">${gpChip(22)}</span></div>`;
     if (w.state === 'result') return `<div class="table"></div>${back}${wizResultHTML()}`;
     const list = wizList();
-    const pages = Math.max(1, Math.ceil(list.length / PER_PAGE));
+    const L = cardGridLayout(250);
+    const pages = Math.max(1, Math.ceil(list.length / L.per));
     w.page = Math.min(w.page, pages - 1);
-    const shown = list.slice(w.page * PER_PAGE, w.page * PER_PAGE + PER_PAGE);
-    const chip = (act, v, on, inner) => `<button type="button" class="chipf" data-do="${act}" data-v="${v}" aria-pressed="${on}">${inner}</button>`;
+    const shown = list.slice(w.page * L.per, w.page * L.per + L.per);
+    const chip = chipF;
     const busy = w.state === 'building';
-    const filters = `<div style="position:absolute;left:60px;top:104px;width:1170px;display:flex;flex-direction:column;gap:12px">
-      <label style="position:relative;display:block"><span class="sr">Search your cards by name</span>
-        <input id="wizq" data-input="wizq" type="search" placeholder="Search your cards" value="${esc(w.q)}" style="width:100%;height:44px;padding:0 14px 0 42px;border-radius:10px;border:1.5px solid rgba(201,165,75,.5);background:#1a1410;color:var(--parch);font-family:var(--body);font-size:16px">
-        <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true" style="position:absolute;left:14px;top:13px"><circle cx="7.5" cy="7.5" r="5.5" fill="none" stroke="#cdbf9f" stroke-width="2"/><path d="M12 12l5 5" stroke="#cdbf9f" stroke-width="2"/></svg></label>
-      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center"><span class="lbl" style="width:52px">Type</span>${Object.entries(TYPES).filter(([k]) => k !== 'materials').map(([k, [label]]) => chip('wiztype', k, w.type === k, esc(label))).join('')}
-        <span style="margin-left:auto;font-size:14px;font-weight:800;color:var(--muted)">${list.length} card${list.length === 1 ? '' : 's'} you own</span></div></div>`;
+    const count = `<span style="${L.short ? '' : 'margin-left:auto;'}font-size:14px;font-weight:800;color:var(--muted);white-space:nowrap">${list.length} card${list.length === 1 ? '' : 's'} you own</span>`;
+    const typeRow = `<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center"><span class="lbl" style="width:52px">Type</span>${Object.entries(TYPES).filter(([k]) => k !== 'materials').map(([k, [label]]) => chip('wiztype', k, w.type === k, esc(label))).join('')}
+        ${L.short ? '' : count}</div>`;
+    const filters = L.short ? `<div style="position:absolute;left:60px;top:100px;width:${L.lw}px;display:flex;gap:12px;align-items:center">
+        ${searchBox('wizq', 'Search your cards', w.q, 'Search your cards by name')}
+        <button type="button" class="chipf" data-do="wizfilt" aria-pressed="${!!w.filtOpen}" aria-expanded="${!!w.filtOpen}" style="height:44px;border-radius:10px">${filterIcon}${w.type === 'all' ? 'Type' : esc(TYPES[w.type][0])}</button>${count}
+        ${w.filtOpen ? `<div class="panel fpop" data-stop style="position:absolute;left:0;top:56px;z-index:30;width:${Math.min(L.lw, 1170)}px;padding:16px 18px;display:flex;flex-direction:column;gap:12px">${typeRow}</div>` : ''}</div>`
+      : `<div style="position:absolute;left:60px;top:104px;width:${L.lw}px;display:flex;flex-direction:column;gap:12px">
+      ${searchBox('wizq', 'Search your cards', w.q, 'Search your cards by name')}
+      ${typeRow}</div>`;
     const tile = (n) => {
       const k = w.focus.indexOf(n);
       return `<div class="cc${k >= 0 ? ' cc-focus' : ''}" data-do="wizpick" data-v="${esc(n)}" data-zoom="${esc(n)}" role="button" tabindex="0" aria-pressed="${k >= 0}" aria-label="${esc(n)}${k >= 0 ? ', chosen' : ''}">
@@ -3237,12 +3384,9 @@ button:focus-visible, [tabindex]:focus-visible { outline: 3px solid var(--gold-p
         <div class="cc-ct"><span>OWNED <b>${owned(n)}</b></span>${k >= 0 ? `<span style="color:var(--gold-hi)">FOCUS <b>${k + 1}</b></span>` : ''}</div>
         ${k >= 0 ? `<span class="wiz-pin">${k + 1}</span>` : ''}</div>`;
     };
-    const grid = `<div style="position:absolute;left:60px;top:250px;width:1170px;display:grid;grid-template-columns:repeat(6,165px);column-gap:36px;row-gap:22px">${shown.map(tile).join('')}
+    const grid = `<div class="ccg${L.small ? ' small' : ''}" style="${L.vars}position:absolute;left:60px;top:${L.top}px;width:${L.lw}px;display:grid;grid-template-columns:repeat(${L.cols},${L.tw}px);column-gap:${L.cg}px;row-gap:${L.rg}px">${shown.map(tile).join('')}
       ${shown.length ? '' : '<div style="grid-column:1/-1;padding:120px 0;text-align:center;font-size:20px;color:var(--faint)">No cards match.</div>'}</div>
-      <div style="position:absolute;left:60px;top:880px;width:1170px;display:flex;align-items:center;justify-content:center;gap:14px">
-        <button type="button" class="btn-d" data-do="wizpage" data-v="-1" ${w.page ? '' : 'disabled style="opacity:.4"'} style="width:44px;height:44px" aria-label="Previous page"><svg width="14" height="14" viewBox="0 0 18 18" aria-hidden="true"><path d="M12 2L5 9l7 7" fill="none" stroke="#f3d27a" stroke-width="2.5"/></svg></button>
-        <span style="font-family:var(--display);font-weight:700;font-size:16px;color:var(--muted)">${w.page + 1} / ${pages}</span>
-        <button type="button" class="btn-d" data-do="wizpage" data-v="1" ${w.page < pages - 1 ? '' : 'disabled style="opacity:.4"'} style="width:44px;height:44px" aria-label="Next page"><svg width="14" height="14" viewBox="0 0 18 18" aria-hidden="true"><path d="M6 2l7 7-7 7" fill="none" stroke="#f3d27a" stroke-width="2.5"/></svg></button></div>`;
+      ${pagerHTML({ ...L, pagerTop: L.short ? L.pagerTop : SH() - 200 }, 'wizpage', w.page, pages, '')}`;
     const slot = (k) => {
       const n = w.focus[k];
       if (!n) return `<div class="wiz-slot empty"><span class="wiz-num">${k + 1}</span><span>${k === 0 ? 'Pick a card to build around' : 'Optional: a second card'}</span></div>`;
@@ -3251,7 +3395,7 @@ button:focus-visible, [tabindex]:focus-visible { outline: 3px solid var(--gold-p
         <button type="button" class="btn-d" data-do="wizpick" data-v="${esc(n)}" aria-label="Remove ${esc(n)}" style="width:40px;height:40px">✕</button></div>`;
     };
     const styles = new Set(w.focus.map((n) => WIZ && WIZ.styleOf(n)).filter(Boolean));
-    const panel = `<div class="panel" style="position:absolute;left:1270px;top:104px;width:590px;height:946px;padding:26px;display:flex;flex-direction:column;gap:18px">
+    const panel = `<div class="panel${L.short ? ' scrolly' : ''}" style="position:absolute;left:${L.px}px;top:${L.short ? 96 : 104}px;width:${L.pw}px;bottom:${L.short ? 20 : 30}px;padding:${L.short ? 20 : 26}px;display:flex;flex-direction:column;gap:${L.short ? 12 : 18}px">
       <span class="lbl">Build around</span>${slot(0)}${slot(1)}
       ${styles.size > 1 ? '<div class="wiz-note">These cards fight in different styles. The wizard will mix them, but a two-style deck splits its materials and usually plays weaker than one that sticks to a style.</div>' : ''}
       ${w.fail ? '<div class="wiz-note" style="border-color:var(--hurt);color:#ffb4a2">The wizard couldn\'t make a legal deck around those cards from what you own. Try a different card.</div>' : ''}
@@ -3277,8 +3421,9 @@ button:focus-visible, [tabindex]:focus-visible { outline: 3px solid var(--gold-p
     const pct = Math.round(100 * r.rate), bars = deckBars(r.cards, 22);
     const verdict = pct >= 55 ? ['Strong', '#79c25a'] : pct >= 42 ? ['Solid', 'var(--gold-hi)'] : ['Rough', '#e0a64a'];
     const cdef = CAPES[r.cape];
-    return `<div class="panel wizlist" style="position:absolute;left:60px;top:104px;width:1170px;height:946px;padding:28px 30px;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:26px;align-content:start;overflow:hidden">${cols}</div>
-      <div class="panel" style="position:absolute;left:1270px;top:104px;width:590px;height:946px;padding:26px;display:flex;flex-direction:column;gap:18px">
+    const L = cardGridLayout(250);
+    return `<div class="panel wizlist${L.short ? ' scrolly' : ''}" style="position:absolute;left:60px;top:${L.short ? 96 : 104}px;width:${L.lw}px;bottom:${L.short ? 20 : 30}px;padding:28px 30px;display:grid;grid-template-columns:repeat(${L.lw < 1000 ? 2 : 4},minmax(0,1fr));gap:26px;align-content:start;overflow-x:hidden;${L.short ? '' : 'overflow-y:hidden'}">${cols}</div>
+      <div class="panel${L.short ? ' scrolly' : ''}" style="position:absolute;left:${L.px}px;top:${L.short ? 96 : 104}px;width:${L.pw}px;bottom:${L.short ? 20 : 30}px;padding:${L.short ? 20 : 26}px;display:flex;flex-direction:column;gap:${L.short ? 12 : 18}px">
         <div style="display:flex;align-items:center;gap:12px">${deckIcon(r.cards, 40)}<label style="flex:1"><span class="sr">Deck name</span><input id="wizname" data-input="wizname" type="text" maxlength="28" value="${esc(w.name)}" style="width:100%;height:46px;padding:0 10px;border-radius:8px;border:1.5px solid rgba(201,165,75,.5);background:#1a1410;color:var(--gold-hi);font-family:var(--display);font-weight:700;font-size:26px"></label>${okBadge(deckRules(r.cards).ok, 38)}</div>
         <div style="display:flex;align-items:center;gap:18px;padding:16px 18px;border-radius:12px;background:#1a1410;border:1.5px solid rgba(201,165,75,.4)">
           <div style="position:relative;width:96px;height:96px;flex:none;border-radius:50%;background:conic-gradient(${verdict[1]} ${pct * 3.6}deg,#3a2f25 0)"><div style="position:absolute;inset:9px;border-radius:50%;background:#1a1410;display:flex;align-items:center;justify-content:center;font-family:var(--display);font-weight:700;font-size:30px;color:${verdict[1]}">${pct}%</div></div>
@@ -3322,13 +3467,23 @@ button:focus-visible, [tabindex]:focus-visible { outline: 3px solid var(--gold-p
       : `<div style="display:flex;align-items:center;gap:20px;flex-wrap:wrap"><button type="button" class="btn-g" disabled style="width:420px;height:110px;font-size:34px;gap:16px;opacity:.55;cursor:not-allowed;filter:grayscale(.4)">BUY<span style="display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border-radius:30px;background:rgba(0,0,0,.35);font-size:26px">${PACK_COST}</span></button>
           <span style="display:inline-flex;align-items:center;gap:8px;padding:6px 14px;border-radius:20px;background:#3a1712;border:1.5px solid var(--hurt);color:#ffb4a2;font-weight:800;font-size:16px">${ICON.gp50 ? `<img src="${ICON.gp50}" alt="" style="width:30px;height:20px;object-fit:contain;filter:grayscale(.4)">` : ''}Need ${PACK_COST - profile.gp} more</span>
           <span style="font-size:14px;font-weight:800;color:var(--faint)">WIN = +${PAY.win} · LOSS = +${PAY.loss}</span></div>`;
-    return `<div class="table"></div>${topBar('Packs', `${profile.packs || 0} opened`, 'menu')}
+    return `<div class="table"></div>${boxed(`
       <div style="position:absolute;left:180px;top:180px;width:640px;height:800px;border-radius:50%;background:radial-gradient(ellipse,rgba(243,210,122,.22) 0%,transparent 62%)"></div>
       <div class="pkwrap" style="position:absolute;left:300px;top:190px;width:400px;height:640px;transform:rotate(-4deg);filter:drop-shadow(0 30px 40px rgba(0,0,0,.8))">${packArt(400, 640)}</div>
       <div style="position:absolute;left:860px;top:170px;width:1000px;display:flex;flex-direction:column;gap:30px">
         <div style="display:flex;flex-direction:column;gap:8px"><span class="lbl">Booster pack</span><span class="ttl" style="font-size:56px">Set 1</span></div>
         ${inside}${buy}
-        ${profile.lastPack ? '<button type="button" class="btn-d" data-do="lastpack" style="align-self:flex-start;height:44px;padding:0 16px;font-size:14px">See your last pack</button>' : ''}</div>`;
+        ${profile.lastPack ? '<button type="button" class="btn-d" data-do="lastpack" style="align-self:flex-start;height:44px;padding:0 16px;font-size:14px">See your last pack</button>' : ''}</div>`)}${topBar('Packs', `${profile.packs || 0} opened`, 'menu')}`;
+  }
+
+  // ---------- show-off screens (packs, pack opening, pack summary, results) ----------
+  // These are pictures composed on a 1920x1080 canvas. On any other stage shape the canvas is centred and
+  // shrunk to fit (never enlarged), while the background still fills the whole screen.
+  function designBox() { const k = Math.min(1, SW() / 1920, SH() / 1080); return { k, x: (SW() - 1920 * k) / 2, y: (SH() - 1080 * k) / 2 }; }
+  function boxed(html) {
+    const B = designBox();
+    if (B.k === 1 && !B.x && !B.y) return html;
+    return `<div class="dbox" style="position:absolute;left:${B.x.toFixed(1)}px;top:${B.y.toFixed(1)}px;width:1920px;height:1080px;transform:scale(${B.k.toFixed(4)});transform-origin:0 0">${html}</div>`;
   }
 
   // ---------- Opening a pack ----------
@@ -3359,15 +3514,15 @@ button:focus-visible, [tabindex]:focus-visible { outline: 3px solid var(--gold-p
     const wrapper = P.stage === 'tear' ? `<div class="pkwrap tearing" style="position:absolute;left:760px;top:220px;width:400px;height:640px">${packArt(400, 640)}<div class="pk-strip">${packArt(400, 640)}</div></div>`
       : `<div style="position:absolute;left:70px;top:120px;width:150px;height:240px;transform:rotate(-16deg);opacity:.8;filter:drop-shadow(0 12px 16px rgba(0,0,0,.7))"><div class="pk-torn">${packArt(150, 240)}</div></div>`;
     return `<div class="table"></div><div style="position:absolute;inset:0;background-image:radial-gradient(ellipse at 50% 55%,rgba(243,210,122,.12) 0%,transparent 55%),radial-gradient(ellipse at 50% 46%,rgba(0,0,0,0) 35%,rgba(0,0,0,.7) 100%)"></div>
-      ${dim}<div style="position:absolute;left:0;right:0;top:46px;display:flex;flex-direction:column;align-items:center;gap:14px"><span class="ttl" style="font-size:40px">Set 1 Booster</span>
+      ${dim}${boxed(`<div style="position:absolute;left:0;right:0;top:46px;display:flex;flex-direction:column;align-items:center;gap:14px"><span class="ttl" style="font-size:40px">Set 1 Booster</span>
         <div style="display:flex;gap:8px" aria-label="${P.up.filter(Boolean).length} of ${n} revealed">${pips}</div></div>
       ${wrapper}${P.stage === 'tear' ? '' : cards}
       ${P.stage === 'tear' ? '' : `<div style="position:absolute;left:0;right:0;top:900px;display:flex;justify-content:center;align-items:center;gap:22px">
         ${allUp ? '<button type="button" class="btn-g" data-do="packsum" style="width:300px;height:76px;font-size:26px">See summary</button>'
-          : `<span class="lbl" style="color:var(--faint)">Click a card to flip</span><button type="button" class="btn-d" data-do="revealall" style="width:240px;height:70px;font-size:22px">Reveal all</button>
+          : `<span class="lbl" style="color:var(--faint)">${tapWord(1)} a card to flip</span><button type="button" class="btn-d" data-do="revealall" style="width:240px;height:70px;font-size:22px">Reveal all</button>
              <button type="button" class="btn-d" data-do="packsum" style="width:200px;height:70px;font-size:18px;border-color:rgba(201,165,75,.45);color:var(--muted)">Skip to summary</button>`}</div>
       <div style="position:absolute;left:0;right:0;top:1010px;display:flex;justify-content:center;gap:28px;font-size:13px;font-weight:800;letter-spacing:.12em;color:var(--muted)">
-        ${['C', 'U', 'R', 'L'].map((r) => `<span style="display:inline-flex;align-items:center;gap:8px">${rarDot(r)}${RAR[r].name.toUpperCase()}</span>`).join('')}</div>`}`;
+        ${['C', 'U', 'R', 'L'].map((r) => `<span style="display:inline-flex;align-items:center;gap:8px">${rarDot(r)}${RAR[r].name.toUpperCase()}</span>`).join('')}</div>`}`)}`;
   }
   async function startPack(cards) {
     sfx('coins', { n: 5 });
@@ -3400,7 +3555,8 @@ button:focus-visible, [tabindex]:focus-visible { outline: 3px solid var(--gold-p
   function burst(k, rar) {                       // sparks off a Rare or Legendary as it turns over
     if (calm()) return;
     const { left, top } = fanPos(k, ui.pack.cards.length);
-    const cx = left + 75, cy = top + 105, n = rar === 'L' ? 22 : 12;
+    const B = designBox();
+    const cx = B.x + (left + 75) * B.k, cy = B.y + (top + 105) * B.k, n = rar === 'L' ? 22 : 12;
     const col = rar === 'L' ? '#ffd28a' : '#d9b6ff';
     for (let j = 0; j < n; j++) {
       const a = (j / n) * Math.PI * 2 + Math.random() * 0.4, dist = 120 + Math.random() * (rar === 'L' ? 160 : 90);
@@ -3425,7 +3581,7 @@ button:focus-visible, [tabindex]:focus-visible { outline: 3px solid var(--gold-p
     const tile = (c) => `<div class="ps" style="--rar:${RAR[c.rar].col}" data-zoom="${esc(c.name)}"><div class="ps-c"${c.rar === 'L' ? ' style="box-shadow:0 0 0 3px #ffc27a,0 0 34px 10px rgba(255,157,46,.55),0 12px 20px rgba(0,0,0,.6)"' : ''}>${cardFace(c.name)}</div>
       ${c.isNew ? '<span class="tag-new" style="left:50%;top:-14px;transform:translateX(-50%)">NEW</span>' : `<span class="own" style="right:6px;top:6px">×${c.have}</span>`}<div class="ps-r"></div></div>`;
     const can = profile.gp >= PACK_COST;
-    return `<div class="table"></div>
+    return `<div class="table"></div>${boxed(`
       <div style="position:absolute;left:0;right:0;top:46px;display:flex;flex-direction:column;align-items:center;gap:16px"><span class="ttl" style="font-size:44px">Pack Summary</span>
         <div style="display:flex;gap:14px">
           <span style="display:inline-flex;align-items:center;gap:8px;padding:6px 16px;border-radius:20px;background:#17240f;border:1.5px solid #79c25a;font-weight:800;font-size:16px;color:#b9e3a5"><b style="font-family:var(--display);font-size:22px;color:#fff">${fresh}</b>NEW</span>
@@ -3436,7 +3592,7 @@ button:focus-visible, [tabindex]:focus-visible { outline: 3px solid var(--gold-p
         <button type="button" class="btn-g" data-do="buypack" ${can ? '' : 'disabled'} style="width:380px;height:90px;font-size:28px;gap:14px;${can ? '' : 'opacity:.55;cursor:not-allowed;filter:grayscale(.4)'}">Open another<span style="display:inline-flex;align-items:center;gap:6px;padding:4px 12px;border-radius:20px;background:rgba(0,0,0,.35);font-size:20px">${ICON.gp50 ? `<img src="${ICON.gp50}" alt="" style="width:32px;height:20px;object-fit:contain">` : ''}${PACK_COST}</span></button>
         <button type="button" class="btn-d" data-do="decks" style="width:280px;height:90px;font-size:24px">Go to decks</button>
         <button type="button" class="btn-d" data-do="menu" style="width:200px;height:90px;font-size:20px">Main menu</button>
-        <span style="margin-left:10px">${gpChip(22)}</span></div>`;
+        <span style="margin-left:10px">${gpChip(22)}</span></div>`)}`;
   }
 
   // ---------- dragging a card from the collection into the deck ----------
@@ -3461,7 +3617,7 @@ button:focus-visible, [tabindex]:focus-visible { outline: 3px solid var(--gold-p
       const dk = $('.dropdeck'); if (dk) dk.classList.add('drop-on');
     }
     d.ghost.style.left = `${p.x - 82}px`; d.ghost.style.top = `${p.y - 115}px`;
-    const over = !!(document.elementFromPoint(e.clientX, e.clientY) || { closest: () => null }).closest('.panel .dropdeck, [data-drop="deck"]') || p.x > 1270;
+    const over = !!(document.elementFromPoint(e.clientX, e.clientY) || { closest: () => null }).closest('.panel .dropdeck, [data-drop="deck"]') || p.x > cardGridLayout(300).px;
     const dk = $('.dropdeck'); if (dk) dk.classList.toggle('drop-hot', over);
     d.over = over;
   });
@@ -3711,21 +3867,21 @@ button:focus-visible, [tabindex]:focus-visible { outline: 3px solid var(--gold-p
   function runSweep(old, board, dir) {
     sfx('sweep', { dir });
     const ease = 'cubic-bezier(.7,0,.3,1)', dur = 560;
-    sweepAnims.push(old.animate([{ transform: 'translateX(0)', filter: 'brightness(1)' }, { transform: `translateX(${-1920 * dir}px)`, filter: 'brightness(.55)' }], { duration: dur, easing: ease, fill: 'forwards' }));
-    sweepAnims.push(board.animate([{ transform: `translateX(${1920 * dir}px)` }, { transform: 'translateX(0)' }], { duration: dur, easing: ease }));
+    sweepAnims.push(old.animate([{ transform: 'translateX(0)', filter: 'brightness(1)' }, { transform: `translateX(${-SW() * dir}px)`, filter: 'brightness(.55)' }], { duration: dur, easing: ease, fill: 'forwards' }));
+    sweepAnims.push(board.animate([{ transform: `translateX(${SW() * dir}px)` }, { transform: 'translateX(0)' }], { duration: dur, easing: ease }));
     const a0 = sweepAnims[0];
     a0.finished.then(() => old.remove(), () => old.remove());
     // the contents (not the backdrop) arrive in a quick cascade once the push is nearly done
     let k = 0;
     for (const el of board.children) {
-      if (el.classList.contains('table') || (el.offsetWidth >= 1800 && el.offsetHeight >= 1000) || el.classList.contains('over')) continue;
+      if (el.classList.contains('table') || (el.offsetWidth >= SW() - 120 && el.offsetHeight >= SH() - 80) || el.classList.contains('over')) continue;
       sweepAnims.push(el.animate([{ opacity: 0, transform: `translateX(${40 * dir}px)` }, { opacity: 1, transform: 'none' }],
         { duration: 420, delay: dur - 160 + Math.min(k++, 8) * 45, easing: 'cubic-bezier(.2,.8,.3,1)', fill: 'backwards' }));
     }
   }
 
   let zoomTimer = null;
-  function hideZoom() { clearTimeout(zoomTimer); const z = $('#zoom'); z.className = ''; z.innerHTML = ''; }
+  function hideZoom() { clearTimeout(zoomTimer); const z = $('#zoom'); z.className = ''; z.innerHTML = ''; z.style.transform = ''; }
   function stageXY(el) {
     const r = el.getBoundingClientRect();
     const s = scale.s;
@@ -3733,6 +3889,7 @@ button:focus-visible, [tabindex]:focus-visible { outline: 3px solid var(--gold-p
   }
   document.addEventListener('mouseover', (e) => {
     if (drag.st && drag.st.moved) return;          // no hover zoom while carrying a card
+    if (recentTouch()) return;                     // a tap also sends mouse events: fingers hold to zoom instead
     const t = e.target.closest && e.target.closest('[data-zoom]');
     if (!t) return;
     if (t === lastZoom) return;
@@ -3743,8 +3900,8 @@ button:focus-visible, [tabindex]:focus-visible { outline: 3px solid var(--gold-p
       if (!CARDS[name]) return;
       const r = stageXY(t);
       const z = $('#zoom');
-      z.innerHTML = cardFace(name);
-      const left = r.x + r.w / 2 < 960 ? Math.min(1920 - 395, r.x + r.w + 24) : Math.max(20, r.x - 375 - 24);
+      z.innerHTML = cardFace(name); z.style.transform = '';
+      const left = r.x + r.w / 2 < SW() / 2 ? Math.min(SW() - 395, r.x + r.w + 24) : Math.max(20, r.x - 375 - 24);
       const top = Math.max(16, Math.min(SH() - 541, r.y + r.h / 2 - 262));
       z.style.left = `${left}px`; z.style.top = `${top}px`;
       z.className = 'on';
@@ -3755,6 +3912,53 @@ button:focus-visible, [tabindex]:focus-visible { outline: 3px solid var(--gold-p
     const t = e.target.closest && e.target.closest('[data-zoom]');
     if (t && (!e.relatedTarget || !t.contains(e.relatedTarget))) { lastZoom = null; hideZoom(); }
   });
+
+  // ---------- fingers: hold a card to read it ----------
+  // Touch and hold anything with data-zoom (a card in your hand, on the table, in the editor or a pack) and
+  // it shows full size in the middle of the screen until you let go. Moving your finger first means a drag
+  // or a scroll instead. Letting go of a held card doesn't also count as a tap.
+  const touch = { t: 0, timer: null, x: 0, y: 0, el: null, shown: false, eat: false };
+  const recentTouch = () => Date.now() - touch.t < 900;
+  function bigZoom(name) {
+    const z = $('#zoom');
+    z.innerHTML = cardFace(name);
+    const k = Math.min(1.5, (SH() * 0.9) / 525);
+    z.style.left = `${((SW() - 375 * k) / 2).toFixed(0)}px`; z.style.top = `${((SH() - 525 * k) / 2).toFixed(0)}px`;
+    z.style.transform = `scale(${k.toFixed(3)})`;
+    z.className = 'on big';
+  }
+  document.addEventListener('pointerdown', (e) => {
+    if (e.pointerType === 'mouse') return;
+    touch.t = Date.now(); touch.eat = false; touch.shown = false;
+    clearTimeout(touch.timer);
+    const el = e.target.closest && e.target.closest('[data-zoom]');
+    touch.el = el && CARDS[el.dataset.zoom] ? el : null;
+    if (!touch.el) return;
+    touch.x = e.clientX; touch.y = e.clientY;
+    touch.timer = setTimeout(() => {
+      if (touch.el !== el || !el.isConnected) return;
+      if ((drag.st && drag.st.moved) || (edDrag.st && edDrag.st.moved)) return;
+      drag.st = null; edDrag.st = null;             // it was a hold, not the start of a drag
+      touch.shown = true;
+      bigZoom(el.dataset.zoom);
+      try { if (navigator.vibrate) navigator.vibrate(12); } catch (err) { /* not allowed here */ }
+    }, 420);
+  });
+  window.addEventListener('pointermove', (e) => {
+    if (!touch.el || touch.shown || e.pointerType === 'mouse') return;
+    if (Math.hypot(e.clientX - touch.x, e.clientY - touch.y) > 12) { clearTimeout(touch.timer); touch.el = null; }
+  });
+  const touchEnd = (e) => {
+    if (e.pointerType === 'mouse') return;
+    clearTimeout(touch.timer); touch.el = null;
+    if (touch.shown) { touch.shown = false; touch.eat = true; hideZoom(); setTimeout(() => { touch.eat = false; }, 450); }
+  };
+  window.addEventListener('pointerup', touchEnd);
+  window.addEventListener('pointercancel', touchEnd);
+  window.addEventListener('click', (e) => { if (touch.eat) { touch.eat = false; e.stopPropagation(); e.preventDefault(); } }, true);
+  // a long press on a phone also asks for the browser's own menu (save image, and in the editor it would
+  // remove a card): fingers never get it
+  document.addEventListener('contextmenu', (e) => { if (recentTouch()) { e.preventDefault(); e.stopImmediatePropagation(); } }, true);
 
   function floats(evs) {
     const fx = $('#fx');
@@ -3803,7 +4007,9 @@ button:focus-visible, [tabindex]:focus-visible { outline: 3px solid var(--gold-p
       case 'decknew': openEditor(null); break;
       case 'wizard': openWizard(); break;
       case 'wizback': if (ui.wiz && ui.wiz.state === 'result') { ui.wiz.state = 'pick'; break; } if (ui.wiz) ui.wiz.token = null; ui.wiz = null; ui.screen = 'decks'; break;
-      case 'wiztype': ui.wiz.type = v; ui.wiz.page = 0; break;
+      case 'wiztype': ui.wiz.type = v; ui.wiz.page = 0; ui.wiz.filtOpen = false; break;
+      case 'wizfilt': ui.wiz.filtOpen = !ui.wiz.filtOpen; break;
+      case 'edfilt': ui.ed.filtOpen = !ui.ed.filtOpen; break;
       case 'wizpage': ui.wiz.page = Math.max(0, ui.wiz.page + +v); break;
       case 'wizpick': {
         const w = ui.wiz;
@@ -3872,7 +4078,8 @@ button:focus-visible, [tabindex]:focus-visible { outline: 3px solid var(--gold-p
       case 'revealall': if (ui.pack) { revealAll(); return; } break;
       case 'packsum': ui.pack = null; ui.screen = 'summary'; break;
       case 'lastpack': ui.screen = 'summary'; break;
-      case 'closemodal': ui.modal = null; ui.confirmReset = false; break;
+      case 'closemodal': ui.modal = null; ui.confirmReset = false; benchStop(); break;
+      case 'benchbot': benchChampion(); return;
       case 'set': {
         const [k, val] = v.split(':');
         if (k === 'speed') { ui.speed = val; store.set('rstcg-speed', val); } else { settings[k] = val; store.set('rstcg-settings', settings); }
@@ -3951,7 +4158,7 @@ button:focus-visible, [tabindex]:focus-visible { outline: 3px solid var(--gold-p
   const PADB = { A: 0, B: 1, X: 2, Y: 3, LB: 4, RB: 5, LT: 6, RT: 7, VIEW: 8, MENU: 9, UP: 12, DOWN: 13, LEFT: 14, RIGHT: 15 };
   const pad = { on: false, key: null, el: null, prev: [], rep: { dir: null, next: 0 }, zoomOff: false, zoomTimer: null };
   function padScope() {                       // the layer that has your attention: a dialog, a chooser, or the whole screen
-    return document.querySelector('#board .over .panel') || document.querySelector('#board .pop') || document.querySelector('#board .modal') || $('#board');
+    return document.querySelector('#board .over .panel') || document.querySelector('#board .pop') || document.querySelector('#board .fpop') || document.querySelector('#board .modal') || $('#board');
   }
   function padCands() {
     const scope = padScope();
@@ -3981,8 +4188,8 @@ button:focus-visible, [tabindex]:focus-visible { outline: 3px solid var(--gold-p
   function zoomCard(el, name) {               // the same full-size view the mouse gets on hover
     if (!CARDS[name]) return;
     const r = stageXY(el), z = $('#zoom');
-    z.innerHTML = cardFace(name);
-    const left = r.x + r.w / 2 < 960 ? Math.min(1920 - 395, r.x + r.w + 24) : Math.max(20, r.x - 375 - 24);
+    z.innerHTML = cardFace(name); z.style.transform = '';
+    const left = r.x + r.w / 2 < SW() / 2 ? Math.min(SW() - 395, r.x + r.w + 24) : Math.max(20, r.x - 375 - 24);
     const top = Math.max(16, Math.min(SH() - 541, r.y + r.h / 2 - 262));
     z.style.left = `${left}px`; z.style.top = `${top}px`; z.className = 'on';
   }
@@ -4027,8 +4234,9 @@ button:focus-visible, [tabindex]:focus-visible { outline: 3px solid var(--gold-p
     el.click();
   }
   function escapeAction() {                   // what Escape (and B) closes, innermost first; false if nothing was open
-    if (ui.modal) { ui.modal = null; ui.confirmReset = false; } else if (ui.oppOpen) ui.oppOpen = false; else if (ui.duelMenu) ui.duelMenu = false;
+    if (ui.modal) { ui.modal = null; ui.confirmReset = false; benchStop(); } else if (ui.oppOpen) ui.oppOpen = false; else if (ui.duelMenu) ui.duelMenu = false;
     else if (ui.renaming) ui.renaming = false; else if (ui.ed && ui.ed.capeOpen) ui.ed.capeOpen = false;
+    else if (ui.ed && ui.ed.filtOpen) ui.ed.filtOpen = false; else if (ui.wiz && ui.wiz.filtOpen) ui.wiz.filtOpen = false;
     else if (typeof ui.view === 'number') ui.view = null; else if (ui.selected !== null || ui.menu) { ui.selected = null; ui.menu = null; }
     else return false;
     render();
@@ -4127,29 +4335,45 @@ button:focus-visible, [tabindex]:focus-visible { outline: 3px solid var(--gold-p
   requestAnimationFrame(padLoop);
   setInterval(() => padPoll(performance.now()), 30);
 
-  // ---------- fit the 1920x1080 stage to the window ----------
+  // ---------- fit the stage to the window ----------
   const scale = { s: 1, x: 0, y: 0 };
   function fit() {
-    const W = window.innerWidth, H = window.innerHeight, SHh = SH();
-    const s = Math.min(W / 1920, H / SHh);
-    scale.s = s; scale.x = (W - 1920 * s) / 2; scale.y = (H - SHh * s) / 2;
+    const W = window.innerWidth, H = window.innerHeight, SHh = SH(), SWw = SW();
+    const s = Math.min(W / SWw, H / SHh);
+    scale.s = s; scale.x = (W - SWw * s) / 2; scale.y = (H - SHh * s) / 2;
     $('#stage').style.transform = `translate(${scale.x}px, ${scale.y}px) scale(${s})`;
   }
-  // A duel uses the whole screen: on a screen wider than 16:9 (a phone held sideways) the stage gets shorter
+  // How tall the menus are in stage pixels, by how tall the window is: a phone held sideways gets 760, so
+  // everything is drawn about 40% bigger than on a 1080 stage; a laptop gets 900; a desktop monitor 1080.
+  const menuHeight = (H) => (H < 500 ? 760 : H < 820 ? 900 : 1080);
+  // Menus: that height, and as wide as the window's shape (4:3 to 21:9 fill it exactly). The duel: 1920 wide,
+  // and as tall as the screen's shape allows between 864 (a phone held sideways) and 1200 (16:10): the table sits at the bottom.
   function stageFor(key) {
-    const h = key === 'duel' ? Math.round(Math.min(1080, Math.max(864, 1920 * window.innerHeight / window.innerWidth))) : 1080;
-    if (h !== stageH) { stageH = h; $('#stage').style.height = `${h}px`; }
+    const W = window.innerWidth || 1920, H = window.innerHeight || 1080;
+    let w, h;
+    if (key === 'duel') { w = 1920; h = Math.round(Math.min(1200, Math.max(864, 1920 * H / W))); }
+    else { h = menuHeight(H); w = Math.round(Math.min(2560, Math.max(1200, h * W / H))); }
+    if (h !== stageH || w !== stageW) { stageH = h; stageW = w; const st = $('#stage').style; st.height = `${h}px`; st.width = `${w}px`; }
+    const el = $('#stage');
+    el.classList.toggle('short', h < 1000);       // less room top to bottom: layouts tighten up
+    el.classList.toggle('phone', h < 800);
+    document.documentElement.classList.toggle('portrait', H > W && (TOUCH() || W < 700));   // see #rotate
     fit();
   }
+  // Fingers: bigger things to tap (see .touch in the CSS). Follows the device, not the window size.
+  const touchMQ = window.matchMedia ? window.matchMedia('(pointer: coarse)') : null;
+  const setTouch = () => document.documentElement.classList.toggle('touch', !!(touchMQ && touchMQ.matches));
+  setTouch();
+  if (touchMQ && touchMQ.addEventListener) touchMQ.addEventListener('change', setTouch);
   window.addEventListener('resize', () => {
-    const was = stageH;
+    const was = `${stageW}x${stageH}`;
     stageFor(shownScreen);
-    if (stageH !== was && !anim.playing) render();
+    if (`${stageW}x${stageH}` !== was && !anim.playing) render();
   });
-  fit();
+  stageFor(null);
 
   // test hook
-  window.__arena = { get ui() { return ui; }, render, act, CARDS, zoneFor, get profile() { return profile; }, deckRules, POOL, PACK_POOL, cardFace, mini, AS, ART, ICON, get CREST() { return CREST; } };
+  window.__arena = { get ui() { return ui; }, render, act, CARDS, zoneFor, get profile() { return profile; }, deckRules, POOL, PACK_POOL, cardFace, mini, AS, ART, ICON, get CREST() { return CREST; }, get EMBLEM() { return EMBLEM; } };
 
   // ---------- boot ----------
   function snapshot() { return ui.config && ui.g && ui.g.winner === null ? duelSave() : {}; }

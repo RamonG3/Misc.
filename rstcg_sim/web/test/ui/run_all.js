@@ -1,5 +1,6 @@
-// Every browser regression test against web/dist/arena.html, one after another. Build first:
-//   python web/build_arena.py && node web/test/ui/run_all.js
+// Every browser regression test against web/dist/arena.html (and the app in web/dist/netlify), one after
+// another. Build first:
+//   python web/build_arena.py && python web/build_netlify.py && node web/test/ui/run_all.js
 // A test passes when it exits cleanly and prints "no errors" / "no page errors". Takes a few minutes.
 const { spawnSync } = require('child_process');
 const path = require('path');
@@ -14,6 +15,9 @@ const tests = [
   ['tutorial, phone (tuttest)', [T('tuttest.js'), 'phone']],
   ['deck wizard, PC (wizui)', [T('wizui.js')]],
   ['deck wizard, phone (wizui)', [T('wizui.js'), '892', '412']],
+  ['fingers on a phone (touch)', [T('touch.js')]],
+  ['every screen shape (layouts)', [T('layouts.js')]],
+  ['installable app (pwa)', [T('pwa.js')]],
 ];
 let bad = 0;
 for (const [name, args] of tests) {

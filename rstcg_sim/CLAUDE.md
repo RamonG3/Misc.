@@ -34,7 +34,10 @@ Read `HANDOFF.md` before starting. If the job is AI opponents, also read `BOTS_B
 
 ```
 python web/build_arena.py                 # build web/dist/arena.html (about 2.3 MB)
-node web/test/ui/run_all.js               # every browser regression test (~10 min); must end "all passed"
+python web/build_netlify.py               # then the installable app in web/dist/netlify/ (deploy that folder)
+node web/test/ui/run_all.js               # every browser regression test (~15 min); must end "all passed"
+node web/test/ui/tour.js 892 412          # screenshots of every screen at one window size (here a Pixel held sideways)
+node web/test/bot_speed.js 4              # Champion's thinking time in the page, with Chrome's CPU slowed 4x
 node web/test/arena_play.js 3             # just full duels by mouse; must report "no page errors"
 node web/test/bot_arena.js 40 greedy greedy        # bot vs bot win rates + ms per decision
 node web/test/bot_ladder.js 160 hard greedy        # the same on 4 cores, both seats on the same seeds; add --peek-test
@@ -53,10 +56,10 @@ python simulate.py 300                    # Python simulator, starter decks
 
 ## How the Arena is put together (`web/arena.src.html`, about 4,100 lines)
 
-**One stage, scaled to fit.** The page is a fixed stage 1920 wide, and `fit()` scales it to the window.
-- The stage is 1080 tall, except in duels on screens wider than 16:9 (phones). There it is `clamp(1920*H/W, 864, 1080)`.
-- Always use `SH()`, never 1080, for anything placed against the bottom.
-- `stageFor(key)` sets the height for a screen.
+**One stage, sized to the screen, scaled to fit.** `stageFor(key)` sets the stage's size for a screen and `fit()` scales it to the window.
+- Menus: 760 / 900 / 1080 tall by the window's height (phones, laptops, monitors), and as wide as the window's shape (1200–2560). A 1920×1080 window gets exactly 1920×1080.
+- The duel: 1920 wide, `clamp(1920*H/W, 864, 1200)` tall.
+- Always use `SW()` and `SH()`, never 1920 or 1080, for anything placed against the right or bottom. `#stage.short` / `#stage.phone` and `html.touch` let CSS adapt. `HANDOFF.md` describes how each screen adapts.
 
 **Rendering is string templates.** `render()` rebuilds `#stage` from `ui` state.
 - Each screen is a function in the `SCREENS` map: `menuHTML`, `pickHTML`, `decksHTML`, `editorHTML`, `wizHTML`, `packsHTML`, `duelHTML`, and so on.
@@ -102,7 +105,9 @@ python simulate.py 300                    # Python simulator, starter decks
 - **Animations in `render()` replay on every render**, because everything is rebuilt. Only animate on a new state, via a class like `.fresh`, or they flicker and look washed out.
 - **Card names contain spaces and apostrophes** (`Iban's Staff`, `Green D'hide Body`). Use `esc()` in templates, and never `split(' ')` legal actions.
 - **"Elemental Rune" in a card's `req` is not a card.** It means any of Air/Water/Earth/Fire.
-- **Hover zoom is mouse-only** (`mouseover`), and the deck editor uses right-click to remove a card. Phones need alternatives (see `HANDOFF.md`).
+- **Hover zoom is mouse-only** (`mouseover`); fingers hold a card instead (`bigZoom`). Taps also send mouse events, so the hover code ignores them for a moment after a touch (`recentTouch()`).
+- **Chrome drops a tap that comes within about half a second of a finger drag** in the DevTools-driven tests. `touch.js` waits after a drag. Not seen on a real phone yet; watch for it.
+- **Check a layout at several window shapes,** not just 1920×1080: `node web/test/ui/layouts.js` (7 shapes) and look at its shots.
 
 ## Working with Ramon
 

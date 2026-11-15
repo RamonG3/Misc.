@@ -113,7 +113,7 @@ fs.mkdirSync(outdir, { recursive: true });
           const to = await zonePoint('mydiscard');
           if (!to) throw new Error('discard pile not reachable by pointer');
           await dragTo(await cardPoint('.hc.toss'), to); stats.drags++;
-        } else { await page.click('.hc.toss >> nth=0'); stats.clicks++; }
+        } else { await page.click('.hc.toss >> nth=0', { position: { x: 24, y: 80 } }); stats.clicks++; }   // its left edge: with a full hand the next card covers its middle
         continue;
       }
       // choose: weighted random over the legal actions, carried out by clicking

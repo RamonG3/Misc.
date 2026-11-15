@@ -1,10 +1,11 @@
-# RuneScape TCG: handoff (2026-11-09)
+# RuneScape TCG: handoff (2026-11-15)
 
 This file describes where things stand. `CLAUDE.md` covers how the code fits together and the ground rules. `README.md` covers the balance history (Rounds 1–27).
 
 ## Links
 
-- **The Arena (latest build, claude.ai artifact):** https://claude.ai/artifact/DTVmjFMHpVvqVYmtS29tRm (version 19, built from `web/dist/arena.html`).
+- **The Arena (latest build, claude.ai artifact):** https://claude.ai/artifact/DTVmjFMHpVvqVYmtS29tRm (version 21, built from `web/dist/arena.html`).
+- **The installable app (Netlify):** https://runescapetcg.netlify.app, deployed from `web/dist/netlify/` (see "Phone version" below).
 - **Rules doc:** https://claude.ai/artifact/AA5kzzcL6QWhBjmwqwhntj
 - **Player rulebook:** https://claude.ai/artifact/87VaH6ai4i5UXEdbRrHkfC
 - **Card templates / design canvas:** https://claude.ai/artifact/NdJNNtUEMTV8FUHc7zTPUg. The card back is the "Crest", artboard `BackCrest.dc.html`.
@@ -23,7 +24,7 @@ This file describes where things stand. `CLAUDE.md` covers how the code fits tog
   - Cape progress has animated ticks with sound, plus a "READY TO CLAIM" stamp.
   - The bot's hand is shown as card backs at the top.
   - The log drawer is at the top right.
-  - Phone-width stages get a shorter, wider table automatically.
+  - Phone-width stages get a shorter, wider table automatically; 16:10 screens get a taller one.
 - **Results:** GP payout (100 win / 50 loss / 0 concede). Leaving a duel saves it; concede is a separate choice.
 - **Collection:** you start with the three starter decks' cards; basic materials are unlimited.
 - **My Decks and the deck editor:** filters, search, paging, drag to add, live legality.
@@ -36,6 +37,7 @@ This file describes where things stand. `CLAUDE.md` covers how the code fits tog
   - After it, one-time tips show up in real duels.
 - **Audio:** synthesised music with an intense layer (latches on once either deck is ≤10), plus sfx.
 - **Xbox controller:** gold focus ring; A/B/X/Y, LB/RB, Menu/View; the right stick scrolls.
+- **Phones and any screen shape:** touch controls, a rotate-your-phone screen, layouts that fill 4:3 to 21:9, and an installable offline app. See "Phone version and adaptive layout" below.
 
 ## AI opponents (2026-11-10)
 
@@ -57,7 +59,7 @@ Three levels in `web/bot_levels.js`. `makeBot(level, seed)` builds one, and Norm
   - It tries its six best moves on the same deals of the hidden cards and plays each to the end. A move that falls clearly behind is dropped. Its first choice keeps its place unless another move is clearly ahead.
   - In those playouts the opponent is greedy. Champion's own seat is played by `SharpBot`: greedy that knows the game is a race. Steps towards a cape are worth more to it, it won't claim second, and it sees a kill that takes the whole turn. That alone is worth 3 points; the search on top of it is worth the rest.
   - The playouts run on `engine.js` with its `async`/`await` words taken out. Same rules, word for word, about a fifth faster. Nothing is kept by hand: node makes the copy when it loads, and the build makes one for the page.
-- **On the phone.** Expect 0.2 to 0.4 seconds a decision on the Pixel (worked out from the node times; not measured on the phone yet). In the Arena it thinks during the bot's "thinking" pause and lets the page draw every 12 playouts, so at normal speed there is no extra wait. At fast speed a hard bot's move can take about 0.3 seconds longer.
+- **On the phone.** Settings has **Champion's thinking time → Test**: it plays a hidden practice duel (Champion against Guard, fixed seeds, the same 12-playout breathing room as a real duel) and times 40 of Champion's moves on that device. `node web/test/bot_speed.js [slowdown]` runs it in Chrome. Results so far (2026-11-15): 0.05 s a move on average, 0.13 s at worst, in the cloud container; 0.15 s / 0.36 s with Chrome's CPU slowed 4×, and 0.23 s / 0.58 s at 6×, which is a rough stand-in for a phone. **Not yet measured on the Pixel itself:** open the app there and press Test. In the Arena it thinks during the bot's "thinking" pause, so at normal speed there is no extra wait.
 - **Saves.** A hard bot's answers are saved with the duel, as an extra `bot` list in `rstcg-arena-duel-v1`, so resuming doesn't think them all through again. Saves without the list still load: the bot thinks again and lands on the same position. A duel saved before there were levels is a normal one.
 - **If cards or rules change:** there is nothing to retrain. Run the ladder again. The settings are the `EASY`, `SHARP` and `HARD` tables in `bot_levels.js`.
 - **Tried and dropped:** deciding reactions and discards by playout (no gain), and stopping playouts early to score the position with a learned estimate (worse than playing them out, for the same time).
@@ -79,22 +81,28 @@ node web/test/arena_levels.js                           # the levels in the buil
 ### 1. AI opponents: done, and in the Arena (2026-11-15)
 - The three levels are above. The picker (Goblin / Guard / Champion tiles) is on the pre-duel screen, Guard by default, and the result screen names the level.
 - The Arena source and its tests are now in this repo (`web/arena.src.html`, `build_arena.py`, `web/test/ui/`). The generated `arena_assets.js` / `arena_fonts.css` stay out: `python web/recover_generated.py <saved Arena page>` rebuilds them, or `arena_assets.py` with the art folder.
-- Still to check: Champion's real speed on Ramon's Pixel. That's the first step of the phone work.
+- Still to check: Champion's real speed on Ramon's Pixel (Settings → Test, see above).
 
-### 2. Finish the phone version (next)
-Ramon has decided: landscape only, the same file as the PC version, and an installable app hosted on Netlify. The tilted table already works at phone size. What's left:
+### 2. Phone version and adaptive layout: done (2026-11-15)
+Ramon decided: landscape only, the same file as the PC version, an installable app on Netlify, and (added 2026-11-15) layouts that adapt to any screen shape, with bigger type on small screens ("stretchy stage + size tiers").
 
-- **Touch controls.**
-  - Long-press a card to zoom it. Hover zoom is mouse-only today (`mouseover` handler); `data-zoom` marks what can zoom.
-  - Check that drag-to-play works by finger on the tilted table (it uses pointer events and should).
-  - The deck editor removes cards by right-click. Phones need another way, such as long-press or the visible − button on deck rows.
-  - Make touch targets big enough at phone scale. The stage is scaled down about 2.2× on a Pixel 7 Pro (892×412 CSS px), so a 44px button becomes about 20px.
-- **Rotate-your-phone overlay** when the phone is held in portrait.
-- **Phone layouts** for the menu, My Decks, the deck editor, the wizard and the packs screens. They currently scale the 1920×1080 stage down, which works but is small. Test at 892×412.
-- **Installable app on Netlify.**
-  - Add a web manifest (landscape orientation, icons from the Crest/skill icons) and a service worker so it installs and works offline.
-  - Deploy `web/dist/arena.html` as `index.html`.
-  - Ramon has a Netlify account. He already hosts runescapekingdoms.netlify.app, a different project.
+- **The stage follows the screen.** `stageFor(key)` sizes it; `SW()` and `SH()` give its width and height. Never use 1920 or 1080 for anything placed against the right or bottom edge.
+  - Menus: the height is a tier from the window's height (`menuHeight`): **760** under 500 CSS px tall (phones), **900** under 820 (laptops, 4:3 tablets), otherwise **1080**. The width is that height times the window's shape, clamped to 1200–2560, so 4:3 to 21:9 fill the screen with no bars. A 1920×1080 window gets exactly the old 1920×1080 stage, so the PC layout is unchanged.
+  - `#stage` gets `.short` (height under 1000) and `.phone` (under 800). `html.touch` is set from `(pointer: coarse)` and makes tap targets bigger (`.touch …` rules in the CSS).
+  - The duel stays 1920 wide; its height follows the shape between 864 (phones) and 1200 (16:10).
+- **How each screen adapts.**
+  - Menu: on a short stage, a smaller crest and the buttons in two columns.
+  - Pick: deck and cape sections wrap and scroll on short screens; the matchup bar goes to two rows under 1500 wide, drops "VS" and shortens labels under 1820; it stays 1800 wide, centred, on an ultrawide.
+  - My Decks: tile grid fills the width; detail panel narrower under 1500.
+  - Deck editor and wizard: `cardGridLayout()` works out the columns, rows and card size (cards shrink on short stages so 2–3 rows fit). On short stages the filters fold into one row with a **Filters** button (`edfilt` / `wizfilt`) that opens them in a panel.
+  - Packs, pack opening, pack summary, results: pictures composed on 1920×1080, so `boxed()` centres that canvas and shrinks it to fit (never enlarges); the background still fills the screen. `designBox()` gives its position for effects such as the sparks.
+- **Touch.** Hold a card (anything with `data-zoom`) for 0.42 s to see it full size in the middle of the screen; letting go closes it and doesn't count as a tap. Moving your finger first means a drag or scroll instead. Taps no longer trigger the mouse hover zoom, and a long press never opens the browser's own menu or removes a card in the editor. Finger drag-to-play works on the table; the deck editor's − and + buttons are bigger on touch screens. Words say "tap" instead of "click" on touch screens (`tapWord()`).
+- **Rotate screen.** Holding a phone upright shows "Turn your phone sideways" (`#rotate`, shown by `html.portrait`).
+- **Installable app.** `python web/build_netlify.py` (after `build_arena.py`) makes `web/dist/netlify/`: `index.html` (the built Arena plus the manifest link and service-worker registration), `manifest.webmanifest` (landscape, full screen), `sw.js` (network first for the page, so a new deploy shows up straight away, with the saved copy used offline), `_headers` and the icons from `web/app/` (made by `node web/make_icons.js` from the Crest). `web/dist/arena.html` itself is untouched and stays the artifact.
+  - Deploy: drag `web/dist/netlify` onto the Deploys page of the `runescapetcg` site, or `netlify deploy --prod --dir web/dist/netlify`.
+  - On the phone: open https://runescapetcg.netlify.app in Chrome → menu → **Add to Home screen / Install**. It opens full screen in landscape and works offline.
+- **Tests:** `touch.js` (fingers), `layouts.js` (every screen at 7 window shapes: no button off screen or covered), `pwa.js` (manifest, install, offline), all in `run_all.js`. `tour.js W H` takes screenshots of every screen at one size.
+- **Not done / ideas:** the duel itself is unchanged apart from touch (its HUD is fine at phone size but could use bigger buttons); the show-off screens (packs, results) are only shrunk to fit, not re-laid out for phones.
 
 ### 3. Later
 - **Card art** for the 64 cards in `rstcg_missing_art.csv`. Rune Arrows art exists on Drive but isn't downloaded yet.
