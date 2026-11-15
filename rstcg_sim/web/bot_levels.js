@@ -4,14 +4,18 @@
  *   LEVELS                 the three levels, in order, with the names the page shows
  *
  * Normal is the greedy HeuristicBot from bot.js, untouched: the balance numbers were measured with it.
- * Easy is the same bot making the mistakes a new player makes.
- * Hard looks ahead. For each choice it copies the game, deals out again everything it can't see, and
- * plays the choice to the end many times with the greedy bot on both sides. It keeps what won most.
+ * Easy is the same bot with a new player's habits: it overlooks options, forgets capes and reactions.
+ * Hard looks ahead. For each decision it copies the game, deals out again everything it can't see, and
+ * plays its best few choices to the end on the same deals, dropping the ones that fall clearly behind.
  *
- * No peeking: a bot here never reads the other player's hand or the order of either deck. Hard's copies
- * pool the opponent's hand and deck and deal them back at random, and shuffle its own deck.
- * Same seed, same game: every random number comes from the engine's seeded RNG, searches run a fixed
- * number of playouts (never a time limit), and the live game is only read, never changed.
+ * No peeking. A bot here never reads the other player's hand or the order of either deck. Hard's copies
+ * pool the opponent's hand and deck and deal them back at random, and shuffle its own deck. (Like greedy,
+ * the bots do know both deck lists, the way players do when lists are open.)
+ * Same seed, same game. Every random number comes from the engine's seeded RNG. A search is bounded by how
+ * many turns it simulates, never by the clock, and Hard keeps nothing between decisions: its dice for a
+ * decision come from the seed and the position. The live game is only read, never changed.
+ *
+ * Measure and check with web/test/bot_ladder.js and web/test/bot_selftest.js.
  */
 (function (root) {
   'use strict';
@@ -53,6 +57,21 @@
     FAST = api && api.Game ? { Game: api.Game.prototype, Player: api.Player.prototype, sync: true }
       : { Game: R.Game.prototype, Player: R.Player.prototype, sync: false };
     return FAST;
+  }
+
+  // Let the page draw and take taps in the middle of a long think. (A message, not a zero timeout: browsers
+  // make a run of zero timeouts wait 4 ms each.)
+  let port = null;
+  const waiting = [];
+  function breathe() {
+    if (typeof MessageChannel === 'undefined') return new Promise((res) => setTimeout(res, 0));
+    if (!port) {
+      const ch = new MessageChannel();
+      ch.port1.onmessage = () => { const res = waiting.shift(); if (res) res(); };
+      if (ch.port1.unref) ch.port1.unref();
+      port = ch.port2;
+    }
+    return new Promise((res) => { waiting.push(res); port.postMessage(0); });
   }
 
   // One number from several, well mixed (so nearby inputs give unrelated seeds).
@@ -195,12 +214,8 @@
         if (this.defends(g, i, a)) return v + def;
         return this.attacks(g, i, a) ? v * hit : v;
       }
-      let v = this.base_score(g, i, a);
+      const v = this.base_score(g, i, a);
       if (v >= 900) return v;
-      if (this.k.adj) {
-        const kind = a[0] === 'play' ? CARDS[a[1]].kind : a[0];
-        v += this.k.adj[kind] || 0;
-      }
       return g.cape_table.length ? v + this.k.tick * this.cape_bonus(g, i, a) : v;
     }
 
@@ -249,7 +264,7 @@
     kill(g, i, legal) {
       const o = g.opp(i);
       const left = g.actions_left;
-      if (o.lp > 45 || (g.location === 'Lumbridge' && !o.lumbridge_used)) return null;
+      if (o.lp > 36 || (g.location === 'Lumbridge' && !o.lumbridge_used)) return null;      // more than a turn can do
       const hits = [];
       for (const a of legal) {
         const [amount, times] = this.strike(g, i, a, left);
@@ -282,74 +297,83 @@
 
   // ---------- Hard ----------
   const HARD = {
-    turns: 4000,       // the most turns of play a decision may simulate, over all its playouts
-    width: 6,          // how many of greedy's top choices are tried
-    batch: 4,          // deals given to every move still in the running before the standings are checked
-    z: 2.0,            // a move this many standard errors behind the leader is dropped
-    stay: 3.0,         // ... but greedy's first choice has to be this far behind
-    edge: 1.0,         // and at the end another move replaces it only if it is this far ahead
-    wait: 8,           // deals played before anything is dropped
-    same: 12,          // a move that has matched a better-ranked one on this many deals is taken to be the same
-    horizon: 80,       // turns a playout may run before it counts as a draw
-    mine: 'greedy',    // who plays my seat in the playouts: 'greedy' or 'sharp'
-    reacts: false,     // decide reactions by playout too (greedy's rule otherwise)
-    discards: false,   // decide discards by playout too (greedy's rule otherwise)
-    pause: 0,          // let the page breathe after this many playouts (0: never; the answer is the same)
+    turns: 3500,             // the most turns of play one decision may simulate, over all its playouts
+    opening: [1500, 2500],   // ... and less on each player's first and second turn, when a playout is longest and tells least
+    width: 6,                // how many of its top choices it tries
+    batch: 4,                // deals given to every move still in the running before the standings are checked
+    wait: 8,                 // deals played before any move is dropped
+    z: 2.0,                  // a move this many standard errors behind the leader is dropped
+    stay: 3.0,               // ... but its first choice has to be this far behind
+    edge: 1.0,               // and when the budget runs out, another move replaces the first choice only if it is this far ahead
+    same: 12,                // a move that has matched a better-ranked one on this many deals is taken to be the same move
+    horizon: 80,             // turns a playout may run before it counts as a draw
+    pause: 0,                // let the page breathe after this many playouts (0: never; the answer is the same either way)
   };
 
+  // In a playout the opponent is played by greedy and Hard's own seat by SharpBot, which is also what picks
+  // and orders the moves it tries. Reactions and discards follow greedy's rules: searching them gained nothing.
   class HardBot extends HeuristicBot {
     constructor(seed, opts) {
       super(seed);
       this.seed = seed >>> 0;
       this.opt = Object.assign({}, HARD, opts || {});
-      this.searches = 0;       // for the tests: decisions searched, playouts and simulated turns spent
+      this.searches = 0;       // for the tests: decisions searched, playouts played, turns simulated
       this.played = 0;
       this.spent = 0;
     }
 
     setup(g) {
       super.setup(g);
-      this.sim = [0, 1].map(() => { const b = new SteadyBot(); b.setup(g); return b; });
-      this.me = [0, 1].map(() => { const b = this.opt.mine === 'sharp' ? new SharpBot() : new SteadyBot(); b.setup(g); return b; });
+      this.greedy = new SteadyBot();
+      this.greedy.setup(g);
+      this.sharp = new SharpBot();
+      this.sharp.setup(g);
       this.forced = null;
     }
 
-    // My seat in a playout: the one answer being tried, then the usual play.
-    seat(k) {
-      const sim = this.me[k];
-      const take = (t) => {
-        const f = this.forced;
-        if (f && f.t === t) { this.forced = null; return f; }
-        return null;
-      };
+    // My seat in a playout: the one move being tried, then the usual play.
+    seat() {
+      const sharp = this.sharp;
       return {
-        choose: (g, i, legal) => { const f = take('choose'); return f ? f.v : sim.choose(g, i, legal); },
-        react: (g, j, amount, style, src, opts) => { const f = take('react'); return f ? f.v : sim.react(g, j, amount, style, src, opts); },
-        discard_choice: (g, i) => { const f = take('discard'); return f ? f.v : sim.discard_choice(g, i); },
+        choose: (g, i, legal) => { const f = this.forced; if (f) { this.forced = null; return f; } return sharp.choose(g, i, legal); },
+        react: (g, j, amount, style, src, opts) => sharp.react(g, j, amount, style, src, opts),
+        discard_choice: (g, i) => sharp.discard_choice(g, i),
       };
     }
 
     // Every decision gets its own dice, from the seed and what anyone at the table can see.
-    dice(g, i, tag) {
+    dice(g, i) {
       const p = g.players[i];
       const o = g.players[1 - i];
-      return new RNG(mix(this.seed, g.turn, g.actions_left, g.free_plays_used, p.hand.length, p.lp, o.lp, tag));
+      return new RNG(mix(this.seed, g.turn, g.actions_left, g.free_plays_used, p.hand.length, p.lp, o.lp, 1));
     }
 
-    // Race the candidates: deal the same hidden cards to every move still in the running, play each out,
-    // and after every few deals drop the moves that are clearly behind. `begin(s, cand)` makes the
-    // candidate's move on the copy `s`. Returns the index of the move left standing.
-    async search(g, i, cands, begin, rng) {
+    // Race the moves: deal the same hidden cards to every move still in the running, play each one out, and
+    // after every few deals drop the moves that are clearly behind. Returns the index of the move left standing.
+    async search(g, i, moves) {
       const o = this.opt;
+      const rng = this.dice(g, i);
       const fast = fastEngine();
       const hidden = hiddenFrom(g, i);
-      const agents = i === 0 ? [this.seat(0), this.sim[1]] : [this.sim[0], this.seat(1)];
-      const won = cands.map(() => []);            // each move's results, deal by deal
-      let alive = cands.map((_, k) => k);
+      const mine = this.seat();
+      const agents = i === 0 ? [mine, this.greedy] : [this.greedy, mine];
+      const cap = g.turn < 2 ? o.opening[0] : g.turn < 4 ? o.opening[1] : o.turns;
+      const won = moves.map(() => []);            // each move's results, deal by deal
+      const total = (k) => { let t = 0; for (const v of won[k]) t += v; return t; };
+      const behind = (k, lead) => {               // how far move k trails the leader, in standard errors
+        let sum = 0;
+        let sq = 0;
+        const n = won[k].length;
+        for (let r = 0; r < n; r++) { const d = won[lead][r] - won[k][r]; sum += d; sq += d * d; }
+        const mean = sum / n;
+        const se = Math.sqrt(Math.max(0, sq / n - mean * mean) / n);
+        return mean <= 0 ? 0 : se === 0 ? Infinity : mean / se;
+      };
+      let alive = moves.map((_, k) => k);
       let spent = 0;
       let deals = 0;
       let since = 0;
-      while (alive.length > 1 && spent < o.turns) {
+      while (alive.length > 1 && spent < cap) {
         for (let b = 0; b < o.batch; b++) {
           const seed = rng.randrange(0x7fffffff) + 1;
           for (const k of alive) {
@@ -357,104 +381,62 @@
             s.note = NOOP;                          // nothing in the rules reads the log, the events or the stats
             s.emit = NOOP;
             s.stat = NOOP;
-            await begin(s, cands[k]);
+            this.forced = moves[k];
+            await s.resume_turn(g.actions_left, g.free_plays_used);
             const end = s.turn + o.horizon;
             while (s.winner === null && s.turn < end) await s.play_turn();
             this.forced = null;
             won[k].push(s.winner === i ? 1 : s.winner === null ? 0.5 : 0);
             spent += s.turn - g.turn + 1;
             this.played++;
-            if (o.pause && ++since >= o.pause) { since = 0; await new Promise((res) => setTimeout(res, 0)); }
+            if (o.pause && ++since >= o.pause) { since = 0; await breathe(); }
           }
           deals++;
         }
         let lead = alive[0];
-        const total = (k) => { let t = 0; for (const v of won[k]) t += v; return t; };
-        for (const k of alive) if (total(k) > total(lead)) lead = k;      // ties go to greedy's order
+        for (const k of alive) if (total(k) > total(lead)) lead = k;      // ties go to the better-ranked move
         const kept = [];
         for (const k of alive) {
-          if (k === lead) { kept.push(k); continue; }
-          let sum = 0;
-          let sq = 0;
-          for (let r = 0; r < deals; r++) { const d = won[lead][r] - won[k][r]; sum += d; sq += d * d; }
-          const mean = sum / deals;
-          const sd = Math.sqrt(Math.max(0, sq / deals - mean * mean));
-          if (deals >= o.wait && mean > 0 && mean > (k === 0 ? o.stay : o.z) * sd / Math.sqrt(deals)) continue;   // clearly behind
-          if (deals >= o.same && kept.some((q) => won[q].every((v, r) => v === won[k][r]))) continue;   // a copy
+          if (k !== lead) {
+            if (deals >= o.wait && behind(k, lead) > (k === 0 ? o.stay : o.z)) continue;                   // clearly behind
+            if (deals >= o.same && kept.some((q) => won[q].every((v, r) => v === won[k][r]))) continue;   // a copy
+          }
           kept.push(k);
         }
         alive = kept;
       }
       let best = alive[0];
-      if (alive.length > 1) {
-        const total = (k) => { let t = 0; for (const v of won[k]) t += v; return t; };
-        for (const k of alive) if (total(k) > total(best)) best = k;
-        if (best !== 0 && alive[0] === 0) {       // the budget ran out with greedy's choice still in: is the leader clearly ahead of it?
-          let sum = 0;
-          let sq = 0;
-          for (let r = 0; r < deals; r++) { const d = won[best][r] - won[0][r]; sum += d; sq += d * d; }
-          const mean = sum / deals;
-          const sd = Math.sqrt(Math.max(0, sq / deals - mean * mean));
-          if (mean < o.edge * sd / Math.sqrt(deals)) best = 0;
-        }
-      }
+      for (const k of alive) if (total(k) > total(best)) best = k;
+      if (best !== 0 && alive[0] === 0 && behind(0, best) < o.edge) best = 0;    // not clearly better than the first choice
       this.searches++;
       this.spent += spent;
       return best;
     }
 
-    // greedy's ranking, with ties in a fixed order (so the order the engine lists moves in doesn't matter)
+    // The moves in the order SharpBot likes them, ties in a fixed order (so the order the engine lists moves
+    // in doesn't matter), and a kill that takes the whole turn at the front.
     ranked(g, i, legal) {
-      return legal.map((a) => ({ a, k: key(a), s: this.score(g, i, a) }))
+      const order = legal.map((a) => ({ a, k: key(a), s: this.sharp.score(g, i, a) }))
         .sort((x, y) => y.s - x.s || (x.k < y.k ? -1 : x.k > y.k ? 1 : 0));
+      if (order[0].s < 900) {
+        const first = this.sharp.kill(g, i, legal);
+        const at = first ? order.findIndex((x) => x.a === first) : -1;
+        if (at > 0) order.unshift(order.splice(at, 1)[0]);
+      }
+      return order;
     }
 
     async choose(g, i, legal) {
       if (legal.length === 1) return legal[0];
       const order = this.ranked(g, i, legal);
       if (order[0].s >= 900) return order[0].a;            // a kill is a kill
-      const cands = order.slice(0, this.opt.width).map((x) => x.a);
-      const best = await this.search(g, i, cands, (s, a) => {
-        this.forced = { t: 'choose', v: a };
-        return s.resume_turn(g.actions_left, g.free_plays_used);
-      }, this.dice(g, i, 1));
-      return cands[best];
+      const moves = order.slice(0, this.opt.width).map((x) => x.a);
+      return moves[await this.search(g, i, moves)];
     }
 
-    async discard_choice(g, i) {
-      const hand = g.players[i].hand;
-      const names = [...new Set(hand)].sort((x, y) => this.keep_value(g, i, x) - this.keep_value(g, i, y) || (x < y ? -1 : 1));
-      if (!this.opt.discards || names.length === 1) return names[0];
-      const cands = names.slice(0, this.opt.width);
-      const best = await this.search(g, i, cands, (s, name) => {
-        this.forced = { t: 'discard', v: name };
-        return s.resume_turn(0, g.free_plays_used);
-      }, this.dice(g, i, 2));
-      return cands[best];
-    }
-
-    // An attack is coming at me. With reacts on, the copy can't pick up the attacker's turn mid-swing, so it
-    // settles this one hit (blocked, sent back, or taken), gives the attacker the rest of their actions, and plays on.
-    async react(g, j, amount, style, src, opts) {
-      const greedy = super.react(g, j, amount, style, src, opts);
-      if (!this.opt.reacts) return greedy;
-      const att = 1 - j;
-      const w = g.players[att].weapon_card();
-      const how = {
-        no_bonus: true,                                    // the amount already has the attacker's bonus in it
-        ignore_armor: src === 'punch',
-        ignore_prayer: src === 'punch',
-        shatter: !!w && ((src === 'weapon' && w.legendary) || (src === 'spec' && w.spec === 'sunder')),
-      };
-      const rest = Math.max(0, g.actions_left - 1);      // whoever's turn it is has (about) this many actions left
-      const cands = [greedy, ...[null, ...opts.slice().sort()].filter((x) => x !== greedy)];
-      const best = await this.search(g, j, cands, async (s, choice) => {
-        this.forced = { t: 'react', v: choice };
-        await s.deal(att, amount, style, src, how);
-        this.forced = null;
-        if (s.winner === null) await s.resume_turn(rest, g.free_plays_used);
-      }, this.dice(g, j, 3 + amount));
-      return cands[best];
+    discard_choice(g, i) {                                 // greedy's choice, without its dice
+      const names = [...new Set(g.players[i].hand)];
+      return names.sort((x, y) => this.keep_value(g, i, x) - this.keep_value(g, i, y) || (x < y ? -1 : 1))[0];
     }
   }
 
