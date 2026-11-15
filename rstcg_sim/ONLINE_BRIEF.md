@@ -1,6 +1,6 @@
 # Brief: online play for the RuneScape TCG Arena
 
-**Status (2026-11-15): planned, nothing built yet.** Ramon has made the main decisions (below). This file sets out what he wants, how it will work, and what is still open. Read `HANDOFF.md` for the wider project and `CLAUDE.md` for how the Arena's code fits together.
+**Status (2026-11-15): planned; the Supabase project exists, nothing else is built yet.** Ramon has made the main decisions (below). This file sets out what he wants, how it will work, and what is still open. Read `HANDOFF.md` for the wider project and `CLAUDE.md` for how the Arena's code fits together.
 
 ## What I want
 
@@ -17,6 +17,12 @@ It is one web app, so PC and phone play each other.
 2. **A name for now, accounts very soon.** The first time you go online you pick a name, with no email. Accounts follow soon after, so progress (GP, collection, decks) doesn't reset between devices.
 3. **Online decks are your own decks,** under the same rules as against bots.
 4. **Online duels pay GP like bot duels:** 100 for a win, 50 for a loss.
+5. **Timers:** 60 seconds per decision (shown once 15 remain), 20 seconds to answer an attack, and running out three times loses the duel.
+6. **Supabase:** a free project with a keep-alive for now; Ramon will move it to Pro later.
+7. **Your opponent's deck list stays hidden** during a duel.
+8. **Accounts come after a test with friends:** build phases 0 to 2, test Challenge a friend with real people, then do accounts.
+
+**The project** (created 2026-11-15): "RuneScape TCG", id `udmaqoxyhiwpvxkrugwr`, region us-east-2, URL `https://udmaqoxyhiwpvxkrugwr.supabase.co`, publishable key `sb_publishable_eaN07rbCUAT_-FtdXkB2Iw_IjdGi_bJ` (public by design; the game ships it). So far it holds only `keepalive`, a one-row table the keep-alive reads. The keep-alive is `.github/workflows/supabase-keepalive.yml` in the Misc. repo (twice a week); delete it once the project is on Pro.
 
 ## Why the server referees
 
@@ -77,7 +83,7 @@ So the server can afford to rebuild the duel from scratch on every move.
 | **Only you** | Your hand, and the cards you draw. |
 | **Nobody** | The order of either deck (your own too) and the seed. |
 | **Hidden until the duel starts** | Each player's cape, as now: both capes flip face up when the duel starts. |
-| **Hidden all duel** | Your opponent's deck list, as in MTG Arena (open question 3). |
+| **Hidden all duel** | Your opponent's deck list, as in MTG Arena. |
 
 ### Testing the referee
 
@@ -118,7 +124,7 @@ So the server can afford to rebuild the duel from scratch on every move.
 ### Shared by both modes
 
 - **Names:** the first time you go online, you pick a name, and names are unique.
-- **Timers:** online needs a clock, or a player who walks away freezes the duel. Proposal (open question 1):
+- **Timers:** online needs a clock, or a player who walks away freezes the duel. Decided:
   - 60 seconds per decision, shown once 15 remain.
   - 20 seconds to answer an attack.
   - Running out three times loses the duel.
@@ -217,7 +223,7 @@ Even if every move costs three function calls (the move, plus each player fetchi
      - Google sign-in needs a Google OAuth client, made once in Google Cloud.
      - Email sign-in needs a mail-sending service, because Supabase's built-in email only reaches the project's own team members.
    - **The first sign-in on a second device** asks which progress to keep.
-   - This phase doesn't depend on online duels, so it could also come first.
+   - Decided: this comes after a test of Challenge a friend with real people.
 4. **Find a match:** the queue, players online, emotes, blocking, and recent opponents you can challenge again.
 
 **Later:**
@@ -227,13 +233,7 @@ Even if every move costs three function calls (the move, plus each player fetchi
 
 ## Still open for Ramon
 
-1. **Timers:** 60 seconds a decision, 20 seconds to answer an attack, three strikes? [suggested]
-2. **Supabase:** OK to create a free Supabase project for the TCG, and add a weekly keep-alive (or pay $25 a month for Pro)?
-3. **Deck lists:** should your opponent's deck list stay hidden during a duel? [suggested: hidden, as in MTG Arena]
-4. **When accounts come (phase 3):**
-   - Google, email, or both?
-   - When two devices both have progress, keep the one with more cards, or always ask?
-5. **Order:** accounts before or after Challenge a friend?
+- **When accounts come (phase 3):** Google, email, or both? When two devices both have progress, keep the one with more cards, or always ask?
 
 ## Done means (phases 0 to 2)
 
