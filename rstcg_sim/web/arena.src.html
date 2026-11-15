@@ -386,6 +386,10 @@ button:focus-visible, [tabindex]:focus-visible { outline: 3px solid var(--gold-p
 .ct-cond { margin-top: auto; display: flex; align-items: center; gap: 5px; padding: 3px 10px; border-radius: 14px; background: #1a1410; border: 1px solid rgba(201,165,75,.4); font-family: var(--display); font-weight: 700; font-size: 18px; color: var(--parch); }
 .ct-cond img { width: 20px; height: 20px; object-fit: contain; }
 .ct-cond small { font-family: var(--body); font-size: 11px; font-weight: 800; letter-spacing: .08em; color: var(--muted); text-transform: uppercase; }
+.ct.lv { width: 146px; height: 152px; padding: 7px; gap: 4px; }
+.ct.lv .ct-art { height: 74px; }
+.ct.lv .ct-art img { height: 64px; }
+.ct.lv .ct-cond { padding: 2px 12px; }
 .ct-sug { position: absolute; top: -10px; left: 50%; transform: translateX(-50%); padding: 1px 9px; border-radius: 5px; background: var(--gold-hi); color: #1a1410; font-size: 11px; font-weight: 800; letter-spacing: .1em; white-space: nowrap; }
 .av { width: 96px; height: 96px; flex: none; border-radius: 50%; background: var(--parch); border: 4px solid var(--gold); display: flex; align-items: center; justify-content: center; }
 .av img { width: 58px; height: 58px; object-fit: contain; }
@@ -630,6 +634,8 @@ button:focus-visible, [tabindex]:focus-visible { outline: 3px solid var(--gold-p
 <script>/*__ASSETS__*/</script>
 <script>/*__ENGINE__*/</script>
 <script>/*__BOT__*/</script>
+<script>/*__ENGINESYNC__*/</script>
+<script>/*__BOTLEVELS__*/</script>
 <script>/*__AUDIO__*/</script>
 <script>/*__WIZ__*/</script>
 <script>
@@ -639,6 +645,7 @@ button:focus-visible, [tabindex]:focus-visible { outline: 3px solid var(--gold-p
   R.setData(window.RSTCG_DATA);
   const { CARDS, CAPES, DECKS } = R;
   const { HeuristicBot } = window.RSTCGBot;
+  const LV = window.RSTCGLevels;
   const AS = window.ARENA_ASSETS;
   const ART = AS.art, ICON = AS.icons, SET1 = AS.set1, FRAME = AS.frame;
   const $ = (s) => document.querySelector(s);
@@ -946,8 +953,8 @@ button:focus-visible, [tabindex]:focus-visible { outline: 3px solid var(--gold-p
   // =====================================================================================
   const ui = {
     screen: 'menu', modal: null, duelMenu: false, oppOpen: false, result: null, confirmReset: false, g: null, you: 0, pending: null, selected: null, menu: null, why: null, logOpen: false,
-    replaying: false, queue: [], decisions: [], config: null,
-    setup: Object.assign({ youDeck: 'Melee', youCape: 'Attack Cape', botDeck: 'Air Mage' }, store.get('rstcg-arena-setup') || {}),
+    replaying: false, queue: [], decisions: [], botMoves: [], botQueue: [], config: null,
+    setup: Object.assign({ youDeck: 'Melee', youCape: 'Attack Cape', botDeck: 'Air Mage', level: 'normal' }, store.get('rstcg-arena-setup') || {}),
     speed: store.get('rstcg-speed') || 'normal', intro: false, skipIntro: null,
   };
   const fast = () => ui.speed === 'fast';
@@ -960,6 +967,12 @@ button:focus-visible, [tabindex]:focus-visible { outline: 3px solid var(--gold-p
     return opening ? rand(1500, 2600) : rand(900, 1900);
   }
 
+  // The bot's level: easy, normal or hard. A duel saved before there were levels is a normal one.
+  const levelOf = (id) => (LV.LEVELS.some((l) => l.id === id) ? id : 'normal');
+  const levelName = (id) => LV.LEVELS.find((l) => l.id === levelOf(id)).name;
+  const LEVEL_WORD = { easy: 'Easy', normal: 'Normal', hard: 'Hard' };
+  const LEVEL_ART = { easy: 'Bronze Dagger', normal: 'Mithril Sword', hard: 'Rune Scimitar' };      // bronze, mithril, rune
+
   function newConfig() {
     const s = ui.setup;
     const seed = Math.floor(Math.random() * 2 ** 31);
@@ -968,7 +981,7 @@ button:focus-visible, [tabindex]:focus-visible { outline: 3px solid var(--gold-p
     const fits = deckObj(botDeck).capes;
     const mine = myDeck(s.youDeck) || profile.decks[0];
     return { seed, botSeed: (seed * 7 + 13) % 2147483647, youDeck: mine.name, youDeckId: mine.id, youCards: { ...mine.cards }, youCape: s.youCape, botDeck,
-      botCape: fits[Math.floor(Math.random() * fits.length)], youFirst: Math.random() < 0.5 };
+      botCape: fits[Math.floor(Math.random() * fits.length)], youFirst: Math.random() < 0.5, level: levelOf(s.level) };
   }
 
   function decide(type, data) {
@@ -1009,23 +1022,52 @@ button:focus-visible, [tabindex]:focus-visible { outline: 3px solid var(--gold-p
     react: (g, j, amount, style, src, opts) => (g !== ui.g ? NEVER() : decide('react', { amount, style, src, opts })),
     discard_choice: (g) => (g !== ui.g ? NEVER() : decide('discard', {})),
   };
-  function botAgent(bot) {
+  // `keep` is for a bot that thinks hard: its answers are saved with the duel, and a resumed duel reads them
+  // back instead of thinking them all through again. Each one is checked against the game as it is read.
+  function botAgent(bot, keep) {
+    const same = (a) => JSON.stringify(a);
+    const recall = (t, ok) => {
+      if (!keep || !ui.botQueue.length) return null;
+      const d = ui.botQueue.shift();
+      if (d.t === t && ok(d.v)) { ui.botMoves.push(d); return d; }
+      ui.botQueue = [];                                       // the save and the game disagree: think from here on
+      return null;
+    };
+    const kept = (t, v) => { if (keep) { ui.botMoves.push({ t, v }); if (!ui.replaying) saveGame(); } };
     return {
       setup: (g) => bot.setup(g),
       async choose(g, i, legal) {
         if (g !== ui.g) return NEVER();
-        if (!ui.replaying) { await settle(g); if (g !== ui.g) return NEVER(); render(); await sleep(thinkTime(g, i)); }
+        const old = recall('c', (v) => legal.some((a) => same(a) === same(v)));
+        const think = () => (old ? legal.find((a) => same(a) === same(old.v)) : bot.choose(g, i, legal));
+        let a;
+        if (ui.replaying) a = await think();
+        else {
+          await settle(g); if (g !== ui.g) return NEVER(); render();
+          [a] = await Promise.all([think(), sleep(thinkTime(g, i))]);        // it does its thinking during the pause
+        }
         if (g !== ui.g) return NEVER();
-        return bot.choose(g, i, legal);
+        if (!old) kept('c', a);
+        return a;
       },
       async react(g, j, amount, style, src, opts) {
         if (!ui.replaying) await sleep(fast() ? 120 : rand(600, 1100));      // a beat to "decide" whether to answer
         if (g !== ui.g) return NEVER();
-        const r = bot.react(g, j, amount, style, src, opts);
+        const old = recall('r', (v) => v === null || opts.includes(v));
+        const r = old ? old.v : await bot.react(g, j, amount, style, src, opts);
+        if (g !== ui.g) return NEVER();
+        if (!old) kept('r', r);
         if (r && !ui.replaying) { await showMove(g, j, null, r); }
         return r;
       },
-      discard_choice(g, i) { const n = bot.discard_choice(g, i); g.log.push({ text: `Bot discards ${n} (hand limit)`, who: i }); return n; },
+      async discard_choice(g, i) {
+        const old = recall('d', (v) => g.players[i].hand.includes(v));
+        const n = old ? old.v : await bot.discard_choice(g, i);
+        if (g !== ui.g) return NEVER();
+        if (!old) kept('d', n);
+        g.log.push({ text: `Bot discards ${n} (hand limit)`, who: i });
+        return n;
+      },
     };
   }
 
@@ -1850,7 +1892,10 @@ button:focus-visible, [tabindex]:focus-visible { outline: 3px solid var(--gold-p
     decks[you] = config.youCards || deckObj(config.youDeck).cards; decks[1 - you] = deckObj(config.botDeck).cards;
     capes[you] = config.youCape; capes[1 - you] = config.botCape;
     names[you] = 'You'; names[1 - you] = 'Bot';
-    agents[you] = human; agents[1 - you] = botAgent(config.tutorial ? tutBot() : new HeuristicBot(config.botSeed));
+    const level = levelOf(config.level);
+    agents[you] = human;
+    agents[1 - you] = config.tutorial ? botAgent(tutBot())
+      : botAgent(LV.makeBot(level, config.botSeed, level === 'hard' ? { pause: 12 } : undefined), level === 'hard');
     if (config.tutorial) decks[1 - you] = TUT_BOT;
     const g = new R.Game(decks, agents, config.seed, Object.assign({ capes }, config.tutorial ? TUT_RULES : {}), names);
     wrapApply(g);
@@ -1858,10 +1903,11 @@ button:focus-visible, [tabindex]:focus-visible { outline: 3px solid var(--gold-p
     if (config.tutorial) tutStack(g, you);
     return g;
   }
-  async function runDuel(config, decisions) {
+  async function runDuel(config, decisions, botMoves) {
     if (!config.tutorial) ui.tut = null;
     ui.tip = null;
     ui.config = config; ui.decisions = [];
+    ui.botMoves = []; ui.botQueue = Array.isArray(botMoves) ? [...botMoves] : [];
     ui.queue = decisions ? [...decisions] : [];
     ui.replaying = !!(decisions && decisions.length);
     ui.pending = null; ui.selected = null; ui.menu = null; ui.why = null; ui.result = null; ui.duelMenu = false; ui.modal = null;
@@ -1890,7 +1936,9 @@ button:focus-visible, [tabindex]:focus-visible { outline: 3px solid var(--gold-p
     if (ui.token !== token || ui.g !== g) return;
     finishDuel(g);
   }
-  function saveGame() { if (ui.config && !ui.config.tutorial && ui.g && ui.g.winner === null) store.set(STORE, { config: ui.config, decisions: ui.decisions }); }
+  // The duel in progress: the setup and your decisions, plus a hard bot's answers so far (see botAgent).
+  const duelSave = () => Object.assign({ config: ui.config, decisions: ui.decisions }, ui.botMoves.length ? { bot: ui.botMoves } : {});
+  function saveGame() { if (ui.config && !ui.config.tutorial && ui.g && ui.g.winner === null) store.set(STORE, duelSave()); }
 
   // =====================================================================================
   // Damage previews (numbers on buttons and prompts)
@@ -2692,7 +2740,12 @@ button:focus-visible, [tabindex]:focus-visible { outline: 3px solid var(--gold-p
     const opp = ui.oppOpen ? `<div class="panel oppl" data-stop style="left:${1060 - 320}px;bottom:${1080 - 820}px">
         <button type="button" data-do="pickbot" data-v="random" aria-pressed="${s.botDeck === 'random'}"><b style="width:20px;text-align:center;color:var(--gold-hi)">?</b>Random</button>
         ${PICKABLE.map((x) => { const xs = deckStyle(x.name); return `<button type="button" data-do="pickbot" data-v="${esc(x.name)}" aria-pressed="${s.botDeck === x.name}">${ICON[xs] ? `<img src="${ICON[xs]}" alt="">` : ''}${esc(x.name)}</button>`; }).join('')}</div>` : '';
-    const vs = `<div class="panel" style="position:absolute;left:60px;top:810px;width:1800px;height:230px;padding:26px 34px;display:flex;align-items:center;gap:40px">
+    // how good the bot is
+    const lv = levelOf(s.level);
+    const levels = `<div style="margin-left:auto;display:flex;flex-direction:column;gap:8px"><span class="lbl">Bot difficulty</span>
+      <div style="display:flex;gap:10px" role="group" aria-label="Bot difficulty">${LV.LEVELS.map((l) => { const pic = ART[LEVEL_ART[l.id]]; return `<button type="button" class="ct lv" data-do="picklevel" data-v="${l.id}" aria-pressed="${lv === l.id}" title="${esc(l.blurb)}">
+        <div class="ct-art">${pic ? `<img src="${pic.src}" alt="">` : ''}</div><span class="ct-nm">${esc(l.name)}</span><span class="ct-cond"><small>${LEVEL_WORD[l.id]}</small></span></button>`; }).join('')}</div></div>`;
+    const vs = `<div class="panel" style="position:absolute;left:60px;top:810px;width:1800px;height:230px;padding:26px 34px;display:flex;align-items:center;gap:36px">
       <div style="display:flex;align-items:center;gap:18px"><div class="av" style="box-shadow:0 0 0 4px ${FRAME[st] || FRAME.neutral}">${ICON[st] ? `<img src="${ICON[st]}" alt="">` : ''}</div>
         <div style="display:flex;flex-direction:column;gap:8px"><span class="ttl" style="font-size:30px">You</span><div style="display:flex;align-items:center;gap:10px"><span class="who" style="width:auto;padding:0 8px;background:${FRAME[st] || FRAME.neutral};color:#fff3d1">${esc(d.name.toUpperCase())}</span>${AS.cape[s.youCape] ? `<img src="${AS.cape[s.youCape].src}" alt="${esc(s.youCape)}" style="height:40px">` : ''}</div></div></div>
       <span class="ttl" style="font-size:54px;color:var(--gold);opacity:.7">VS</span>
@@ -2700,8 +2753,9 @@ button:focus-visible, [tabindex]:focus-visible { outline: 3px solid var(--gold-p
         <div style="display:flex;flex-direction:column;gap:8px"><span class="ttl" style="font-size:30px">${bd ? esc(bd.name) : 'Random deck'}</span>
           <div style="display:flex;align-items:center;gap:10px"><span class="who bot">BOT</span><span style="position:relative;display:inline-block"><img src="${CREST}" alt="Bot's cape, hidden" style="display:block;width:32px;height:45px;border-radius:4px"><b style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:var(--display);font-size:22px;color:var(--gold-hi);text-shadow:0 0 6px #000">?</b></span>
             <button type="button" class="btn-d" data-do="opp" aria-expanded="${!!ui.oppOpen}" style="height:40px;padding:0 14px;font-size:14px;margin-left:6px">Change opponent ${ui.oppOpen ? '▴' : '▾'}</button></div></div></div>
+      ${levels}
       <div style="margin-left:auto;display:flex;flex-direction:column;align-items:flex-end;gap:12px">
-        <button type="button" class="btn-g" data-do="start" style="width:380px;height:110px;font-size:38px">START DUEL</button>
+        <button type="button" class="btn-g" data-do="start" style="width:350px;height:110px;font-size:36px">START DUEL</button>
         <span class="lbl" style="color:var(--faint)">both capes flip face up when the duel starts</span></div></div>`;
     return `<div class="table"></div>
       <div style="position:absolute;left:60px;top:34px;right:60px;display:flex;align-items:center;gap:20px">
@@ -2819,7 +2873,8 @@ button:focus-visible, [tabindex]:focus-visible { outline: 3px solid var(--gold-p
       <div class="resin" style="position:absolute;left:0;right:0;top:90px;display:flex;flex-direction:column;align-items:center;gap:14px">
         ${EMBLEM ? `<img src="${EMBLEM}" alt="" style="width:120px;height:120px;${won ? 'filter:drop-shadow(0 0 20px rgba(243,210,122,.6))' : 'filter:grayscale(.7) brightness(.7)'}">` : ''}
         <span style="font-family:var(--display);font-weight:700;font-size:120px;letter-spacing:.08em;line-height:1;color:${won ? 'var(--gold-hi)' : '#b8c4cf'};text-shadow:${won ? '0 0 40px rgba(243,210,122,.6),0 6px 0 #4d3a12' : '0 6px 0 #1c2530'}">${title}</span>
-        <div style="display:flex;align-items:center;gap:12px;margin-top:6px">${line}</div></div>
+        <div style="display:flex;align-items:center;gap:12px;margin-top:6px">${line}</div>
+        ${r.config ? `<span class="lbl" style="font-size:13px">against ${esc(levelName(r.config.level))} · ${LEVEL_WORD[levelOf(r.config.level)]}</span>` : ''}</div>
       ${deck('Your deck', r.youLp, true, !won)}${deck('Bot deck', r.botLp, false, won)}
       ${coins}${pile}${counter}
       <div style="position:absolute;left:0;right:0;top:930px;display:flex;justify-content:center;gap:20px">${buttons}
@@ -3732,12 +3787,13 @@ button:focus-visible, [tabindex]:focus-visible { outline: 3px solid var(--gold-p
       case 'pickdeck': { ui.setup.youDeck = v; const dk = myDeck(v); if (dk) ui.setup.youCape = dk.cape; store.set('rstcg-arena-setup', ui.setup); break; }
       case 'pickcape': ui.setup.youCape = v; store.set('rstcg-arena-setup', ui.setup); break;
       case 'pickbot': ui.setup.botDeck = v; ui.oppOpen = false; store.set('rstcg-arena-setup', ui.setup); break;
+      case 'picklevel': ui.setup.level = levelOf(v); store.set('rstcg-arena-setup', ui.setup); break;
       case 'opp': ui.oppOpen = !ui.oppOpen; break;
       case 'play': if (ui.g && ui.g.winner === null) stopDuel(); ui.screen = 'pick'; ui.oppOpen = false; ui.modal = null; break;
       case 'menu': if (ui.g && ui.g.winner === null) stopDuel(); ui.g = null; ui.screen = 'menu'; ui.result = null; ui.oppOpen = false; break;
       case 'start': runDuel(newConfig()); return;
-      case 'resume': { const saved = store.get(STORE); if (saved) runDuel(saved.config, saved.decisions); return; }
-      case 'rematch': { const c = (ui.result && ui.result.config) || ui.config; const f = newConfig(); runDuel(Object.assign(f, { youDeck: c.youDeck, youDeckId: c.youDeckId, youCards: c.youCards, youCape: c.youCape, botDeck: c.botDeck, botCape: deckObj(c.botDeck).capes[Math.floor(Math.random() * deckObj(c.botDeck).capes.length)] })); return; }
+      case 'resume': { const saved = store.get(STORE); if (saved) runDuel(saved.config, saved.decisions, saved.bot); return; }
+      case 'rematch': { const c = (ui.result && ui.result.config) || ui.config; const f = newConfig(); runDuel(Object.assign(f, { youDeck: c.youDeck, youDeckId: c.youDeckId, youCards: c.youCards, youCape: c.youCape, level: levelOf(c.level), botDeck: c.botDeck, botCape: deckObj(c.botDeck).capes[Math.floor(Math.random() * deckObj(c.botDeck).capes.length)] })); return; }
       case 'seeboard': if (ui.result && ui.result.g) { ui.g = ui.result.g; ui.screen = 'duel'; } break;
       case 'results': if (ui.result) ui.screen = 'result'; break;
       case 'how': case 'settings': ui.modal = what; ui.confirmReset = false; break;
@@ -4096,9 +4152,9 @@ button:focus-visible, [tabindex]:focus-visible { outline: 3px solid var(--gold-p
   window.__arena = { get ui() { return ui; }, render, act, CARDS, zoneFor, get profile() { return profile; }, deckRules, POOL, PACK_POOL, cardFace, mini, AS, ART, ICON, get CREST() { return CREST; } };
 
   // ---------- boot ----------
-  function snapshot() { return ui.config && ui.g && ui.g.winner === null ? { config: ui.config, decisions: ui.decisions } : {}; }
+  function snapshot() { return ui.config && ui.g && ui.g.winner === null ? duelSave() : {}; }
   function start(data) {
-    if (data && data.config && Array.isArray(data.decisions)) { runDuel(data.config, data.decisions); return; }
+    if (data && data.config && Array.isArray(data.decisions)) { runDuel(data.config, data.decisions, data.bot); return; }
     if (!profile.tutorial && !profile.wins && !profile.losses && !store.get(STORE)) ui.modal = 'welcome';
     render();
   }

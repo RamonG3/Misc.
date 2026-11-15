@@ -61,7 +61,10 @@ Three levels in `web/bot_levels.js`. `makeBot(level, seed)` builds one, and Norm
 - **Saves.** A hard bot's answers are saved with the duel, as an extra `bot` list in `rstcg-arena-duel-v1`, so resuming doesn't think them all through again. Saves without the list still load: the bot thinks again and lands on the same position. A duel saved before there were levels is a normal one.
 - **If cards or rules change:** there is nothing to retrain. Run the ladder again. The settings are the `EASY`, `SHARP` and `HARD` tables in `bot_levels.js`.
 - **Tried and dropped:** deciding reactions and discards by playout (no gain), and stopping playouts early to score the position with a learned estimate (worse than playing them out, for the same time).
-- **Would help next:** `Player.count()` in `engine.js` takes a sixth of a playout, because it builds arrays on every call. Rewriting its loops changes no rule and would give Champion that much more search. It is an engine edit, so it is Ramon's call.
+- **Engine speed-up (2026-11-15, Ramon approved it on condition the parity tests didn't move):** `count`, `main_elements`, `meets` and `family_count` in `engine.js` are now plain loops instead of building arrays on every call. Same logic as `engine.py`, which is unchanged.
+  - Checked: 3,000 greedy games across all 12 decks play move for move the same on the old and new engine (103,219 decisions). 40,000 random boards count the same, 2,381 of them with Staff of Light-style weapons. The JS side of `parity27.py` gives byte-identical results, and the Python comparison is normal noise (87 matchups, mean |z| 0.69).
+  - Gain: greedy games 31% faster. Champion 46 → 36 ms a decision on the same seeds, with identical games and results (67.1% of 432).
+  - Champion's search budget was left as it was, so it is the same strength, only quicker. Spending the time on more playouts instead would make it stronger; that would be a balance call for Ramon.
 
 ```
 node web/test/bot_ladder.js 160 hard greedy             # any two bots: starter pairings, both seats, same seeds, 4 cores
@@ -73,15 +76,12 @@ node web/test/arena_levels.js                           # the levels in the buil
 
 ## What's next, in Ramon's order
 
-### 1. AI opponents: the bots are done, the picker is not in the Arena yet
-- **Done (2026-11-10):** three levels, measured and checked. See "AI opponents" below.
-- **Still to do:** put the difficulty picker into `web/arena.src.html`.
-  - The Arena's source is not in this repo, and the session that wrote the bots could not reach it.
-  - The wiring is written and tested against a copy of the source taken back out of the published v19 page. `python web/tools/wire_levels.py web/arena.src.html` applies it: 19 exact edits, or none at all if the source has moved on. Its header lists the two lines `build_arena.py` needs.
-  - Then build, and run `node web/test/arena_levels.js` and `node web/test/ui/run_all.js`. Register the bots in the `BOTS` table of `web/test/bot_arena.js` as well.
-- Brief: `BOTS_BRIEF.md`.
+### 1. AI opponents: done, and in the Arena (2026-11-15)
+- The three levels are above. The picker (Goblin / Guard / Champion tiles) is on the pre-duel screen, Guard by default, and the result screen names the level.
+- The Arena source and its tests are now in this repo (`web/arena.src.html`, `build_arena.py`, `web/test/ui/`). The generated `arena_assets.js` / `arena_fonts.css` stay out: `python web/recover_generated.py <saved Arena page>` rebuilds them, or `arena_assets.py` with the art folder.
+- Still to check: Champion's real speed on Ramon's Pixel. That's the first step of the phone work.
 
-### 2. Finish the phone version
+### 2. Finish the phone version (next)
 Ramon has decided: landscape only, the same file as the PC version, and an installable app hosted on Netlify. The tilted table already works at phone size. What's left:
 
 - **Touch controls.**

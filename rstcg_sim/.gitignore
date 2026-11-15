@@ -5,6 +5,7 @@ web/arena_fonts.css
 web/dist/
 # Test output
 web/test/ui/shots/
+web/test/arena_shots/
 web/test/page*.html
 web/test/spec_chk.json
 web/test/out_chk.json

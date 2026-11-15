@@ -5,11 +5,23 @@ Run python web/arena_assets.py first when art or fonts change (this script runs 
 """
 import json
 import os
+import re
 import subprocess
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 if not os.path.exists(os.path.join(HERE, "arena_assets.js")) or not os.path.exists(os.path.join(HERE, "arena_fonts.css")):
     subprocess.run(["python3", os.path.join(HERE, "arena_assets.py")], check=True)
+
+def read(name):
+    return open(os.path.join(HERE, name)).read()
+
+
+def engine_without_waiting(src):
+    """engine.js with its async/await words taken out: the same rules, run synchronously, for the hard bot's playouts."""
+    src = re.sub(r"\bawait\s+", "", re.sub(r"\basync\s+", "", src))
+    return ("(function () {\n  var module = { exports: {} };\n  (function (window) {\n" + src +
+            "\n  })({});\n  window.RSTCGSync = module.exports;\n})();")
+
 
 src = open(os.path.join(HERE, "arena.src.html")).read()
 data = json.load(open(os.path.join(HERE, "cards.json")))
@@ -21,6 +33,8 @@ parts = {
     "/*__BOT__*/": open(os.path.join(HERE, "bot.js")).read(),
     "/*__AUDIO__*/": open(os.path.join(HERE, "arena_audio.js")).read(),
     "/*__WIZ__*/": open(os.path.join(HERE, "deckwiz.js")).read(),
+    "/*__ENGINESYNC__*/": engine_without_waiting(read("engine.js")),
+    "/*__BOTLEVELS__*/": read("bot_levels.js"),
 }
 for k, v in parts.items():
     assert src.count(k) == 1, k

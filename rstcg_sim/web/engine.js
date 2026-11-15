@@ -44,6 +44,7 @@
   };
   const FREE_SPECS = new Set(['sanctuary', 'light']);
   const ELEMENTAL = ['Air Rune', 'Water Rune', 'Earth Rune', 'Fire Rune'];
+  const anyElemental = (list) => { for (let j = 0; j < list.length; j++) if (ELEMENTAL.includes(list[j])) return true; return false; };
   const NO_BUFF_SRC = new Set(['punch', 'reversal', 'quest']);
   const WEAPON_KINDS = ['weapon', 'thrown', 'bow', 'staff'];
 
@@ -142,24 +143,32 @@
       }
     }
 
+    // count, main_elements, meets and family_count are the same logic as engine.py, written as plain loops:
+    // they run thousands of times a playout, and building arrays on every call was a sixth of the hard bot's time.
     count(mat, real = false) {
+      const mats = this.materials;
       if (mat === 'Elemental Rune') {                // Round 19: any Air, Water, Earth or Fire rune
         let n = 0;
-        for (const [m, k] of Object.entries(this.materials)) {
-          if (k && (ELEMENTAL.includes(m) || CARDS[m].combo.some((x) => ELEMENTAL.includes(x)))) n += k;
+        for (const m in mats) {
+          const k = mats[m];
+          if (k && (ELEMENTAL.includes(m) || anyElemental(CARDS[m].combo))) n += k;
         }
         if (!real && this.weapon) {
-          for (const [m, k] of CARDS[this.weapon.name].counts_as) if (ELEMENTAL.includes(m)) n += k;
+          const ca = CARDS[this.weapon.name].counts_as;
+          for (let j = 0; j < ca.length; j++) if (ELEMENTAL.includes(ca[j][0])) n += ca[j][1];
         }
         return n;
       }
-      let n = get(this.materials, mat);
-      for (const [name, k] of Object.entries(this.materials)) {   // specialty runes count as both
+      let n = get(mats, mat);
+      for (const name in mats) {                     // specialty runes count as both
+        const k = mats[name];
         if (k && CARDS[name].combo.includes(mat)) n += k;
       }
       if (!real && this.weapon) {
-        for (const [m, k] of CARDS[this.weapon.name].counts_as) {
-          if (m === mat || (m === 'Elemental Rune' && this.main_elements().includes(mat))) n += k;
+        const ca = CARDS[this.weapon.name].counts_as;
+        for (let j = 0; j < ca.length; j++) {
+          const m = ca[j][0];
+          if (m === mat || (m === 'Elemental Rune' && this.is_main_element(mat))) n += ca[j][1];
         }
       }
       return n;
@@ -167,14 +176,26 @@
     // Staff of Light (Round 19): the Air/Water/Earth/Fire runes you have the most of in play. Combination
     // runes count for both their elements; on a tie every tied element qualifies; none in play counts as nothing.
     main_elements() {
-      const c = ELEMENTAL.map((e) => this.count(e, true));
-      const top = Math.max(...c);
-      return ELEMENTAL.filter((e, j) => c[j] === top && top > 0);
+      return ELEMENTAL.filter((e) => this.is_main_element(e));
     }
-    meets(req, real = false) { return req.every(([m, k]) => this.count(m, real) >= k); }
+    is_main_element(mat) {                           // main_elements().includes(mat), without the arrays
+      if (!ELEMENTAL.includes(mat)) return false;
+      let top = -Infinity, mine = 0;
+      for (let j = 0; j < ELEMENTAL.length; j++) {
+        const v = this.count(ELEMENTAL[j], true);
+        if (v > top) top = v;
+        if (ELEMENTAL[j] === mat) mine = v;
+      }
+      return mine === top && top > 0;
+    }
+    meets(req, real = false) {
+      for (let j = 0; j < req.length; j++) if (this.count(req[j][0], real) < req[j][1]) return false;
+      return true;
+    }
     family_count(fam) {
+      const mats = this.materials;
       let n = 0;
-      for (const [m, k] of Object.entries(this.materials)) if (fam === 'any' || CARDS[m].mat === fam) n += k;
+      for (const m in mats) if (fam === 'any' || CARDS[m].mat === fam) n += mats[m];
       return n;
     }
     weapon_card() { return this.weapon ? CARDS[this.weapon.name] : null; }

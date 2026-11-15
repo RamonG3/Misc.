@@ -12,10 +12,13 @@ const fs = require('fs');
 const R = require('../engine.js');
 R.setData(JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'cards.json'), 'utf8')));
 const { HeuristicBot } = require('../bot.js');
+const L = require('../bot_levels.js');
 
-const BOTS = {
+const BOTS = {                                     // bot_ladder.js is the fuller version of this (cores, peek test)
   greedy: (seed) => new HeuristicBot(seed),
-  // smart: (seed) => new SmartBot(seed),          // <- new bots go here
+  easy: (seed) => L.makeBot('easy', seed),
+  normal: (seed) => L.makeBot('normal', seed),
+  hard: (seed) => L.makeBot('hard', seed),
 };
 
 const games = +(process.argv[2] || 40);

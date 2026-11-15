@@ -71,7 +71,7 @@ python simulate.py 300                    # Python simulator, starter decks
 **The duel.**
 - `newConfig()` → `buildGame(config)` → `runDuel(config, decisions)`.
 - The human's choices come in through a promise-based agent.
-- The bot is `botAgent(new HeuristicBot(seed))`, which adds the "thinking" pause and the move reveal.
+- The bot is `botAgent(LV.makeBot(level, seed))`, which adds the "thinking" pause and the move reveal. The level is in the config, so a resumed duel keeps it.
 - `saveGame()` stores `{config, decisions}` after every human decision.
 
 **Animations replay the difference.**
