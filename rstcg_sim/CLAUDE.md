@@ -61,7 +61,9 @@ python simulate.py 300                    # Python simulator, starter decks
 - The duel: 1920 wide, `clamp(1920*H/W, 864, 1200)` tall.
 - Always use `SW()` and `SH()`, never 1920 or 1080, for anything placed against the right or bottom. `#stage.short` / `#stage.phone` and `html.touch` let CSS adapt. `HANDOFF.md` describes how each screen adapts.
 
-**Rendering is string templates.** `render()` rebuilds `#stage` from `ui` state.
+**Rendering is string templates.** `render()` rebuilds `#board` from `ui` state.
+- Menus are swapped in with `innerHTML`. A duel that is already showing is redrawn **in place** by `morphInto()`: kept elements get only their differences, matched by `id`, `data-at`, `data-bh` or `data-zoom` (then by position). Rebuilding the tilted table from scratch made phones blink. `window.__arena.morphCheck()` compares the result with a board drawn from scratch; `arena_play.js` and `touch.js` call it.
+- So an element a duel animation holds on to can survive the next render. That is fine as long as WAAPI animations on board elements don't use `fill: 'forwards'`.
 - Each screen is a function in the `SCREENS` map: `menuHTML`, `pickHTML`, `decksHTML`, `editorHTML`, `wizHTML`, `packsHTML`, `duelHTML`, and so on.
 - `SWEEP` sets how menu screens slide between each other.
 
@@ -107,6 +109,7 @@ python simulate.py 300                    # Python simulator, starter decks
 - **"Elemental Rune" in a card's `req` is not a card.** It means any of Air/Water/Earth/Fire.
 - **Hover zoom is mouse-only** (`mouseover`); fingers hold a card instead (`bigZoom`). Taps also send mouse events, so the hover code ignores them for a moment after a touch (`recentTouch()`).
 - **Chrome drops a tap that comes within about half a second of a finger drag** in the DevTools-driven tests. `touch.js` waits after a drag. Not seen on a real phone yet; watch for it.
+- **Class names are global.** The dragged card's `.ghost` rules once styled `.mchip.ghost` (the dashed "+2 any element" chip from Staff of Light) as a 190×266 card outline. Those rules now live under `#drag .ghost`; scope new generic class names the same way.
 - **Check a layout at several window shapes,** not just 1920×1080: `node web/test/ui/layouts.js` (7 shapes) and look at its shots.
 
 ## Working with Ramon

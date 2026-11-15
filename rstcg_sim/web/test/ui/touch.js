@@ -83,6 +83,7 @@ const check = (ok, what) => { console.log(`${ok ? 'ok  ' : 'FAIL'} ${what}`); if
   await page.screenshot({ path: path.join(SHOTS, 'touch_duel_hold.png') });
   await T('touchEnd'); await page.waitForTimeout(400);
   check(await page.evaluate(() => window.__arena.ui.selected === null && !document.querySelector('.pop')), 'letting go does not open its options');
+  await page.evaluate(() => { window.__marked = [...document.querySelectorAll('#board img, #board .plane, #board .scene')]; window.__marked.forEach((n) => { n.__mark = 1; }); });
   const before = await page.evaluate(() => { const u = window.__arena.ui; return u.g.players[u.you].hand.length; });
   const mat = await centre('[data-zone="mymat"]');
   await swipe(hc, { x: mat.x, y: mat.y }, 16);
@@ -90,6 +91,13 @@ const check = (ok, what) => { console.log(`${ok ? 'ok  ' : 'FAIL'} ${what}`); if
   if (await page.$('.pop .opt:not(.cancel)')) { const o = await centre('.pop .opt:not(.cancel)'); await tap(o); await page.waitForTimeout(1200); }
   const after = await page.evaluate(() => { const u = window.__arena.ui; return u.g.players[u.you].hand.length; });
   check(after < before, `a finger drag plays a card (hand ${before} -> ${after})`);
+  // phones blink if the board is rebuilt from scratch: the table and most pictures must be the same elements as before
+  const kept = await page.evaluate(() => { const live = window.__marked.filter((n) => n.isConnected); return { plane: !!(document.querySelector('#board .plane') || {}).__mark, n: window.__marked.length, live: live.length }; });
+  check(kept.plane && kept.live >= kept.n * 0.6, `the table is redrawn in place, not rebuilt (${kept.live} of ${kept.n} pictures kept)`);
+  const same = await page.evaluate(() => window.__arena.morphCheck());
+  check(same === true || same === null, 'the redrawn board matches one drawn from scratch');
+  const broken = await page.evaluate(() => { const el = document.querySelector('#board .plane'); el.setAttribute('data-test', '1'); const r = window.__arena.morphCheck(); el.removeAttribute('data-test'); return r; });
+  check(Array.isArray(broken), 'and that check does notice a difference');
   await page.screenshot({ path: path.join(SHOTS, 'touch_duel.png') });
 
   console.log(errs.length ? 'page ERRORS:\n  ' + errs.join('\n  ') : fails.length ? `${fails.length} checks failed` : 'no errors');

@@ -94,6 +94,11 @@ fs.mkdirSync(outdir, { recursive: true });
       if (st.none) break;
       if (st.winner !== null) break;
       if (!st.type) { await page.waitForTimeout(60); continue; }
+      if (st.type === 'choose') {      // the board redrawn in place must match one drawn from scratch
+        const mc = await page.evaluate(() => window.__arena.morphCheck && window.__arena.morphCheck());
+        stats.morph = (stats.morph || 0) + 1;
+        if (Array.isArray(mc)) errors.push('board redrawn in place differs from a fresh one: ' + JSON.stringify(mc));
+      }
       const tag = (n) => (gi === 0 && !shots.has(n) ? (shots.add(n), true) : false);
       if (st.type === 'react') {
         if (tag('react')) await page.screenshot({ path: path.join(outdir, '03_react.png') });

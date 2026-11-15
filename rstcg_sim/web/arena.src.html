@@ -342,13 +342,14 @@ html, body { touch-action: manipulation; }
 #viewport img { -webkit-user-drag: none; user-drag: none; }
 .hc.lifted { opacity: .22 !important; animation: none !important; box-shadow: 0 0 0 2px rgba(243,210,122,.4) !important; filter: grayscale(.6); }
 #drag { position: absolute; inset: 0; z-index: 120; pointer-events: none; }
-.ghost { position: absolute; width: 190px; height: 266px; border-radius: 7px; transform-origin: 50% 35%;
+/* the card you're carrying: only inside #drag (.mchip.ghost and .mc-art img.ghost are other things) */
+#drag .ghost { position: absolute; width: 190px; height: 266px; border-radius: 7px; transform-origin: 50% 35%;
   box-shadow: 0 0 0 3px var(--gold-pale), 0 0 26px 6px rgba(243,210,122,.55), 30px 44px 40px rgba(0,0,0,.7); }
-.ghost > .cf { transform: scale(.50667); transform-origin: 0 0; }
-.ghost.react { box-shadow: 0 0 0 3px #9fd986, 0 0 30px 8px rgba(121,194,90,.55), 30px 44px 40px rgba(0,0,0,.7); }
-.ghost.toss { box-shadow: 0 0 0 3px var(--hurt), 0 0 26px 6px rgba(255,90,60,.5), 30px 44px 40px rgba(0,0,0,.7); }
-.ghost.back { transition: left .18s ease-out, top .18s ease-out, transform .18s ease-out; }
-.ghost.land { transition: left .16s ease-in, top .16s ease-in, transform .16s ease-in, opacity .16s ease-in; opacity: 0; }
+#drag .ghost > .cf { transform: scale(.50667); transform-origin: 0 0; }
+#drag .ghost.react { box-shadow: 0 0 0 3px #9fd986, 0 0 30px 8px rgba(121,194,90,.55), 30px 44px 40px rgba(0,0,0,.7); }
+#drag .ghost.toss { box-shadow: 0 0 0 3px var(--hurt), 0 0 26px 6px rgba(255,90,60,.5), 30px 44px 40px rgba(0,0,0,.7); }
+#drag .ghost.back { transition: left .18s ease-out, top .18s ease-out, transform .18s ease-out; }
+#drag .ghost.land { transition: left .16s ease-in, top .16s ease-in, transform .16s ease-in, opacity .16s ease-in; opacity: 0; }
 .gtip { position: absolute; width: 360px; display: flex; flex-direction: column; align-items: center; gap: 6px; }
 .gneed { display: flex; gap: 6px; }
 .gneed span { display: inline-flex; align-items: center; gap: 4px; padding: 3px 9px 3px 5px; border-radius: 14px; background: #1a1410; border: 1.5px solid #79c25a; font-weight: 700; font-size: 14px; color: var(--cream); }
@@ -2450,7 +2451,7 @@ html, body { touch-action: manipulation; }
     const dc = proj(1670, ROW.bot + 120);
     const cards = Array.from({ length: n }, (_, k) => {
       const d = k - mid;
-      const left = 960 + d * spacing - 60, top = top0 + Math.round(d * d * 3);
+      const left = 960 + d * spacing - 60, top = top0 + Math.round((mid * mid - d * d) * 3);   // held from across the table: the fan arcs the other way, ends up and middle down
       const deal = ui.intro ? ' deal' : '';
       const vars = ui.intro ? `--rot:${-d * 4}deg;--d:${DEAL_START + k * DEAL_STEP}s;--dx:${dc.x - (left + 60)}px;--dy:${dc.y - (top + 84)}px;` : '';
       return `<div class="bk${deal}" data-bh="${k}" style="${vars}left:${left}px;top:${top}px;width:120px;height:168px;transform:rotate(${-d * 4}deg);transform-origin:50% 0;box-shadow:0 8px 16px rgba(0,0,0,.6)">${backImg(120, 168, true)}</div>`;
@@ -3839,7 +3840,8 @@ html, body { touch-action: manipulation; }
       $('#stage').insertBefore(old, $('#reveal'));
     }
     stageFor(key);
-    board.innerHTML = key === 'result' ? resultHTML() : key === 'duel' ? duelHTML() : SCREENS[key]();
+    const html = key === 'result' ? resultHTML() : key === 'duel' ? duelHTML() : SCREENS[key]();
+    if (key === 'duel' && from === 'duel') morphInto(board, html); else board.innerHTML = html;
     shownScreen = key;
     AU.want(key === 'duel' ? 'duel' : key === 'result' ? 'quiet' : 'menu');
     if (key === 'duel' && ui.g && !anim.playing) duelIntense(ui.g.winner === null && Math.min(ui.g.players[0].lp, ui.g.players[1].lp) <= 10);
@@ -3850,6 +3852,53 @@ html, body { touch-action: manipulation; }
     if (ll) ll.scrollTop = keepLog === null || keepLog > ll.scrollHeight - 900 ? ll.scrollHeight : keepLog;
     hideZoom();
     if (pad.on) padRefocus();
+  }
+
+  // ---------- redrawing the duel in place ----------
+  // A duel re-renders many times a turn. Rebuilding the whole board each time makes phones throw away the
+  // tilted table's layers and images and paint them again, which shows as the board blinking. So the new
+  // HTML is laid over the old: elements that are still there are kept and only their differences are
+  // written; cards and slots are matched by what they are (id, data-at, data-bh, data-zoom), the rest by
+  // position. The result is the same DOM that innerHTML would give.
+  const tplEl = document.createElement('template');
+  function morphInto(el, html) {
+    tplEl.innerHTML = html;
+    morphKids(el, tplEl.content);
+    tplEl.innerHTML = '';
+  }
+  function morphKey(n, seen) {
+    if (n.nodeType !== 1) return null;
+    const k = n.id ? '#' + n.id : n.getAttribute('data-at') || (n.hasAttribute('data-bh') ? 'bh' + n.getAttribute('data-bh') : null)
+      || (n.hasAttribute('data-zoom') ? 'z:' + n.getAttribute('data-zoom') : null);
+    if (!k) return null;
+    const c = (seen.get(k) || 0) + 1;                 // the second Mithril Bar in a hand is its own card
+    seen.set(k, c);
+    return `${n.nodeName}|${k}|${c}`;
+  }
+  function morphKids(from, to) {
+    const keyed = new Map(), seenA = new Map(), seenB = new Map(), keyOf = new Map();
+    for (let c = from.firstChild; c; c = c.nextSibling) { const k = morphKey(c, seenA); if (k) { keyed.set(k, c); keyOf.set(c, k); } }
+    let cur = from.firstChild;
+    for (let b = to.firstChild; b;) {
+      const next = b.nextSibling;
+      const k = morphKey(b, seenB);
+      let m = null;
+      if (k) { m = keyed.get(k) || null; if (m) keyed.delete(k); }
+      else if (cur && !keyOf.has(cur) && cur.nodeType === b.nodeType && cur.nodeName === b.nodeName) m = cur;
+      if (m) {
+        if (m === cur) cur = cur.nextSibling; else from.insertBefore(m, cur);
+        morphNode(m, b);
+      } else from.insertBefore(b, cur);
+      b = next;
+    }
+    while (cur) { const n = cur.nextSibling; from.removeChild(cur); cur = n; }
+    for (const m of keyed.values()) if (m.parentNode === from) from.removeChild(m);   // keyed and gone, left before cur
+  }
+  function morphNode(a, b) {
+    if (a.nodeType !== 1) { if (a.nodeValue !== b.nodeValue) a.nodeValue = b.nodeValue; return; }
+    for (const at of [...a.attributes]) if (!b.hasAttribute(at.name)) a.removeAttribute(at.name);
+    for (const at of b.attributes) if (a.getAttribute(at.name) !== at.value) a.setAttribute(at.name, at.value);
+    morphKids(a, b);
   }
 
   // ---------- sweeping between the menu screens ----------
@@ -4373,7 +4422,19 @@ html, body { touch-action: manipulation; }
   stageFor(null);
 
   // test hook
-  window.__arena = { get ui() { return ui; }, render, act, CARDS, zoneFor, get profile() { return profile; }, deckRules, POOL, PACK_POOL, cardFace, mini, AS, ART, ICON, get CREST() { return CREST; }, get EMBLEM() { return EMBLEM; } };
+  window.__arena = { get ui() { return ui; }, render, act, CARDS, zoneFor, get profile() { return profile; }, deckRules, POOL, PACK_POOL, cardFace, mini, AS, ART, ICON, get CREST() { return CREST; }, get EMBLEM() { return EMBLEM; },
+    // for tests: does the duel board, redrawn in place, read the same as a board drawn from scratch?
+    // (attribute order aside). Returns true, or the first place they differ.
+    morphCheck() {
+      if (shownScreen !== 'duel' || anim.playing) return null;
+      const canon = (n) => (n.nodeType === 3 ? n.nodeValue : n.nodeType !== 1 ? '' : `<${n.nodeName} ${[...n.attributes].map((a) => `${a.name}=${a.value}`).sort().join(' ')}>${[...n.childNodes].map(canon).join('')}</>`);
+      const t = document.createElement('div'); t.innerHTML = duelHTML();
+      const inner = (el) => [...el.childNodes].map(canon).join('');
+      const x = inner(t), y = inner($('#board'));
+      if (x === y) return true;
+      let k = 0; while (k < x.length && x[k] === y[k]) k++;
+      return [x.slice(Math.max(0, k - 150), k + 100), y.slice(Math.max(0, k - 150), k + 100)];
+    } };
 
   // ---------- boot ----------
   function snapshot() { return ui.config && ui.g && ui.g.winner === null ? duelSave() : {}; }

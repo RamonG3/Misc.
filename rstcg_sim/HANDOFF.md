@@ -102,6 +102,7 @@ Ramon decided: landscape only, the same file as the PC version, an installable a
   - Deploy: drag `web/dist/netlify` onto the Deploys page of the `runescapetcg` site, or `netlify deploy --prod --dir web/dist/netlify`.
   - On the phone: open https://runescapetcg.netlify.app in Chrome → menu → **Add to Home screen / Install**. It opens full screen in landscape and works offline.
 - **Tests:** `touch.js` (fingers), `layouts.js` (every screen at 7 window shapes: no button off screen or covered), `pwa.js` (manifest, install, offline), all in `run_all.js`. `tour.js W H` takes screenshots of every screen at one size.
+- **Fixed after Ramon's first phone test (2026-11-15):** the board blinked on the phone whenever a card was played (the duel is now redrawn in place, `morphInto`; the test browser never blinked, so this is the likely cause rather than a proven one: confirm on the Pixel); the bot's face-down hand arced the same way as yours (it now arcs the other way, as if held across the table); playing Staff of Light drew a dashed card-sized outline at the bottom left (the "+2 any element" chip was picking up the dragged card's `.ghost` style).
 - **Not done / ideas:** the duel itself is unchanged apart from touch (its HUD is fine at phone size but could use bigger buttons); the show-off screens (packs, results) are only shrunk to fit, not re-laid out for phones.
 
 ### 3. Later
