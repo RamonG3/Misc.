@@ -107,7 +107,7 @@ Ramon decided: landscape only, the same file as the PC version, an installable a
 
 ### 3. Later
 - **Card art** for the 64 cards in `rstcg_missing_art.csv`. Rune Arrows art exists on Drive but isn't downloaded yet.
-- **Online play against other people.** Ramon wants this eventually; nothing is built yet.
+- **Online play against other people.** Planned (2026-11-15), nothing built yet. `ONLINE_BRIEF.md` has the two modes (Find a match, Challenge a friend) and Ramon's decisions: the server referees from day one, a name now with accounts and cloud progress soon after, your own decks online, and GP as for bots. It also has the design (Supabase), the phases and the questions still open.
 - **Rebuild decks from the full tested pool,** to see what independent deckbuilding does to balance.
 - **Print-and-play:** `print/build_pnp.py` + `print/render.js` → PDFs. Done for the 3 starters.
 
