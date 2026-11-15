@@ -37,6 +37,9 @@ python web/build_arena.py                 # build web/dist/arena.html (about 2.3
 node web/test/ui/run_all.js               # every browser regression test (~10 min); must end "all passed"
 node web/test/arena_play.js 3             # just full duels by mouse; must report "no page errors"
 node web/test/bot_arena.js 40 greedy greedy        # bot vs bot win rates + ms per decision
+node web/test/bot_ladder.js 160 hard greedy        # the same on 4 cores, both seats on the same seeds; add --peek-test
+node web/test/bot_selftest.js                      # what the bots stand on; must end "all passed"
+node web/test/arena_levels.js                      # the difficulty levels in the built page; must end "all passed"
 node web/test/wiz_test.js                 # deck wizard builds + win rates, headless
 node web/test/parity.js field 100         # JS engine vs Python numbers (with web/test/parity*.py)
 python simulate.py 300                    # Python simulator, starter decks
@@ -86,6 +89,10 @@ python simulate.py 300                    # Python simulator, starter decks
 - **Collection and economy:** you start with the three starter decks' cards, and basic materials are unlimited.
   - GP: 100 per win, 50 per loss. A 6-card pack (3 Common / 2 Uncommon / 1 Rare, sometimes Legendary) costs 200 GP.
   - Deck rules: exactly 60 cards, ≤4 copies, ≤1 Legendary, and only cards you own. `deckRules()` checks them.
+- **Bots:** `bot_levels.js` (`window.RSTCGLevels`) has the three levels: `makeBot(level, seed)` for `easy`, `normal` and `hard`. `bot.js` stays as it is, and is the normal level. `HANDOFF.md` has the numbers.
+  - A bot never reads the other player's hand or the order of either deck. The hard bot's copies of the game (`cloneGame`) deal those out again.
+  - The hard bot keeps nothing between decisions, and bounds its search by simulated turns, never by the clock. Its dice for a decision come from the seed and the position.
+  - Its playouts run on `engine.js` with the `async`/`await` words stripped (`unwait`). Node makes that copy at load and the build makes one for the page. Never keep a second engine by hand.
 - **Deck Wizard:** `deckwiz.js` (`window.RSTCGWiz`) builds a deck around up to 2 focus cards from what you own. It adapts the Starter/Tournament lists, then tests candidates with greedy-vs-greedy games and keeps the best. The UI is `wizHTML` / `wizBuild`.
 - **Audio:** `arena_audio.js`, all synthesised, no sound files. It has music layers, an "intense" layer that latches on once either deck is ≤10, and sfx by name: `sfx('tick')` etc.
 
