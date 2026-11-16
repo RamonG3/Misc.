@@ -10,8 +10,11 @@
 //   peek { code }                 -> { host, yours }               who is challenging you
 //   join { code, deck, cape, version }     -> { match }             take the seat; the duel starts
 //   cancel { match }              -> { ok }                         close your room before anyone joins
-//   view { match, since? }        -> what you may see (referee view) + { status, names, deadline, now }
+//   view { match, since? }        -> what you may see (referee view) + { status, names, deadline, now, next }
 //   move { match, seq, move }     -> the same, after your move. move: { t, v } or { t: 'concede' }
+//   rematch { match, deck, cape, version }  -> { match, waiting } or { match, started }
+//                                    after a duel: offer a rematch (a room the other player can take), or take
+//                                    up theirs (the new duel starts). { match, off: true } withdraws your offer.
 //
 // A decision whose time has run out is settled on the next request from either player.
 import S from './gen/engine.js';
@@ -116,12 +119,39 @@ async function settle(uid, data) {
 }
 function seen(uid, data, since) {
   const m = data.match;
-  const base = { match: m.id, status: m.status, kind: m.kind, code: m.code, now: new Date().toISOString() };
+  const base = { match: m.id, status: m.status, kind: m.kind, code: m.code, now: new Date().toISOString(), next: m.next || null };
   if (m.status === 'waiting' || m.status === 'cancelled' || !m.seats) return base;
   if (m.version !== VERSION) return { ...base, status: 'stopped', names: m.names, result: m.result, why: 'This duel was played on an older version of the game.' };
   const seat = m.seats.indexOf(uid);
   return { ...base, names: m.names, deadline: m.deadline, ...F.view(data.secret.setup, data.moves, seat, since) };
 }
+
+// A room for a friend to join, with a fresh code.
+async function openRoom(uid, entry) {
+  for (let tries = 0; tries < 6; tries++) {
+    const code = newCode();
+    try { return { match: await rpc('duel_create', { p_host: uid, p_code: code, p_version: VERSION, p_entry: entry }), code }; }
+    catch (e) { if (!/23505|duplicate key/.test(e.message)) throw e; }
+  }
+  throw new Oops('busy', 'Please try again.', 503);
+}
+// The guest takes the seat: the coin toss, the seed, and the duel starts.
+async function startDuel(uid, room, entry) {
+  const me = await profile(uid);
+  if (!me) throw new Oops('noname', 'Pick a name first.');
+  const data = await rpc('duel_load', { p_match: room.id });
+  const hostFirst = randomInt(2) === 0;                       // the coin toss
+  const seats = hostFirst ? [room.host, uid] : [uid, room.host];
+  const entries = hostFirst ? [data.secret.host_entry, entry] : [entry, data.secret.host_entry];
+  const names = hostFirst ? [room.host_name, me.name] : [me.name, room.host_name];
+  const setup = { seed: randomInt(2 ** 31), decks: entries.map((e) => e.cards), capes: entries.map((e) => e.cape), names };
+  const st = F.state(setup, []);
+  const ok = await rpc('duel_start', { p_match: room.id, p_guest: uid, p_entry: entry, p_setup: setup, p_seats: seats, p_names: names,
+    p_pending: st.pending, p_deadline: deadlineFor(st.pending, true) });
+  if (!ok) throw new Oops('taken', 'Someone else has taken that duel.', 409);
+  return room.id;
+}
+const fresh = (room) => Date.now() - Date.parse(room.created_at) <= ROOM_HOURS * 3600e3;
 
 // ---------- the requests ----------
 const OPS = {
@@ -133,40 +163,22 @@ const OPS = {
     checkVersion(b);
     const entry = entryOf(b);
     if (!(await profile(uid))) throw new Oops('noname', 'Pick a name first.');
-    for (let tries = 0; tries < 6; tries++) {
-      const code = newCode();
-      try { return { match: await rpc('duel_create', { p_host: uid, p_code: code, p_version: VERSION, p_entry: entry }), code }; }
-      catch (e) { if (!/23505|duplicate key/.test(e.message)) throw e; }
-    }
-    throw new Oops('busy', 'Please try again.', 503);
+    return openRoom(uid, entry);
   },
   async peek(uid, b) {
     const room = await rpc('duel_find', { p_code: cleanCode(b.code) });
     if (!room) throw new Oops('nocode', 'No duel is waiting with that code.', 404);
-    const expired = Date.now() - Date.parse(room.created_at) > ROOM_HOURS * 3600e3;
-    if (expired) throw new Oops('nocode', 'That challenge has expired.', 404);
+    if (!fresh(room)) throw new Oops('nocode', 'That challenge has expired.', 404);
     return { host: room.host_name, yours: room.host === uid };
   },
   async join(uid, b) {
     checkVersion(b);
     const entry = entryOf(b);
     const room = await rpc('duel_find', { p_code: cleanCode(b.code) });
-    if (!room || Date.now() - Date.parse(room.created_at) > ROOM_HOURS * 3600e3) throw new Oops('nocode', 'No duel is waiting with that code.', 404);
+    if (!room || !fresh(room)) throw new Oops('nocode', 'No duel is waiting with that code.', 404);
     if (room.host === uid) throw new Oops('own', "That's your own challenge.");
     if (room.version !== VERSION) throw new Oops('nocode', 'That challenge was made on an older version of the game.', 404);
-    const me = await profile(uid);
-    if (!me) throw new Oops('noname', 'Pick a name first.');
-    const data = await rpc('duel_load', { p_match: room.id });
-    const hostFirst = randomInt(2) === 0;                       // the coin toss
-    const seats = hostFirst ? [room.host, uid] : [uid, room.host];
-    const entries = hostFirst ? [data.secret.host_entry, entry] : [entry, data.secret.host_entry];
-    const names = hostFirst ? [room.host_name, me.name] : [me.name, room.host_name];
-    const setup = { seed: randomInt(2 ** 31), decks: entries.map((e) => e.cards), capes: entries.map((e) => e.cape), names };
-    const st = F.state(setup, []);
-    const ok = await rpc('duel_start', { p_match: room.id, p_guest: uid, p_entry: entry, p_setup: setup, p_seats: seats, p_names: names,
-      p_pending: st.pending, p_deadline: deadlineFor(st.pending, true) });
-    if (!ok) throw new Oops('taken', 'Someone else has taken that duel.', 409);
-    return { match: room.id };
+    return { match: await startDuel(uid, room, entry) };
   },
   async cancel(uid, b) {
     return { ok: !!(await rpc('duel_cancel', { p_match: String(b.match || ''), p_host: uid })) };
@@ -188,6 +200,33 @@ const OPS = {
     }
     if (!(await record(m, data.moves.length, out))) throw new Oops('stale', 'The duel has moved on.', 409);
     return seen(uid, await load(uid, m.id), Number.isInteger(b.seq) ? b.seq : undefined);
+  },
+  async rematch(uid, b) {
+    const old = (await load(uid, b.match)).match;
+    if (b.off) {                                    // withdraw your offer (closes your room, if it's still open)
+      if (old.next) await rpc('duel_cancel', { p_match: old.next, p_host: uid });
+      return { ok: true };
+    }
+    if (old.status !== 'done') throw new Oops('notover', "That duel isn't over.", 409);
+    checkVersion(b);
+    if (old.version !== VERSION) throw new Oops('update', 'That duel was played on an older version of the game.', 409);
+    const entry = entryOf(b);
+    if (!(await profile(uid))) throw new Oops('noname', 'Pick a name first.');
+    for (let tries = 0; tries < 4; tries++) {
+      const m = (await load(uid, old.id)).match;
+      const room = m.next ? await rpc('duel_room', { p_match: m.next }) : null;
+      if (room && room.status === 'waiting' && fresh(room) && room.version === VERSION) {
+        if (room.host === uid) return { match: room.id, waiting: true };            // you offered already
+        try { return { match: await startDuel(uid, room, entry), started: true }; }  // take up their offer
+        catch (e) { if (e instanceof Oops && e.code === 'taken') continue; throw e; }
+      }
+      if (room && room.status === 'playing' && (room.host === uid || room.guest === uid)) return { match: room.id, started: true };
+      if (room && room.status === 'done') throw new Oops('over', 'That rematch has been played.', 409);
+      const mine = await openRoom(uid, entry);       // offer one: a room, and the old duel pointing at it
+      if (await rpc('duel_next', { p_match: old.id, p_user: uid, p_next: mine.match, p_version: VERSION })) return { match: mine.match, waiting: true };
+      await rpc('duel_cancel', { p_match: mine.match, p_host: uid });     // their offer got in first: take that one instead
+    }
+    throw new Oops('busy', 'Please try again.', 503);
   },
 };
 

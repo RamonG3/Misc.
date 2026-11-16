@@ -3,14 +3,15 @@
 // Builds server/supabase/functions/duel/gen (as deployed: add --min to test the shrunk build), then:
 // 1. the generated engine + referee give exactly the same views as web/referee.js on the source engine;
 // 2. index.js, with Deno's few calls stood in for and the database calls answered from memory (mirroring
-//    server/supabase/migrations/*_online_v1.sql), plays whole duels between two "devices" that know only what the server
-//    sends them: challenge, peek, join, view, move, timeouts on a moved clock, concede, and refusals.
+//    server/supabase/migrations/*.sql, see fake_db.mjs), plays whole duels between two "devices" that know only what the
+//    server sends them: challenge, peek, join, view, move, timeouts on a moved clock, concede, refusals, and rematches.
 // Ends "all passed".
 import { createRequire } from 'module';
 import { execFileSync } from 'child_process';
 import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
+import { makeDb } from './fake_db.mjs';
 
 const require = createRequire(import.meta.url);
 process.removeAllListeners('warning');      // node's note that gen/ files are ES modules (they are, for Deno)
@@ -75,58 +76,10 @@ for (const d of POOL) ok(GF.entry(d.cards, d.capes[0]).length === 0, `build: dec
 console.log('build: the deployed copy agrees with the source');
 
 // ---------- 2. the function, against a pretend database ----------
-const db = { profiles: new Map(), matches: new Map(), secrets: new Map(), moves: new Map() };
 let clock = Date.parse('2026-11-15T12:00:00Z');
 Date.now = () => clock;
-const nowIso = () => new Date(clock).toISOString();
+const { db, RPC } = makeDb({ now: () => clock });
 const uuid = () => crypto.randomUUID();
-const RPC = {
-  duel_create({ p_host, p_code, p_version, p_entry }) {
-    if (!db.profiles.has(p_host)) throw { status: 409, text: 'insert or update on table "matches" violates foreign key constraint' };
-    for (const m of db.matches.values()) if (m.host === p_host && m.status === 'waiting') m.status = 'cancelled';
-    for (const m of db.matches.values()) if (m.code === p_code && m.status === 'waiting') throw { status: 409, text: '23505 duplicate key' };
-    const id = uuid();
-    db.matches.set(id, { id, kind: 'challenge', code: p_code, status: 'waiting', host: p_host, guest: null, seats: null, names: null, version: p_version,
-      seq: 0, pending: null, deadline: null, strikes: [0, 0], result: null, created_at: nowIso() });
-    db.secrets.set(id, { match_id: id, host_entry: p_entry, guest_entry: null, setup: null });
-    db.moves.set(id, []);
-    return id;
-  },
-  duel_find({ p_code }) {
-    for (const m of db.matches.values()) if (m.code === String(p_code).toUpperCase() && m.status === 'waiting')
-      return { id: m.id, host: m.host, host_name: db.profiles.get(m.host).name, version: m.version, created_at: m.created_at };
-    return null;
-  },
-  duel_load({ p_match }) {
-    const m = db.matches.get(p_match);
-    return m ? JSON.parse(J({ match: m, secret: db.secrets.get(p_match), moves: db.moves.get(p_match).map((x) => x.move) })) : null;
-  },
-  duel_mine({ p_user }) {
-    return [...db.matches.values()].filter((m) => (m.host === p_user || m.guest === p_user) && ['waiting', 'playing'].includes(m.status))
-      .map((m) => ({ id: m.id, status: m.status, code: m.code, host: m.host === p_user }));
-  },
-  duel_start({ p_match, p_guest, p_entry, p_setup, p_seats, p_names, p_pending, p_deadline }) {
-    const m = db.matches.get(p_match);
-    if (!m || m.status !== 'waiting' || m.guest || m.host === p_guest) return false;
-    Object.assign(m, { guest: p_guest, seats: p_seats, names: p_names, status: 'playing', pending: p_pending, deadline: p_deadline });
-    Object.assign(db.secrets.get(p_match), { guest_entry: p_entry, setup: p_setup });
-    for (const x of db.matches.values()) if (x.host === p_guest && x.status === 'waiting') x.status = 'cancelled';
-    return true;
-  },
-  duel_append({ p_match, p_seq, p_move, p_pending, p_deadline, p_strikes, p_result }) {
-    const m = db.matches.get(p_match);
-    if (!m || m.seq !== p_seq || m.status !== 'playing') return false;
-    Object.assign(m, { seq: p_seq + 1, pending: p_pending, deadline: p_deadline, strikes: p_strikes, result: p_result, status: p_result ? 'done' : 'playing' });
-    db.moves.get(p_match).push({ seq: p_seq, move: JSON.parse(J(p_move)) });
-    return true;
-  },
-  duel_cancel({ p_match, p_host }) {
-    const m = db.matches.get(p_match);
-    if (!m || m.host !== p_host || m.status !== 'waiting') return false;
-    m.status = 'cancelled';
-    return true;
-  },
-};
 const BASE = 'http://db.test';
 let dbCalls = 0;
 globalThis.fetch = async (url, init = {}) => {
@@ -276,7 +229,67 @@ for (let n = 0; n < DUELS; n++) {
   tally.duels += 1;
   if (process.env.VERBOSE) console.log(`  duel ${n}: ${dev[ann].v.seq} moves, ${end && end.reason}`);
 }
+
+// ---------- rematches ----------
+async function quickDuel(host = ann, guest = bo) {        // a duel that ends at once: the host concedes
+  const ch = await call(host, { ...entryA, op: 'challenge' });
+  await call(guest, { ...entryB, op: 'join', code: ch.body.code });
+  const r = await call(host, { op: 'move', match: ch.body.match, seq: 0, move: { t: 'concede' } });
+  ok(r.body.result && r.body.result.reason === 'concede', `quick duel: ${J(r.body).slice(0, 120)}`);
+  return ch.body.match;
+}
+const offer = (uid, match, extra = {}) => call(uid, { ...(uid === ann ? entryA : entryB), op: 'rematch', match, ...extra });
+{
+  // in progress: no rematch yet; a stranger can't offer one
+  const ch = await call(ann, { ...entryA, op: 'challenge' });
+  await call(bo, { ...entryB, op: 'join', code: ch.body.code });
+  await expectError(bo, { ...entryB, op: 'rematch', match: ch.body.match }, 'notover', 'a rematch before the duel is over');
+  await call(ann, { op: 'move', match: ch.body.match, seq: 0, move: { t: 'concede' } });
+  await expectError(cy, { ...entryB, op: 'rematch', match: ch.body.match }, 'nomatch', 'a rematch from someone who did not play');
+  await expectError(bo, { ...entryB, op: 'rematch', match: ch.body.match, version: 'old' }, 'update', 'a rematch from an old app');
+
+  // Bo offers, Ann sees it and takes it up: the new duel starts with both of them
+  const old = ch.body.match;
+  const o1 = await offer(bo, old);
+  ok(o1.status === 200 && o1.body.waiting === true && db.matches.get(old).next === o1.body.match, `rematch offer: ${J(o1.body)}`);
+  ok((await offer(bo, old)).body.match === o1.body.match, 'offering twice opened a second room');
+  ok((await call(ann, { op: 'view', match: old })).body.next === o1.body.match, 'the other player can\'t see the offer');
+  const o2 = await offer(ann, old);
+  ok(o2.status === 200 && o2.body.started === true && o2.body.match === o1.body.match, `taking up a rematch: ${J(o2.body)}`);
+  const re = db.matches.get(o1.body.match);
+  ok(re.status === 'playing' && re.seats.includes(ann) && re.seats.includes(bo), `the rematch didn't start: ${J(re).slice(0, 160)}`);
+  ok((await offer(bo, old)).body.started === true, 'asking again after it started');
+  const v = await call(bo, { op: 'view', match: re.id });
+  ok(v.body.status === 'playing' && v.body.state && v.body.pending, 'the rematch can\'t be viewed');
+  await call(ann, { op: 'move', match: re.id, seq: 0, move: { t: 'concede' } });
+  await expectError(ann, { ...entryA, op: 'rematch', match: old }, 'over', 'a second rematch from the same duel');
+
+  // an offer can be withdrawn; then the other player's offer stands
+  const old2 = await quickDuel();
+  const w1 = await offer(ann, old2);
+  ok((await offer(ann, old2, { off: true })).body.ok === true, 'withdrawing an offer');
+  ok(db.matches.get(w1.body.match).status === 'cancelled' && db.matches.get(old2).next === null, 'a withdrawn offer is still open');
+  const w2 = await offer(bo, old2);
+  ok(w2.body.waiting === true && w2.body.match !== w1.body.match, `an offer after a withdrawn one: ${J(w2.body)}`);
+  // a new challenge closes the open offer too
+  await call(bo, { ...entryB, op: 'challenge' });
+  ok(db.matches.get(old2).next === null, 'a new challenge left the rematch offer standing');
+  // two offers at once: the second finds the first and takes it
+  const w3 = await offer(ann, old2);
+  ok(!RPC.duel_next({ p_match: old2, p_user: bo, p_next: uuid(), p_version: VERSION }), 'a second offer replaced a standing one');
+  const w4 = await offer(bo, old2);
+  ok(w4.body.started === true && w4.body.match === w3.body.match, `the second offer didn't take the first: ${J(w4.body)}`);
+  // an offer on an older version doesn't stand in the way
+  const old3 = await quickDuel();
+  const w5 = await offer(ann, old3);
+  db.matches.get(w5.body.match).version = 'old';
+  const w6 = await offer(bo, old3);
+  ok(w6.body.waiting === true && w6.body.match !== w5.body.match, `an offer from an older version stood: ${J(w6.body)}`);
+  tally.rematches = 4;
+}
+
 console.error = errorLog;
+console.log(`rematches: offered, taken up, withdrawn, replaced, raced`);
 console.log(`function: ${tally.duels} duels, ${tally.moves} moves, ${tally.refused} bad moves tried, ${tally.timeouts} clock jumps, ${tally.catchups} catch-ups, ends ${J(tally.ends)}, ${dbCalls} database calls`);
 console.log(failures ? `${failures} FAILED` : 'all passed');
 process.exit(failures ? 1 : 0);

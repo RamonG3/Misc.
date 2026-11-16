@@ -101,11 +101,15 @@ function unseen(text, seen) {
 }
 function checkShape(state, seat, where) {
   ok(J(Object.keys(state).sort()) === J([...REF.GAME_PUBLIC, 'players'].sort()), `${where}: game fields ${Object.keys(state)}`);
-  const want = J([...REF.PLAYER_PUBLIC, 'lp', 'handSize', 'hand', 'decklist'].sort());
+  const want = J([...REF.PLAYER_PUBLIC, 'lp', 'handSize', 'hand', 'decklist', 'left'].sort());
   state.players.forEach((p, i) => {
     ok(J(Object.keys(p).sort()) === want, `${where}: player ${i} fields`);
-    if (i !== seat) ok(p.hand === null && p.decklist === null, `${where}: the other player's hand or list is showing`);
-    else ok(Array.isArray(p.hand) && p.hand.length === p.handSize, `${where}: your hand is missing`);
+    if (i !== seat) ok(p.hand === null && p.decklist === null && p.left === null, `${where}: the other player's hand, list or deck is showing`);
+    else {
+      ok(Array.isArray(p.hand) && p.hand.length === p.handSize, `${where}: your hand is missing`);
+      const n = Object.values(p.left || {}).reduce((s, k) => s + k, 0);
+      ok(n === p.lp && J(Object.keys(p.left)) === J(Object.keys(p.left).sort()), `${where}: what's left in your deck doesn't add up (${n} for ${p.lp})`);
+    }
   });
 }
 function classified(g) {

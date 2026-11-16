@@ -19,7 +19,8 @@
  * { seat, t: 'concede' } and { seat, t: 'forfeit' } (time ran out a third time).
  *
  * Nothing secret leaves through view(): not the seed, not the order of either deck, not the other
- * player's hand or deck list. test/referee_test.js checks this over thousands of duels.
+ * player's hand or deck list. test/referee_test.js checks this over thousands of duels. Each player gets
+ * their own hand, their deck list and what's left in their deck (`left`: how many of each card, no order).
  */
 (function (root) {
   'use strict';
@@ -51,6 +52,7 @@
   // database (jsonb) doesn't keep the order it was given, so the referee always puts the names in order.
   const inOrder = (cards) => Object.fromEntries(Object.entries(cards).sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0)));
   const copy = (x) => (x === undefined ? null : JSON.parse(JSON.stringify(x)));
+  const counted = (cards) => { const n = {}; for (const c of cards.slice().sort()) n[c] = (n[c] || 0) + 1; return n; };
   const BAD = {};                     // "that answer doesn't fit"
 
   function make(S, D) {
@@ -67,6 +69,7 @@
         q.handSize = p.hand.length;
         q.hand = i === seat ? p.hand.slice() : null;
         q.decklist = i === seat ? { ...p.decklist } : null;
+        q.left = i === seat ? counted(p.deck) : null;      // what's left in your own deck: how many of each, never the order
         return q;
       });
       return out;
