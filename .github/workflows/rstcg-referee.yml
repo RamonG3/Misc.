@@ -28,8 +28,8 @@ jobs:
     env:
       SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
         with:
           node-version: 22
       - name: Referee tests (leaks, replays, refused moves)
@@ -41,7 +41,7 @@ jobs:
         working-directory: rstcg_sim/server
         run: |
           node build.js
-          npx --yes supabase@latest functions deploy duel --project-ref udmaqoxyhiwpvxkrugwr --use-api
+          npx --yes supabase@latest functions deploy duel --project-ref udmaqoxyhiwpvxkrugwr --use-api --yes
       - name: No token, no deploy
         if: env.SUPABASE_ACCESS_TOKEN == ''
         run: echo "Tests passed. Add the SUPABASE_ACCESS_TOKEN secret to deploy the referee from here."

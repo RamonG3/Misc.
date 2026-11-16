@@ -1,5 +1,5 @@
 # The Supabase CLI's settings for the online referee. Deploy from rstcg_sim/server:
-#   node build.js && npx supabase functions deploy duel --project-ref udmaqoxyhiwpvxkrugwr --use-api
+#   node build.js && npx supabase functions deploy duel --project-ref udmaqoxyhiwpvxkrugwr --use-api --yes
 # (the GitHub Action .github/workflows/rstcg-duel-deploy.yml does the same on every push that changes it)
 project_id = "rstcg"
 
