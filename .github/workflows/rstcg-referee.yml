@@ -1,4 +1,5 @@
-# RuneScape TCG: test the online referee, and deploy it to Supabase (Edge Function "duel").
+# RuneScape TCG: test the online referee (and the accounts' cloud save), and deploy the referee to Supabase
+# (Edge Function "duel").
 #
 # Runs when the rules, the referee or the server code change. The tests always run. The deploy runs only
 # when the repository has the secret SUPABASE_ACCESS_TOKEN (a personal access token from
@@ -15,6 +16,7 @@ on:
       - 'rstcg_sim/web/cards.json'
       - 'rstcg_sim/web/referee.js'
       - 'rstcg_sim/web/deckrules.js'
+      - 'rstcg_sim/web/cloudsave.js'
       - 'rstcg_sim/server/**'
       - '.github/workflows/rstcg-referee.yml'
   workflow_dispatch:
@@ -36,6 +38,10 @@ jobs:
         run: node web/test/referee_test.js 1000 100
       - name: The function against a pretend database
         run: node server/test_local.mjs 30
+      - name: The cloud save (merging, and many devices at once)
+        run: node web/test/cloud_test.js 3000
+      - name: Account calls against a pretend Supabase
+        run: node web/test/accounts_test.js
       - name: Deploy
         if: env.SUPABASE_ACCESS_TOKEN != ''
         working-directory: rstcg_sim/server

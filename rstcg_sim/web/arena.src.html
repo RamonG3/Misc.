@@ -280,9 +280,35 @@ button:focus-visible, [tabindex]:focus-visible { outline: 3px solid var(--gold-p
 .onl p { margin: 0; max-width: 820px; font-size: 22px; line-height: 1.5; color: var(--cream); }
 .onl .fine { max-width: 820px; font-size: 16px; line-height: 1.45; color: var(--faint); }
 .err { color: var(--hurt); font-size: 18px; font-weight: 700; }
+/* Accounts: the menu's chip, the ways to sign in, and the two saves side by side */
+.acct { height: 48px; padding: 0 18px 0 13px; border-radius: 30px; font-size: 18px; gap: 10px; box-shadow: 0 4px 12px rgba(0,0,0,.6); white-space: nowrap; max-width: 320px; }
+.acct span { overflow: hidden; text-overflow: ellipsis; }
+.acct.warn { border-color: var(--hurt); color: #ffd0c4; }
+.acctp b { color: var(--gold-pale); }
+.acctp.wide { width: 1100px; }
+.acways { display: flex; flex-direction: column; gap: 14px; align-items: center; }
+.acbtn { width: 460px; height: 76px; font-size: 25px; gap: 16px; }
+.acline { display: flex; align-items: center; justify-content: center; gap: 12px; max-width: 820px; font-size: 20px; line-height: 1.4; color: var(--cream); text-align: left; }
+.acline svg { flex: 0 0 auto; }
+.acsaves { display: flex; gap: 26px; justify-content: center; align-items: stretch; width: 100%; }
+.acsave { flex: 1 1 0; max-width: 440px; padding: 20px 24px; border-radius: 14px; background: #120e0b; border: 2px solid rgba(201,165,75,.55); display: flex; flex-direction: column; gap: 9px; text-align: left; }
+.acsave h3 { margin: 0 0 4px; font-family: var(--display); font-size: 27px; color: var(--gold-hi); text-align: center; }
+.acsave .row { display: flex; justify-content: space-between; gap: 12px; font-size: 20px; color: var(--cream); }
+.acsave .row b { font-family: var(--display); }
+.acsave small { font-size: 15px; color: var(--faint); text-align: center; }
+.acsave .btn-g { height: 62px; font-size: 21px; margin-top: 6px; }
+#stage.short .acctp { top: 112px; padding: 26px 40px; gap: 14px; }
+#stage.short .acsave { padding: 14px 20px; gap: 6px; }
+#stage.short .acsave .row { font-size: 18px; }
+#stage.phone .acctp { top: 100px; padding: 20px 34px; gap: 11px; }
+#stage.phone .acctp p { font-size: 20px; }
+#stage.phone .acbtn { height: 68px; }
+#stage.phone .acsave h3 { font-size: 23px; margin: 0; }
+#stage.phone .acsave .btn-g { height: 56px; margin-top: 2px; }
 .onin { height: 64px; padding: 0 18px; border-radius: 12px; border: 2px solid var(--gold); background: #120e0b; color: var(--gold-pale); font-family: var(--display); font-weight: 700; font-size: 30px; text-align: center; }
 .onin:focus { outline: none; border-color: var(--gold-hi); box-shadow: 0 0 0 4px rgba(243,210,122,.2); }
 .onin.code { letter-spacing: .3em; text-transform: uppercase; }
+.onin.mail { font-family: var(--body); font-weight: 700; letter-spacing: .01em; }
 .onin::placeholder { color: rgba(201,165,75,.35); }
 .oncode { display: flex; gap: 14px; }
 .oncode b { width: 96px; height: 120px; border-radius: 14px; background: #120e0b; border: 2.5px solid var(--gold-hi); display: flex; align-items: center; justify-content: center;
@@ -447,6 +473,10 @@ html, body { touch-action: manipulation; }
 .setrow { display: flex; align-items: center; gap: 14px; padding: 14px 0; border-top: 1px solid rgba(201,165,75,.2); }
 .setrow > span { flex: 1; font-size: 18px; }
 .setrow small { display: block; font-size: 14px; color: var(--faint); }
+/* Settings has nine rows: a little closer together everywhere, and closer still on a laptop's shorter stage */
+.modal:has(.setrow) { gap: 10px; }
+.short .modal:has(.setrow) { gap: 6px; padding-top: 26px; padding-bottom: 26px; }
+.short .setrow { padding: 10px 0; }
 /* phones: the How to Play and Settings dialogs in bigger type, using the extra width */
 .phone .modal { width: 1240px; }
 .phone .modal h3 { font-size: 26px; }
@@ -454,8 +484,8 @@ html, body { touch-action: manipulation; }
 .phone .setrow > span { font-size: 23px; }
 .phone .setrow small { font-size: 18px; }
 /* phones: Settings packed tighter so every row, Reset included, fits without scrolling */
-.phone .modal:has(.setrow) { gap: 4px; padding-top: 24px; padding-bottom: 24px; }
-.phone .setrow { padding: 10px 0; }
+.phone .modal:has(.setrow) { gap: 4px; padding-top: 20px; padding-bottom: 20px; }
+.phone .setrow { padding: 7px 0; }
 .res { position: absolute; inset: 0; background-color: #15110d; }
 .res.lose { background-color: #0f1014; }
 .rays { position: absolute; left: 460px; top: -260px; width: 1000px; height: 1000px; border-radius: 50%; background: repeating-conic-gradient(from 0deg, rgba(243,210,122,.10) 0deg 6deg, transparent 6deg 18deg); -webkit-mask-image: radial-gradient(circle, #000 20%, transparent 68%); mask-image: radial-gradient(circle, #000 20%, transparent 68%); animation: spin 90s linear infinite; }
@@ -710,6 +740,7 @@ html, body { touch-action: manipulation; }
 <script>/*__DECKRULES__*/</script>
 <script>/*__REFEREE__*/</script>
 <script>/*__ONLINE__*/</script>
+<script>/*__CLOUD__*/</script>
 <script>/*__VERSION__*/</script>
 <script>
 (function () {
@@ -2031,13 +2062,14 @@ html, body { touch-action: manipulation; }
   // (cards called '?'); when one of their cards comes out of the hand, the move names it.
   // Everything runs one step at a time through ui.od.chain, so pictures never overtake each other.
   // =====================================================================================
-  const ONLINE = 'rstcg-online-v1';            // { auth, name, duel: { match, opp, seq, log, logTurn } }
+  const ONLINE = 'rstcg-online-v1';            // { auth, name, duel: { match, opp, seq, log, logTurn }, flow } (flow: a trip to Google under way)
   const VERSION = window.RSTCG_VERSION || 'dev';
   const RF = window.RSTCGReferee;              // the referee's rules of time (the page only reads them)
   const CLOCK_SHOW = 15;                       // a decision's clock shows for its last 15 seconds
   const onlineGet = () => store.get(ONLINE) || {};
   const onlineSave = (patch) => store.set(ONLINE, Object.assign(onlineGet(), patch));
-  const ON = window.RSTCGOnline ? window.RSTCGOnline.make({ load: () => onlineGet().auth || null, save: (auth) => onlineSave({ auth }) }) : null;
+  const ON = window.RSTCGOnline ? window.RSTCGOnline.make({ load: () => onlineGet().auth || null, save: (auth) => onlineSave({ auth }),
+    loadFlow: () => onlineGet().flow || null, saveFlow: (flow) => onlineSave({ flow }), changed: (why) => accountChanged(why) }) : null;
   const onl = () => !!(ui.config && ui.config.online);
   const sameMove = (a, b) => JSON.stringify(a) === JSON.stringify(b);
   ui.on = { state: null, name: onlineGet().name || null, nameText: '', nameErr: '', codeText: '', codeErr: '', code: '', join: null, room: null, msg: '', busy: false };
@@ -3181,15 +3213,20 @@ html, body { touch-action: manipulation; }
   }
 
   // =====================================================================================
-  // Profile: your GP and record, kept in this browser. Each duel pays once: 100 GP for a win,
-  // 50 for a loss (a draw pays like a loss), nothing for conceding.
+  // Profile: your GP and record, kept in this browser (and, for a signed-in player, in their account:
+  // see "Accounts and the cloud save"). Each duel pays once: 100 GP for a win, 50 for a loss (a draw
+  // pays like a loss), nothing for conceding.
   // =====================================================================================
   const PROFILE = 'rstcg-profile-v1';
   const START_GP = 0;
   const PAY = { win: 100, loss: 50 };
   const PACK_COST = 200;
   const profile = Object.assign({ gp: START_GP, wins: 0, losses: 0, paid: null }, store.get(PROFILE) || {});
-  const saveProfile = () => store.set(PROFILE, profile);
+  // The cloud save's state ("Accounts and the cloud save", further down, does the work). state: 'idle' (in step, as
+  // far as we know), 'busy', 'offline', 'error', or 'ask' (the player must choose which progress to keep: `ask`).
+  const cloud = { live: false, state: 'idle', busy: null, again: false, timer: 0, retry: 0, ask: null, looked: 0, leaving: 0, err: '' };
+  ui.acct = { state: null, ways: null, email: '', emailErr: '', code: '', codeErr: '', kind: null, busy: false, msg: '', note: '', confirm: null };
+  const saveProfile = () => { store.set(PROFILE, profile); cloudTouch(); };
   const settings = Object.assign({ motion: 'full', music: 'med', sfx: 'med', tips: 'on' }, store.get('rstcg-settings') || {});
   const VOL = { music: { off: 0, low: 0.3, med: 0.55, high: 0.85 }, sfx: { off: 0, low: 0.4, med: 0.8, high: 1 } };
   const AU = window.RSAudio || { unlock() {}, want() {}, intense() {}, sting() {}, sfx() {}, volumes() {}, health() { return null; } };
@@ -3270,7 +3307,7 @@ html, body { touch-action: manipulation; }
       <div style="position:absolute;inset:0;background:linear-gradient(90deg,rgba(12,9,7,.94) 0%,rgba(12,9,7,.78) 34%,rgba(12,9,7,.15) 66%,rgba(12,9,7,.35) 100%)"></div>
       <div style="position:absolute;inset:0;background:radial-gradient(ellipse at 70% 50%,rgba(0,0,0,0) 40%,rgba(0,0,0,.55) 100%)"></div>
       ${life.motes}
-      <div style="position:absolute;right:48px;top:36px">${gpChip(26)}</div>
+      <div style="position:absolute;right:48px;top:36px;display:flex;align-items:center;gap:14px">${accountChip()}${gpChip(26)}</div>
       <div style="position:absolute;left:0;top:0;width:900px;height:300px;${short ? 'transform:scale(.72);transform-origin:30px 20px' : ''}">
       <div class="crest-ring" style="animation-delay:${life.ringDelay}"></div>
       ${EMBLEM ? `<img class="crest-glow" src="${EMBLEM}" alt="" style="position:absolute;left:96px;top:70px;width:210px;height:210px;animation-delay:${life.glowDelay}">` : ''}
@@ -3387,7 +3424,10 @@ html, body { touch-action: manipulation; }
           <li>A win pays ${PAY.win} GP and a loss ${PAY.loss} GP. Conceding pays nothing.</li></ul>`;
     } else {
       const seg = (key, val, label) => `<button type="button" class="btn-d" data-do="set" data-v="${key}:${val}" aria-pressed="${(key === 'speed' ? ui.speed : settings[key]) === val}" style="height:44px;padding:0 18px;font-size:15px">${label}</button>`;
+      const me = account(), inn = !!(me && !me.guest);
       body = `<div style="display:flex;align-items:center;gap:14px">${ICN.gear}<span class="ttl" style="font-size:34px">Settings</span>${close}</div>
+        ${ON ? `<div class="setrow"><span>Account<small>${inn ? `Signed in${me.email ? ` as ${esc(me.email)}` : ''}. Your progress is saved to your account` : 'Sign in to keep your progress and carry on from any device'}</small></span>
+          <button type="button" class="btn-d" data-do="account" style="height:44px;padding:0 18px;font-size:15px">${inn ? 'Your account' : 'Sign in'}</button></div>` : ''}
         <div class="setrow"><span>Bot speed<small>How long the bot takes to think and show each move</small></span>${seg('speed', 'normal', 'Normal')}${seg('speed', 'fast', 'Fast')}</div>
         <div class="setrow"><span>Animations<small>Reduced skips the deal, card flights and banners</small></span>${seg('motion', 'full', 'Full')}${seg('motion', 'reduced', 'Reduced')}</div>
         <div class="setrow"><span>Music<small>Three menu songs and three battle songs that build when a deck runs low</small></span>${['off', 'low', 'med', 'high'].map((x) => seg('music', x, x === 'med' ? 'Medium' : x[0].toUpperCase() + x.slice(1))).join('')}</div>
@@ -3397,12 +3437,414 @@ html, body { touch-action: manipulation; }
           <button type="button" class="btn-d" data-do="soundcheck" style="height:44px;padding:0 14px;font-size:14px">Check again</button></div>
         <div class="setrow"><span>Champion's thinking time<small>Times the hardest bot on this device, in a practice duel played out of sight</small></span><span id="benchOut" style="flex:0 0 auto;font-size:15px;color:var(--faint)">${benchText()}</span>
           <button type="button" class="btn-d" data-do="benchbot" style="height:44px;padding:0 18px;font-size:15px" ${bench.running ? 'disabled' : ''}>${bench.n && !bench.running ? 'Test again' : 'Test'}</button></div>
-        <div class="setrow"><span>Reset progress<small>Back to ${START_GP} GP, no record, and only the three starter decks (now ${profile.gp} GP · ${profile.wins} W · ${profile.losses} L · ${collected()} cards collected)</small></span>
+        <div class="setrow"><span>Reset progress<small>Back to ${START_GP} GP, no record, and only the three starter decks${inn ? ', on every device signed in to your account' : ''} (now ${profile.gp} GP · ${profile.wins} W · ${profile.losses} L · ${collected()} cards collected)</small></span>
           <button type="button" class="btn-d" data-do="reset" style="height:44px;padding:0 18px;font-size:15px;${ui.confirmReset ? 'border-color:var(--hurt);color:var(--hurt)' : ''}">${ui.confirmReset ? `${tapWord(1)} again to reset` : 'Reset'}</button></div>`;
     }
     return `<div class="over" data-do="closemodal"><div class="panel modal" data-stop role="dialog" aria-modal="true" style="max-height:${Math.min(960, SH() - 40)}px">${body}</div></div>`;
   }
 
+
+  // =====================================================================================
+  // Accounts and the cloud save (ONLINE_BRIEF.md, phase 3).
+  //
+  // A guest's progress lives in this browser. Signing in (with Google, or a code sent by email) turns the
+  // guest into an account with the same id, name and duels, and keeps the progress on the server as well,
+  // so every device signed in to the account shares it.
+  //
+  // - "Progress" is the profile minus profile.cloud. That is this device's mark: the revision and the copy
+  //   it last knew the server had ({ uid, rev, at, base }). It lives inside the profile so the two reach the
+  //   browser's storage in one write and can never disagree (and two tabs each keep a matching pair).
+  // - cloudsave.js decides what a visit to the server does: save, take theirs, merge the two, or ask the
+  //   player. This section decides when to visit, and shows it.
+  // - A visit follows every change (saveProfile) a moment later. Opening the app, coming back to it and
+  //   returning to the menu look for changes from other devices.
+  // - Offline or signed out, the game plays on as it always has, and the changes go up at the next chance.
+  // - The first time a device with progress meets an account with progress, the player chooses which to
+  //   keep (Ramon, 2026-11-16: "ask each time"). What they didn't keep is put aside in rstcg-backup-v1.
+  // =====================================================================================
+  const CS = window.RSTCGCloud;
+  const BACKUP = 'rstcg-backup-v1';              // { at, why, uid, data }: the progress last replaced by a choice
+  // a preview (the claude.ai artifact) or a page opened from a file can't reach the server or come back from Google
+  const PREVIEW = !/^https?:$/.test(location.protocol) || /claude|anthropic/.test(location.hostname);
+  const APP_NAME = window.RSTCGOnline ? window.RSTCGOnline.APP.replace(/^https:\/\/|\/$/g, '') : 'runescapetcg.netlify.app';
+  const account = () => (ON ? ON.account() : null);
+  const signedIn = () => { const a = account(); return !!(a && !a.guest); };
+  const acctKey = (a) => (a ? `${a.uid}:${a.guest ? 'guest' : 'account'}` : '');
+  let knownAcct = acctKey(account());            // who this tab believes it is (another tab may sign in or out)
+  const inOnlineDuel = () => !!(ui.od || (onlineGet().duel && onlineGet().duel.match));
+  const progressNow = () => { const { cloud: mark, ...rest } = profile; return JSON.parse(JSON.stringify(rest)); };
+  // a brand-new game: nothing in it that a player could miss
+  function untouched(p) {
+    const s = starterState(), n = (x) => +x || 0;
+    return !n(p.gp) && !n(p.wins) && !n(p.losses) && !n(p.packs) && !(p.online && (n(p.online.wins) || n(p.online.losses)))
+      && CS.same(p.coll || {}, s.coll) && CS.same(p.decks || [], s.decks);
+  }
+  // The progress under the screen was just replaced (another device's, or a merge): point the screen at what's there.
+  function profileSwapped() {
+    if (!Array.isArray(profile.decks) || !profile.decks.length || !profile.coll) Object.assign(profile, starterState());
+    pickedDeck();
+    if (ui.deckSel && !myDeck(ui.deckSel)) ui.deckSel = profile.decks[0].id;
+    ui.confirmDel = false; ui.renaming = false;
+    if (['menu', 'decks', 'packs', 'pick', 'account', 'summary'].includes(ui.screen) && !ui.pack && !ui.intro) render();
+  }
+  function cloudPut(data, mark) {
+    if (data) {
+      for (const k of Object.keys(profile)) delete profile[k];
+      Object.assign(profile, { gp: START_GP, wins: 0, losses: 0, paid: null }, JSON.parse(JSON.stringify(data)));
+    }
+    if (mark) profile.cloud = mark; else delete profile.cloud;
+    store.set(PROFILE, profile);                 // not saveProfile(): this is the server's news, not a change made here
+    if (data) profileSwapped();
+  }
+  const cloudDev = () => ({ uid: account().uid, untouched, put: cloudPut,
+    get: () => ({ data: progressNow(), mark: profile.cloud || null }),
+    load: (since) => ON.progress.load(since),
+    save: (data, rev) => ON.progress.save(data, rev, { keepalive: Date.now() - cloud.leaving < 3000 }) });
+
+  // ---------- visiting the server ----------
+  function cloudState(s, err) {
+    cloud.state = s; cloud.err = err || '';
+    cloudShow();
+  }
+  // the chip on the menu and the status line on the account screen, changed where they stand (no redraw)
+  function cloudShow() {
+    const chip = document.getElementById('acctchip');
+    if (chip) chip.outerHTML = accountChip();
+    const line = document.getElementById('acstatus');
+    if (line) line.innerHTML = cloudLine();
+  }
+  function cloudStop() { clearTimeout(cloud.timer); cloud.timer = 0; cloud.again = false; cloud.retry = 0; cloud.state = 'idle'; cloud.err = ''; }
+  function cloudLater() {
+    clearTimeout(cloud.timer);
+    cloud.retry = Math.min(60e3, cloud.retry ? cloud.retry * 2 : 5e3);
+    cloud.timer = setTimeout(cloudSync, cloud.retry);
+  }
+  function cloudTouch() {                        // the progress on this device changed
+    if (!cloud.live || !ON || !CS || cloud.ask || !signedIn()) return;
+    if (cloud.busy) { cloud.again = true; return; }
+    clearTimeout(cloud.timer);
+    cloud.timer = setTimeout(cloudSync, 1200);
+  }
+  function cloudLook() {                         // a good moment to see whether another device has been busy
+    if (cloud.live && !cloud.busy && !cloud.timer && Date.now() - cloud.looked > 15e3) cloudSync();
+  }
+  function cloudSync() {
+    if (!cloud.live || !ON || !CS || cloud.ask || !signedIn()) return Promise.resolve();
+    clearTimeout(cloud.timer); cloud.timer = 0;
+    if (cloud.busy) { cloud.again = true; return cloud.busy; }
+    cloud.busy = (async () => {
+      do {
+        cloud.again = false;
+        if (cloud.state !== 'offline' && cloud.state !== 'error') cloudState('busy');     // (a retry doesn't flicker "saving")
+        try {
+          const r = await CS.sync(cloudDev());
+          cloud.looked = Date.now();
+          if (r.ask) { cloud.ask = r.ask; cloudState('ask'); break; }
+          cloud.retry = 0;
+          cloudState('idle');
+        } catch (e) {
+          if (e && e.code === 'auth') { cloudState('idle'); break; }       // signed out under us: accountChanged says so
+          cloudState(e && e.code === 'net' ? 'offline' : 'error', (e && e.message) || '');
+          if (!(e && e.code === 'net')) console.error(e);
+          cloudLater();
+          break;
+        }
+      } while (cloud.again);
+      cloud.busy = null;
+    })();
+    return cloud.busy;
+  }
+  window.addEventListener('online', () => { if (cloud.state === 'offline') cloudSync(); });
+  // leaving the app (a phone going to its home screen): send what hasn't gone yet, at once
+  const cloudLeave = () => { if (cloud.timer && cloud.state !== 'offline') { cloud.leaving = Date.now(); cloudSync(); } };
+  window.addEventListener('pagehide', cloudLeave);
+
+  // ---------- who is signed in ----------
+  // The server signed this device out (the sign-in was ended somewhere else, or ran out).
+  function accountChanged(why) {
+    if (why !== 'signedout') return;
+    knownAcct = '';
+    cloud.ask = null; cloudStop();
+    onlineSave({ name: null, duel: null }); ui.on.name = null;
+    odToast('You have been signed out. Sign in again to keep saving your progress.');
+    if (ui.screen === 'account') { ui.acct.state = 'out'; accountWays(); render(); } else cloudShow();
+  }
+  // Another tab or window of the game signed in or out: start again from what is saved, so this one can't
+  // carry on with someone else's progress. (A duel is left to finish first.)
+  function accountCheck() {
+    if (!ON) return;
+    const stored = onlineGet().auth;
+    if (!stored && account()) ON.forget();
+    const k = acctKey(account());
+    if (k === knownAcct) return;
+    if (ui.g && ui.g.winner === null) return;
+    knownAcct = k;
+    location.reload();
+  }
+  window.addEventListener('storage', (e) => { if (e.key === ONLINE) accountCheck(); });
+  // back from Google by the browser's Back button: the page is shown again as it was left
+  window.addEventListener('pageshow', (e) => { if (e.persisted && ui.acct.state === 'busy' && ui.screen === 'account') { ui.acct.state = signedIn() ? 'in' : 'out'; render(); } });
+
+  function accountWords(e) {
+    const c = (e && e.code) || '';
+    if (c === 'net') return "Can't reach the game server. Check your connection and try again.";
+    if (c === 'access_denied') return 'You came back before signing in. Nothing has changed.';
+    if (c === 'manual_linking_disabled') return "Signing in with Google isn't switched on at the game server yet.";
+    if (c === 'otp_expired') return "That code isn't right, or it has run out. Check it, or send a new one.";
+    if (c === 'over_email_send_rate_limit') return 'Give it a minute before asking for another code.';
+    if (c === 'over_request_rate_limit' || c === 'busy') return 'Too many tries just now. Wait a minute and try again.';
+    if (c === 'email_address_not_authorized') return "Emailed codes can't reach that address yet. Sign in with Google instead.";
+    if (c === 'email_address_invalid' || c === 'validation_failed') return "That doesn't look like an email address.";
+    if (c === 'email_provider_disabled' || c === 'provider_disabled') return 'That way of signing in is switched off.';
+    if (c === 'flow_state_not_found' || c === 'flow_state_expired' || c === 'bad_code_verifier') return 'That sign-in ran out of time. Try again.';
+    if (c === 'identity_already_exists' || c === 'email_exists') return 'That sign-in already belongs to another player.';
+    if (c === 'where') return `Signing in works in the app at ${APP_NAME}.`;
+    if (c === 'auth') return 'You have been signed out. Sign in again.';
+    return (e && e.message) || 'Something went wrong. Try again.';
+  }
+  function accountError(e) {
+    if (!(e && e.code)) console.error(e);
+    ui.acct.busy = false;
+    if (ui.screen !== 'account') { odToast(accountWords(e)); return; }
+    ui.acct.state = 'error'; ui.acct.msg = accountWords(e);
+    render();
+  }
+  // typing again answers a complaint about what was typed; taken off the page in place, since a render would move the caret
+  function accountTyped(key) {
+    if (!ui.acct[key]) return;
+    ui.acct[key] = '';
+    const el = document.querySelector('.acctp .err'); if (el) el.remove();
+  }
+  function accountBusy(msg) { ui.screen = 'account'; ui.modal = null; ui.acct.state = 'busy'; ui.acct.msg = msg; render(); }
+  // which ways to sign in are switched on at the server (the dashboard's Google and Email providers)
+  async function accountWays() {
+    const a = ui.acct;
+    if (PREVIEW || !ON) { a.ways = { where: true }; return; }
+    if (!a.ways || a.ways.err) a.ways = null;
+    try { const w = await ON.ways(); a.ways = w; } catch (e) { a.ways = { err: accountWords(e) }; }
+    if (ui.screen === 'account' && a.state === 'out') render();
+  }
+  async function accountName() {                 // the online name that goes with the account, if it has one
+    try { const n = await ON.myName(); ui.on.name = n || null; onlineSave({ name: n || null }); } catch (e) { return; }
+    if (ui.screen === 'account' && ui.acct.state === 'in') render(); else cloudShow();
+  }
+  function accountOpen() {
+    const a = ui.acct;
+    Object.assign(a, { confirm: null, emailErr: '', codeErr: '', note: '' });
+    ui.modal = null; ui.screen = 'account';
+    if (cloud.ask) a.state = 'choose';
+    else if (signedIn()) { a.state = 'in'; cloudSync(); accountName(); }
+    else { a.state = 'out'; accountWays(); }
+    render();
+  }
+  const here = () => location.origin + location.pathname;      // where Google sends the player back to
+  async function accountGoogle() {
+    if (inOnlineDuel()) return;
+    accountBusy('Off to Google');
+    try { await ON.google(here()); } catch (e) { accountError(e); }
+  }
+  // The page has just come back from a sign-in (boot hands us what ON.landing found in the address).
+  async function accountLand(l) {
+    accountBusy('Signing you in');
+    try {
+      const r = await ON.land(l);
+      if (r.again) {                             // that Google account has a game account already: sign in to it
+        ui.acct.msg = 'Finding your account'; render();
+        await ON.google(here(), { fresh: true });
+        return;
+      }
+      await accountArrived(r.linked);
+    } catch (e) { accountError(e); }
+  }
+  // Signed in. `same`: the guest became the account (same id, so its name and duels are still theirs).
+  async function accountArrived(same) {
+    knownAcct = acctKey(account());
+    if (!same) { onlineSave({ name: null, duel: null }); ui.on.name = null; }
+    cloud.ask = null; cloudStop();
+    accountBusy('Fetching your progress');
+    await cloudSync();
+    ui.acct.confirm = null;
+    ui.acct.state = cloud.ask ? 'choose' : 'in';
+    if (ui.screen === 'account') render();
+    accountName();
+  }
+  async function accountSend(again) {
+    const a = ui.acct, email = (a.email || '').trim();
+    if (a.busy || inOnlineDuel()) return;
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) { a.emailErr = "That doesn't look like an email address."; a.state = 'email'; render(); return; }
+    a.busy = true; a.emailErr = ''; a.codeErr = ''; a.note = '';
+    if (!again) accountBusy('Sending your code'); else render();
+    try {
+      const r = await ON.emailCode(email);
+      a.busy = false;
+      if (r.done) { await accountArrived(true); return; }
+      Object.assign(a, { state: 'code', kind: r.type, code: again ? a.code : '', note: again ? 'A new code is on its way.' : '' });
+      render(); focusSoon('accode');
+    } catch (e) {
+      a.busy = false;
+      if (again) { a.state = 'code'; a.codeErr = accountWords(e); } else { a.state = 'email'; a.emailErr = accountWords(e); }
+      render(); focusSoon(again ? 'accode' : 'acemail');
+    }
+  }
+  async function accountVerify() {
+    const a = ui.acct, code = (a.code || '').replace(/\D/g, '');
+    if (a.busy) return;
+    if (code.length < 6) { a.codeErr = 'The code is 6 numbers.'; render(); return; }
+    a.busy = true; a.codeErr = ''; a.note = '';
+    accountBusy('Checking your code');
+    try {
+      await ON.emailVerify(a.email.trim(), code, a.kind);
+      a.busy = false; a.code = '';
+      await accountArrived(a.kind === 'email_change');
+    } catch (e) {
+      a.busy = false; a.state = 'code'; a.codeErr = accountWords(e);
+      render(); focusSoon('accode');
+    }
+  }
+  const soon = (p, ms) => Promise.race([p, new Promise((res) => setTimeout(res, ms))]);
+  async function accountSignOut(save) {
+    accountBusy('Signing out');
+    if (save) await soon(cloudSync().catch(() => {}), 4000);       // a last save, if the server is there
+    cloud.ask = null; cloudStop();
+    ON.signOut();                                // not waited for: the device forgets at once
+    knownAcct = '';
+    onlineSave({ name: null, duel: null }); ui.on.name = null;
+    ui.acct.confirm = null; ui.acct.state = 'out';
+    accountWays();
+    render();
+  }
+  // The player's answer to "which progress do you keep?"
+  async function accountKeep(which) {
+    const asked = cloud.ask;
+    if (!asked) { accountOpen(); return; }
+    accountBusy(which === 'device' ? 'Saving this device\'s progress to your account' : 'Fetching your account\'s progress');
+    // what is about to be replaced is put aside first, in case it was the wrong button
+    store.set(BACKUP, { at: Date.now(), uid: account().uid, why: which === 'device' ? "the account's progress, replaced by this device's" : "this device's progress, replaced by the account's",
+      data: which === 'device' ? asked.data : progressNow() });
+    try {
+      const r = await CS.choose(cloudDev(), which, asked);
+      ui.acct.confirm = null;
+      if (r.ask) { cloud.ask = r.ask; ui.acct.state = 'choose'; ui.acct.note = 'Your account changed while you were choosing. Have another look.'; render(); return; }
+      cloud.ask = null; cloud.looked = Date.now(); cloudState('idle');
+      ui.acct.state = 'in'; ui.acct.note = '';
+      render();
+    } catch (e) {
+      ui.acct.state = 'choose'; ui.acct.confirm = null; ui.acct.note = accountWords(e);
+      render();
+    }
+  }
+
+  // ---------- what it looks like ----------
+  const ACI = {
+    person: '<svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4.2" fill="none" stroke="#f3d27a" stroke-width="2"/><path d="M4 21c.8-4.4 4-6.5 8-6.5s7.200 2.100 8 6.500" fill="none" stroke="#f3d27a" stroke-width="2" stroke-linecap="round"/></svg>',
+    ok: '<svg width="28" height="24" viewBox="0 0 28 24" aria-hidden="true"><path d="M8 20a6 6 0 01-.9-11.900A7.500 7.500 0 0121.700 9.200 5.400 5.400 0 0121 20z" fill="none" stroke="#9fd986" stroke-width="2" stroke-linejoin="round"/><path d="M10.500 14l2.600 2.600 4.800-5" fill="none" stroke="#9fd986" stroke-width="2.200" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+    up: '<svg width="28" height="24" viewBox="0 0 28 24" aria-hidden="true"><path d="M8 20a6 6 0 01-.9-11.900A7.500 7.500 0 0121.700 9.200 5.400 5.400 0 0121 20z" fill="none" stroke="#f3d27a" stroke-width="2" stroke-linejoin="round"/><path d="M14 17.500v-6M11.200 13.800L14 11l2.800 2.800" fill="none" stroke="#f3d27a" stroke-width="2.200" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+    off: '<svg width="28" height="24" viewBox="0 0 28 24" aria-hidden="true"><path d="M8 20a6 6 0 01-.9-11.900A7.500 7.500 0 0121.700 9.200 5.400 5.400 0 0121 20z" fill="none" stroke="#cdbf9f" stroke-width="2" stroke-linejoin="round"/><path d="M5 3l18 19" stroke="#cdbf9f" stroke-width="2.200" stroke-linecap="round"/></svg>',
+    ask: '<svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10" fill="none" stroke="#ff9d86" stroke-width="2"/><path d="M12 6.500v7" stroke="#ff9d86" stroke-width="2.600" stroke-linecap="round"/><circle cx="12" cy="17.300" r="1.500" fill="#ff9d86"/></svg>',
+    google: '<svg width="30" height="30" viewBox="0 0 48 48" aria-hidden="true"><path fill="#fff" d="M44.500 20H24v8.500h11.800C34.700 33.900 30.100 37 24 37c-7.200 0-13-5.800-13-13s5.800-13 13-13c3.100 0 5.900 1.100 8.100 2.900l6.400-6.400C34.600 4.100 29.600 2 24 2 11.800 2 2 11.800 2 24s9.800 22 22 22c11 0 21-8 21-22 0-1.300-.2-2.700-.500-4z"/></svg>',
+    mail: '<svg width="28" height="24" viewBox="0 0 28 24" aria-hidden="true"><rect x="3" y="4" width="22" height="16" rx="2.500" fill="none" stroke="#f3d27a" stroke-width="2"/><path d="M4 6l10 8 10-8" fill="none" stroke="#f3d27a" stroke-width="2" stroke-linejoin="round"/></svg>',
+  };
+  const cloudIcon = () => (cloud.state === 'ask' ? ACI.ask : cloud.state === 'offline' || cloud.state === 'error' ? ACI.off : cloud.state === 'busy' || cloud.timer ? ACI.up : ACI.ok);
+  // the main menu's corner: "Sign in" for a guest; for an account, its name and whether its progress is saved
+  function accountChip() {
+    if (!ON) return '';
+    const inn = signedIn();
+    const say = !inn ? 'Sign in to keep your progress on every device' : cloud.state === 'ask' ? 'Choose which progress to keep' : 'Your account';
+    return `<button type="button" id="acctchip" class="btn-d acct${inn && cloud.state === 'ask' ? ' warn' : ''}" data-do="account" aria-label="${say}" title="${say}">${inn ? cloudIcon() : ACI.person}<span>${inn ? esc(ui.on.name || 'Account') : 'Sign in'}</span></button>`;
+  }
+  function agoWords(ms) {
+    const s = Math.max(0, (Date.now() - ms) / 1000);
+    if (s < 90) return 'just now';
+    if (s < 3600) return `${Math.round(s / 60)} minutes ago`;
+    if (s < 86400) { const h = Math.round(s / 3600); return `${h} hour${h === 1 ? '' : 's'} ago`; }
+    return `on ${new Date(ms).toLocaleDateString(undefined, { day: 'numeric', month: 'short' })}`;
+  }
+  function cloudLine() {
+    const at = profile.cloud && profile.cloud.at ? Date.parse(profile.cloud.at) : 0;
+    const when = at ? ` Last saved ${agoWords(at)}.` : '';
+    if (cloud.state === 'offline') return `${ACI.off}<span>Can't reach the game server. Your progress is safe on this device and will be saved when you're back online.</span>`;
+    if (cloud.state === 'error') return `${ACI.off}<span>Your progress couldn't be saved just now. It is safe on this device, and the game will try again.</span>`;
+    if (cloud.state === 'busy' || cloud.timer) return `${ACI.up}<span>Saving your progress…</span>`;
+    return `${ACI.ok}<span>Your progress is saved to your account.${when}</span>`;
+  }
+  // one side of "which progress do you keep?"
+  function saveCard(title, p, small, which) {
+    const n = (x) => (+x || 0).toLocaleString();
+    const cards = POOL.filter((c) => isBasic(c) || ((p.coll || {})[c] || 0) > 0).length;
+    const on = p.online || {};
+    const sure = ui.acct.confirm === which;
+    const row = (k, v) => `<div class="row"><span>${k}</span><b>${v}</b></div>`;
+    return `<div class="acsave"><h3>${title}</h3>
+      ${row('GP', n(p.gp))}${row('Cards collected', `${cards} / ${POOL.length}`)}${row('Decks', n((p.decks || []).length))}
+      ${row('Duels won', n((+p.wins || 0) + (+on.wins || 0)))}${row('Packs opened', n(p.packs))}
+      <small>${esc(small)}</small>
+      <button type="button" class="btn-g" data-do="ackeep" data-v="${which}" style="${sure ? 'border-color:var(--hurt);filter:saturate(.7)' : ''}">${sure ? `${tapWord(1)} again to keep it` : which === 'device' ? "Keep this device's" : "Keep my account's"}</button></div>`;
+  }
+  function accountHTML() {
+    const a = ui.acct, who = account();
+    const dots = '<span class="thinking" aria-hidden="true"><i></i><i></i><i></i></span>';
+    const head = `<div style="position:absolute;left:60px;top:34px;right:60px;display:flex;align-items:center;gap:20px">
+        <button type="button" class="btn-d" data-do="acback" style="width:52px;height:52px" aria-label="Back">${ICN.back}</button>
+        <span class="ttl" style="font-size:40px">Your account</span>
+        <span style="margin-left:auto">${gpChip(22)}</span></div>`;
+    const row = (html) => `<div style="display:flex;gap:16px;justify-content:center;align-items:center;flex-wrap:wrap">${html}</div>`;
+    const err = (t) => (t ? `<span class="err" role="alert">${esc(t)}</span>` : '');
+    const note = (t) => (t ? `<span class="fine" role="status" style="color:var(--gold-pale)">${esc(t)}</span>` : '');
+    let inner;
+    if (a.state === 'choose' && cloud.ask) {
+      const at = Date.parse(cloud.ask.at);
+      inner = `<span class="ttl" style="font-size:38px">Which progress do you keep?</span>
+        <p>This device and your account both have progress. Keep one. The other is replaced.</p>
+        ${note(a.note)}
+        <div class="acsaves">${saveCard('This device', progressNow(), 'What you have played here', 'device')}
+          ${saveCard('Your account', cloud.ask.data || {}, at ? `Last saved ${agoWords(at)}` : 'Saved from another device', 'account')}</div>
+        <button type="button" class="btn-d" data-do="aclater" style="height:48px;padding:0 24px;font-size:17px">Decide later, and sign out</button>`;
+    } else if (a.state === 'in' && who && !who.guest) {
+      const how = who.provider === 'google' ? 'with Google' : who.provider === 'email' ? 'with a code by email' : '';
+      inner = `<span class="ttl" style="font-size:38px">You're signed in</span>
+        <p>${who.email ? `As <b>${esc(who.email)}</b>${how ? `, ${how}` : ''}.` : 'Your progress goes with you.'}${ui.on.name ? ` Online, you're <b>${esc(ui.on.name)}</b>.` : ''}</p>
+        <div id="acstatus" class="acline" role="status">${cloudLine()}</div>
+        ${row(`<button type="button" class="btn-g" data-do="menu" style="width:260px;height:68px;font-size:24px">Done</button>
+          <button type="button" class="btn-d" data-do="acout" style="height:68px;padding:0 26px;font-size:19px;${a.confirm === 'out' ? 'border-color:var(--hurt);color:var(--hurt)' : ''}">${a.confirm === 'out' ? `${tapWord(1)} again to sign out` : 'Sign out'}</button>`)}
+        <span class="fine">To carry on somewhere else, open the game there and sign in the same way. Signing out leaves your progress on this device and in your account.</span>`;
+    } else if (a.state === 'email') {
+      inner = `<span class="ttl" style="font-size:38px">Sign in by email</span>
+        <p>Type your email address and we'll send you a code. There is no password.</p>
+        ${row(`<input id="acemail" class="onin mail" data-input="acemail" type="email" maxlength="120" autocomplete="email" autocapitalize="off" spellcheck="false" enterkeyhint="send" value="${esc(a.email)}" aria-label="Your email address" placeholder="you@example.com" style="width:560px;font-size:26px">
+          <button type="button" class="btn-g" data-do="acsend" style="width:220px;height:64px;font-size:22px" ${a.busy ? 'disabled' : ''}>Send code</button>`)}
+        ${err(a.emailErr)}`;
+    } else if (a.state === 'code') {
+      inner = `<span class="ttl" style="font-size:38px">Check your email</span>
+        <p>We sent a code to <b>${esc(a.email.trim())}</b>. Type it here.</p>
+        ${row(`<input id="accode" class="onin code" data-input="accode" type="text" inputmode="numeric" maxlength="10" autocomplete="one-time-code" spellcheck="false" enterkeyhint="go" value="${esc(a.code)}" aria-label="The code from the email" placeholder="000000" style="width:340px">
+          <button type="button" class="btn-g" data-do="acverify" style="width:200px;height:64px;font-size:22px" ${a.busy ? 'disabled' : ''}>Sign in</button>`)}
+        ${err(a.codeErr)}${note(a.note)}
+        <span class="fine">It can take a minute to arrive, and it works for an hour. If it isn't there, look in your spam folder.</span>
+        ${row(`<button type="button" class="btn-d" data-do="acresend" style="height:52px;padding:0 22px;font-size:17px" ${a.busy ? 'disabled' : ''}>Send a new code</button>
+          <button type="button" class="btn-d" data-do="acemail" style="height:52px;padding:0 22px;font-size:17px">Use another address</button>`)}`;
+    } else if (a.state === 'busy') {
+      inner = `<span class="ttl" style="font-size:36px;display:flex;align-items:center;gap:16px">${esc(a.msg)} ${dots}</span>`;
+    } else if (a.state === 'error') {
+      inner = `<span class="ttl" style="font-size:38px">Couldn't sign in</span><p>${esc(a.msg)}</p>
+        ${row(`<button type="button" class="btn-g" data-do="account" style="width:240px;height:72px;font-size:24px">Try again</button>
+          <button type="button" class="btn-d" data-do="menu" style="width:220px;height:72px;font-size:20px">Main menu</button>`)}`;
+    } else {
+      const w = a.ways, duel = inOnlineDuel();
+      let ways;
+      if (!w) ways = `<span class="ttl" style="font-size:26px;display:flex;align-items:center;gap:14px;color:var(--bot-hi)">Asking the game server ${dots}</span>`;
+      else if (w.where) ways = `<p>Accounts work in the app at ${esc(APP_NAME)}, not inside a preview.</p>`;
+      else if (w.err) ways = `${err(w.err)}${row('<button type="button" class="btn-g" data-do="account" style="width:240px;height:68px;font-size:22px">Try again</button>')}`;
+      else if (!w.google && !w.email) ways = "<p>Signing in isn't switched on yet. Your progress stays safe on this device.</p>";
+      else ways = `<div class="acways">${w.google ? `<button type="button" class="btn-g acbtn" data-do="acgoogle" ${duel ? 'disabled' : ''}>${ACI.google}Sign in with Google</button>` : ''}
+          ${w.email ? `<button type="button" class="${w.google ? 'btn-d' : 'btn-g'} acbtn" data-do="acemail" ${duel ? 'disabled' : ''}>${ACI.mail}Email me a code</button>` : ''}</div>
+          ${duel ? '<span class="err">You\'re in an online duel. Finish it first, then sign in.</span>' : ''}`;
+      inner = `<span class="ttl" style="font-size:38px">Keep your progress</span>
+        <p>Sign in, and your GP, cards and decks are saved to your account. Sign in on another device and carry on there.</p>
+        ${ways}
+        <span class="fine">${ui.on.name ? `Your online name, ${esc(ui.on.name)}, comes with you. ` : ''}You can keep playing as a guest: a guest's progress stays on this device.</span>`;
+    }
+    return `<div class="table"></div>${head}<div class="panel onl acctp${a.state === 'choose' ? ' wide' : ''}">${inner}</div>`;
+  }
 
   // ---------- Play Online, the hub: connecting, your name, a code to join, the waiting room ----------
   function onlineHTML() {
@@ -3421,7 +3863,7 @@ html, body { touch-action: manipulation; }
         ${row(`<input id="onname" class="onin" data-input="onname" type="text" maxlength="12" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="done" value="${esc(o.nameText)}" aria-label="Your name" style="width:440px">
           <button type="button" class="btn-g" data-do="onname" style="width:180px;height:64px;font-size:24px" ${o.busy ? 'disabled' : ''}>Save</button>`)}
         ${err(o.nameErr)}
-        <span class="fine">Your name is kept in this browser for now. Accounts that follow you between devices come later.</span>`;
+        <span class="fine">${signedIn() ? 'Your name goes with your account, to every device you sign in on.' : 'Your name is kept on this device. Sign in from the main menu and it goes with you, along with your progress.'}</span>`;
     } else if (o.state === 'code') {
       inner = `<span class="ttl" style="font-size:40px">Join a friend</span>
         <p>Type the code your friend sent you.</p>
@@ -4362,6 +4804,12 @@ html, body { touch-action: manipulation; }
     else if (k === 'edname') { ui.ed.name = e.target.value; ui.ed.dirty = true; }
     else if (k === 'deckname') ui.renameText = e.target.value;
     else if (k === 'onname') ui.on.nameText = e.target.value;
+    else if (k === 'acemail') { ui.acct.email = e.target.value; accountTyped('emailErr'); }
+    else if (k === 'accode') {
+      const t = e.target.value.replace(/\D/g, '').slice(0, 10);
+      if (t !== e.target.value) e.target.value = t;
+      ui.acct.code = t; accountTyped('codeErr');
+    }
     else if (k === 'oncode') {
       const t = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 5);
       if (t !== e.target.value) e.target.value = t;
@@ -4373,6 +4821,8 @@ html, body { touch-action: manipulation; }
     if (k === 'deckname') act('renamedone');
     else if (k === 'onname') act('onname');
     else if (k === 'oncode') act('onpeek');
+    else if (k === 'acemail') act('acsend');
+    else if (k === 'accode') act('acverify');
   });
 
   // =====================================================================================
@@ -4548,7 +4998,7 @@ html, body { touch-action: manipulation; }
     const keepLog = $('#logl') ? $('#logl').scrollTop : null;
     $('#stage').classList.toggle('calm', calm());
     const ae = document.activeElement, fid = ae && ae.id && ae.tagName === 'INPUT' ? ae.id : null, caret = fid ? ae.selectionStart : 0;
-    const SCREENS = { menu: menuHTML, online: onlineHTML, pick: pickHTML, decks: decksHTML, editor: editorHTML, wizard: wizHTML, packs: packsHTML, open: () => openHTML() + packCoach('open'), summary: () => summaryHTML() + packCoach('summary') };
+    const SCREENS = { menu: menuHTML, online: onlineHTML, account: accountHTML, pick: pickHTML, decks: decksHTML, editor: editorHTML, wizard: wizHTML, packs: packsHTML, open: () => openHTML() + packCoach('open'), summary: () => summaryHTML() + packCoach('summary') };
     const key = SCREENS[ui.screen] && (ui.screen !== 'editor' || ui.ed) && (ui.screen !== 'wizard' || ui.wiz) && (ui.screen !== 'open' || ui.pack) ? ui.screen : ui.screen === 'result' && ui.result ? 'result' : ui.g ? 'duel' : 'menu';
     const from = shownScreen;
     const sweeping = from && from !== key && (from in SWEEP || from === 'result') && key in SWEEP && !calm();
@@ -4626,7 +5076,7 @@ html, body { touch-action: manipulation; }
   // Forward (deeper: menu -> Packs -> a pack's summary) the old screen, background and all, is pushed off
   // to the left as the new one comes in from the right; then the new screen's contents settle in one
   // after another. Back reverses it.
-  const SWEEP = { menu: 0, online: 1, pick: 1, decks: 1, packs: 1, editor: 2, summary: 2 };
+  const SWEEP = { menu: 0, online: 1, account: 1, pick: 1, decks: 1, packs: 1, editor: 2, summary: 2 };
   let shownScreen = null;
   const sweepAnims = [];
   function endSweep() {
@@ -4766,7 +5216,7 @@ html, body { touch-action: manipulation; }
       case 'picklevel': ui.setup.level = levelOf(v); store.set('rstcg-arena-setup', ui.setup); break;
       case 'opp': ui.oppOpen = !ui.oppOpen; break;
       case 'play': if (ui.g && ui.g.winner === null) stopDuel(); ui.screen = 'pick'; ui.pickMode = 'bot'; ui.oppOpen = false; ui.modal = null; break;
-      case 'menu': if (ui.g && ui.g.winner === null) stopDuel(); ui.g = null; ui.screen = 'menu'; ui.result = null; ui.oppOpen = false; break;
+      case 'menu': if (ui.g && ui.g.winner === null) stopDuel(); ui.g = null; ui.screen = 'menu'; ui.result = null; ui.oppOpen = false; cloudLook(); break;
       case 'start': runDuel(newConfig()); return;
       case 'resume': { const saved = store.get(STORE); if (saved) runDuel(saved.config, saved.decisions, saved.bot); return; }
       case 'rematch': { if (ui.result && ui.result.online) { rematchAsk(); return; } const c = (ui.result && ui.result.config) || ui.config; const f = newConfig(); runDuel(Object.assign(f, { youDeck: c.youDeck, youDeckId: c.youDeckId, youCards: c.youCards, youCape: c.youCape, level: levelOf(c.level), botDeck: c.botDeck, botCape: deckObj(c.botDeck).capes[Math.floor(Math.random() * deckObj(c.botDeck).capes.length)] })); return; }
@@ -4909,6 +5359,27 @@ html, body { touch-action: manipulation; }
         if (o && o.again === 'waiting') { ON.call('rematch', { match: o.match, off: true }).catch(() => {}); o.again = null; o.room = null; if (o.roomWatch) { o.roomWatch(); o.roomWatch = null; } }
         break;
       }
+      // --- accounts ---
+      case 'account': accountOpen(); return;
+      case 'acback': {
+        const st = ui.acct.state;
+        if (st === 'busy') return;
+        if (st === 'email' || st === 'code') { ui.acct.state = 'out'; ui.acct.emailErr = ''; ui.acct.codeErr = ''; accountWays(); break; }
+        ui.acct.confirm = null; ui.screen = 'menu'; cloudLook(); break;
+      }
+      case 'acgoogle': accountGoogle(); return;
+      case 'acemail': if (inOnlineDuel()) return; Object.assign(ui.acct, { state: 'email', emailErr: '', codeErr: '', note: '', code: '' }); render(); focusSoon('acemail'); return;
+      case 'acsend': accountSend(false); return;
+      case 'acresend': accountSend(true); return;
+      case 'acverify': accountVerify(); return;
+      case 'acout':
+        if (inOnlineDuel()) { odToast('Finish your online duel first, then sign out.'); return; }
+        if (ui.acct.confirm !== 'out') { ui.acct.confirm = 'out'; break; }
+        accountSignOut(true); return;
+      case 'aclater': accountSignOut(false); return;
+      case 'ackeep':
+        if (ui.acct.confirm !== v) { ui.acct.confirm = v; break; }
+        accountKeep(v); return;
       case 'log': ui.logOpen = !ui.logOpen; break;
       case 'speed': ui.speed = ui.speed === 'fast' ? 'normal' : 'fast'; store.set('rstcg-speed', ui.speed); break;
       case 'viewdiscard': ui.view = +v; break;
@@ -5182,7 +5653,7 @@ html, body { touch-action: manipulation; }
   stageFor(null);
 
   // test hook
-  window.__arena = { get ui() { return ui; }, render, act, CARDS, zoneFor, online: { sync: () => odSync(), get od() { return ui.od; }, ON, VERSION, idle: () => !anim.playing && !ui.intro && (!ui.od || !ui.od.jobs) }, get profile() { return profile; }, deckRules, POOL, PACK_POOL, cardFace, mini, AS, ART, ICON, get CREST() { return CREST; }, get EMBLEM() { return EMBLEM; },
+  window.__arena = { get ui() { return ui; }, render, act, CARDS, zoneFor, online: { sync: () => odSync(), get od() { return ui.od; }, ON, VERSION, idle: () => !anim.playing && !ui.intro && (!ui.od || !ui.od.jobs) }, get profile() { return profile; }, cloud: { get state() { return cloud; }, sync: () => cloudSync(), signedIn, account, progress: () => progressNow(), untouched }, deckRules, POOL, PACK_POOL, cardFace, mini, AS, ART, ICON, get CREST() { return CREST; }, get EMBLEM() { return EMBLEM; },
     // for tests: does the duel board, redrawn in place, read the same as a board drawn from scratch?
     // (attribute order aside). Returns true, or the first place they differ.
     morphCheck() {
@@ -5198,12 +5669,24 @@ html, body { touch-action: manipulation; }
 
   // ---------- boot ----------
   function snapshot() { return ui.config && ui.g && ui.g.winner === null ? duelSave() : {}; }
+  // Back from a sign-in (Google's trip, or a link pressed in a sign-in email)? It goes out of the address at once,
+  // so a reload or a shared link can't carry it along.
+  const landed = ON && !PREVIEW ? ON.landing(location.href) : null;
+  if (landed) { try { history.replaceState(null, '', location.pathname); } catch (e) { /* fine */ } }
   {
     const m = /^#duel-([A-Za-z0-9]{5})$/.exec(location.hash || '');     // a friend's link: runescapetcg.netlify.app/#duel-K7MQX
     if (m) { ui.on.code = m[1].toUpperCase(); try { history.replaceState(null, '', location.pathname + location.search); } catch (e) { /* fine */ } }
   }
-  document.addEventListener('visibilitychange', () => { if (document.hidden || !ON) return; ON.wake(); if (ui.od) odSync(); });
+  document.addEventListener('visibilitychange', () => {
+    if (!ON) return;
+    if (document.hidden) { cloudLeave(); return; }
+    ON.wake(); if (ui.od) odSync();
+    accountCheck(); cloudLook();
+  });
   function start(data) {
+    cloud.live = true;
+    if (landed) { accountLand(landed); return; }
+    if (signedIn()) cloudSync();
     if (ui.on.code && ON) { render(); onlineEnter(); return; }
     if (data && data.config && Array.isArray(data.decisions)) { runDuel(data.config, data.decisions, data.bot); return; }
     if (!profile.tutorial && !profile.wins && !profile.losses && !store.get(STORE)) ui.modal = 'welcome';

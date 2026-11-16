@@ -1,14 +1,17 @@
 // A pretend database for trying the `duel` function away from Supabase: the tables in memory and the
 // referee's database calls (rpc), mirroring server/supabase/migrations/*.sql. Keep the two in step.
 //
-//   const { db, RPC } = makeDb({ now, uuid, onChange })
+//   const { db, RPC, progress } = makeDb({ now, uuid, onChange })
 //   db.profiles / matches / secrets / moves      Maps, as the tables
 //   RPC.duel_create({ p_host, ... }) ...         the functions, called with the arguments PostgREST passes
 //   onChange(row)                                after a matches row changes (the browser tests' Realtime)
+//   db.progress                                  the cloud save: user id -> { user_id, data, rev, created_at, updated_at }
+//   progress.load(who, since) / .save(who, data, rev)    what a player may do with it, as the policies and
+//                                                progress_save() decide. who: { id, guest } from their token
 //
 // Used by server/test_local.mjs and server/fake_supabase.mjs. A database error is thrown as { status, text }.
 export function makeDb({ now = () => Date.now(), uuid = () => crypto.randomUUID(), onChange = () => {} } = {}) {
-  const db = { profiles: new Map(), matches: new Map(), secrets: new Map(), moves: new Map() };
+  const db = { profiles: new Map(), matches: new Map(), secrets: new Map(), moves: new Map(), progress: new Map() };
   const J = JSON.stringify;
   const iso = () => new Date(now()).toISOString();
   const touch = (m) => { m.updated_at = iso(); onChange(m); };
@@ -88,5 +91,39 @@ export function makeDb({ now = () => Date.now(), uuid = () => crypto.randomUUID(
       return true;
     },
   };
-  return { db, RPC };
+  // ---------- the cloud save (migrations *_accounts_progress*.sql) ----------
+  // jsonb hands a document's keys back shortest first, then in byte order: so does this, to keep the page honest
+  const jsonb = (x) => (Array.isArray(x) ? x.map(jsonb) : x && typeof x === 'object'
+    ? Object.fromEntries(Object.keys(x).sort((a, b) => Buffer.byteLength(a) - Buffer.byteLength(b) || Buffer.compare(Buffer.from(a), Buffer.from(b))).map((k) => [k, jsonb(x[k])])) : x);
+  const SAVE_LIMIT = 400000;
+  const progress = {
+    // select ... where user_id = <me> and rev > since: guests see no rows
+    load(who, since) {
+      const row = who.guest ? null : db.progress.get(who.id);
+      return row && row.rev > (since || 0) ? [JSON.parse(J({ data: row.data, rev: row.rev, updated_at: row.updated_at }))] : [];
+    },
+    // public.progress_save(p_data, p_rev)
+    save(who, p_data, p_rev) {
+      const check = () => {
+        if (!p_data || typeof p_data !== 'object' || Array.isArray(p_data)) throw { status: 400, code: '23514', text: 'new row for relation "progress" violates check constraint "progress_is_object"' };
+        if (Buffer.byteLength(J(p_data)) > SAVE_LIMIT) throw { status: 400, code: '23514', text: 'new row for relation "progress" violates check constraint "progress_size"' };
+      };
+      const row = who.guest ? null : db.progress.get(who.id);          // what the policies let this token see
+      if (p_rev == null) {
+        if (who.guest) throw { status: 403, code: '42501', text: 'new row violates row-level security policy for table "progress"' };
+        if (!row) {
+          check();
+          const made = { user_id: who.id, data: jsonb(JSON.parse(J(p_data))), rev: 1, created_at: iso(), updated_at: iso() };
+          db.progress.set(who.id, made);
+          return { ok: true, rev: 1, at: made.updated_at };
+        }
+      } else if (row && row.rev === p_rev) {
+        check();
+        Object.assign(row, { data: jsonb(JSON.parse(J(p_data))), rev: row.rev + 1, updated_at: iso() });
+        return { ok: true, rev: row.rev, at: row.updated_at };
+      }
+      return row ? { ok: false, rev: row.rev, at: row.updated_at, data: JSON.parse(J(row.data)) } : { ok: false, rev: null };
+    },
+  };
+  return { db, RPC, progress };
 }
