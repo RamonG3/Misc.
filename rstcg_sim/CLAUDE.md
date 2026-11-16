@@ -93,6 +93,7 @@ python simulate.py 300                    # Python simulator, starter decks
 - `TABLE = {w:1920, h:780, tilt:30, pers:1500}`, rendered as `.scene` (perspective) > `.plane` (`rotateX`).
 - `proj(x,y)` / `projRect` mirror the CSS 3D maths, for placing flat things over tilted ones.
 - The HUD stays flat on top: your hand, the actions grid, the turn panel, End turn, the log tab and the bot's hand of card backs.
+- Nameplates (`nameplate()`) show the same hooded stranger for both seats (`playerIcon()`, trim in the seat's colour) and the other side's name (`oppName()`), never the deck's style or name: a deck should give itself away in play, not before (Ramon, 2026-11-15; it matters online).
 - Rows: `ROW = {bot:8, you:522, h:250}`.
 
 **Other systems.**

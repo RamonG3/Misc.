@@ -21,6 +21,9 @@ It is one web app, so PC and phone play each other.
 6. **Supabase:** a free project with a keep-alive for now; Ramon will move it to Pro later.
 7. **Your opponent's deck list stays hidden** during a duel.
 8. **Accounts come after a test with friends:** build phases 0 to 2, test Challenge a friend with real people, then do accounts.
+9. **The reaction tell stays** (the duel waiting on the defender during your turn shows they hold a reaction). Same as MTG Arena.
+10. **Timeouts win automatically.** A player who runs out of time three times loses; there is no "claim the win" button.
+11. **Nothing at the table gives a deck away before it's played.** Both seats show the same hooded stranger (seat-coloured trim) and a name, never the deck's style icon or deck name; the intro reads "You vs" and their name. Done for bot duels too (2026-11-15).
 
 **The project** (created 2026-11-15): "RuneScape TCG", id `udmaqoxyhiwpvxkrugwr`, region us-east-2, URL `https://udmaqoxyhiwpvxkrugwr.supabase.co`, publishable key `sb_publishable_eaN07rbCUAT_-FtdXkB2Iw_IjdGi_bJ` (public by design; the game ships it). Besides the online tables (below) it holds `keepalive`, a one-row table the keep-alive reads. The keep-alive is its own private repo, `RamonG3/rstcg-keepalive`: a GitHub Action reads that row on Mondays and Thursdays (first run checked 2026-11-15). Delete the repo once the project is on Pro.
 
@@ -58,8 +61,8 @@ It is one web app, so PC and phone play each other.
 - **From a Claude session:** `NODE_PATH=<terser> node server/build.js --min`, then the connector's `deploy_edge_function` with `index.js` and the six `gen/` files (about 60 KB; check `hello` says `intact: true`).
 - Duels in progress on an older version stop with a message; deploy between play sessions.
 
-**Ramon's to-do before phase 1 can be tried on a phone:**
-1. **Turn on anonymous sign-ins:** Supabase dashboard → the "RuneScape TCG" project → Authentication → Sign In / Providers → "Allow anonymous sign-ins". (It's off; the connector can't change it.)
+**Ramon's set-up steps:**
+1. ~~Turn on anonymous sign-ins~~: done 2026-11-15, and checked: an anonymous sign-up gets a token the `duel` function accepts.
 2. **Optional, for automatic deploys:** make a personal access token at supabase.com/dashboard/account/tokens and add it to the Misc. repo as the Actions secret `SUPABASE_ACCESS_TOKEN`.
 
 **Also installed:** `pg_net` (database HTTP calls), for the smoke test and perhaps a scheduled clock sweep later.
@@ -126,6 +129,7 @@ So the server can afford to rebuild the duel from scratch on every move.
 | **Nobody** | The order of either deck (your own too) and the seed. |
 | **Hidden until the duel starts** | Each player's cape, as now: both capes flip face up when the duel starts. |
 | **Hidden all duel** | Your opponent's deck list, as in MTG Arena. |
+| **Hidden until played** | The style of either deck: both seats show the same hooded stranger and a name, not a style icon or deck name. |
 
 ### Testing the referee
 
@@ -171,7 +175,7 @@ So the server can afford to rebuild the duel from scratch on every move.
   - 20 seconds to answer an attack.
   - Running out three times loses the duel.
 - **Leaving:** Leave keeps your seat, and your clock still runs.
-- **Dropping out:** if a device loses connection or goes to sleep, reopening the app fetches the duel as it stands and carries on. After 3 minutes away, the other player may claim the win.
+- **Dropping out:** if a device loses connection or goes to sleep, reopening the app fetches the duel as it stands and carries on. A player who stays away runs out of time, and the third time loses automatically (no claim button).
 - **Concede** counts as a loss.
 - **Same version only:** each build gets a version stamp, a hash of `engine.js` and `cards.json`.
   - The device and the server must agree.
@@ -237,7 +241,7 @@ Even if every move costs three function calls (the move, plus each player fetchi
   - It builds the display-only `Game` from each view.
   - It turns the server's pending decision into the same `ui.pending` prompts `decide()` shows today.
   - It sends your answer instead of resolving a local promise.
-  - Names come from the match, not "Bot".
+  - Names come from the match, not "Bot": `oppName()` already names the other side on the nameplate and in the intro (the bot's level name for now).
 - **Network code:** a new module `online.js`, inlined by `build_arena.py` like the others.
   - The Supabase JavaScript client is bundled into the build. No CDN.
   - Offline play makes no network calls.
@@ -276,10 +280,7 @@ Even if every move costs three function calls (the move, plus each player fetchi
 ## Still open for Ramon
 
 - **When accounts come (phase 3):** Google, email, or both? When two devices both have progress, keep the one with more cards, or always ask?
-- **The reaction tell.** The engine only asks for a reaction when the defender holds a card that can answer that attack, so online the attacker can tell: if the duel stops to wait for the other player during your own turn, they have a Protect prayer or a reversal for it. Against the bot it never shows, because the bot answers at once. Choices:
-  - Accept it (MTG Arena has the same tell). This is what is built.
-  - Make every attack the defender could in principle answer look the same: a short pause of varying length each time, whether or not they hold a card (the defender's device answers "no" by itself when they have nothing). Fairer, but every such attack waits a moment. No rules change: the engine isn't touched.
-- **"3 minutes away, the other player may claim the win."** Not built as such: the three-timeouts rule already ends a duel for a player who has gone, after about three of their decisions (at least 3 minutes). Say if you still want a separate claim button.
+- **Capes still hint at the deck.** Both capes flip face up when the duel starts, and an Attack Cape points at melee about as clearly as the old sword icon did. That's a rule (Ramon's call): keeping capes hidden until claimed would close it.
 
 ## Done means (phases 0 to 2)
 
@@ -289,7 +290,7 @@ Even if every move costs three function calls (the move, plus each player fetchi
 - **Rejoining works:** closing the app mid-duel and reopening it carries on where the duel was.
 - **Clocks work:**
   - A player who stops moving loses on time.
-  - If a player disconnects for 3 minutes, the other can claim the win.
+  - A player who leaves loses on time automatically; nobody has to press anything.
 - **Tested:** two headless browsers play full duels through the real server in a test.
 - **Nothing else changes:** the bot game, offline play and the artifact work as before.
 

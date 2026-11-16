@@ -4,7 +4,7 @@ This file describes where things stand. `CLAUDE.md` covers how the code fits tog
 
 ## Links
 
-- **The Arena (latest build, claude.ai artifact):** https://claude.ai/artifact/DTVmjFMHpVvqVYmtS29tRm (version 22, built from `web/dist/arena.html`).
+- **The Arena (latest build, claude.ai artifact):** https://claude.ai/artifact/DTVmjFMHpVvqVYmtS29tRm (version 23, built from `web/dist/arena.html`).
 - **The installable app (Netlify):** https://runescapetcg.netlify.app, deployed from `web/dist/netlify/` (see "Phone version" below).
 - **The online server (Supabase):** project "RuneScape TCG" (`udmaqoxyhiwpvxkrugwr`, https://udmaqoxyhiwpvxkrugwr.supabase.co), Edge Function `duel`. See `ONLINE_BRIEF.md`.
 - **Rules doc:** https://claude.ai/artifact/AA5kzzcL6QWhBjmwqwhntj
@@ -24,6 +24,7 @@ This file describes where things stand. `CLAUDE.md` covers how the code fits tog
   - Drag or click to play cards, with animated moves, attacks, milling, heals, quests and capes.
   - Cape progress has animated ticks with sound, plus a "READY TO CLAIM" stamp.
   - The bot's hand is shown as card backs at the top.
+  - Both nameplates show the same hooded stranger (gold trim for you, blue for the other side) and a name (the bot's level name), never the deck's style icon or deck name; the intro reads "You vs Champion". A deck gives itself away in play, not before (Ramon, 2026-11-15, for online).
   - The log drawer is at the top right.
   - Phone-width stages get a shorter, wider table automatically; 16:10 screens get a taller one.
 - **Results:** GP payout (100 win / 50 loss / 0 concede). Leaving a duel saves it; concede is a separate choice.
