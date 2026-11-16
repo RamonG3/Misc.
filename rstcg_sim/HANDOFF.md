@@ -4,7 +4,7 @@ This file describes where things stand. `CLAUDE.md` covers how the code fits tog
 
 ## Links
 
-- **The Arena (latest build, claude.ai artifact):** https://claude.ai/artifact/DTVmjFMHpVvqVYmtS29tRm (version 23, built from `web/dist/arena.html`).
+- **The Arena (latest build, claude.ai artifact):** https://claude.ai/artifact/DTVmjFMHpVvqVYmtS29tRm (version 24, built from `web/dist/arena.html`).
 - **The installable app (Netlify):** https://runescapetcg.netlify.app, deployed from `web/dist/netlify/` (see "Phone version" below).
 - **The online server (Supabase):** project "RuneScape TCG" (`udmaqoxyhiwpvxkrugwr`, https://udmaqoxyhiwpvxkrugwr.supabase.co), Edge Function `duel`. See `ONLINE_BRIEF.md`.
 - **Rules doc:** https://claude.ai/artifact/AA5kzzcL6QWhBjmwqwhntj
