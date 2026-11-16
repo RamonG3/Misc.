@@ -1,6 +1,6 @@
 # Brief: online play for the RuneScape TCG Arena
 
-**Status (2026-11-16): phases 0 to 2 are built. Challenge a friend works end to end** (Play Online → a name → a deck and cape → a code or link → the duel → rematch), against the real server. Next is Ramon's test with friends, then accounts (phase 3). Ramon has made the main decisions (below). This file sets out what he wants, how it works, what is built, and what is still open. Read `HANDOFF.md` for the wider project and `CLAUDE.md` for how the Arena's code fits together.
+**Status (2026-11-16): phases 0 to 2 are built. Challenge a friend works end to end** (Play Online → a name → a deck and cape → a code or link → the duel → rematch), against the real server. Next is accounts (phase 3, from 2026-11-16): see "Phase 3 (accounts): start here", which ends with the questions to ask Ramon first. Ramon has made the main decisions (below). This file sets out what he wants, how it works, what is built, and what is still open. Read `HANDOFF.md` for the wider project and `CLAUDE.md` for how the Arena's code fits together.
 
 ## What I want
 
@@ -63,7 +63,7 @@ It is one web app, so PC and phone play each other.
 
 **Ramon's set-up steps:**
 1. ~~Turn on anonymous sign-ins~~: done 2026-11-15, and checked: an anonymous sign-up gets a token the `duel` function accepts.
-2. ~~A deploy token~~: done 2026-11-15 (the Actions secret `SUPABASE_ACCESS_TOKEN` in the Misc. repo). Pushes that touch the rules, the cards or `server/` now test and deploy the function by themselves (version 3 went out that way on 2026-11-16).
+2. ~~A deploy token~~: done 2026-11-15 (the Actions secret `SUPABASE_ACCESS_TOKEN` in the Misc. repo). Pushes that touch the rules, the cards or `server/` now test and deploy the function by themselves (versions 3 and 4 went out that way on 2026-11-16).
 
 **Also installed:** `pg_net` (database HTTP calls), for the smoke test and perhaps a scheduled clock sweep later.
 
@@ -89,7 +89,7 @@ It is one web app, so PC and phone play each other.
 **On the server:**
 - **Rematches:** a `rematch` op (offer, take up, or take back) and migration `20261116035711_online_rematch.sql`: `matches.next` points a finished duel at the room for its rematch; `duel_room` and `duel_next`; closing a room clears the offers pointing at it; two offers at once end in one duel.
 - **Views now include what's left in your own deck** (`left`: how many of each card, never the order), for the "no Silverlight in your deck" kind of preview.
-- Function version 3, deployed by the GitHub Action.
+- Function version 4 (2026-11-16), deployed by the GitHub Action.
 
 **Tested:**
 - `node web/test/ui/online.js [decisions]` (about 2.5 minutes, in `run_all.js`): two browsers against `server/fake_supabase.mjs`, a stand-in for Supabase that runs the real function on the pretend database and speaks Realtime's protocol. Ann challenges; Bob joins with the link and brings a deck full of reactions; they play by clicking and choosing; Ann reloads mid-duel and resumes from the menu while Bob plays on; Ann's clock runs out once; the live connection drops for a while and the pages poll; the board is checked against a fresh redraw; then a concede, the results and GP, a rematch offered and taken up, and the refusals (a taken name, a code that isn't there). Screenshots in `web/test/ui/shots/online/`.
@@ -97,6 +97,43 @@ It is one web app, so PC and phone play each other.
 - **Live, 2026-11-16:** in the desktop app's browser pane (on the live site, with `online.js` pasted in), two pretend players went through sign-up, names (a taken one refused), challenge, peek, join, six moves, a token refresh, concede, and a rematch offered and taken up. Realtime pinged both players for every change, in about 0.1 s; moves took 230 to 400 ms. The test players were deleted afterwards.
 
 **Not done yet:** Find a match (phase 4), accounts (phase 3). A duel in progress when the rules change stops with "a new version is out" and pays nobody.
+
+## Phase 3 (accounts): start here
+
+Ramon moved on to accounts on 2026-11-16, and nothing for them is built yet. This section was written before the chat that builds them, as the ground to stand on. Ask Ramon the three questions at the end before building.
+
+**Progress today** lives only in the browser's `localStorage` (through `store` in `arena.src.html`):
+- **`rstcg-profile-v1`, the progress itself:**
+  - `gp`; `coll` (the cards you own, name → count; basic materials aren't in it, they're unlimited); `decks` (your own decks);
+  - `packs` (how many opened) and `lastPack`; `tutorial` and `tutorialPack` (the free pack, given once); `tips` (one-time tips already seen);
+  - `wins` and `losses` against bots, `online` (`{wins, losses}`), and `paid` / `onlinePaid` (so a duel pays once).
+- **Per device, and probably staying so:** `rstcg-settings` and `rstcg-speed`, `rstcg-arena-setup` (the last deck, cape and level picked), `rstcg-arena-duel-v1` (a bot duel in progress).
+- **`rstcg-online-v1`:** the anonymous sign-in (`auth`), your online name, the online duel you're in.
+- **The device is the bank:** packs are rolled on it (`grantPack`), and bot duels pay on it.
+
+**What Supabase offers** (its docs, read 2026-11-16):
+- **An anonymous player becomes a permanent one by linking a sign-in, and keeps the same user id,** so the online name, the duels and anything stored against that id carry over.
+  - Email: `updateUser({email})`, then the player confirms with what's emailed.
+  - Google: `linkIdentity({provider: 'google'})`, a round trip to Google and back.
+  - Both need **manual linking** turned on (dashboard: Authentication → Sign In / Providers).
+- **On a second device, the player simply signs in** (Google, or an emailed code). That device's own anonymous player and its progress are left behind, which is question 2 below.
+- **An emailed 6-digit code can replace the link:** the email templates need `{{ .Token }}`, and the game checks the code (`verifyOtp`). A code typed into the game never has to find its way back into the installed app, which a link opened from an email app might not.
+- **Sign-ins only return to allowed addresses:** `https://runescapetcg.netlify.app` goes in Authentication → URL Configuration.
+- **Anonymous sign-ups are limited to 30 an hour per IP address** (the default). Fine for friends; Supabase advises a CAPTCHA before strangers come (phase 4).
+- **No library:** `online.js` talks to Supabase with fetch alone, so each of these becomes a plain call to its Auth API. Check every call against the docs or the supabase-js source before building on it, and teach `server/fake_supabase.mjs` the same calls so the browser tests cover them.
+- **Check early, on the Pixel, in the installed app,** that Google's round trip comes back into the app and not into a Chrome tab.
+- **The connector can't change Auth settings:** manual linking, providers, email templates, SMTP and allowed addresses are Ramon's clicks in the dashboard.
+
+**Ask Ramon first:**
+1. **Sign in with Google, email, or both?**
+   - **Google:** no passwords and no emails to send. Ramon makes a free OAuth client in Google Cloud (type Web application; its redirect URI is the callback the Supabase dashboard shows under Providers → Google, `https://udmaqoxyhiwpvxkrugwr.supabase.co/auth/v1/callback`) and pastes its id and secret into Supabase. Google's sign-in screen may name the Supabase address rather than the game.
+   - **Email:** for anyone, with or without Google. Supabase's own email only reaches the project's team, so it needs a sending service (custom SMTP). Most want a domain of your own to send from, and `runescapetcg.netlify.app` can't be one (Netlify owns `netlify.app`): so a domain of Ramon's, or a personal mailbox such as Gmail (the sign-in emails then come from that address).
+   - **Both:** they sit side by side; the extra work is mostly email's set-up.
+2. **A device that already has progress signs in to an account that has some too: which wins?** Keep the account's; keep whichever has more cards; merge (every card from both, the higher GP); or ask each time.
+3. **How much should the server trust the device?** Today someone with the browser's developer tools can give themselves GP or cards. Offline that hurts nobody; online it decides which cards they can bring.
+   - **Cloud save:** the account stores progress as the devices report it, and they sync. Quick to build; bot play stays offline; cheating stays possible.
+   - **The server is the bank:** GP and cards live on the server; it opens packs, pays online duels (it referees them, so it knows who won) and checks online decks against the collection, as planned above. Bot duels still run on the device, so their GP either comes on the device's word (perhaps with a daily cap) or is checked: a bot duel is its seed plus your choices, which the save already keeps, so the server could replay it before paying. Mind the 2 s CPU limit with Champion (about 36 ms a move), and that a device choosing its own seeds could choose kind ones.
+   - A suggestion (Claude's, 2026-11-16): cloud save while it's friends, and the bank before Find a match lets strangers in.
 
 ## Why the server referees
 
@@ -290,8 +327,8 @@ Even if every move costs three function calls (the move, plus each player fetchi
    - the referee function (rebuild, move checks, views, clock);
    - its node tests (no leaks, replays, refused moves).
 1. **The duel screen online (done 2026-11-16):** `runOnlineDuel`, the display-only `Game`, waiting and clocks, rejoining. Tested with two headless browsers.
-2. **Challenge a friend (done 2026-11-16):** links and codes, the waiting room, rematch. Next: Ramon's test with friends.
-3. **Accounts and cloud progress** (soon after, at Ramon's request):
+2. **Challenge a friend (done 2026-11-16):** links and codes, the waiting room, rematch.
+3. **Accounts and cloud progress** (next, from 2026-11-16; see "Phase 3 (accounts): start here"):
    - **Signing in:** sign in with Google and/or email, linked to the name you already have.
    - **Progress on the server:** GP, collection, decks, packs and tutorial state, so PC and phone share progress.
    - **The server takes over:** online decks are checked against your collection, and the server pays online GP.
@@ -309,7 +346,7 @@ Even if every move costs three function calls (the move, plus each player fetchi
 
 ## Still open for Ramon
 
-- **When accounts come (phase 3):** Google, email, or both? When two devices both have progress, keep the one with more cards, or always ask?
+- **Accounts (phase 3):** the three questions at the end of "Phase 3 (accounts): start here": Google, email or both; which progress wins when a second device signs in; and how much the server trusts the device.
 - **Capes still hint at the deck.** Both capes flip face up when the duel starts, and an Attack Cape points at melee about as clearly as the old sword icon did. That's a rule (Ramon's call): keeping capes hidden until claimed would close it.
 
 ## Done means (phases 0 to 2)
@@ -332,5 +369,8 @@ Everything below is met in tests (2026-11-16) except the first, which is Ramon's
 - Free project pausing: https://supabase.com/docs/guides/platform/free-project-pausing
 - Anonymous sign-ins (linking to Google or email later, rate limit, CAPTCHA): https://supabase.com/docs/guides/auth/auth-anonymous
 - Built-in email only reaches the project's team; custom SMTP: https://supabase.com/docs/guides/auth/auth-smtp
+- Linking an identity (manual linking): https://supabase.com/docs/guides/auth/auth-identity-linking
+- Emailed codes instead of links (`{{ .Token }}`, `verifyOtp`): https://supabase.com/docs/guides/auth/auth-email-passwordless
+- Google sign-in: https://supabase.com/docs/guides/auth/social-login/auth-google
 - Edge Function limits (2 s CPU): https://supabase.com/docs/guides/functions/limits
 - Cloudflare Durable Objects on the free plan: https://developers.cloudflare.com/changelog/2025-04-07-durable-objects-free-tier/

@@ -5,7 +5,7 @@ Ramon is designing a RuneScape-themed 1v1 trading card game. This folder holds t
 1. **The balance simulator (Python, repo root).** `cards.py`, `engine.py`, `bot.py`, `planner.py` and the round scripts. `README.md` records every balance round; `HANDOFF.md` covers the current state and what's next.
 2. **The Arena (`web/`).** A browser game in the style of MTG Arena, played against a bot on PC, on a Pixel 7 Pro phone (landscape), or with an Xbox controller. It is the main thing being built now.
 
-Read `HANDOFF.md` before starting. If the job is AI opponents, also read `BOTS_BRIEF.md`. If it is online play, also read `ONLINE_BRIEF.md`.
+Read `HANDOFF.md` before starting. If the job is AI opponents, also read `BOTS_BRIEF.md`. If it is online play or accounts, also read `ONLINE_BRIEF.md`.
 
 ## Ground rules
 
