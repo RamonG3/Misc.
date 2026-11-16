@@ -107,6 +107,7 @@ python simulate.py 300                    # Python simulator, starter decks
   - Its playouts run on `engine.js` with the `async`/`await` words stripped (`unwait`). Node makes that copy at load and the build makes one for the page. Never keep a second engine by hand.
 - **Deck Wizard:** `deckwiz.js` (`window.RSTCGWiz`) builds a deck around up to 2 focus cards from what you own. It adapts the Starter/Tournament lists, then tests candidates with greedy-vs-greedy games and keeps the best. The UI is `wizHTML` / `wizBuild`.
 - **Audio:** `arena_audio.js`, all synthesised, no sound files. It has music layers, an "intense" layer that latches on once either deck is ≤10, and sfx by name: `sfx('tick')` etc.
+  - Notes are scheduled 1 s ahead (`LOOKAHEAD`) so a busy page can't make the music drop notes, and touch screens ask for a bigger output buffer. `RSAudio.health()` (Settings → Sound check) reports glitches, dropped notes and the buffer. The busiest battle song costs about half a desktop core to synthesize, so keep new instruments cheap.
 
 ## Gotchas already paid for
 

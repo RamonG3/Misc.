@@ -429,6 +429,9 @@ html, body { touch-action: manipulation; }
 .phone .modal p, .phone .modal li { font-size: 23px; }
 .phone .setrow > span { font-size: 23px; }
 .phone .setrow small { font-size: 18px; }
+/* phones: Settings packed tighter so every row, Reset included, fits without scrolling */
+.phone .modal:has(.setrow) { gap: 4px; padding-top: 24px; padding-bottom: 24px; }
+.phone .setrow { padding: 10px 0; }
 .res { position: absolute; inset: 0; background-color: #15110d; }
 .res.lose { background-color: #0f1014; }
 .rays { position: absolute; left: 460px; top: -260px; width: 1000px; height: 1000px; border-radius: 50%; background: repeating-conic-gradient(from 0deg, rgba(243,210,122,.10) 0deg 6deg, transparent 6deg 18deg); -webkit-mask-image: radial-gradient(circle, #000 20%, transparent 68%); mask-image: radial-gradient(circle, #000 20%, transparent 68%); animation: spin 90s linear infinite; }
@@ -2595,7 +2598,7 @@ html, body { touch-action: manipulation; }
   const saveProfile = () => store.set(PROFILE, profile);
   const settings = Object.assign({ motion: 'full', music: 'med', sfx: 'med', tips: 'on' }, store.get('rstcg-settings') || {});
   const VOL = { music: { off: 0, low: 0.3, med: 0.55, high: 0.85 }, sfx: { off: 0, low: 0.4, med: 0.8, high: 1 } };
-  const AU = window.RSAudio || { unlock() {}, want() {}, intense() {}, sting() {}, sfx() {}, volumes() {} };
+  const AU = window.RSAudio || { unlock() {}, want() {}, intense() {}, sting() {}, sfx() {}, volumes() {}, health() { return null; } };
   const sfx = (n, o) => AU.sfx(n, o);
   AU.volumes({ music: VOL.music[settings.music] ?? 0.55, sfx: VOL.sfx[settings.sfx] ?? 0.8 });
   const calm = () => settings.motion === 'reduced' || !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
@@ -2696,6 +2699,18 @@ html, body { touch-action: manipulation; }
   const bench = { running: false, n: 0, ms: 0, max: 0, token: null };
   const BENCH_MOVES = 40;
   const secs = (ms) => (ms / 1000).toFixed(ms < 995 ? 2 : 1) + ' s';
+  // Settings → Sound check: how the music is holding up on this device since the app opened. Glitches are
+  // the audio thread missing its deadline (where the browser reports them); dropped notes are the page being
+  // too busy to schedule them in time.
+  function soundCheckText() {
+    const h = AU.health ? AU.health() : null;
+    if (!h) return 'No sound yet this visit';
+    const mm = `${Math.floor(h.played / 60)}:${String(h.played % 60).padStart(2, '0')}`;
+    const parts = [];
+    if (h.glitches !== null) parts.push(`${h.glitches} glitch${h.glitches === 1 ? '' : 'es'}`);
+    parts.push(`${h.dropped} note${h.dropped === 1 ? '' : 's'} dropped`);
+    return `${parts.join(', ')} in ${mm}${h.buffer !== null ? ` · ${h.buffer} ms buffer` : ''}`;
+  }
   function benchText() {
     if (!bench.n) return bench.running ? 'Thinking…' : '';
     const avg = secs(bench.ms / bench.n);
@@ -2778,6 +2793,8 @@ html, body { touch-action: manipulation; }
         <div class="setrow"><span>Music<small>Three menu songs and three battle songs that build when a deck runs low</small></span>${['off', 'low', 'med', 'high'].map((x) => seg('music', x, x === 'med' ? 'Medium' : x[0].toUpperCase() + x.slice(1))).join('')}</div>
         <div class="setrow"><span>Tips<small>Short explanations the first time something new happens in a duel</small></span>${seg('tips', 'on', 'On')}${seg('tips', 'off', 'Off')}<button type="button" class="btn-d" data-do="tipsreset" style="height:44px;padding:0 14px;font-size:14px">Show again</button></div>
         <div class="setrow"><span>Sound effects</span>${['off', 'low', 'med', 'high'].map((x) => seg('sfx', x, x === 'med' ? 'Medium' : x[0].toUpperCase() + x.slice(1))).join('')}</div>
+        <div class="setrow"><span>Sound check<small>Hiccups in the music on this device since the app opened. None is the goal</small></span><span id="soundOut" style="flex:0 0 auto;font-size:15px;color:var(--faint)">${esc(soundCheckText())}</span>
+          <button type="button" class="btn-d" data-do="soundcheck" style="height:44px;padding:0 14px;font-size:14px">Check again</button></div>
         <div class="setrow"><span>Champion's thinking time<small>Times the hardest bot on this device, in a practice duel played out of sight</small></span><span id="benchOut" style="flex:0 0 auto;font-size:15px;color:var(--faint)">${benchText()}</span>
           <button type="button" class="btn-d" data-do="benchbot" style="height:44px;padding:0 18px;font-size:15px" ${bench.running ? 'disabled' : ''}>${bench.n && !bench.running ? 'Test again' : 'Test'}</button></div>
         <div class="setrow"><span>Reset progress<small>Back to ${START_GP} GP, no record, and only the three starter decks (now ${profile.gp} GP · ${profile.wins} W · ${profile.losses} L · ${collected()} cards collected)</small></span>
@@ -4130,6 +4147,7 @@ html, body { touch-action: manipulation; }
       case 'lastpack': ui.screen = 'summary'; break;
       case 'closemodal': ui.modal = null; ui.confirmReset = false; benchStop(); break;
       case 'benchbot': benchChampion(); return;
+      case 'soundcheck': { const el = document.getElementById('soundOut'); if (el) el.textContent = soundCheckText(); return; }
       case 'set': {
         const [k, val] = v.split(':');
         if (k === 'speed') { ui.speed = val; store.set('rstcg-speed', val); } else { settings[k] = val; store.set('rstcg-settings', settings); }

@@ -1,4 +1,5 @@
-// Music and sound effects start, switch and stop with the right screens (no audio errors).
+// Music and sound effects start, switch and stop with the right screens (no audio errors), and the music
+// doesn't drop notes while the page is busy.
 // Run from anywhere: node web/test/ui/audioflow.js   (screenshots go to web/test/ui/shots/audioflow/, which is not part of the test)
 const path=require('path');const SHOTS=path.join(__dirname,'shots','audioflow');require('fs').mkdirSync(SHOTS,{recursive:true});const {chromium}=require('playwright');
 (async()=>{const b=await chromium.launch({args:['--autoplay-policy=no-user-gesture-required']});const page=await b.newPage({viewport:{width:1920,height:1080}});const errs=[];
@@ -12,6 +13,9 @@ for (const n of ['click','move','sweep','lift','back','draw','flip','card','reve
 await page.click('[data-do="play"]');await page.click('[data-do="start"]');await page.waitForTimeout(700);await page.click('[data-do="skipintro"]');
 await page.waitForFunction(()=>{const u=window.__arena.ui;return u.pending&&u.pending.type==='choose'});await page.waitForTimeout(500);
 console.log('duel',JSON.stringify(await st()));
+// a busy page (a bot thinking, a big redraw) mustn't make the music drop or delay notes
+for(let k=0;k<4;k++){await page.evaluate(()=>{const t=performance.now();while(performance.now()-t<600){}});await page.waitForTimeout(700);}
+const hl=await page.evaluate(()=>RSAudio.health());console.log('busy page',JSON.stringify(hl));if(!hl||hl.dropped>0||hl.late>0)errs.push('music dropped or delayed notes while the page was busy: '+JSON.stringify(hl));
 await page.evaluate(()=>{const u=window.__arena.ui;u.g.players[1-u.you].deck.length=9;window.__arena.render();});await page.waitForTimeout(3000);
 console.log('deck at 9',JSON.stringify(await st()));
 await page.evaluate(()=>{const u=window.__arena.ui,bt=u.g.players[1-u.you];bt.deck.length=0;bt.hand.length=0;const k=u.pending.legal.findIndex(a=>a[0]==='pass');u.pending.resolve(u.pending.legal[k]);});

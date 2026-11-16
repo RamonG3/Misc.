@@ -401,7 +401,12 @@ window.RSAudio = (() => {
   // ---------------------------------------------------------------------------------
   // The player: lookahead scheduling, layers, crossfades
   // ---------------------------------------------------------------------------------
+  // Notes are scheduled this far ahead. The page's own work (a hard bot thinking, a big redraw) can hold the
+  // scheduler up for half a second on a phone; with a short lookahead the notes it missed were dropped, and
+  // the music stuttered as if it were buffering.
+  const LOOKAHEAD = 1.0;
   const players = [];
+  const stats = { late: 0, dropped: 0 };          // notes scheduled late / dropped (the page was too busy)
   let current = null, wanted = 'quiet', wantIntense = false, idleOrder = [], lastCombat = null, timer = null;
   function player(song, at, fadeIn = 1.5) {
     const g = gainNode(0), layers = {};
@@ -430,7 +435,8 @@ window.RSAudio = (() => {
       const ev = s.events[p.idx], t = p.start + (p.loop * L + ev.beat) * p.spb;
       if (t > until) break;
       p.idx += 1;
-      if (t < ctx.currentTime - 0.05) continue;          // fell behind (tab was asleep): skip, don't pile up
+      if (t < ctx.currentTime - 0.05) { stats.dropped += 1; continue; }   // fell behind (tab was asleep): skip, don't pile up
+      if (t < ctx.currentTime) stats.late += 1;
       const dest = p.layers[ev.layer];
       if (ev.note === null) D[ev.inst](t, ev.v, dest);
       else I[ev.inst](t, hz(ev.note), ev.d * p.spb, ev.v, dest, ev.pan || 0);
@@ -443,7 +449,7 @@ window.RSAudio = (() => {
   function tick() {
     if (!ctx) return;
     const now = ctx.currentTime;
-    for (const p of players) schedule(p, now + 0.3);
+    for (const p of players) schedule(p, now + LOOKAHEAD);
     for (let k = players.length - 1; k >= 0; k--) if (players[k].done) players.splice(k, 1);
     // an idle song gives way to the next after a couple of times round
     if (current && current.song.kind === 'idle' && !current.dying) {
@@ -559,9 +565,13 @@ window.RSAudio = (() => {
     if (ctx) { if (ctx.state === 'suspended') ctx.resume(); return; }
     const AC = window.AudioContext || window.webkitAudioContext;
     if (!AC) return;
-    const c = new AC();
+    // Phones get a bigger output buffer: the music is all synthesized live, and a phone's audio thread that
+    // misses a deadline crackles. Desktops keep the smallest buffer, for snappy effects.
+    const touch = !!(window.matchMedia && window.matchMedia('(pointer: coarse)').matches);
+    let c;
+    try { c = new AC(touch ? { latencyHint: 'playback' } : undefined); } catch (e) { c = new AC(); }
     use(c, build(c));
-    timer = setInterval(tick, 40);
+    timer = setInterval(tick, 50);
     apply();
   }
   function sting(name) {
@@ -602,6 +612,17 @@ window.RSAudio = (() => {
     sfx,
     volumes,
     get ready() { return !!ctx; },
+    // How the sound is holding up on this device: glitches (the audio thread missed its deadline, where the
+    // browser reports it: AudioContext.playbackStats) and notes the page was too busy to schedule in time.
+    health() {
+      if (!ctx) return null;
+      const ps = ctx.playbackStats || ctx.playoutStats || null;
+      const num = (x) => (typeof x === 'number' && isFinite(x) ? x : null);
+      const out = { buffer: num(ctx.baseLatency) !== null ? Math.round(((ctx.baseLatency || 0) + (num(ctx.outputLatency) || 0)) * 1000) : null,
+        glitches: null, played: Math.round(ctx.currentTime), late: stats.late, dropped: stats.dropped };
+      if (ps) out.glitches = num(ps.underrunEvents) !== null ? ps.underrunEvents : num(ps.fallbackFramesEvents);
+      return out;
+    },
     get playing() { return current ? current.song.name : null; },
     get layers() { return current ? Object.fromEntries(Object.entries(current.layers).map(([k, g]) => [k, +g.gain.value.toFixed(3)])) : null; },
     songs: () => Object.fromEntries(Object.entries(SONGS).map(([k, s]) => [k, { name: s.name, kind: s.kind, seconds: +(s.length * 60 / s.bpm).toFixed(1), notes: s.events.length }])),
