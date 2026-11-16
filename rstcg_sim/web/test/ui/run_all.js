@@ -18,6 +18,7 @@ const tests = [
   ['deck wizard, phone (wizui)', [T('wizui.js'), '892', '412']],
   ['fingers on a phone (touch)', [T('touch.js')]],
   ['every screen shape (layouts)', [T('layouts.js')]],
+  ['the menu\'s tour of places (menutour)', [T('menutour.js')]],
   ['installable app (pwa)', [T('pwa.js')]],
   ['online duels, two browsers (online)', [T('online.js'), '40']],
   ['the cloud save, in node (cloud_test)', [path.join(__dirname, '..', 'cloud_test.js'), '3000']],

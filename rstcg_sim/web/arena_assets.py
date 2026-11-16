@@ -55,7 +55,7 @@ for n in list(CARDS) + [c for c in P.CAPE_ART if c not in CARDS]:
         continue
     path = os.path.join(P.IMG, f)
     im = load(path)
-    small = n not in P.STAND_IN and os.path.getsize(path) < 12000 and not f.endswith("detail.png")
+    small = P.is_pixel_icon(n, f)                 # a tiny wiki icon (spells, prayers): told by its size in pixels
     mode = ("scene" if n in P.SCENE else "portrait" if n in P.PORTRAIT else "tall" if n in P.TALL
             else "px" if small else "item")
     if mode == "px":
@@ -79,7 +79,7 @@ for cape in json.load(open(os.path.join(HERE, "cards.json")))["capes"]:
 
 # ---------- Location backdrops: the board's background while that Location is in play ----------
 BACKDROP = {"Wilderness": "wilderness.png", "Varrock": "varrock.jpg", "Grand Exchange": "grand_exchange.jpg",
-            "Wizards' Tower": "wizards_tower.jpg"}
+            "Wizards' Tower": "wizards_tower.jpg", "Lumbridge": "lumbridge_wide.jpg"}
 backdrop = {}
 for loc, f in BACKDROP.items():
     p = os.path.join(P.IMG, f)

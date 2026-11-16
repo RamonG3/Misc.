@@ -519,7 +519,14 @@ html, body { touch-action: manipulation; }
 .pb-LB, .pb-RB, .pb-M { background: #cdbf9f; border-radius: 6px; }
 
 /* ---------- main menu idle life ---------- */
-.menu-bg { animation: kenburns 52s ease-in-out infinite alternate; transform-origin: 62% 42%; will-change: transform; }
+.mlayer { position: absolute; inset: 0; }
+.mlayer.in, .motes.in { animation: mfadein 2.4s ease-in-out both; }
+.motes.out { animation: mfadeout 2.4s ease-in-out both; }
+@keyframes mfadein { from { opacity: 0; } }
+@keyframes mfadeout { to { opacity: 0; } }
+#mplace { transition: opacity .7s ease; }
+#mplace.off { opacity: 0; }
+.menu-bg { position: absolute; left: 0; top: 0; width: 100%; height: 100%; object-fit: cover; animation: kenburns 52s ease-in-out infinite alternate; transform-origin: 62% 42%; will-change: transform; }
 @keyframes kenburns { from { transform: scale(1.03) translate(0, 0); } to { transform: scale(1.13) translate(-34px, -16px); } }
 .menu-light { position: absolute; left: 700px; top: 80px; width: 1100px; height: 800px; border-radius: 50%; pointer-events: none; mix-blend-mode: screen;
   background: radial-gradient(ellipse, var(--lc) 0%, transparent 62%); animation: lightdrift 34s ease-in-out infinite alternate; }
@@ -3271,20 +3278,78 @@ html, body { touch-action: manipulation; }
     "Wizards' Tower": { c: ['#9cc3e6', '#e3f0fa', '#b9a6ff'], light: 'rgba(140,180,255,.2)', n: 28, t: [14, 24], s: [3, 8], dx: [-90, 90], o: [.5, .9] },
     Varrock: { c: ['#f3d27a', '#fff1c4'], light: 'rgba(255,220,150,.18)', n: 22, t: [18, 30], s: [2, 5], dx: [-40, 80], o: [.35, .7] },
     'Grand Exchange': { c: ['#fff25e', '#f3d27a', '#fff1c4'], light: 'rgba(255,230,140,.2)', n: 24, t: [16, 28], s: [2, 6], dx: [-50, 70], o: [.4, .8] },
+    Lumbridge: { c: ['#f4e9a8', '#d7f0b4', '#ffffff'], light: 'rgba(190,230,170,.18)', n: 24, t: [16, 28], s: [2, 6], dx: [-60, 90], o: [.35, .75] },
   };
   const MOTES = {};                                  // one fixed layout per scene, so redraws don't reshuffle
-  function menuLife() {
-    const fx = SCENE_FX[MENU_BG] || SCENE_FX.Varrock;
+  function menuLife(place = MENU_BG) {
+    const fx = SCENE_FX[place] || SCENE_FX.Varrock;
     const now = performance.now() / 1000;
     const ph = (period, off = 0) => `-${((now + off) % period).toFixed(2)}s`;
-    if (!MOTES[MENU_BG]) {
+    if (!MOTES[place]) {
       const r = (a) => a[0] + Math.random() * (a[1] - a[0]);
-      MOTES[MENU_BG] = Array.from({ length: fx.n }, () => ({ core: fx.core || '#fff', x: Math.random() * 1920, t: r(fx.t), s: r(fx.s), dx: r(fx.dx), o: r(fx.o), c: fx.c[Math.floor(Math.random() * fx.c.length)], off: Math.random() * 40 }));
+      MOTES[place] = Array.from({ length: fx.n }, () => ({ core: fx.core || '#fff', x: Math.random() * 1920, t: r(fx.t), s: r(fx.s), dx: r(fx.dx), o: r(fx.o), c: fx.c[Math.floor(Math.random() * fx.c.length)], off: Math.random() * 40 }));
     }
-    const motes = MOTES[MENU_BG].map((m) => `<span class="mote" style="left:${(m.x / 19.2).toFixed(1)}%;--s:${m.s.toFixed(1)}px;--t:${m.t.toFixed(1)}s;--d:${ph(m.t, m.off)};--dx:${m.dx.toFixed(0)}px;--o:${m.o.toFixed(2)};--c:${m.c};--core:${m.core}"></span>`).join('');
+    const motes = MOTES[place].map((m) => `<span class="mote" style="left:${(m.x / 19.2).toFixed(1)}%;--s:${m.s.toFixed(1)}px;--t:${m.t.toFixed(1)}s;--d:${ph(m.t, m.off)};--dx:${m.dx.toFixed(0)}px;--o:${m.o.toFixed(2)};--c:${m.c};--core:${m.core}"></span>`).join('');
     return { motes: `<div class="motes">${motes}</div>`, light: `<div class="menu-light" style="--lc:${fx.light};animation-delay:${ph(68)}"></div>`,
       bgDelay: ph(104), sheenDelay: ph(8, 3), ringDelay: ph(70), glowDelay: ph(6), breatheDelay: ph(3.4) };
   }
+  // one place: its painting and its light, as a layer the next place can fade in over
+  const menuLayer = (place, life, cls = '') => `<div class="mlayer${cls}" data-place="${esc(place)}"><img class="menu-bg" src="${AS.backdrop[place]}" alt="" style="animation-delay:${life.bgDelay}">${life.light}</div>`;
+
+  // ---------- the tour: leave the main menu alone and it moves on to another place every so often ----------
+  // The places go round in one shuffled order (so each comes up once a lap and never twice running), starting
+  // from the one picked when the game opened. The clock only runs while the menu is what you're looking at:
+  // not with a dialog open, on another screen, or with the tab hidden; coming back to the menu from another
+  // screen starts the place's time again (render does that). The change is made in place (a new
+  // layer fades in over the old), never by redrawing the menu, so a button being pressed or the controller's
+  // focus isn't disturbed. Which place comes next is menu dressing, so Math.random is fine here.
+  const TOUR = { every: 20000, fade: 2400, shown: 0, order: null, busy: false };
+  const tourPlaces = () => Object.keys(AS.backdrop);
+  function tourNext() {
+    const all = tourPlaces();
+    if (!TOUR.order || TOUR.order.length !== all.length) {
+      const rest = all.filter((p) => p !== MENU_BG);
+      for (let i = rest.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [rest[i], rest[j]] = [rest[j], rest[i]]; }
+      TOUR.order = [MENU_BG, ...rest];
+    }
+    return TOUR.order[(TOUR.order.indexOf(MENU_BG) + 1) % TOUR.order.length] || null;
+  }
+  const tourIdle = () => shownScreen === 'menu' && !ui.modal && !document.hidden && !TOUR.busy && !document.getElementById('trans') && tourPlaces().length > 1;
+  function tourStep(to) {                        // fade to the next place (or to `to`); false when it can't just now
+    const next = to && AS.backdrop[to] ? to : tourNext();
+    if (shownScreen !== 'menu' || TOUR.busy || !next || next === MENU_BG || !$('#board #mscene')) return false;
+    TOUR.busy = true; TOUR.shown = 0;
+    const done = () => {
+      for (const el of document.querySelectorAll('#board #mscene .mlayer:not(:last-child), #board #mmotes .motes:not(:last-child)')) el.remove();
+      for (const el of document.querySelectorAll('#board .mlayer.in, #board .motes.in')) el.classList.remove('in');
+      TOUR.busy = false;
+    };
+    const show = () => {
+      const host = $('#board #mscene'), dust = $('#board #mmotes'), label = $('#board #mplace');
+      if (shownScreen !== 'menu' || !host) { TOUR.busy = false; return; }          // you left while the painting was loading
+      MENU_BG = next;
+      const life = menuLife(next);
+      host.insertAdjacentHTML('beforeend', menuLayer(next, life, ' in'));
+      if (dust) {
+        for (const el of dust.children) el.classList.add('out');
+        dust.insertAdjacentHTML('beforeend', life.motes.replace('class="motes"', 'class="motes in"'));
+      }
+      if (label) {
+        label.classList.add('off');
+        setTimeout(() => { const l = $('#board #mplace'); if (l) { l.textContent = MENU_BG.toUpperCase(); l.classList.remove('off'); } }, 750);
+      }
+      setTimeout(done, TOUR.fade + 100);
+    };
+    const img = new Image();
+    img.src = AS.backdrop[next];
+    (img.decode ? img.decode() : Promise.resolve()).then(show, show);              // decoded first, so the fade never starts on a blank layer
+    return true;
+  }
+  setInterval(() => {
+    if (!tourIdle()) return;
+    TOUR.shown += 1000;
+    if (TOUR.shown >= TOUR.every) tourStep();
+  }, 1000);
 
   function menuHTML() {
     if (!MENU_BG) { const k = Object.keys(AS.backdrop); MENU_BG = k.length ? k[Math.floor(Math.random() * k.length)] : ''; }
@@ -3303,17 +3368,17 @@ html, body { touch-action: manipulation; }
       ? `<button type="button" class="mi" data-do="play">${ICN.swords.replace(/40/g, '28').replace('#fff3d1', '#f3d27a')}${saved ? 'New duel vs Bot' : 'Play vs Bot'}</button>`
       : `<button type="button" class="btn-g breathe" data-do="play" style="width:460px;height:104px;font-size:34px;justify-content:flex-start;padding:0 28px;gap:20px;animation-delay:${life.breatheDelay}">${ICN.swords}Play vs Bot</button>`;
     return `<div class="table"></div>
-      ${MENU_BG ? `<div style="position:absolute;inset:0;overflow:hidden"><img class="menu-bg" src="${AS.backdrop[MENU_BG]}" alt="" style="position:absolute;left:0;top:0;width:100%;height:100%;object-fit:cover;animation-delay:${life.bgDelay}">${life.light}</div>` : ''}
+      ${MENU_BG ? `<div id="mscene" style="position:absolute;inset:0;overflow:hidden">${menuLayer(MENU_BG, life)}</div>` : ''}
       <div style="position:absolute;inset:0;background:linear-gradient(90deg,rgba(12,9,7,.94) 0%,rgba(12,9,7,.78) 34%,rgba(12,9,7,.15) 66%,rgba(12,9,7,.35) 100%)"></div>
       <div style="position:absolute;inset:0;background:radial-gradient(ellipse at 70% 50%,rgba(0,0,0,0) 40%,rgba(0,0,0,.55) 100%)"></div>
-      ${life.motes}
+      <div id="mmotes" style="position:absolute;inset:0;pointer-events:none">${life.motes}</div>
       <div style="position:absolute;right:48px;top:36px;display:flex;align-items:center;gap:14px">${accountChip()}${gpChip(26)}</div>
-      <div style="position:absolute;left:0;top:0;width:900px;height:300px;${short ? 'transform:scale(.72);transform-origin:30px 20px' : ''}">
+      <div style="position:absolute;left:0;top:0;width:900px;height:300px"><div style="position:absolute;inset:0;${short ? 'transform:scale(.72);transform-origin:30px 20px' : ''}">
       <div class="crest-ring" style="animation-delay:${life.ringDelay}"></div>
       ${EMBLEM ? `<img class="crest-glow" src="${EMBLEM}" alt="" style="position:absolute;left:96px;top:70px;width:210px;height:210px;animation-delay:${life.glowDelay}">` : ''}
       ${ICON.logo ? `<div class="logo-wrap"><img src="${ICON.logo}" alt="RuneScape"><div class="logo-sheen" style="-webkit-mask-image:url(${ICON.logo});mask-image:url(${ICON.logo});animation-delay:${life.sheenDelay}"></div></div>` : ''}
       <div style="position:absolute;left:340px;top:236px;display:flex;align-items:center;gap:14px"><span style="width:60px;height:1px;background:var(--gold)"></span>
-        <span style="font-family:var(--display);font-weight:600;font-size:20px;letter-spacing:.36em;color:var(--cream)">TRADING CARD GAME</span><span style="width:60px;height:1px;background:var(--gold)"></span></div></div>
+        <span style="font-family:var(--display);font-weight:600;font-size:20px;letter-spacing:.36em;color:var(--cream)">TRADING CARD GAME</span><span style="width:60px;height:1px;background:var(--gold)"></span></div></div></div>
       <nav aria-label="Main menu" style="position:absolute;left:${short ? 90 : 110}px;top:${short ? 228 : saved && live ? 290 : saved || live ? 320 : 340}px;${short ? 'display:grid;grid-template-columns:repeat(2,460px);align-items:end' : 'display:flex;flex-direction:column'};gap:${saved && live && !short ? 10 : 14}px">
         ${resume}${play}
         <button type="button" class="mi" data-do="online"${ON ? '' : ' disabled'}>${ICN.globe}Play Online${rec}</button>
@@ -3326,7 +3391,7 @@ html, body { touch-action: manipulation; }
       <div style="position:absolute;left:${short ? 90 : 110}px;bottom:${short ? 28 : 40}px;display:flex;align-items:center;gap:12px;font-size:13px;font-weight:700;letter-spacing:.14em;color:var(--faint)">
         <span>SET 1</span><span style="width:4px;height:4px;border-radius:50%;background:var(--faint)"></span><span>COLLECTED ${collected()} / ${POOL.length}</span>
         <span style="width:4px;height:4px;border-radius:50%;background:var(--faint)"></span><span>RECORD ${profile.wins} W · ${profile.losses} L</span></div>
-      ${MENU_BG ? `<span style="position:absolute;right:48px;bottom:40px;font-size:13px;font-weight:700;letter-spacing:.14em;color:rgba(233,223,199,.6)">${esc(MENU_BG.toUpperCase())}</span>` : ''}
+      ${MENU_BG ? `<span id="mplace" style="position:absolute;right:48px;bottom:40px;font-size:13px;font-weight:700;letter-spacing:.14em;color:rgba(233,223,199,.6)">${esc(MENU_BG.toUpperCase())}</span>` : ''}
       ${modalHTML()}`;
   }
 
@@ -5014,6 +5079,7 @@ html, body { touch-action: manipulation; }
     const html = key === 'result' ? resultHTML() : key === 'duel' ? duelHTML() : SCREENS[key]();
     if (key === 'duel' && from === 'duel') morphInto(board, html); else board.innerHTML = html;
     shownScreen = key;
+    if (key === 'menu' && from !== 'menu') TOUR.shown = 0;        // back on the menu: the place you left stays its full time
     AU.want(key === 'duel' ? 'duel' : key === 'result' ? 'quiet' : 'menu');
     if (key === 'duel' && ui.g && !anim.playing) duelIntense(ui.g.winner === null && Math.min(ui.g.players[0].lp, ui.g.players[1].lp) <= 10);
     if (sweeping) runSweep(old, board, from === 'result' || (SWEEP[key] >= (SWEEP[from] || 0)) ? 1 : -1);
@@ -5653,7 +5719,8 @@ html, body { touch-action: manipulation; }
   stageFor(null);
 
   // test hook
-  window.__arena = { get ui() { return ui; }, render, act, CARDS, zoneFor, online: { sync: () => odSync(), get od() { return ui.od; }, ON, VERSION, idle: () => !anim.playing && !ui.intro && (!ui.od || !ui.od.jobs) }, get profile() { return profile; }, cloud: { get state() { return cloud; }, sync: () => cloudSync(), signedIn, account, progress: () => progressNow(), untouched }, deckRules, POOL, PACK_POOL, cardFace, mini, AS, ART, ICON, get CREST() { return CREST; }, get EMBLEM() { return EMBLEM; },
+  window.__arena = { get ui() { return ui; }, render, act, CARDS, zoneFor, online: { sync: () => odSync(), get od() { return ui.od; }, ON, VERSION, idle: () => !anim.playing && !ui.intro && (!ui.od || !ui.od.jobs) }, get profile() { return profile; }, cloud: { get state() { return cloud; }, sync: () => cloudSync(), signedIn, account, progress: () => progressNow(), untouched },
+    tour: { get place() { return MENU_BG; }, get places() { return tourPlaces(); }, get busy() { return TOUR.busy; }, get shown() { return TOUR.shown; }, get every() { return TOUR.every; }, set every(ms) { TOUR.every = ms; }, step: (to) => tourStep(to) }, deckRules, POOL, PACK_POOL, cardFace, mini, AS, ART, ICON, get CREST() { return CREST; }, get EMBLEM() { return EMBLEM; },
     // for tests: does the duel board, redrawn in place, read the same as a board drawn from scratch?
     // (attribute order aside). Returns true, or the first place they differ.
     morphCheck() {
