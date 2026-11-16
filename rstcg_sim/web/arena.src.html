@@ -275,6 +275,30 @@ button:focus-visible, [tabindex]:focus-visible { outline: 3px solid var(--gold-p
 .endturn.wait { border: 2px solid rgba(156,195,230,.6); background: #18202a; color: var(--bot-hi); font-size: 24px; box-shadow: 0 10px 20px rgba(0,0,0,.6); cursor: default; }
 .endturn small { font-family: var(--body); font-size: 16px; letter-spacing: .1em; font-weight: 700; opacity: .8; }
 
+/* ---------- online ---------- */
+.onl { position: absolute; left: 0; right: 0; top: 132px; margin: 0 auto; width: 980px; max-width: calc(100% - 80px); padding: 38px 48px; display: flex; flex-direction: column; align-items: center; gap: 20px; text-align: center; }
+.onl p { margin: 0; max-width: 820px; font-size: 22px; line-height: 1.5; color: var(--cream); }
+.onl .fine { max-width: 820px; font-size: 16px; line-height: 1.45; color: var(--faint); }
+.err { color: var(--hurt); font-size: 18px; font-weight: 700; }
+.onin { height: 64px; padding: 0 18px; border-radius: 12px; border: 2px solid var(--gold); background: #120e0b; color: var(--gold-pale); font-family: var(--display); font-weight: 700; font-size: 30px; text-align: center; }
+.onin:focus { outline: none; border-color: var(--gold-hi); box-shadow: 0 0 0 4px rgba(243,210,122,.2); }
+.onin.code { letter-spacing: .3em; text-transform: uppercase; }
+.onin::placeholder { color: rgba(201,165,75,.35); }
+.oncode { display: flex; gap: 14px; }
+.oncode b { width: 96px; height: 120px; border-radius: 14px; background: #120e0b; border: 2.5px solid var(--gold-hi); display: flex; align-items: center; justify-content: center;
+  font-family: var(--display); font-size: 70px; color: var(--gold-pale); box-shadow: inset 0 0 20px rgba(0,0,0,.6), 0 0 24px rgba(243,210,122,.25); }
+.odclock { display: inline-flex; align-items: center; justify-content: center; min-width: 66px; height: 28px; padding: 0 10px; border-radius: 14px; background: #3a1712; border: 1.5px solid var(--hurt);
+  color: #ffd9cf; font-family: var(--display); font-weight: 700; font-size: 18px; letter-spacing: .04em; text-shadow: none; }
+.odclock:empty { display: none; }
+.odclock.low { animation: clockpulse 1s ease-in-out infinite; }
+@keyframes clockpulse { 50% { background: #7a2618; box-shadow: 0 0 16px rgba(255,155,133,.6); } }
+.odtoast { position: absolute; left: 50%; top: 40%; z-index: 96; transform: translate(-50%, -50%); max-width: 1100px; padding: 14px 26px; border-radius: 14px; background: rgba(24,18,14,.97);
+  border: 2px solid var(--gold-hi); color: var(--cream); font-size: 22px; font-weight: 700; text-align: center; box-shadow: 0 12px 30px rgba(0,0,0,.7); pointer-events: none; animation: toast 3.6s ease-out both; }
+@keyframes toast { 0% { opacity: 0; transform: translate(-50%, calc(-50% - 12px)); } 8%, 85% { opacity: 1; transform: translate(-50%, -50%); } 100% { opacity: 0; transform: translate(-50%, -50%); } }
+.odnet { position: absolute; left: 50%; top: 24px; z-index: 46; transform: translateX(-50%); display: inline-flex; align-items: center; gap: 10px; padding: 8px 18px; border-radius: 20px;
+  background: #3a1712; border: 1.5px solid var(--hurt); color: #ffd9cf; font-size: 16px; font-weight: 800; letter-spacing: .06em; }
+.calm .odtoast { animation: none; }
+
 /* ---------- popovers, prompts, overlays ---------- */
 .pop { position: absolute; z-index: 60; min-width: 260px; max-width: 380px; padding: 10px; border-radius: 12px; background: #1d1713; border: 2px solid var(--gold);
   box-shadow: 0 16px 40px rgba(0,0,0,.8); display: flex; flex-direction: column; gap: 6px; }
@@ -684,6 +708,9 @@ html, body { touch-action: manipulation; }
 <script>/*__AUDIO__*/</script>
 <script>/*__WIZ__*/</script>
 <script>/*__DECKRULES__*/</script>
+<script>/*__REFEREE__*/</script>
+<script>/*__ONLINE__*/</script>
+<script>/*__VERSION__*/</script>
 <script>
 (function () {
   'use strict';
@@ -1122,7 +1149,7 @@ html, body { touch-action: manipulation; }
     const you = i === ui.you;
     const p = g.players[i];
     const v = (base, third) => (you ? base : third);
-    const who = you ? 'You' : 'Bot';
+    const who = you ? 'You' : them().who;
     const w = p.weapon_card();
     switch (a[0]) {
       case 'draw': return `${who} ${v('draw', 'draws')} a card`;
@@ -1199,7 +1226,7 @@ html, body { touch-action: manipulation; }
       const c = CARDS[name];
       const verb = reactCard ? 'REACTS' : ({ material: 'PLAYS', spell: 'CASTS', weapon: 'EQUIPS', thrown: 'EQUIPS', bow: 'EQUIPS', staff: 'EQUIPS',
         arrows: 'LOADS', armor: 'WEARS', shield: 'RAISES', food: 'EATS', buff: 'PRAYS', quest: 'STARTS', location: 'TRAVELS TO', npc: 'CALLS' }[c.kind] || 'PLAYS');
-      html = `<div class="rv-lbl" style="top:100px"><span><span class="who bot">BOT</span>${verb}</span></div><div class="rv-card">${cardFace(name)}</div>`;
+      html = `<div class="rv-lbl" style="top:100px"><span><span class="who bot">${esc(them().TAG)}</span>${verb}</span></div><div class="rv-card">${cardFace(name)}</div>`;
     } else {
       const art = (n) => (ART[n] ? `<img src="${ART[n].src}" alt="">` : '');
       const label = {
@@ -1208,7 +1235,7 @@ html, body { touch-action: manipulation; }
         spec: [`${w ? SPEC_NAME[w.spec] : 'Special attack'}`, w ? art(w.name) : ''], claim: [`Claims the ${a[1]}`, AS.cape[a[1]] ? `<img src="${AS.cape[a[1]].src}" alt="">` : ''],
         quest: ['Takes a quest step', ICON.quest ? `<img src="${ICON.quest}" alt="">` : ''], varrock: ['Rests in Varrock', ''], exchange: ['Trades at the Grand Exchange', ''],
       }[a[0]] || [a[0], ''];
-      html = `<div class="rv-lbl" style="top:250px"><span><span class="who bot">BOT</span>${label[1]}${esc(label[0])}</span></div>`;
+      html = `<div class="rv-lbl" style="top:250px"><span><span class="who bot">${esc(them().TAG)}</span>${label[1]}${esc(label[0])}</span></div>`;
     }
     box.innerHTML = html;
     sfx('reveal', { v: name ? 1 : 0.6 });
@@ -1634,7 +1661,8 @@ html, body { touch-action: manipulation; }
       AU.sting('claim');
       glow(at(`cape:${e.cape}`), 'rgba(243,210,122,.8)', D(1200));
       const pic = AS.cape[e.cape];
-      await banner(`${pic ? `<img src="${pic.src}" alt="">` : ''}<b>${mine ? 'You claim' : 'The bot claims'} the ${esc(e.cape)}</b><small>${mine ? 'WEAR IT FOR 3 OF YOUR TURNS TO WIN' : 'IT WINS IF IT WEARS IT FOR 3 TURNS'}</small>`, mine, D(1500));
+      const T = them();
+      await banner(`${pic ? `<img src="${pic.src}" alt="">` : ''}<b>${mine ? 'You claim' : `${esc(T.The)} claims`} the ${esc(e.cape)}</b><small>${mine ? 'WEAR IT FOR 3 OF YOUR TURNS TO WIN' : T.WEARWIN}</small>`, mine, D(1500));
     }
     async function quest(e) {
       const r = R0[`${e.who}:quest`] || matSpot(e.who), p = mid(r);
@@ -1696,13 +1724,13 @@ html, body { touch-action: manipulation; }
       if (!t.wear && t.to >= t.need && t.from < t.need) {        // goal met: you can claim it
         sfx('ready', { bot: !mine, pan });
         glow(panel, hue, E(1400));
-        await stampAt(mine ? 'READY TO CLAIM' : 'BOT CAN CLAIM', pr.x + pr.w / 2 + 50, pr.y + pr.h / 2, mine ? '#f3d27a' : '#ff9b85', 30, E(1100));
+        await stampAt(mine ? 'READY TO CLAIM' : them().CAN, pr.x + pr.w / 2 + 50, pr.y + pr.h / 2, mine ? '#f3d27a' : '#ff9b85', 30, E(1100));
       } else await sleep(E(240));
     }
     const capeTicks = async () => { for (const t of ticks.splice(0)) await capeTick(t); };
     async function turnBanner(mine) {
       sfx(mine ? 'turnYou' : 'turnBot');
-      const d = fxAdd('turnban', `<span>${mine ? 'YOUR TURN' : "BOT'S TURN"}</span>`, `--c:${mine ? 'var(--gold-hi)' : 'var(--bot-hi)'};--g:${mine ? 'rgba(243,210,122,.55)' : 'rgba(156,195,230,.55)'}`);
+      const d = fxAdd('turnban', `<span>${mine ? 'YOUR TURN' : them().TURN}</span>`, `--c:${mine ? 'var(--gold-hi)' : 'var(--bot-hi)'};--g:${mine ? 'rgba(243,210,122,.55)' : 'rgba(156,195,230,.55)'}`);
       const span = d.firstChild;
       d.animate([{ opacity: 0, clipPath: 'inset(0 50% 0 50%)' }, { opacity: 1, clipPath: 'inset(0 0 0 0)', offset: 0.2 }, { opacity: 1, offset: 0.78 }, { opacity: 0 }], { duration: D(900), fill: 'both' });
       await done(span.animate([{ transform: 'translateX(-60px)', opacity: 0 }, { transform: 'translateX(0)', opacity: 1, offset: 0.25 }, { transform: 'translateX(8px)', opacity: 1, offset: 0.78 }, { transform: 'translateX(40px)', opacity: 0 }], { duration: D(900), fill: 'both' }));
@@ -1917,9 +1945,9 @@ html, body { touch-action: manipulation; }
   const TIPS = [
     ['first', () => true, 'Reading cards', 'Hover over any card, or press and hold it, to read it full size. The duel log (top right) lists every move.'],
     ['discard', (g, pd) => pd && pd.type === 'discard', 'Hand limit', `You can hold ${R.RULES.hand_max} cards at the end of your turn. Drag the extras onto your discard pile.`],
-    ['react', (g, pd) => pd && pd.type === 'react', 'Reactions', "Once a round, on the bot's turn, you can answer an attack: a Protect prayer blocks its style, a reversal sends it back. Drag the glowing card up, or take the hit."],
+    ['react', (g, pd) => pd && pd.type === 'react', 'Reactions', "Once a round, on your opponent's turn, you can answer an attack: a Protect prayer blocks its style, a reversal sends it back. Drag the glowing card up, or take the hit."],
     ['claim', (g) => g.active === ui.you && g.claimable(ui.you).length > 0, 'Ready to claim', `You've met a cape's goal. Press Claim, then wear it for ${R.RULES.cape_turns} of your turns to win.`],
-    ['botcape', (g) => Object.values(g.cape_claimed).includes(1 - ui.you), 'The bot has a cape', `It wins if it wears it for ${R.RULES.cape_turns} of its turns. Empty its deck first, or race it with your own cape.`],
+    ['botcape', (g) => Object.values(g.cape_claimed).includes(1 - ui.you), 'Your opponent has a cape', `They win if they wear it for ${R.RULES.cape_turns} of their turns. Empty their deck first, or race them with your own cape.`],
     ['special', (g) => { const p = g.players[ui.you], w = p.weapon_card(); return g.active === ui.you && w && w.spec && p.energy >= w.spec_cost; }, 'Special attack ready', 'Your weapon has a special attack. It costs Special energy, which fills by 1 every turn. Press Special to use it.'],
     ['quest', (g, pd) => pd && pd.type === 'choose' && pd.legal.some((a) => a[0] === 'play' && CARDS[a[1]].kind === 'quest'), 'Quests', 'Play a quest, then work through its steps: your first step each turn is free. Finishing one earns Quest Points and its reward.'],
     ['location', (g, pd) => pd && pd.type === 'choose' && pd.legal.some((a) => a[0] === 'play' && ['location', 'teleport'].includes(CARDS[a[1]].kind)), 'Locations', 'A location changes the rules for both players while it is on the table. Its badge says how.'],
@@ -1991,7 +2019,564 @@ html, body { touch-action: manipulation; }
   }
   // The duel in progress: the setup and your decisions, plus a hard bot's answers so far (see botAgent).
   const duelSave = () => Object.assign({ config: ui.config, decisions: ui.decisions }, ui.botMoves.length ? { bot: ui.botMoves } : {});
-  function saveGame() { if (ui.config && !ui.config.tutorial && ui.g && ui.g.winner === null) store.set(STORE, duelSave()); }
+  function saveGame() { if (ui.config && !ui.config.tutorial && !ui.config.online && ui.g && ui.g.winner === null) store.set(STORE, duelSave()); }
+
+  // =====================================================================================
+  // Online duels (ONLINE_BRIEF.md). The server referees: it plays each duel again from its seed and its
+  // moves for every request, and sends each player only what they may see (web/referee.js). The page
+  // never plays an online duel itself. It keeps a Game that is never played (odGame) for drawing the
+  // board and asking the rules things (damage previews, cape progress, what's free), sets it to each
+  // picture the server sends, and lets the animations above play the difference. It shows the choices
+  // the server offers and sends the one you pick. The other player's hand and deck are only counts here
+  // (cards called '?'); when one of their cards comes out of the hand, the move names it.
+  // Everything runs one step at a time through ui.od.chain, so pictures never overtake each other.
+  // =====================================================================================
+  const ONLINE = 'rstcg-online-v1';            // { auth, name, duel: { match, opp, seq, log, logTurn } }
+  const VERSION = window.RSTCG_VERSION || 'dev';
+  const RF = window.RSTCGReferee;              // the referee's rules of time (the page only reads them)
+  const CLOCK_SHOW = 15;                       // a decision's clock shows for its last 15 seconds
+  const onlineGet = () => store.get(ONLINE) || {};
+  const onlineSave = (patch) => store.set(ONLINE, Object.assign(onlineGet(), patch));
+  const ON = window.RSTCGOnline ? window.RSTCGOnline.make({ load: () => onlineGet().auth || null, save: (auth) => onlineSave({ auth }) }) : null;
+  const onl = () => !!(ui.config && ui.config.online);
+  const sameMove = (a, b) => JSON.stringify(a) === JSON.stringify(b);
+  ui.on = { state: null, name: onlineGet().name || null, nameText: '', nameErr: '', codeText: '', codeErr: '', code: '', join: null, room: null, msg: '', busy: false };
+
+  // Words for the other side of the table: the bot, or (online) the other player.
+  function them() {
+    if (!onl()) {
+      return { name: levelName(ui.config && ui.config.level), who: 'Bot', the: 'the bot', The: 'The bot', poss: "The bot's", tag: 'BOT', TAG: 'BOT', its: 'its',
+        TURN: "BOT'S TURN", PICK: "BOT'S PICK", CAN: 'BOT CAN CLAIM', WINS: 'BOT WINS', WINSNEXT: 'BOT WINS NEXT TURN', WEARWIN: 'IT WINS IF IT WEARS IT FOR 3 TURNS' };
+    }
+    const n = ui.config.opp || 'Them';
+    return { name: n, who: n, the: n, The: n, poss: `${n}'s`, tag: 'THEM', TAG: n.toUpperCase(), its: 'their',
+      TURN: 'THEIR TURN', PICK: 'THEIR PICK', CAN: 'THEY CAN CLAIM', WINS: 'THEY WIN', WINSNEXT: 'THEY WIN NEXT TURN', WEARWIN: 'THEY WIN IF THEY WEAR IT FOR 3 TURNS' };
+  }
+
+  // ---------- the picture: a Game that is never played ----------
+  function odGame(v) {
+    const g = new R.Game([{}, {}], [null, null], 1, v.rules, ['', '']);
+    g.log = []; g.events = [];
+    odPut(g, v.state);
+    return g;
+  }
+  const VIEW_ONLY = new Set(['players', 'lp', 'handSize', 'hand', 'decklist', 'left']);
+  function odPut(g, st) {
+    for (const [k, x] of Object.entries(st)) if (!VIEW_ONLY.has(k)) g[k] = x;
+    st.players.forEach((q, i) => {
+      const p = g.players[i];
+      for (const [k, x] of Object.entries(q)) if (!VIEW_ONLY.has(k)) p[k] = x;
+      p.hand = q.hand ? q.hand.slice() : Array(q.handSize).fill('?');
+      p.deck = q.left ? Object.entries(q.left).flatMap(([n, k]) => Array(k).fill(n)) : Array(q.lp).fill('?');
+      p.decklist = q.decklist || {};
+    });
+  }
+
+  // ---------- time ----------
+  const odNow = () => Date.now() + (ui.od ? ui.od.offset : 0);        // the server's clock, as near as we know it
+  function odLeft() {                       // seconds left on the decision now pending, as the players see it (null: none)
+    const od = ui.od;
+    if (!od || !od.pending || !od.deadline || od.result || od.stopped) return null;
+    return Math.max(0, Math.ceil((od.deadline - RF.GRACE * 1000 - odNow()) / 1000));
+  }
+  function odClockText() {
+    const s = odLeft();
+    return s === null || s > CLOCK_SHOW || ui.intro ? '' : `0:${String(s).padStart(2, '0')}`;
+  }
+  const odClockHTML = () => (ui.od ? `<b class="odclock${(odLeft() ?? 99) <= 5 ? ' low' : ''}" aria-live="off">${odClockText()}</b>` : '');
+  function odTick() {
+    const od = ui.od;
+    if (!od) return;
+    const t = odClockText(), low = (odLeft() ?? 99) <= 5;
+    for (const el of document.querySelectorAll('#board .odclock')) { if (el.textContent !== t) el.textContent = t; el.classList.toggle('low', low); }
+    if (od.result || od.stopped) return;
+    // a decision that ran out on the server is settled by the next request from either player
+    if (od.pending && od.deadline && odNow() > od.deadline + 600 && Date.now() - od.dlPoll > 3000) { od.dlPoll = Date.now(); odSync(); return; }
+    // with the live connection down, look now and then; with it up, now and then anyway
+    const every = ON.live(od.match) ? 20e3 : od.pending && od.pending.seat === ui.you ? 6e3 : 2500;
+    if (Date.now() - od.polled > every) odSync();
+  }
+  function odToast(text) {
+    const d = fxAdd('odtoast', esc(text));
+    setTimeout(() => d.remove(), 3700);
+  }
+
+  // ---------- talking to the server, one step at a time ----------
+  function odJob(fn) {
+    const od = ui.od;
+    od.jobs += 1;
+    od.chain = od.chain.then(() => (ui.od === od ? fn() : null)).catch((e) => odTrouble(od, e)).finally(() => { od.jobs -= 1; });
+    return od.chain;
+  }
+  async function odCall(od, op, body) {     // retries while the network is down ("Reconnecting...")
+    for (let tries = 0; ; tries++) {
+      try {
+        const r = await ON.call(op, body);
+        if (od.net !== 'ok') { od.net = 'ok'; if (ui.od === od) render(); }
+        return r;
+      } catch (e) {
+        if (e.code !== 'net' || ui.od !== od) throw e;
+        if (od.net !== 'down') { od.net = 'down'; render(); }
+        await sleep(Math.min(8000, 1000 * 2 ** tries));
+        if (ui.od !== od) throw e;
+      }
+    }
+  }
+  function odSync() {                       // ask what's new; a sync asked for while one runs happens again after it
+    const od = ui.od;
+    if (!od) return;
+    if (od.syncing) { od.again = true; return; }
+    od.syncing = true;
+    od.polled = Date.now();
+    odJob(async () => {
+      try {
+        do {
+          od.again = false; od.polled = Date.now();
+          await odTake(od, await odCall(od, 'view', { match: od.match, since: od.seq }));
+        } while (od.again && ui.od === od);
+      } finally { od.syncing = false; }
+    });
+  }
+  function odTrouble(od, e) {
+    if (ui.od !== od) return;
+    const code = e && e.code;
+    if (['stale', 'turn', 'kind', 'illegal', 'over'].includes(code)) { odSync(); return; }      // the duel moved on: catch up
+    if (code === 'update' || code === 'nomatch') {
+      od.stopped = { code, message: code === 'update' ? (e.message || 'This copy of the game is out of date.') : "That duel isn't there any more." };
+      if (code === 'nomatch') onlineSave({ duel: null });
+      ui.pending = null; render(); return;
+    }
+    if (!(e instanceof Error) || !code) console.error(e);
+    odToast((e && e.message) || 'Something went wrong.');
+    setTimeout(() => { if (ui.od === od) odSync(); }, 3000);
+  }
+  function odSave(od) {                     // this device's log of the duel, so a reload picks it up where it was
+    onlineSave({ duel: { match: od.match, opp: od.opp, seq: od.seq, state: od.state, log: ui.g ? ui.g.log.slice(-200) : [], logTurn: od.logTurn } });
+  }
+
+  // ---------- a picture from the server ----------
+  async function odTake(od, v) {
+    if (ui.od !== od || !v) return;
+    if (v.now) od.offset = Date.parse(v.now) - Date.now();
+    if (v.status === 'stopped') { od.stopped = { code: 'update', message: v.why || 'This duel was played on an older version of the game.' }; onlineSave({ duel: null }); ui.pending = null; render(); return; }
+    if (!v.state) return;
+    if (v.steps && v.steps.length) {
+      if (ui.pending) { ui.pending = null; ui.selected = null; ui.menu = null; ui.why = null; render(); }    // decided already (the time ran out)
+      const quiet = od.quiet;              // catching up after a reload: no animations
+      if (quiet) ui.replaying = true;
+      try { for (const st of v.steps) { if (ui.od !== od) return; await odStep(od, st); } } finally { if (quiet) { ui.replaying = false; od.quiet = false; } }
+    } else if (v.log) odRedraw(od, v);     // too far behind to catch up move by move: the duel as it stands
+    if (ui.od !== od) return;
+    od.seq = v.seq; od.pending = v.pending; od.result = v.result; od.strikes = v.strikes || od.strikes; od.state = v.state;
+    od.deadline = v.deadline ? Date.parse(v.deadline) : null;
+    odSave(od);
+    if (v.result) { await odEnd(od, v.result); return; }
+    if (v.pending && v.pending.seat === ui.you) odAsk(od, v.pending);
+    else render();
+  }
+  function odTurnLine(od, g, t) {           // "Turn 5 · Zezima" in the log, once a turn
+    if (od.logTurn === t) return;
+    od.logTurn = t;
+    g.log.push({ turn: true, text: `Turn ${t + 1} · ${t % 2 === ui.you ? 'You' : them().who}`, who: t % 2 });
+  }
+  function odNotes(od, g, notes) { for (const n of notes || []) { odTurnLine(od, g, n.at); g.log.push(n); } }
+  function odReveal(i, names) {             // their card leaves a hand of '?': name it in the last picture, so it can be followed
+    const shown = anim.shown && anim.shown.p[i];
+    if (!shown) return;
+    for (const n of names) { const k = shown.hand.indexOf('?'); if (k >= 0) shown.hand[k] = n; }
+  }
+  function odResult(od, evs) {              // damage and healing go on the line of the move that caused them
+    const e = od.entry;
+    if (!e) return;
+    for (const x of evs) {
+      if (x.type === 'hit' && x.by === e.who && x.src !== 'reversal') { e.dmg = (e.dmg || 0) + x.amount; e.soak = (e.soak || 0) + x.soaked; e.hit = true; }
+      if (x.type === 'heal' && x.who === e.who) e.heal = (e.heal || 0) + x.amount;
+    }
+    if (e.hit) e.entry.result = `${e.dmg} damage${e.soak ? `, ${e.soak} soaked` : ''}`;
+    if (e.heal) e.entry.result = `heals ${e.heal}`;
+  }
+  // One move and what followed it, played out as wrapApply plays a move against the bot.
+  async function odStep(od, st) {
+    const g = ui.g, mv = st.move, i = mv.seat, a = mv.v, mine = i === ui.you, T = them();
+    if (mv.late) {
+      od.lates[i] += 1;
+      const what = mv.t === 'choose' ? (mine ? 'your turn ended' : 'their turn ended') : mv.t === 'react' ? 'no reaction' : `${a} was discarded`;
+      const text = `${mine ? 'Your time ran out' : `${T.name} ran out of time`}: ${what} (${od.lates[i]} of ${RF.STRIKES})`;
+      g.log.push({ text, who: i });
+      odToast(text);
+      if (mine) sfx('nope');
+    }
+    if (mv.t === 'concede' || mv.t === 'forfeit') {
+      g.log.push({ text: mv.t === 'concede' ? (mine ? 'You concede' : `${T.name} concedes`) : `${mine ? 'You' : T.name} ran out of time ${RF.STRIKES} times`, who: i });
+      odPut(g, st.state); odNotes(od, g, st.notes);
+      return;
+    }
+    if (mv.t === 'choose' && a[0] !== 'pass') {
+      odTurnLine(od, g, g.turn);
+      const entry = { text: describe(g, i, a), who: i, action: true };
+      od.entry = { entry, who: i };
+      const name = ['play', 'varrock', 'exchange'].includes(a[0]) ? a[1] : null;
+      const q = g.players[i].quest, qstep = q ? CARDS[q.name].steps[q.step] : null;
+      const tossed = a[0] === 'quest' && a[1] && qstep && qstep[0] === 'discard' ? a[1] : null;   // a quest step that discards from the hand
+      if (!mine) { odReveal(i, [name || tossed].filter(Boolean)); if (!ui.replaying) await showMove(g, i, a); }
+      if (ui.od !== od) return;
+      g.log.push(entry);
+      if (!(mine && od.lift && sameMove(od.lift, a))) {     // (your card left the hand when you picked it)
+        render();
+        anim.hint = { i, name, from: null };
+        if (name && mine && !ui.replaying) await liftYourCard(a, name);
+      }
+      od.lift = null;
+    } else if (mv.t === 'choose') od.entry = null;
+    else if (mv.t === 'react' && a) { if (!mine) { odReveal(i, [a]); if (!ui.replaying) await showMove(g, i, null, a); } }
+    else if (mv.t === 'discard') {
+      if (!mine) odReveal(i, [a]);
+      g.log.push({ text: `${mine ? 'You discard' : `${T.who} discards`} ${a} (hand limit)`, who: i });
+    }
+    if (ui.od !== od) return;
+    odPut(g, st.state);
+    g.events.push(...st.events);
+    odNotes(od, g, st.notes);
+    odResult(od, st.events);
+    if (g.winner === null) odTurnLine(od, g, g.turn);
+    await settle(g);
+  }
+  function odRedraw(od, v) {
+    const g = ui.g;
+    odPut(g, v.state);
+    g.log = []; g.events = []; od.logTurn = null; od.entry = null;
+    odNotes(od, g, v.log);
+    if (g.winner === null) odTurnLine(od, g, g.turn);
+    if (anim.held && anim.held.el) anim.held.el.remove();
+    $('#reveal').innerHTML = '';
+    Object.assign(anim, { shown: snap(g), ev: 0, hint: null, held: null, drop: null, reactFrom: null });
+    render();
+  }
+
+  // ---------- your decisions ----------
+  function odAsk(od, p) {
+    if (ui.pending && ui.pending.seq === od.seq) return;
+    const data = p.t === 'choose' ? { legal: p.legal } : p.t === 'react' ? { amount: p.amount, style: p.style, src: p.src, opts: p.opts } : {};
+    ui.pending = Object.assign({ type: p.t, seq: od.seq }, data, {
+      resolve: (v) => {
+        if (ui.od !== od || !ui.pending || ui.pending.seq !== od.seq) return;
+        ui.pending = null; ui.selected = null; ui.menu = null; ui.why = null;
+        odMove(od, { t: p.t, v: v === undefined ? null : v });
+      },
+    });
+    render();
+  }
+  function odMove(od, move) {
+    const a = move.v;
+    if (move.t === 'choose' && Array.isArray(a) && ['play', 'varrock', 'exchange'].includes(a[0])) {
+      render();
+      anim.hint = { i: ui.you, name: a[1], from: null };
+      od.lift = a;
+      od.lifting = liftYourCard(a, a[1]);       // the card leaves your hand at once; the server's answer follows
+    } else render();
+    const seq = od.seq;
+    odJob(async () => {
+      try {
+        const v = await odCall(od, 'move', { match: od.match, seq, move });
+        await od.lifting;
+        await odTake(od, v);
+      } catch (e) {
+        await od.lifting;
+        od.lift = null;
+        if (ui.g && ui.od === od) await settle(ui.g);           // the card goes back to your hand
+        throw e;
+      } finally { od.lifting = null; }
+    });
+  }
+  function odConcede() {
+    const od = ui.od;
+    if (!od) return;
+    ui.duelMenu = false; ui.pending = null; ui.selected = null; ui.menu = null;
+    render();
+    odJob(async () => { await odTake(od, await odCall(od, 'move', { match: od.match, seq: od.seq, move: { t: 'concede' } })); });
+  }
+
+  // ---------- starting, leaving and ending ----------
+  async function runOnlineDuel(id, o = {}) {
+    if (!ON) return;
+    if (ui.g && ui.g.winner === null) stopDuel();
+    resultLeave(false);
+    hubStop();
+    ui.on.state = 'starting'; ui.screen = 'online'; ui.result = null;
+    render();
+    let v;
+    try { v = await ON.call('view', { match: id }); } catch (e) { if (ui.screen === 'online' && ui.on.state === 'starting') hubError(e); return; }
+    if (ui.screen !== 'online' || ui.on.state !== 'starting') return;      // went elsewhere meanwhile
+    if (v.status === 'stopped' || !v.state) {
+      onlineSave({ duel: null });
+      hubError({ message: v.why || "That duel isn't there any more." });
+      return;
+    }
+    stopDuel();
+    // This device's picture of the duel, if it has one from up to a few moves back: its log, and the board as it
+    // was, to catch up from quietly. Otherwise the duel as it stands, with the server's notes for a log.
+    const kept = onlineGet().duel;
+    const from = kept && kept.match === id && kept.state && Array.isArray(kept.log) && kept.seq <= v.seq && v.seq - kept.seq <= RF.MAX_STEPS ? kept : null;
+    const g = odGame(from ? { rules: v.rules, state: from.state } : v);
+    const od = { match: id, you: v.you, opp: v.names[1 - v.you], seq: v.seq, pending: v.pending, result: v.result, strikes: v.strikes || [0, 0],
+      lates: (v.strikes || [0, 0]).slice(), deadline: v.deadline ? Date.parse(v.deadline) : null, offset: v.now ? Date.parse(v.now) - Date.now() : 0,
+      chain: Promise.resolve(), jobs: 0, syncing: false, again: false, polled: Date.now(), dlPoll: 0, logTurn: null, entry: null, lift: null, lifting: null, net: 'ok', stopped: null };
+    if (from) { g.log = from.log.slice(); od.logTurn = from.logTurn ?? null; od.seq = from.seq; od.state = from.state; od.quiet = from.seq < v.seq; }
+    else { odNotes(od, g, v.log); od.state = v.state; }
+    if (g.winner === null && !v.result) odTurnLine(od, g, g.turn);
+    ui.tut = null; ui.tip = null; ui.result = null; ui.duelMenu = false; ui.modal = null; ui.logOpen = false;
+    ui.pending = null; ui.selected = null; ui.menu = null; ui.why = null; ui.decisions = []; ui.replaying = false;
+    ui.config = { online: true, match: id, opp: od.opp, names: v.names, seed: `online:${id}`, level: null };
+    ui.g = g; ui.you = v.you; ui.od = od; ui.screen = 'duel'; ui.intenseOn = false;
+    Object.assign(anim, { shown: snap(g), ev: g.events.length, hint: null, held: null, drop: null, reactFrom: null, playing: false, inApply: false });
+    odSave(od);
+    od.unwatch = ON.watch(id, (row) => { if (ui.od === od && (row.seq !== od.seq || row.status !== 'playing')) odSync(); });
+    od.ticker = setInterval(odTick, 250);
+    odJob(async () => {
+      if (v.seq === 0 && !v.result && !o.resume) await playIntro();       // the server's clock allows for the intro
+      if (ui.od !== od) return;
+      render();
+      if (od.quiet) return;                 // (the catch-up below asks, when it's done)
+      if (v.result) { await odEnd(od, v.result); return; }
+      if (v.pending && v.pending.seat === ui.you) odAsk(od, v.pending);
+    });
+    odSync();                               // anything that happened while the duel was being opened
+  }
+  function odClose(od) {                    // stop listening to a duel (it goes on without this device)
+    if (!od) return;
+    clearInterval(od.ticker);
+    if (od.unwatch) od.unwatch();
+    od.unwatch = null;
+    if (ui.od === od) ui.od = null;
+  }
+  async function odEnd(od, res) {
+    const g = ui.g;
+    ui.pending = null;
+    if (g.winner === null) { g.winner = res.winner; g.end_reason = res.reason; }
+    clearInterval(od.ticker);
+    render();
+    await sleep(calm() ? 400 : fast() ? 300 : 1400);
+    if (ui.od !== od) return;
+    odFinish(od, res);
+  }
+  // Results online: 100 GP for a win, 50 for a loss or a draw, nothing for conceding or running out of time.
+  // Each duel pays once (profile.onlinePaid keeps the last few duels paid for).
+  function odFinish(od, res) {
+    const g = ui.g, you = ui.you;
+    const won = res.winner === you, draw = res.winner === null;
+    const quit = !won && !draw && (res.reason === 'concede' || res.reason === 'time');
+    const paid = Array.isArray(profile.onlinePaid) ? profile.onlinePaid : [];
+    const fresh = !paid.includes(od.match);
+    const before = profile.gp;
+    const pay = !fresh || quit ? 0 : won ? PAY.win : PAY.loss;
+    if (fresh) {
+      const rec = Object.assign({ wins: 0, losses: 0 }, profile.online || {});
+      if (won) rec.wins += 1; else if (!draw) rec.losses += 1;
+      profile.online = rec;
+      profile.gp += pay;
+      profile.onlinePaid = [...paid, od.match].slice(-40);
+      saveProfile();
+    }
+    odClose(od);
+    onlineSave({ duel: null });
+    const p = g.players[you], b = g.players[1 - you];
+    ui.result = { online: { match: od.match, opp: od.opp, again: null, room: null, offered: false, busy: false, error: '' },
+      won, draw, conceded: res.reason === 'concede' && !won, quit, reason: res.reason, turn: g.turn + 1, youLp: p.lp, botLp: b.lp, pay, before, after: profile.gp,
+      shown: before, ticked: false, cape: res.reason === 'cape' ? (won ? p : b).cape_name : null, config: ui.config, g };
+    ui.screen = 'result';
+    render();
+    AU.sting(won ? 'victory' : 'defeat');
+    if (pay && !calm()) setTimeout(() => sfx('coins', { n: won ? 10 : 4 }), 800);
+    tickGP();
+    resultWatch();
+  }
+
+  // ---------- after a duel: a rematch ----------
+  // Pressing Rematch offers one (the server opens a room and points the old duel at it). The other player
+  // sees the old duel's row change; their Rematch takes up the offer and the new duel starts for both.
+  function resultWatch() {
+    const r = ui.result, o = r && r.online;
+    if (!o || !ON) return;
+    o.unwatch = ON.watch(o.match, (row) => { if (ui.result === r) rematchSeen(r, row.next || null); });
+    o.poll = setInterval(async () => {
+      if (ui.result !== r) { clearInterval(o.poll); return; }
+      if (o.again === 'waiting' && o.room && !ON.live(o.room)) {
+        try { const w = await ON.call('view', { match: o.room }); if (ui.result === r && w.status === 'playing') { rematchGo(o.room); return; } } catch (e) { /* try again soon */ }
+      }
+      if (ON.live(o.match)) return;
+      try { const w = await ON.call('view', { match: o.match }); if (ui.result === r) rematchSeen(r, w.next || null); } catch (e) { /* try again soon */ }
+    }, 4000);
+  }
+  function rematchSeen(r, next) {
+    const o = r.online;
+    if (!next) { if (o.offered) { o.offered = false; render(); } return; }        // their offer was withdrawn
+    if (next === o.room) return;                                                   // that's yours
+    if (o.again === 'waiting') { rematchAsk(); return; }                           // both pressed at once: take theirs
+    if (!o.offered) { o.offered = true; sfx('reveal', { v: 0.6 }); render(); }
+  }
+  function onlineDeck() {                   // the deck and cape you bring online (the ones picked on the duel screen)
+    const d = pickedDeck();
+    return d && deckRules(d.cards).ok ? { cards: { ...d.cards }, cape: CAPES[ui.setup.youCape] ? ui.setup.youCape : d.cape, name: d.name } : null;
+  }
+  async function rematchAsk() {
+    const r = ui.result, o = r && r.online;
+    if (!o || o.busy) return;
+    const d = onlineDeck();
+    if (!d) { o.error = 'Pick a legal deck first.'; render(); return; }
+    o.busy = true; o.error = ''; render();
+    try {
+      const res = await ON.call('rematch', { match: o.match, deck: d.cards, cape: d.cape, version: VERSION });
+      if (ui.result !== r) return;
+      if (res.started) { rematchGo(res.match); return; }
+      o.again = 'waiting'; o.room = res.match;
+      if (!o.roomWatch) o.roomWatch = ON.watch(o.room, (row) => { if (ui.result === r && row.status === 'playing') rematchGo(o.room); });
+    } catch (e) { if (ui.result === r) o.error = e.message || 'Something went wrong.'; }
+    finally { o.busy = false; if (ui.result === r) render(); }
+  }
+  function rematchGo(id) { resultLeave(false); runOnlineDuel(id); }
+  function resultLeave(withdraw) {          // off the result screen: stop listening, and take back an offer nobody took up
+    const o = ui.result && ui.result.online;
+    if (!o) return;
+    clearInterval(o.poll);
+    if (o.unwatch) o.unwatch();
+    if (o.roomWatch) o.roomWatch();
+    o.unwatch = o.roomWatch = null;
+    if (withdraw && o.again === 'waiting' && ON) ON.call('rematch', { match: o.match, off: true }).catch(() => {});
+    o.again = null;
+  }
+
+  // ---------- Play Online: connecting, your name, challenges ----------
+  function hubError(e) {
+    ui.screen = 'online'; ui.on.state = 'error'; ui.on.busy = false;
+    ui.on.msg = e && e.code === 'net' ? "Can't reach the game server. Check your connection and try again." : (e && e.message) || 'Something went wrong.';
+    render();
+  }
+  async function onlineEnter() {
+    if (!ON) return;
+    hubStop();
+    ui.screen = 'online'; ui.pickMode = 'online'; ui.on.state = 'connecting'; ui.on.msg = '';
+    render();
+    let h;
+    try { h = await ON.call('hello'); } catch (e) { if (ui.screen === 'online') hubError(e); return; }
+    if (ui.screen !== 'online' || ui.on.state !== 'connecting') return;
+    if (h.version !== VERSION) { ui.on.state = 'update'; render(); return; }
+    ui.on.name = h.name || null;
+    if (!h.name) { ui.on.state = 'name'; ui.on.nameText = ''; ui.on.nameErr = ''; render(); focusSoon('onname'); return; }
+    onlineSave({ name: h.name });
+    const duels = h.duels || [];
+    const playing = duels.find((d) => d.status === 'playing');
+    if (playing) { runOnlineDuel(playing.id, { resume: true }); return; }      // your clock is running: back to it
+    const room = duels.find((d) => d.status === 'waiting' && d.host);
+    if (room && !ui.on.code) { hubWait({ match: room.id, code: room.code }); return; }
+    onlinePick();
+  }
+  async function onlinePick() {             // to the deck picker, online; with a code to join, ask whose duel it is first
+    ui.screen = 'pick'; ui.pickMode = 'online'; ui.on.state = null; ui.oppOpen = false;
+    const code = ui.on.code;
+    ui.on.code = '';
+    if (code) await onlinePeek(code);
+    render();
+  }
+  async function onlinePeek(code) {
+    ui.on.busy = true;
+    try {
+      const p = await ON.call('peek', { code });
+      ui.on.busy = false;
+      if (p.yours) { ui.on.join = null; ui.on.codeErr = "That's your own challenge: send it to a friend."; return false; }
+      ui.on.join = { code: code.toUpperCase(), host: p.host };
+      ui.on.codeErr = '';
+      return true;
+    } catch (e) {
+      ui.on.busy = false;
+      ui.on.join = null;
+      ui.on.codeErr = e.code === 'net' ? "Can't reach the game server." : e.message || 'No duel is waiting with that code.';
+      return false;
+    }
+  }
+  const NAME_OK = /^[A-Za-z0-9][A-Za-z0-9 _-]{1,10}[A-Za-z0-9]$/;      // as the database's rule (profiles_name_shape)
+  async function onlineName() {
+    const t = (ui.on.nameText || '').trim();
+    if (!NAME_OK.test(t) || /\s\s/.test(t)) { ui.on.nameErr = '3 to 12 letters or numbers. Spaces, - and _ are fine in the middle.'; render(); return; }
+    if (['you', 'bot'].includes(t.toLowerCase())) { ui.on.nameErr = 'That one would get confusing. Try another.'; render(); return; }
+    ui.on.busy = true; ui.on.nameErr = ''; render();
+    try {
+      await ON.setName(t);
+      ui.on.name = t; onlineSave({ name: t });
+      ui.on.busy = false;
+      onlinePick();
+    } catch (e) {
+      ui.on.busy = false;
+      ui.on.nameErr = e.code === 'taken' ? 'That name is taken. Try another.' : e.code === 'shape' ? "That name won't do. Try another." : e.code === 'net' ? "Can't reach the game server." : e.message;
+      render();
+    }
+  }
+  async function onlineChallenge() {
+    const d = onlineDeck();
+    if (!d || ui.on.busy) return;
+    ui.on.busy = true; render();
+    try {
+      const r = await ON.call('challenge', { deck: d.cards, cape: d.cape, version: VERSION });
+      ui.on.busy = false;
+      hubWait(r);
+    } catch (e) { ui.on.busy = false; if (e.code === 'noname') { ui.screen = 'online'; ui.on.state = 'name'; render(); } else hubError(e); }
+  }
+  async function onlineAccept() {
+    const d = onlineDeck(), j = ui.on.join;
+    if (!d || !j || ui.on.busy) return;
+    ui.on.busy = true; ui.screen = 'online'; ui.on.state = 'joining'; render();
+    try {
+      const r = await ON.call('join', { code: j.code, deck: d.cards, cape: d.cape, version: VERSION });
+      ui.on.busy = false; ui.on.join = null;
+      runOnlineDuel(r.match);
+    } catch (e) {
+      ui.on.busy = false;
+      if (e.code === 'nocode' || e.code === 'taken' || e.code === 'own') { ui.on.join = null; ui.on.codeErr = e.message; ui.screen = 'pick'; ui.on.state = null; render(); }
+      else hubError(e);
+    }
+  }
+  // The waiting room: your code, ways to send it, and the duel starts when your friend joins.
+  function hubWait(room) {
+    hubStop();
+    ui.on.room = { match: room.match, code: room.code };
+    ui.screen = 'online'; ui.on.state = 'waiting';
+    const r = ui.on.room;
+    r.unwatch = ON.watch(r.match, (row) => { if (ui.on.room === r && row.status === 'playing') { hubStop(); runOnlineDuel(r.match); } });
+    r.poll = setInterval(async () => {
+      if (ui.on.room !== r) { clearInterval(r.poll); return; }
+      if (ON.live(r.match)) return;
+      try {
+        const w = await ON.call('view', { match: r.match });
+        if (ui.on.room !== r) return;
+        if (w.status === 'playing') { hubStop(); runOnlineDuel(r.match); } else if (w.status === 'cancelled') { hubStop(); onlinePick(); }
+      } catch (e) { /* try again soon */ }
+    }, 3000);
+    render();
+  }
+  function hubStop() {
+    const r = ui.on.room;
+    if (!r) return;
+    clearInterval(r.poll);
+    if (r.unwatch) r.unwatch();
+    ui.on.room = null;
+  }
+  async function hubCancel() {
+    const r = ui.on.room;
+    hubStop();
+    onlinePick();
+    if (r) ON.call('cancel', { match: r.match }).catch(() => {});
+  }
+  function joinLink(code) {
+    const base = /^https?:$/.test(location.protocol) && !/claude|anthropic/.test(location.hostname) ? location.origin + location.pathname : window.RSTCGOnline.APP;
+    return `${base}#duel-${code}`;
+  }
+  async function copyText(t) {
+    try { await navigator.clipboard.writeText(t); return true; } catch (e) { /* no clipboard here: the old way */ }
+    try {
+      const x = document.createElement('textarea'); x.value = t; x.style.cssText = 'position:fixed;left:-9999px;top:0';
+      document.body.appendChild(x); x.select(); const ok = document.execCommand('copy'); x.remove(); return ok;
+    } catch (e) { return false; }
+  }
+  function focusSoon(id) { setTimeout(() => { const el = document.getElementById(id); if (el && !TOUCH()) el.focus(); }, 60); }
 
   // =====================================================================================
   // Damage previews (numbers on buttons and prompts)
@@ -2071,7 +2656,7 @@ html, body { touch-action: manipulation; }
     if (c.kind === 'food') return p.lp >= g.rules.max_lp ? 'Your deck is full.' : !p.discard.length ? 'Nothing in your discard to heal from.' : 'You already ate this turn.';
     if (c.kind === 'shield') return 'Your weapon is two-handed.';
     if (c.kind === 'npc') return 'Nothing in your discard it can recover.';
-    if (c.kind === 'destroy') return c.needs_melee_weapon && !(w && w.kind === 'weapon') ? 'Needs a Melee weapon equipped.' : 'The bot has nothing it can destroy.';
+    if (c.kind === 'destroy') return c.needs_melee_weapon && !(w && w.kind === 'weapon') ? 'Needs a Melee weapon equipped.' : "There's nothing of theirs to destroy.";
     if (c.kind === 'location') return 'Already in play.';
     if (c.kind === 'hammer') return 'Needs a weapon with durability (not a Legendary) or a shield.';
     if (c.kind === 'buff') return g.free_plays_used >= g.rules.free_plays_max ? 'No free plays left this turn.' : 'Already active.';
@@ -2200,7 +2785,7 @@ html, body { touch-action: manipulation; }
     const you = ui.you, bot = 1 - you;
     const picks = g.rules.capes || [];
     const mine = picks[you] === cape, theirs = picks[bot] === cape;
-    const pick = mine && theirs ? ['BOTH PICKED', 'background:var(--gold);color:#1a1410'] : mine ? ['YOUR PICK', 'background:var(--gold);color:#1a1410'] : ['BOT\'S PICK', 'background:var(--bot);color:#e3f0fa;border:1px solid var(--gold)'];
+    const pick = mine && theirs ? ['BOTH PICKED', 'background:var(--gold);color:#1a1410'] : mine ? ['YOUR PICK', 'background:var(--gold);color:#1a1410'] : [them().PICK, 'background:var(--bot);color:#e3f0fa;border:1px solid var(--gold)'];
     const pic = AS.cape[cape];
     const art = pic ? `<img class="${pic.mode}" src="${pic.src}" alt="">` : '<i>✦</i>';
     const def = CAPES[cape];
@@ -2217,7 +2802,7 @@ html, body { touch-action: manipulation; }
           : `<div class="track"><i style="width:${Math.min(100, 100 * have / need)}%;background:${col}"></i></div>`;
         const near = !isYou && have >= need - 1 && have < need;
         return `<div data-cprow="${esc(cape)}|${k}" data-col="${col}" style="display:flex;align-items:center;gap:8px;${near ? 'margin:-3px -6px;padding:3px 6px;border-radius:6px;background:rgba(156,195,230,.08);box-shadow:0 0 0 1.5px rgba(156,195,230,.55),0 0 14px rgba(156,195,230,.3)' : ''}${have >= need ? ';' : ''}">
-          <span class="who ${isYou ? 'you' : 'bot'}">${isYou ? 'YOU' : 'BOT'}</span>${meter}<b class="cpn" style="font-family:var(--display);font-size:16px;color:${have >= need ? 'var(--gold-pale)' : have ? (isYou ? 'var(--gold-hi)' : 'var(--bot-hi)') : 'var(--faint)'};min-width:44px;text-align:right">${Math.min(have, 99)}/${need}</b></div>`;
+          <span class="who ${isYou ? 'you' : 'bot'}">${isYou ? 'YOU' : them().tag}</span>${meter}<b class="cpn" style="font-family:var(--display);font-size:16px;color:${have >= need ? 'var(--gold-pale)' : have ? (isYou ? 'var(--gold-hi)' : 'var(--bot-hi)') : 'var(--faint)'};min-width:44px;text-align:right">${Math.min(have, 99)}/${need}</b></div>`;
       };
       const canYou = g.claimable(you).includes(cape);
       const canBot = g.claimable(bot).includes(cape);
@@ -2225,15 +2810,16 @@ html, body { touch-action: manipulation; }
       else if (canBot) cls = 'danger';
       body = `${row(you)}${row(bot)}<div style="display:flex;align-items:center;gap:8px;margin-top:auto;padding-top:8px;border-top:1px solid rgba(201,165,75,.2)">
         <span class="lbl" style="font-size:10px">Wear</span><span class="ctr"></span><span class="ctr"></span><span class="ctr"></span>
-        <span style="margin-left:auto;font-size:11px;font-weight:700;letter-spacing:.12em;color:${canYou ? 'var(--gold-hi)' : canBot ? 'var(--hurt)' : 'var(--faint)'}">${canYou ? 'READY TO CLAIM' : canBot ? 'BOT CAN CLAIM' : 'UNCLAIMED'}</span></div>`;
+        <span style="margin-left:auto;font-size:11px;font-weight:700;letter-spacing:.12em;color:${canYou ? 'var(--gold-hi)' : canBot ? 'var(--hurt)' : 'var(--faint)'}">${canYou ? 'READY TO CLAIM' : canBot ? them().CAN : 'UNCLAIMED'}</span></div>`;
     } else {
       const isYou = claimedBy === you;
       const n = g.players[claimedBy].cape || 0;
       cls = n >= 2 ? (isYou ? 'mine' : 'danger') : '';
-      body = `<div style="display:flex;align-items:center;gap:10px"><span class="who ${isYou ? 'you' : 'bot'}">${isYou ? 'YOU' : 'BOT'}</span><span class="lbl" style="color:var(--cream)">wear it</span></div>
+      const T = them();
+      body = `<div style="display:flex;align-items:center;gap:10px"><span class="who ${isYou ? 'you' : 'bot'}">${isYou ? 'YOU' : T.tag}</span><span class="lbl" style="color:var(--cream)">wear it</span></div>
         <div data-cpw="${esc(cape)}" style="display:flex;align-items:center;gap:10px">${[0, 1, 2].map((k) => `<span class="ctr ${k < n ? 'on' + (isYou ? '' : ' botc') : ''}" style="width:34px;height:34px"></span>`).join('')}
         <b class="cpn" style="font-family:var(--display);font-size:20px;color:${isYou ? 'var(--gold-hi)' : 'var(--bot-hi)'}">${n}/3</b></div>
-        <div style="margin-top:auto;font-family:var(--display);font-weight:700;font-size:${n >= 2 ? 20 : 14}px;color:${n >= 2 ? (isYou ? 'var(--gold-hi)' : 'var(--hurt)') : 'var(--muted)'}">${n >= 3 ? (isYou ? 'YOU WIN' : 'BOT WINS') : n >= 2 ? (isYou ? 'ONE TURN LEFT' : 'BOT WINS NEXT TURN') : `${3 - n} of ${isYou ? 'your' : 'its'} turns to go`}</div>`;
+        <div style="margin-top:auto;font-family:var(--display);font-weight:700;font-size:${n >= 2 ? 20 : 14}px;color:${n >= 2 ? (isYou ? 'var(--gold-hi)' : 'var(--hurt)') : 'var(--muted)'}">${n >= 3 ? (isYou ? 'YOU WIN' : T.WINS) : n >= 2 ? (isYou ? 'ONE TURN LEFT' : T.WINSNEXT) : `${3 - n} of ${isYou ? 'your' : T.its} turns to go`}</div>`;
     }
     const blind = ui.intro ? `<img class="capeback" src="${CREST}" alt="" style="--d:${left < 900 ? 4.55 : 4.75}s">` : '';   // blind picks flip face up
     return `<div class="capew" style="left:${left}px;top:${STRIP.top + 12}px"><div class="capet ${cls}" data-at="cape:${esc(cape)}"><div class="cape-art"><div>${art}</div>${blind}<span class="pick" style="${pick[1]}">${pick[0]}</span></div>
@@ -2304,7 +2890,7 @@ html, body { touch-action: manipulation; }
     const topCard = p.discard[p.discard.length - 1];
     const ddz = `${i === ui.you ? 'data-zone="mydiscard" ' : ''}data-at="${i}:disc"`;               // NPCs recover from it; hand-limit discards go to it
     const disc = topCard
-      ? `<div class="abs" style="left:1756px;top:${top}px"><button type="button" ${ddz} data-do="viewdiscard" data-v="${i}" aria-label="${i === ui.you ? 'Your' : 'Bot'} discard pile, ${p.discard.length} cards" style="display:block;padding:0;border:0;background:none;border-radius:7px;box-shadow:${edges(p.discard.length)};zoom:1.25">${mini(topCard, {}).replace('class="mc"', 'class="mc" style="box-shadow:none"')}</button></div>`
+      ? `<div class="abs" style="left:1756px;top:${top}px"><button type="button" ${ddz} data-do="viewdiscard" data-v="${i}" aria-label="${i === ui.you ? 'Your' : esc(them().poss)} discard pile, ${p.discard.length} cards" style="display:block;padding:0;border:0;background:none;border-radius:7px;box-shadow:${edges(p.discard.length)};zoom:1.25">${mini(topCard, {}).replace('class="mc"', 'class="mc" style="box-shadow:none"')}</button></div>`
       : `<div class="abs" ${ddz} style="left:1756px;top:${top}px;width:140px;height:196px;border:2px dashed rgba(201,165,75,.35);border-radius:8px"></div>`;
     const dplaque = `<div class="plq" data-at="${i}:discn" style="left:1782px;top:${top + 162}px;width:88px;height:52px"><b style="font-size:28px">${p.discard.length}</b></div>`;
     return deck + plaque + '<!--split-->' + disc + dplaque;
@@ -2324,8 +2910,8 @@ html, body { touch-action: manipulation; }
       <circle cx="20.6" cy="21.6" r="1.15" fill="${trim}"/><circle cx="27.4" cy="21.6" r="1.15" fill="${trim}"/>
       <circle cx="24" cy="36.6" r="2.3" fill="${trim}" stroke="${edge}" stroke-width=".8"/></svg>`;
   }
-  // What the other side of the table is called: the bot's level name now ("Guard"); online, the player's name.
-  const oppName = () => levelName(ui.config && ui.config.level);
+  // What the other side of the table is called: the bot's level name ("Guard"), or online the player's name.
+  const oppName = () => them().name;
   function nameplate(g, i) {
     const p = g.players[i];
     const you = i === ui.you;
@@ -2355,7 +2941,7 @@ html, body { touch-action: manipulation; }
     const freeLeft = g.rules.free_plays_max - g.free_plays_used;
     const col = mine ? 'var(--gold-hi)' : 'var(--bot-hi)';
     return `<div class="abs turnp" style="left:1504px;top:${SH() - 272}px;background:${mine ? 'rgba(36,28,22,.94)' : 'rgba(24,32,42,.94)'};border-color:${mine ? 'var(--gold)' : 'var(--bot-hi)'};box-shadow:0 0 0 4px ${mine ? 'rgba(243,210,122,.12)' : 'rgba(156,195,230,.12)'},0 0 26px ${mine ? 'rgba(243,210,122,.28)' : 'rgba(156,195,230,.28)'},0 10px 20px rgba(0,0,0,.6)">
-      <div style="display:flex;align-items:baseline;justify-content:space-between;width:100%"><span style="font-family:var(--display);font-weight:700;font-size:34px;color:${col};line-height:1;text-shadow:0 0 14px ${mine ? 'rgba(243,210,122,.5)' : 'rgba(156,195,230,.5)'}">${mine ? 'YOUR TURN' : "BOT'S TURN"}</span>
+      <div style="display:flex;align-items:baseline;justify-content:space-between;width:100%"><span style="font-family:var(--display);font-weight:700;font-size:34px;color:${col};line-height:1;text-shadow:0 0 14px ${mine ? 'rgba(243,210,122,.5)' : 'rgba(156,195,230,.5)'}">${mine ? 'YOUR TURN' : them().TURN}</span>
         <span style="font-size:14px;font-weight:800;letter-spacing:.2em;color:var(--muted)">TURN ${g.turn + 1}</span></div>
       <div style="display:flex;align-items:center;gap:12px;width:100%"><span class="lbl" style="font-size:14px">Actions</span><div style="display:flex;gap:12px" aria-label="${left} of ${total} actions left">${Array.from({ length: total }, (_, k) => `<span class="${k >= total - left ? 'dp1' + (mine ? '' : ' b') : 'dp0'}"></span>`).join('')}</div>
         <span class="lbl" style="font-size:14px;margin-left:auto">Free</span><div style="display:flex;gap:8px" aria-label="${freeLeft} free plays left">${Array.from({ length: g.rules.free_plays_max }, (_, k) => `<span class="${k >= g.rules.free_plays_max - freeLeft ? 'fp1' : 'fp0'}"></span>`).join('')}</div></div></div>`;
@@ -2394,13 +2980,19 @@ html, body { touch-action: manipulation; }
     const A = coreActions();
     if (g.winner !== null) return '';
     const at = `style="top:${SH() - 160}px"`;
-    if (g.active !== ui.you) return `<button type="button" class="endturn wait" ${at} disabled><svg width="22" height="28" viewBox="0 0 22 28" aria-hidden="true"><path d="M3 2h16M3 26h16M5 2c0 8 12 8 12 12S5 18 5 26M17 2c0 8-12 8-12 12s12 4 12 12" fill="none" stroke="#9cc3e6" stroke-width="2"/></svg>BOT'S TURN
-      ${ui.intro ? '' : '<small class="thinking" aria-label="The bot is thinking">thinking <i></i><i></i><i></i></small>'}</button>`;
+    const od = ui.od, T = them();
+    const theirs = !!(od && od.pending && od.pending.seat !== ui.you);          // online: waiting on the other player
+    if (g.active !== ui.you || (theirs && !ui.pending)) {
+      const small = !od ? '<small class="thinking" aria-label="The bot is thinking">thinking <i></i><i></i><i></i></small>'
+        : theirs ? `<small class="thinking">${esc(g.active === ui.you ? `${T.name} may react` : `${T.name} is deciding`)} <i></i><i></i><i></i></small>` : '';
+      return `<button type="button" class="endturn wait" ${at} disabled><svg width="22" height="28" viewBox="0 0 22 28" aria-hidden="true"><path d="M3 2h16M3 26h16M5 2c0 8 12 8 12 12S5 18 5 26M17 2c0 8-12 8-12 12s12 4 12 12" fill="none" stroke="#9cc3e6" stroke-width="2"/></svg>${g.active !== ui.you ? T.TURN : 'WAITING'}
+      ${ui.intro ? '' : small}${theirs ? odClockHTML() : ''}</button>`;
+    }
     const ready = A.pass.length;
     const left = g.actions_left;
     return `<button type="button" class="endturn" ${at} data-do="core" data-v="pass" ${ready ? '' : 'disabled'}>
       <svg width="34" height="22" viewBox="0 0 34 22" aria-hidden="true"><path d="M2 11h26M20 3l8 8-8 8" fill="none" stroke="#fff3d1" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/></svg>END TURN
-      ${left ? `<small>${plural(left, 'action')} unused</small>` : ''}</button>`;
+      ${left ? `<small>${plural(left, 'action')} unused</small>` : ''}${od ? odClockHTML() : ''}</button>`;
   }
 
   // ---------- hands ----------
@@ -2474,7 +3066,7 @@ html, body { touch-action: manipulation; }
       const vars = ui.intro ? `--rot:${-d * 4}deg;--d:${DEAL_START + k * DEAL_STEP}s;--dx:${dc.x - (left + 60)}px;--dy:${dc.y - (top + 84)}px;` : '';
       return `<div class="bk${deal}" data-bh="${k}" style="${vars}left:${left}px;top:${top}px;width:120px;height:168px;transform:rotate(${-d * 4}deg);transform-origin:50% 0;box-shadow:0 8px 16px rgba(0,0,0,.6)">${backImg(120, 168, true)}</div>`;
     }).join('');
-    return cards + (n && !ui.intro ? `<div class="bhn" style="left:${960 + mid * spacing + 72}px;top:${top0 + 64}px" aria-label="The bot holds ${n} cards">${n}</div>` : '');
+    return cards + (n && !ui.intro ? `<div class="bhn" style="left:${960 + mid * spacing + 72}px;top:${top0 + 64}px" aria-label="${esc(them().The)} holds ${n} cards">${n}</div>` : '');
   }
 
   // ---------- prompts ----------
@@ -2487,14 +3079,14 @@ html, body { touch-action: manipulation; }
       const c = CARDS[name];
       let what;
       if (c.kind === 'prayer') what = `Block it: you take nothing${soak ? `, your shield keeps its soak` : ''}`;
-      else { const [back, bs] = g.compute_damage(ui.you, pd.amount, c.converts_to); what = `Send it back as ${S[c.converts_to]}: the bot takes ${back}${bs ? ` (${bs} soaked)` : ''}`; }
+      else { const [back, bs] = g.compute_damage(ui.you, pd.amount, c.converts_to); what = `Send it back as ${S[c.converts_to]}: ${them().the} takes ${back}${bs ? ` (${bs} soaked)` : ''}`; }
       return `<button type="button" class="btn-g green" data-do="react" data-v="${esc(name)}" style="height:58px;font-size:16px;width:100%;flex-direction:column;gap:0">${esc(name)}<span style="font-family:var(--body);font-size:12.5px;letter-spacing:0">${esc(what)}</span></button>`;
     }).join('');
     return `<div class="veil" data-zone="react"></div>
       <div class="panel" data-zone="react" style="position:absolute;left:1130px;top:${560 - 40 * pd.opts.length}px;width:440px;padding:18px 20px;display:flex;flex-direction:column;gap:14px;border:2px solid var(--gold);z-index:50;box-shadow:0 0 0 4px rgba(243,210,122,.12),0 16px 40px rgba(0,0,0,.8)">
         <div style="display:flex;align-items:center;gap:14px">
           <div style="width:64px;height:64px;border-radius:50%;flex:none;background:radial-gradient(circle,${FRAME[pd.style] || '#5e5a52'} 0%,#17202a 75%);border:3px solid #e8f4ff;display:flex;flex-direction:column;align-items:center;justify-content:center;box-shadow:0 0 20px rgba(156,195,230,.6)">${styleIcon(pd.style).replace('<img', '<img style="width:20px;height:20px"')}<b style="font-family:var(--display);font-size:26px;color:#fff;line-height:1">${pd.amount}</b></div>
-          <div style="display:flex;flex-direction:column;gap:4px"><span class="ttl" style="font-size:26px">${pd.src === 'reversal' ? 'It comes back!' : 'React?'}</span>
+          <div style="display:flex;flex-direction:column;gap:4px"><span class="ttl" style="font-size:26px;display:flex;align-items:center;gap:12px">${pd.src === 'reversal' ? 'It comes back!' : 'React?'}${odClockHTML()}</span>
             <span style="font-weight:700;font-size:15px;color:var(--bot-hi)">${esc(last ? last.text : 'Incoming attack')} · <span style="color:var(--hurt)">${take} to your deck</span>${soak ? ` · ${soak} soaked` : ''}</span></div></div>
         ${opts}
         <button type="button" class="btn-d" data-do="react" data-v="" style="height:58px;font-size:20px">Take it</button>
@@ -2504,7 +3096,7 @@ html, body { touch-action: manipulation; }
     const p = g.players[ui.you];
     const over = p.hand.length - g.rules.hand_max;
     return `<div class="panel" style="position:absolute;left:740px;top:${SH() - 420}px;width:440px;padding:14px 18px;z-index:40;border:2px solid var(--hurt);text-align:center">
-      <span class="ttl" style="font-size:22px">Hand limit ${g.rules.hand_max}</span><div style="margin-top:6px;font-size:15px">Drag ${plural(over, 'card')} to your discard pile, or ${tapWord()} ${over === 1 ? 'it' : 'them'}</div></div>`;
+      <span class="ttl" style="font-size:22px;display:inline-flex;align-items:center;gap:12px">Hand limit ${g.rules.hand_max}${odClockHTML()}</span><div style="margin-top:6px;font-size:15px">Drag ${plural(over, 'card')} to your discard pile, or ${tapWord()} ${over === 1 ? 'it' : 'them'}</div></div>`;
   }
   function coreMenuHTML(g) {
     const m = ui.menu;
@@ -2520,17 +3112,19 @@ html, body { touch-action: manipulation; }
       return `<button type="button" class="logtab" data-do="log" aria-label="Open duel log">
         <svg width="30" height="30" viewBox="0 0 20 20" aria-hidden="true"><path d="M5 3h10v14H5z M8 7h4 M8 10h4 M8 13h3" fill="none" stroke="#f3d27a" stroke-width="1.6"/></svg></button>`;
     }
+    const T = them();
     const items = g.log.slice(-120).map((e) => {
       if (e.turn === true) return `<div class="lg turn">${esc(e.text)}</div>`;
       if (!e.action) return `<div class="lg note">${esc(e.text)}</div>`;
-      const you = e.who === ui.you;
-      return `<div class="lg"><span class="who ${you ? 'you' : 'bot'}" style="flex:none">${you ? 'YOU' : 'BOT'}</span><span style="flex:1">${esc(e.text.replace(/^(You|Bot) /, ''))}</span>${e.result ? `<span class="res">${esc(e.result)}</span>` : ''}</div>`;
+      const you = e.who === ui.you, who = `${you ? 'You' : T.who} `;
+      const text = e.text.startsWith(who) ? e.text.slice(who.length) : e.text;
+      return `<div class="lg"><span class="who ${you ? 'you' : 'bot'}" style="flex:none">${you ? 'YOU' : esc(T.TAG)}</span><span style="flex:1">${esc(text)}</span>${e.result ? `<span class="res">${esc(e.result)}</span>` : ''}</div>`;
     }).join('');
     return `<div class="logp" style="height:${SH() - 120}px"><div style="display:flex;align-items:center;justify-content:space-between"><span class="ttl" style="font-size:20px">Duel Log</span>
-      <div style="display:flex;gap:8px"><button type="button" class="btn-d" data-do="speed" style="height:34px;padding:0 10px;font-size:12px">Bot: ${ui.speed === 'fast' ? 'Fast' : 'Normal'}</button>
+      <div style="display:flex;gap:8px"><button type="button" class="btn-d" data-do="speed" style="height:34px;padding:0 10px;font-size:12px">${onl() ? 'Speed' : 'Bot'}: ${ui.speed === 'fast' ? 'Fast' : 'Normal'}</button>
       <button type="button" class="btn-d" data-do="log" aria-label="Close duel log" style="width:34px;height:34px">✕</button></div></div>
       <div class="logl" id="logl">${items}</div>
-      <div style="display:flex;gap:8px"><button type="button" class="btn-d" data-do="newduel" style="height:36px;padding:0 12px;font-size:13px">Leave duel</button></div></div>`;
+      <div style="display:flex;gap:8px"><button type="button" class="btn-d" data-do="duelmenu" style="height:36px;padding:0 12px;font-size:13px">Leave duel</button></div></div>`;
   }
 
   // ---------- overlays ----------
@@ -2538,7 +3132,7 @@ html, body { touch-action: manipulation; }
     const p = g.players[i];
     const cards = [...p.discard].reverse().map((n) => `<div style="transform:scale(.8);transform-origin:0 0;width:90px;height:125px">${mini(n)}</div>`).join('');
     return `<div class="over" data-do="close"><div class="panel" data-stop style="width:1100px;max-height:820px;padding:24px;display:flex;flex-direction:column;gap:14px">
-      <div style="display:flex;justify-content:space-between;align-items:center"><span class="ttl" style="font-size:28px">${i === ui.you ? 'Your discard' : "Bot's discard"} · ${p.discard.length}</span>
+      <div style="display:flex;justify-content:space-between;align-items:center"><span class="ttl" style="font-size:28px">${i === ui.you ? 'Your discard' : esc(`${them().poss} discard`)} · ${p.discard.length}</span>
       <button type="button" class="btn-d" data-do="close" style="height:40px;padding:0 16px">Close</button></div>
       <div style="display:flex;flex-wrap:wrap;gap:12px;overflow-y:auto">${cards || '<span>Empty.</span>'}</div></div></div>`;
   }
@@ -2565,7 +3159,7 @@ html, body { touch-action: manipulation; }
     const youFirst = g.active === you;
     const introLayer = intro ? `<div class="intro-title" style="top:${Math.round(SH() * 0.37)}px"><span class="lbl" style="font-size:16px;color:var(--gold-hi)">Duel</span>
         <div style="display:flex;align-items:center;gap:40px;font-family:var(--display);font-weight:700;font-size:56px"><span style="color:var(--gold-hi)">You</span><span style="font-size:36px;color:var(--faint)">vs</span><span style="color:var(--bot-hi)">${esc(oppName())}</span></div></div>
-      <div class="intro-first" style="--d:5.2s;top:${Math.round(SH() * 0.35)}px;--c:${youFirst ? 'var(--gold-hi)' : 'var(--bot-hi)'};--g:${youFirst ? 'rgba(243,210,122,.5)' : 'rgba(156,195,230,.5)'}"><span>${youFirst ? 'YOU GO FIRST' : 'BOT GOES FIRST'}</span></div>
+      <div class="intro-first" style="--d:5.2s;top:${Math.round(SH() * 0.35)}px;--c:${youFirst ? 'var(--gold-hi)' : 'var(--bot-hi)'};--g:${youFirst ? 'rgba(243,210,122,.5)' : 'rgba(156,195,230,.5)'}"><span>${youFirst ? 'YOU GO FIRST' : esc(`${them().TAG} GOES FIRST`)}</span></div>
       <button type="button" class="btn-d skip" data-do="skipintro">Skip</button>` : '';
     return `<div class="table"></div>${intro ? '' : backdropHTML(g)}
       ${sceneOpen()}<div class="felt"></div>
@@ -2581,7 +3175,7 @@ html, body { touch-action: manipulation; }
       ${ui.menu ? coreMenuHTML(g) : ''}
       ${W(4.9, 'fade', logHTML(g))}
       ${coachHTML()}${ui.tut ? '' : tipHTML(g)}
-      ${typeof ui.view === 'number' ? discardViewHTML(g, ui.view) : ''}
+      ${typeof ui.view === 'number' ? discardViewHTML(g, ui.view) : ''}${odOverHTML()}
       ${g.winner !== null && ui.result && ui.result.g === g ? `<button type="button" class="btn-g" data-do="results" style="position:absolute;left:1504px;top:${SH() - 340}px;width:392px;height:64px;font-size:20px;z-index:40">Back to results</button>` : ''}
       ${duelMenuHTML(g)}`;
   }
@@ -2660,10 +3254,16 @@ html, body { touch-action: manipulation; }
     const saved = store.get(STORE);
     const life = menuLife();
     const short = SH() < 1000;                       // not enough height for one long column: two columns, smaller crest
-    const resume = saved && saved.config
-      ? `<button type="button" class="btn-g breathe" data-do="resume" style="animation-delay:${life.breatheDelay};width:460px;height:104px;font-size:30px;justify-content:flex-start;padding:0 28px;gap:20px">${ICN.resume}<span style="display:flex;flex-direction:column;align-items:flex-start;gap:4px">Resume duel<small style="font-family:var(--body);font-size:15px;font-weight:700;letter-spacing:.04em;color:#ffe2b8">${esc(saved.config.youDeck)} vs ${esc(saved.config.botDeck)}</small></span></button>` : '';
-    const play = saved
-      ? `<button type="button" class="mi" data-do="play">${ICN.swords.replace(/40/g, '28').replace('#fff3d1', '#f3d27a')}New duel vs Bot</button>`
+    const live = ON && onlineGet().duel;              // an online duel this device is in: it goes on without you
+    const big = (what, inner) => `<button type="button" class="btn-g breathe" data-do="${what}" style="animation-delay:${life.breatheDelay};width:460px;height:104px;font-size:30px;justify-content:flex-start;padding:0 28px;gap:20px">${ICN.resume}<span style="display:flex;flex-direction:column;align-items:flex-start;gap:4px">${inner}</span></button>`;
+    const sub = (t) => `<small style="font-family:var(--body);font-size:15px;font-weight:700;letter-spacing:.04em;color:#ffe2b8">${esc(t)}</small>`;
+    const resumeOnline = live && live.match ? big('onresume', `Resume duel${sub(`Online · vs ${live.opp || 'your friend'}`)}`) : '';
+    const resume = resumeOnline + (saved && saved.config
+      ? (resumeOnline ? `<button type="button" class="mi" data-do="resume">${ICN.resume.replace(/40/g, '28').replace(/#fff3d1/g, '#f3d27a')}Resume duel vs Bot</button>`
+        : big('resume', `Resume duel${sub(`${saved.config.youDeck} vs ${saved.config.botDeck}`)}`)) : '');
+    const rec = profile.online && profile.online.wins + profile.online.losses ? `<span class="side">${profile.online.wins} W · ${profile.online.losses} L</span>` : '';
+    const play = saved || resumeOnline
+      ? `<button type="button" class="mi" data-do="play">${ICN.swords.replace(/40/g, '28').replace('#fff3d1', '#f3d27a')}${saved ? 'New duel vs Bot' : 'Play vs Bot'}</button>`
       : `<button type="button" class="btn-g breathe" data-do="play" style="width:460px;height:104px;font-size:34px;justify-content:flex-start;padding:0 28px;gap:20px;animation-delay:${life.breatheDelay}">${ICN.swords}Play vs Bot</button>`;
     return `<div class="table"></div>
       ${MENU_BG ? `<div style="position:absolute;inset:0;overflow:hidden"><img class="menu-bg" src="${AS.backdrop[MENU_BG]}" alt="" style="position:absolute;left:0;top:0;width:100%;height:100%;object-fit:cover;animation-delay:${life.bgDelay}">${life.light}</div>` : ''}
@@ -2677,9 +3277,9 @@ html, body { touch-action: manipulation; }
       ${ICON.logo ? `<div class="logo-wrap"><img src="${ICON.logo}" alt="RuneScape"><div class="logo-sheen" style="-webkit-mask-image:url(${ICON.logo});mask-image:url(${ICON.logo});animation-delay:${life.sheenDelay}"></div></div>` : ''}
       <div style="position:absolute;left:340px;top:236px;display:flex;align-items:center;gap:14px"><span style="width:60px;height:1px;background:var(--gold)"></span>
         <span style="font-family:var(--display);font-weight:600;font-size:20px;letter-spacing:.36em;color:var(--cream)">TRADING CARD GAME</span><span style="width:60px;height:1px;background:var(--gold)"></span></div></div>
-      <nav aria-label="Main menu" style="position:absolute;left:${short ? 90 : 110}px;top:${short ? 228 : saved ? 320 : 340}px;${short ? 'display:grid;grid-template-columns:repeat(2,460px);align-items:end' : 'display:flex;flex-direction:column'};gap:14px">
+      <nav aria-label="Main menu" style="position:absolute;left:${short ? 90 : 110}px;top:${short ? 228 : saved && live ? 290 : saved || live ? 320 : 340}px;${short ? 'display:grid;grid-template-columns:repeat(2,460px);align-items:end' : 'display:flex;flex-direction:column'};gap:${saved && live && !short ? 10 : 14}px">
         ${resume}${play}
-        <button type="button" class="mi" disabled>${ICN.globe}Play Online<span class="soon">COMING LATER</span></button>
+        <button type="button" class="mi" data-do="online"${ON ? '' : ' disabled'}>${ICN.globe}Play Online${rec}</button>
         <button type="button" class="mi" data-do="decks">${ICN.decks}Decks<span class="side">${profile.decks.length}</span></button>
         <button type="button" class="mi" data-do="packs">${ICN.packs}Packs<span class="side">${PACK_COST} GP</span></button>
         <button type="button" class="mi" data-do="tutorial">${ICN.tut}Tutorial${profile.tutorialPack ? '' : '<span class="side free">FREE PACK</span>'}</button>
@@ -2803,14 +3403,72 @@ html, body { touch-action: manipulation; }
     return `<div class="over" data-do="closemodal"><div class="panel modal" data-stop role="dialog" aria-modal="true" style="max-height:${Math.min(960, SH() - 40)}px">${body}</div></div>`;
   }
 
-  // ---------- pick a deck, pick a cape (blind), pick an opponent ----------
-  function pickHTML() {
+
+  // ---------- Play Online, the hub: connecting, your name, a code to join, the waiting room ----------
+  function onlineHTML() {
+    const o = ui.on;
+    const dots = '<span class="thinking" aria-hidden="true"><i></i><i></i><i></i></span>';
+    const head = `<div style="position:absolute;left:60px;top:34px;right:60px;display:flex;align-items:center;gap:20px">
+        <button type="button" class="btn-d" data-do="onback" style="width:52px;height:52px" aria-label="Back">${ICN.back}</button>
+        <span class="ttl" style="font-size:40px">Play Online</span>${o.name && o.state !== 'name' ? `<span class="lbl" style="margin-left:8px">playing as ${esc(o.name)}</span>` : ''}
+        <span style="margin-left:auto">${gpChip(22)}</span></div>`;
+    const row = (html) => `<div style="display:flex;gap:16px;justify-content:center;align-items:center;flex-wrap:wrap">${html}</div>`;
+    const err = (t) => (t ? `<span class="err" role="alert">${esc(t)}</span>` : '');
+    let inner;
+    if (o.state === 'name') {
+      inner = `<span class="ttl" style="font-size:40px">${o.name ? 'Change your name' : 'Pick a name'}</span>
+        <p>${o.name ? 'This is what other players see at the table.' : 'Other players see it at the table.'} 3 to 12 letters or numbers.</p>
+        ${row(`<input id="onname" class="onin" data-input="onname" type="text" maxlength="12" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="done" value="${esc(o.nameText)}" aria-label="Your name" style="width:440px">
+          <button type="button" class="btn-g" data-do="onname" style="width:180px;height:64px;font-size:24px" ${o.busy ? 'disabled' : ''}>Save</button>`)}
+        ${err(o.nameErr)}
+        <span class="fine">Your name is kept in this browser for now. Accounts that follow you between devices come later.</span>`;
+    } else if (o.state === 'code') {
+      inner = `<span class="ttl" style="font-size:40px">Join a friend</span>
+        <p>Type the code your friend sent you.</p>
+        ${row(`<input id="oncode" class="onin code" data-input="oncode" type="text" maxlength="5" autocomplete="off" autocapitalize="characters" spellcheck="false" enterkeyhint="go" value="${esc(o.codeText)}" aria-label="Code" placeholder="CODE" style="width:300px">
+          <button type="button" class="btn-g" data-do="onpeek" style="width:180px;height:64px;font-size:24px" ${o.busy ? 'disabled' : ''}>Join</button>`)}
+        ${err(o.codeErr)}`;
+    } else if (o.state === 'waiting' && o.room) {
+      const d = onlineDeck();
+      inner = `<span class="ttl" style="font-size:40px">Challenge a friend</span>
+        <p>Send your friend this code. The duel starts as soon as they join.</p>
+        <div class="oncode" aria-label="Your code: ${esc(o.room.code.split('').join(' '))}">${o.room.code.split('').map((c) => `<b>${esc(c)}</b>`).join('')}</div>
+        ${row(`<button type="button" class="btn-d" data-do="oncopy" data-v="code" style="height:56px;padding:0 22px;font-size:18px">Copy code</button>
+          <button type="button" class="btn-d" data-do="oncopy" data-v="link" style="height:56px;padding:0 22px;font-size:18px">Copy link</button>
+          ${navigator.share ? '<button type="button" class="btn-d" data-do="onshare" style="height:56px;padding:0 22px;font-size:18px">Share…</button>' : ''}`)}
+        <span style="display:flex;align-items:center;gap:12px;font-family:var(--display);font-weight:700;font-size:24px;color:var(--bot-hi)">Waiting for your friend ${dots}</span>
+        <span class="fine">${d ? `You'll play ${esc(d.name)} with the ${esc(d.cape)}. ` : ''}The code works for a day, and the link opens the game with it filled in.</span>
+        <button type="button" class="btn-d" data-do="oncancel" style="height:52px;padding:0 26px;font-size:18px">Cancel</button>`;
+    } else if (o.state === 'update') {
+      inner = `<span class="ttl" style="font-size:38px">A new version is out</span>
+        <p>Both players need the same version of the game to duel online. Reload to get it. If that doesn't help, the server is being updated: try again in a few minutes.</p>
+        ${row(`<button type="button" class="btn-g" data-do="onreload" style="width:240px;height:72px;font-size:24px">Reload</button>
+          <button type="button" class="btn-d" data-do="menu" style="width:220px;height:72px;font-size:20px">Main menu</button>`)}`;
+    } else if (o.state === 'error') {
+      inner = `<span class="ttl" style="font-size:38px">Couldn't go online</span><p>${esc(o.msg)}</p>
+        <span class="fine">Online play works in the app at ${esc(window.RSTCGOnline ? window.RSTCGOnline.APP.replace(/^https:\/\/|\/$/g, '') : 'runescapetcg.netlify.app')}, not inside a preview.</span>
+        ${row(`<button type="button" class="btn-g" data-do="online" style="width:240px;height:72px;font-size:24px">Try again</button>
+          <button type="button" class="btn-d" data-do="menu" style="width:220px;height:72px;font-size:20px">Main menu</button>`)}`;
+    } else {
+      const what = o.state === 'joining' ? `Joining ${o.join ? `${o.join.host}'s` : 'the'} duel` : o.state === 'starting' ? 'Starting the duel' : 'Connecting to the game server';
+      inner = `<span class="ttl" style="font-size:36px;display:flex;align-items:center;gap:16px">${esc(what)} ${dots}</span>`;
+    }
+    return `<div class="table"></div>${head}<div class="panel onl">${inner}</div>`;
+  }
+
+  // ---------- pick a deck, pick a cape (blind), pick an opponent (or, online, a friend) ----------
+  function pickedDeck() {                    // the deck picked to duel with (a setup saved long ago may hold its name, not its id)
     const s = ui.setup;
     if (!myDeck(s.youDeck) || !deckRules(myDeck(s.youDeck).cards).ok) {
       const byName = profile.decks.find((x) => x.name === s.youDeck && deckRules(x.cards).ok) || profile.decks.find((x) => deckRules(x.cards).ok) || profile.decks[0];
       s.youDeck = byName.id;
     }
-    const d = myDeck(s.youDeck);
+    return myDeck(s.youDeck);
+  }
+  function pickHTML() {
+    const online = ui.pickMode === 'online';
+    const s = ui.setup;
+    const d = pickedDeck();
     const st = deckStyle(d.cards);
     const box = (dk) => {
       const r = deckRules(dk.cards), chk = { ok: r.ok, total: r.total, problems: deckProblems(r) };
@@ -2871,13 +3529,27 @@ html, body { touch-action: manipulation; }
     const tight = !narrow && SW() < 1820;                 // one row, but only just: no "VS", shorter labels
     const vsH = narrow ? 330 : short ? 196 : 230;
     const side = Math.max(60, Math.round((SW() - 1800) / 2));   // on an ultrawide the picker stays 1800 wide, centred
-    const vs = `<div class="panel" style="position:absolute;left:${side}px;right:${side}px;bottom:${short ? 22 : 40}px;height:${vsH}px;padding:${short ? 16 : 26}px ${tight ? 26 : 34}px;display:flex;align-items:center;gap:${narrow ? '14px 36px;flex-wrap:wrap;align-content:center' : tight ? '22px' : '36px'}">
+    const panelOpen = `<div class="panel" style="position:absolute;left:${side}px;right:${side}px;bottom:${short ? 22 : 40}px;height:${vsH}px;padding:${short ? 16 : 26}px ${tight ? 26 : 34}px;display:flex;align-items:center;gap:${narrow ? '14px 36px;flex-wrap:wrap;align-content:center' : tight ? '22px' : '36px'}">
       <div style="display:flex;align-items:center;gap:18px"><div class="av" style="box-shadow:0 0 0 4px ${FRAME[st] || FRAME.neutral}">${ICON[st] ? `<img src="${ICON[st]}" alt="">` : ''}</div>
         <div style="display:flex;flex-direction:column;gap:8px"><span class="ttl" style="font-size:30px">You</span><div style="display:flex;align-items:center;gap:10px"><span class="who" style="width:auto;padding:0 8px;background:${FRAME[st] || FRAME.neutral};color:#fff3d1">${esc(d.name.toUpperCase())}</span>${AS.cape[s.youCape] ? `<img src="${AS.cape[s.youCape].src}" alt="${esc(s.youCape)}" style="height:40px">` : ''}</div></div></div>
-      ${tight ? '' : '<span class="ttl" style="font-size:54px;color:var(--gold);opacity:.7">VS</span>'}
+      ${tight ? '' : '<span class="ttl" style="font-size:54px;color:var(--gold);opacity:.7">VS</span>'}`;
+    const hiddenCape = (alt) => `<span style="position:relative;display:inline-block"><img src="${CREST}" alt="${alt}" style="display:block;width:32px;height:45px;border-radius:4px"><b style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:var(--display);font-size:22px;color:var(--gold-hi);text-shadow:0 0 6px #000">?</b></span>`;
+    const j = ui.on.join, busy = ui.on.busy;
+    const goW = tight ? 290 : 350, goH = short ? 96 : 110;
+    const vsOnline = `${panelOpen}
+      <div style="display:flex;align-items:center;gap:18px"><div class="av" style="box-shadow:0 0 0 4px var(--bot)">${playerIcon(7, false)}</div>
+        <div style="display:flex;flex-direction:column;gap:8px"><span class="ttl" style="font-size:30px">${j ? esc(j.host) : 'A friend'}</span>
+          <div style="display:flex;align-items:center;gap:10px"><span class="who bot" style="width:auto;padding:0 8px">${j ? 'CHALLENGES YOU' : 'ONLINE'}</span>${hiddenCape('Their cape, hidden')}</div></div></div>
+      <div style="margin-left:auto;display:flex;flex-direction:column;align-items:flex-end;gap:10px">
+        ${j ? `<button type="button" class="btn-g" data-do="onaccept" style="width:${goW}px;height:${goH}px;font-size:${tight ? 30 : 34}px" ${busy ? 'disabled' : ''}>ACCEPT DUEL</button>
+          <button type="button" class="btn-d" data-do="onnotnow" style="height:40px;padding:0 16px;font-size:14px">Not now</button>`
+        : `<button type="button" class="btn-g" data-do="onchallenge" style="width:${goW}px;height:${goH}px;font-size:${tight ? 26 : 30}px" ${busy ? 'disabled' : ''}>CHALLENGE A FRIEND</button>
+          <button type="button" class="btn-d" data-do="oncode" style="height:44px;padding:0 18px;font-size:16px">Join with a code</button>`}
+        ${ui.on.codeErr ? `<span class="err" role="alert" style="font-size:15px">${esc(ui.on.codeErr)}</span>` : ''}</div></div>`;
+    const vs = online ? vsOnline : `${panelOpen}
       <div style="display:flex;align-items:center;gap:18px"><div class="av" style="box-shadow:0 0 0 4px ${bst ? FRAME[bst] : 'var(--bot)'}">${bst && ICON[bst] ? `<img src="${ICON[bst]}" alt="">` : '<b style="font-family:var(--display);font-size:44px;color:var(--bot)">?</b>'}</div>
         <div style="display:flex;flex-direction:column;gap:8px"><span class="ttl" style="font-size:30px">${bd ? esc(bd.name) : 'Random deck'}</span>
-          <div style="display:flex;align-items:center;gap:10px"><span class="who bot">BOT</span><span style="position:relative;display:inline-block"><img src="${CREST}" alt="Bot's cape, hidden" style="display:block;width:32px;height:45px;border-radius:4px"><b style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:var(--display);font-size:22px;color:var(--gold-hi);text-shadow:0 0 6px #000">?</b></span>
+          <div style="display:flex;align-items:center;gap:10px"><span class="who bot">BOT</span>${hiddenCape("Bot's cape, hidden")}
             <button type="button" class="btn-d" data-do="opp" aria-expanded="${!!ui.oppOpen}" style="height:40px;padding:0 14px;font-size:14px;margin-left:6px;white-space:nowrap" aria-label="Change opponent">${tight ? 'Change' : 'Change opponent'} ${ui.oppOpen ? '▴' : '▾'}</button></div></div></div>
       ${levels}
       <div style="margin-left:auto;display:flex;flex-direction:column;align-items:flex-end;gap:12px">
@@ -2886,8 +3558,9 @@ html, body { touch-action: manipulation; }
     return `<div class="table"></div>
       <div style="position:absolute;left:60px;top:34px;right:60px;display:flex;align-items:center;gap:20px">
         <button type="button" class="btn-d" data-do="menu" style="width:52px;height:52px" aria-label="Back to menu">${ICN.back}</button>
-        <span class="ttl" style="font-size:40px">Duel vs Bot</span><span class="lbl" style="margin-left:8px">pick a deck · pick a cape blind</span>
-        <span style="margin-left:auto">${gpChip(22)}</span></div>
+        <span class="ttl" style="font-size:40px">${online ? (j ? `Duel ${esc(j.host)}` : 'Duel a friend') : 'Duel vs Bot'}</span><span class="lbl" style="margin-left:8px">pick a deck · pick a cape blind</span>
+        ${online && ui.on.name ? `<button type="button" class="btn-d" data-do="onrename" style="margin-left:auto;height:44px;padding:0 16px;font-size:14px" aria-label="Change your name">Playing as ${esc(ui.on.name)} · Change</button>` : ''}
+        <span style="margin-left:${online && ui.on.name ? '12px' : 'auto'}">${gpChip(22)}</span></div>
       <div class="${short ? 'scrolly ' : ''}pick-body" style="position:absolute;left:${side - 8}px;right:${side - 8}px;top:${short ? 100 : 112}px;bottom:${vsH + (short ? 36 : 62)}px;padding:8px;display:flex;flex-wrap:wrap;align-content:flex-start;gap:${short ? 28 : 30}px 46px">
         <section style="flex:1 1 640px;min-width:0;display:flex;flex-direction:column;gap:12px" aria-label="Your deck">
           <div style="height:30px;display:flex;align-items:center;gap:12px"><span class="cn">1</span><span class="ttl" style="font-size:24px">Your deck</span></div>
@@ -2895,7 +3568,7 @@ html, body { touch-action: manipulation; }
           ${summary}</section>
         <section style="flex:0 0 800px;display:flex;flex-direction:column;gap:12px" aria-label="Your cape">
           <div style="height:30px;display:flex;align-items:center;gap:12px"><span class="cn">2</span><span class="ttl" style="font-size:24px">Your cape</span>
-            <span style="display:inline-flex;align-items:center;gap:6px;margin-left:10px;padding:3px 10px;border-radius:12px;background:#1a1410;border:1px solid rgba(201,165,75,.4);font-size:12px;font-weight:800;letter-spacing:.12em;color:var(--muted)">${ICN.lock}HIDDEN FROM BOT</span></div>
+            <span style="display:inline-flex;align-items:center;gap:6px;margin-left:10px;padding:3px 10px;border-radius:12px;background:#1a1410;border:1px solid rgba(201,165,75,.4);font-size:12px;font-weight:800;letter-spacing:.12em;color:var(--muted)">${ICN.lock}${online ? 'HIDDEN UNTIL THE DUEL' : 'HIDDEN FROM BOT'}</span></div>
           <div style="display:grid;grid-template-columns:repeat(5,152px);gap:16px 10px;margin-top:8px;flex:none">${capeNames.map(capeBtn).join('')}</div>
           <div style="flex:1;min-height:0"></div>${capeInfo}</section></div>
       ${vs}`;
@@ -2964,18 +3637,18 @@ html, body { touch-action: manipulation; }
   function resultHTML() {
     const r = ui.result;
     if (r.tutorial) return tutResultHTML(r);
-    const won = r.won;
+    const won = r.won, T = them(), o = r.online;
     const title = r.draw ? 'DRAW' : won ? 'VICTORY' : 'DEFEAT';
     const col = won ? 'var(--gold-hi)' : 'var(--bot-hi)';
     let line;
     if (r.reason === 'cape' && r.cape) {
       const pic = AS.cape[r.cape];
       line = `${pic ? `<img src="${pic.src}" alt="${esc(r.cape)}" style="height:60px">` : ''}<div style="display:flex;gap:6px" aria-label="3 of 3 turns worn">${[0, 1, 2].map(() => `<span class="ctr0" style="background:${col};border-color:${won ? 'var(--gold-pale)' : '#e3f0fa'}"></span>`).join('')}</div>
-        <span class="lbl" style="font-size:14px;color:${col}">${won ? 'Cape win' : "Bot's cape win"} · turn ${r.turn}</span>`;
+        <span class="lbl" style="font-size:14px;color:${col}">${won ? 'Cape win' : `${esc(T.poss)} cape win`} · turn ${r.turn}</span>`;
     } else {
-      const why = { damage: won ? "The bot's deck ran out" : 'Your deck ran out', deck_out: won ? 'The bot drew from an empty deck' : 'You drew from an empty deck',
-        concede: 'You conceded', timeout: 'Turn limit reached' }[r.reason] || (won ? 'You won' : 'The bot won');
-      line = `<span class="lbl" style="font-size:15px;color:${col}">${why} · turn ${r.turn}</span>`;
+      const why = { damage: won ? `${T.poss} deck ran out` : 'Your deck ran out', deck_out: won ? `${T.The} drew from an empty deck` : 'You drew from an empty deck',
+        concede: won ? `${T.name} conceded` : 'You conceded', time: won ? `${T.name} ran out of time` : 'You ran out of time', timeout: 'Turn limit reached', turns: 'Turn limit reached' }[r.reason] || (won ? 'You won' : `${T.The} won`);
+      line = `<span class="lbl" style="font-size:15px;color:${col}">${esc(why)} · turn ${r.turn}</span>`;
     }
     const deck = (label, n, mine, dim) => `<div style="position:absolute;left:${mine ? 190 : 1600}px;top:560px;display:flex;flex-direction:column;align-items:center;gap:12px;${dim ? 'opacity:.65' : ''}">
       <span class="lbl">${label}</span>${n ? `<img src="${CREST}" alt="" style="display:block;width:130px;height:182px;border-radius:7px;box-shadow:${edges(n)}">` : '<div style="width:130px;height:182px;border-radius:7px;border:2px dashed var(--hurt);background:rgba(0,0,0,.25)"></div>'}
@@ -2986,13 +3659,21 @@ html, body { touch-action: manipulation; }
     const pile = r.pay ? `<div style="position:absolute;left:${won ? 760 : 790}px;top:${won ? 560 : 600}px;width:${won ? 400 : 340}px;height:${won ? 210 : 170}px;border-radius:50%;background:radial-gradient(ellipse,rgba(242,216,22,${won ? .35 : .22}) 0%,transparent 65%)"></div>
       ${(won ? ICON.gp100 : ICON.gp50) ? `<img class="gpland" src="${won ? ICON.gp100 : ICON.gp50}" alt="${r.pay} GP" style="position:absolute;left:${won ? 820 : 840}px;top:${won ? 540 : 600}px;width:${won ? 280 : 240}px;filter:drop-shadow(0 16px 20px rgba(0,0,0,.6))">` : ''}
       <b class="gpplus" style="position:absolute;left:${won ? 1110 : 1090}px;top:${won ? 560 : 590}px;font-family:var(--display);font-weight:700;font-size:${won ? 64 : 56}px;color:#fff25e;text-shadow:0 0 24px rgba(242,216,22,.7),0 4px 0 #6b5f00">+${r.pay}</b>`
-      : `<div style="position:absolute;left:0;right:0;top:640px;text-align:center;font-family:var(--display);font-size:30px;color:var(--faint)">${r.conceded ? 'No GP for conceding' : 'Already paid for this duel'}</div>`;
+      : `<div style="position:absolute;left:0;right:0;top:640px;text-align:center;font-family:var(--display);font-size:30px;color:var(--faint)">${r.conceded ? 'No GP for conceding' : r.quit ? 'No GP when your time runs out' : 'Already paid for this duel'}</div>`;
     const counter = `<div style="position:absolute;left:0;right:0;top:820px;display:flex;justify-content:center"><div class="gp" style="font-size:34px;padding:10px 26px 10px 12px;gap:14px">
       ${ICON.gp50 ? `<img src="${ICON.gp50}" alt="" style="width:56px;height:36px">` : ''}<span style="color:var(--faint);font-size:24px">${r.before.toLocaleString()}</span>
       <svg width="24" height="14" viewBox="0 0 24 14" aria-hidden="true"><path d="M1 7h20M15 1l6 6-6 6" fill="none" stroke="#cdbf9f" stroke-width="2"/></svg>
       <span id="gpnow" aria-live="polite">${r.shown.toLocaleString()}</span><span style="font-size:22px">GP</span></div></div>`;
     const packTag = `<span style="position:absolute;top:-12px;right:-10px;padding:2px 8px;border-radius:10px;background:#79c25a;color:#0f1f08;font-family:var(--body);font-size:12px;font-weight:800">${PACK_COST} GP</span>`;
-    const buttons = won
+    const buttons = o
+      ? `${o.offered && o.again !== 'waiting' ? `<span class="lbl" style="position:absolute;left:0;right:0;top:-34px;text-align:center;font-size:15px;color:var(--bot-hi)">${esc(T.name)} wants a rematch</span>` : ''}
+        ${o.error ? `<span class="err" role="alert" style="position:absolute;left:0;right:0;top:96px;text-align:center;font-size:16px">${esc(o.error)}</span>` : ''}
+        ${o.again === 'waiting'
+    ? `<button type="button" class="btn-g" disabled style="width:400px;height:80px;font-size:22px">Waiting for ${esc(T.name)}…</button>
+          <button type="button" class="btn-d" data-do="rematchno" style="width:150px;height:80px;font-size:18px">Cancel</button>`
+    : `<button type="button" class="btn-g${o.offered ? ' breathe' : ''}" data-do="rematch" style="width:300px;height:80px;font-size:26px" ${o.busy ? 'disabled' : ''}>Rematch</button>`}
+        <button type="button" class="btn-d" data-do="online" style="width:220px;height:80px;font-size:20px">Play Online</button>`
+      : won
       ? `<button type="button" class="btn-g" data-do="play" style="width:300px;height:80px;font-size:26px">Play again</button>
          <button type="button" class="btn-d" data-do="packs" style="position:relative;width:260px;height:80px;font-size:20px">Open a pack${packTag}</button>`
       : `<button type="button" class="btn-g" data-do="rematch" style="width:300px;height:80px;font-size:26px">Rematch</button>
@@ -3004,12 +3685,24 @@ html, body { touch-action: manipulation; }
         ${EMBLEM ? `<img src="${EMBLEM}" alt="" style="width:120px;height:120px;${won ? 'filter:drop-shadow(0 0 20px rgba(243,210,122,.6))' : 'filter:grayscale(.7) brightness(.7)'}">` : ''}
         <span style="font-family:var(--display);font-weight:700;font-size:120px;letter-spacing:.08em;line-height:1;color:${won ? 'var(--gold-hi)' : '#b8c4cf'};text-shadow:${won ? '0 0 40px rgba(243,210,122,.6),0 6px 0 #4d3a12' : '0 6px 0 #1c2530'}">${title}</span>
         <div style="display:flex;align-items:center;gap:12px;margin-top:6px">${line}</div>
-        ${r.config ? `<span class="lbl" style="font-size:13px">against ${esc(levelName(r.config.level))} · ${LEVEL_WORD[levelOf(r.config.level)]}</span>` : ''}</div>
-      ${deck('Your deck', r.youLp, true, !won)}${deck('Bot deck', r.botLp, false, won)}
+        ${o ? `<span class="lbl" style="font-size:13px">against ${esc(T.name)} · online</span>` : r.config ? `<span class="lbl" style="font-size:13px">against ${esc(levelName(r.config.level))} · ${LEVEL_WORD[levelOf(r.config.level)]}</span>` : ''}</div>
+      ${deck('Your deck', r.youLp, true, !won)}${deck(o ? `${esc(T.poss)} deck` : 'Bot deck', r.botLp, false, won)}
       ${coins}${pile}${counter}
       <div style="position:absolute;left:0;right:0;top:930px;display:flex;justify-content:center;gap:20px">${buttons}
         <button type="button" class="btn-d" data-do="menu" style="width:220px;height:80px;font-size:20px">Main menu</button></div>`)}
       ${r.g ? '<button type="button" class="btn-d" data-do="seeboard" style="position:absolute;right:48px;bottom:40px;height:44px;padding:0 16px;font-size:14px">View the final board</button>' : ''}`;
+  }
+
+  function odOverHTML() {
+    const od = ui.od;
+    if (!od) return '';
+    if (od.stopped) {
+      return `<div class="over"><div class="panel modal" data-stop role="dialog" aria-modal="true" style="width:820px;align-items:center;text-align:center;gap:22px">
+        <span class="ttl" style="font-size:38px">${od.stopped.code === 'update' ? 'A new version is out' : 'This duel has gone'}</span><p style="font-size:22px;line-height:1.5;margin:0">${esc(od.stopped.message)}</p>
+        <div style="display:flex;gap:16px;justify-content:center">${od.stopped.code === 'update' ? '<button type="button" class="btn-g" data-do="onreload" style="width:240px;height:72px;font-size:24px">Reload</button>' : ''}
+          <button type="button" class="btn-d" data-do="leave" style="width:220px;height:72px;font-size:20px">Main menu</button></div></div></div>`;
+    }
+    return od.net === 'down' ? '<div class="odnet" role="status">Reconnecting <span class="thinking" aria-hidden="true"><i></i><i></i><i></i></span></div>' : '';
   }
 
   // ---------- leaving a duel (it stays saved) or conceding ----------
@@ -3019,11 +3712,12 @@ html, body { touch-action: manipulation; }
     if (!ui.duelMenu) return btn;
     if (ui.config && ui.config.tutorial) return `${btn}<div class="pop" data-stop style="left:1530px;top:92px;bottom:auto;width:360px"><button type="button" class="opt" data-do="tutquit"><b>Leave the tutorial</b><small>You can start it again from the main menu</small></button><button type="button" class="opt cancel" data-do="duelmenu"><b>Keep going</b></button></div>`;
     return `${btn}<div class="pop" data-stop style="left:1530px;top:92px;bottom:auto;width:360px">
-      <button type="button" class="opt" data-do="leave"><b>Back to menu</b><small>The duel is saved: resume it from the menu</small></button>
+      <button type="button" class="opt" data-do="leave"><b>Back to menu</b><small>${ui.od ? 'The duel goes on without you, and your clock keeps running' : 'The duel is saved: resume it from the menu'}</small></button>
       <button type="button" class="opt" data-do="concede" style="border-color:rgba(255,155,133,.5)"><b style="color:var(--hurt)">Concede</b><small>Counts as a loss and pays no GP</small></button>
       <button type="button" class="opt cancel" data-do="duelmenu"><b>Keep playing</b></button></div>`;
   }
   function stopDuel() {                       // the running game is left where it is: its agents never answer again
+    odClose(ui.od);                           // (online, it goes on at the server)
     ui.token = {};
     ui.g = null; ui.pending = null; ui.selected = null; ui.menu = null; ui.why = null; ui.view = null;
     ui.logOpen = false; ui.duelMenu = false; ui.intro = false;
@@ -3667,9 +4361,18 @@ html, body { touch-action: manipulation; }
     else if (k === 'wizname') { ui.wiz.name = e.target.value; }
     else if (k === 'edname') { ui.ed.name = e.target.value; ui.ed.dirty = true; }
     else if (k === 'deckname') ui.renameText = e.target.value;
+    else if (k === 'onname') ui.on.nameText = e.target.value;
+    else if (k === 'oncode') {
+      const t = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 5);
+      if (t !== e.target.value) e.target.value = t;
+      ui.on.codeText = t;
+    }
   });
   document.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter' && e.target.dataset && e.target.dataset.input === 'deckname') act('renamedone');
+    const k = e.key === 'Enter' && e.target.dataset ? e.target.dataset.input : null;
+    if (k === 'deckname') act('renamedone');
+    else if (k === 'onname') act('onname');
+    else if (k === 'oncode') act('onpeek');
   });
 
   // =====================================================================================
@@ -3845,7 +4548,7 @@ html, body { touch-action: manipulation; }
     const keepLog = $('#logl') ? $('#logl').scrollTop : null;
     $('#stage').classList.toggle('calm', calm());
     const ae = document.activeElement, fid = ae && ae.id && ae.tagName === 'INPUT' ? ae.id : null, caret = fid ? ae.selectionStart : 0;
-    const SCREENS = { menu: menuHTML, pick: pickHTML, decks: decksHTML, editor: editorHTML, wizard: wizHTML, packs: packsHTML, open: () => openHTML() + packCoach('open'), summary: () => summaryHTML() + packCoach('summary') };
+    const SCREENS = { menu: menuHTML, online: onlineHTML, pick: pickHTML, decks: decksHTML, editor: editorHTML, wizard: wizHTML, packs: packsHTML, open: () => openHTML() + packCoach('open'), summary: () => summaryHTML() + packCoach('summary') };
     const key = SCREENS[ui.screen] && (ui.screen !== 'editor' || ui.ed) && (ui.screen !== 'wizard' || ui.wiz) && (ui.screen !== 'open' || ui.pack) ? ui.screen : ui.screen === 'result' && ui.result ? 'result' : ui.g ? 'duel' : 'menu';
     const from = shownScreen;
     const sweeping = from && from !== key && (from in SWEEP || from === 'result') && key in SWEEP && !calm();
@@ -3923,7 +4626,7 @@ html, body { touch-action: manipulation; }
   // Forward (deeper: menu -> Packs -> a pack's summary) the old screen, background and all, is pushed off
   // to the left as the new one comes in from the right; then the new screen's contents settle in one
   // after another. Back reverses it.
-  const SWEEP = { menu: 0, pick: 1, decks: 1, packs: 1, editor: 2, summary: 2 };
+  const SWEEP = { menu: 0, online: 1, pick: 1, decks: 1, packs: 1, editor: 2, summary: 2 };
   let shownScreen = null;
   const sweepAnims = [];
   function endSweep() {
@@ -4054,17 +4757,19 @@ html, body { touch-action: manipulation; }
       if (what === 'skipintro' && ui.skipIntro) ui.skipIntro();
       return;
     }
+    // off an online result screen: stop listening for a rematch, and take back an offer nobody took up
+    if (ui.screen === 'result' && ui.result && ui.result.online && ['menu', 'play', 'packs', 'edit', 'decks', 'tutorial'].includes(what)) resultLeave(true);
     switch (what) {
       case 'pickdeck': { ui.setup.youDeck = v; const dk = myDeck(v); if (dk) ui.setup.youCape = dk.cape; store.set('rstcg-arena-setup', ui.setup); break; }
       case 'pickcape': ui.setup.youCape = v; store.set('rstcg-arena-setup', ui.setup); break;
       case 'pickbot': ui.setup.botDeck = v; ui.oppOpen = false; store.set('rstcg-arena-setup', ui.setup); break;
       case 'picklevel': ui.setup.level = levelOf(v); store.set('rstcg-arena-setup', ui.setup); break;
       case 'opp': ui.oppOpen = !ui.oppOpen; break;
-      case 'play': if (ui.g && ui.g.winner === null) stopDuel(); ui.screen = 'pick'; ui.oppOpen = false; ui.modal = null; break;
+      case 'play': if (ui.g && ui.g.winner === null) stopDuel(); ui.screen = 'pick'; ui.pickMode = 'bot'; ui.oppOpen = false; ui.modal = null; break;
       case 'menu': if (ui.g && ui.g.winner === null) stopDuel(); ui.g = null; ui.screen = 'menu'; ui.result = null; ui.oppOpen = false; break;
       case 'start': runDuel(newConfig()); return;
       case 'resume': { const saved = store.get(STORE); if (saved) runDuel(saved.config, saved.decisions, saved.bot); return; }
-      case 'rematch': { const c = (ui.result && ui.result.config) || ui.config; const f = newConfig(); runDuel(Object.assign(f, { youDeck: c.youDeck, youDeckId: c.youDeckId, youCards: c.youCards, youCape: c.youCape, level: levelOf(c.level), botDeck: c.botDeck, botCape: deckObj(c.botDeck).capes[Math.floor(Math.random() * deckObj(c.botDeck).capes.length)] })); return; }
+      case 'rematch': { if (ui.result && ui.result.online) { rematchAsk(); return; } const c = (ui.result && ui.result.config) || ui.config; const f = newConfig(); runDuel(Object.assign(f, { youDeck: c.youDeck, youDeckId: c.youDeckId, youCards: c.youCards, youCape: c.youCape, level: levelOf(c.level), botDeck: c.botDeck, botCape: deckObj(c.botDeck).capes[Math.floor(Math.random() * deckObj(c.botDeck).capes.length)] })); return; }
       case 'seeboard': if (ui.result && ui.result.g) { ui.g = ui.result.g; ui.screen = 'duel'; } break;
       case 'results': if (ui.result) ui.screen = 'result'; break;
       case 'how': case 'settings': ui.modal = what; ui.confirmReset = false; break;
@@ -4115,7 +4820,7 @@ html, body { touch-action: manipulation; }
         ui.confirmDel = false; break;
       }
       case 'edit': openEditor(v); break;
-      case 'duelwith': ui.setup.youDeck = v; { const dk = myDeck(v); if (dk) ui.setup.youCape = dk.cape; } store.set('rstcg-arena-setup', ui.setup); ui.screen = 'pick'; break;
+      case 'duelwith': ui.setup.youDeck = v; { const dk = myDeck(v); if (dk) ui.setup.youCape = dk.cape; } store.set('rstcg-arena-setup', ui.setup); ui.screen = 'pick'; ui.pickMode = 'bot'; break;
       // --- deck editor ---
       case 'edadd': if (ui.ed) edAdd(v); break;
       case 'edrem': if (ui.ed) edRemove(v); break;
@@ -4167,7 +4872,43 @@ html, body { touch-action: manipulation; }
       case 'tipsreset': profile.tips = {}; saveProfile(); break;
       case 'packtutok': ui.packTut = false; break;
       case 'leave': stopDuel(); ui.screen = 'menu'; break;      // the save stays: Resume picks it up
-      case 'concede': { if (!g || g.winner !== null) return; stopDuel(); finishDuel(g, true); return; }
+      case 'concede': { if (!g || g.winner !== null) return; if (ui.od) { odConcede(); return; } stopDuel(); finishDuel(g, true); return; }
+      // --- online ---
+      case 'online': resultLeave(true); if (ui.g && ui.g.winner === null) stopDuel(); ui.modal = null; onlineEnter(); return;
+      case 'onback': {
+        const st = ui.on.state;
+        if (st === 'waiting') { hubCancel(); return; }
+        if ((st === 'name' && ui.on.name) || st === 'code') { onlinePick(); return; }
+        hubStop(); ui.on.state = null; ui.screen = 'menu'; break;
+      }
+      case 'onname': onlineName(); return;
+      case 'onrename': ui.screen = 'online'; ui.on.state = 'name'; ui.on.nameText = ui.on.name || ''; ui.on.nameErr = ''; render(); focusSoon('onname'); return;
+      case 'oncode': ui.screen = 'online'; ui.on.state = 'code'; ui.on.codeText = ''; ui.on.codeErr = ''; render(); focusSoon('oncode'); return;
+      case 'onpeek': {
+        const c = (ui.on.codeText || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+        if (c.length !== 5) { ui.on.codeErr = 'A code is 5 letters and numbers.'; break; }
+        if (ui.on.busy) return;
+        render();
+        onlinePeek(c).then((ok) => { if (ok) onlinePick(); else if (ui.screen === 'online') render(); });
+        return;
+      }
+      case 'onnotnow': ui.on.join = null; ui.on.codeErr = ''; break;
+      case 'onaccept': onlineAccept(); return;
+      case 'onchallenge': onlineChallenge(); return;
+      case 'oncancel': hubCancel(); return;
+      case 'oncopy': {
+        const r = ui.on.room;
+        if (r) copyText(v === 'link' ? joinLink(r.code) : r.code).then((ok) => odToast(ok ? (v === 'link' ? 'Link copied' : 'Code copied') : "Couldn't copy it here: read the code out instead"));
+        return;
+      }
+      case 'onshare': { const r = ui.on.room; if (r && navigator.share) navigator.share({ title: 'RuneScape TCG', text: `Duel me in the RuneScape TCG! My code is ${r.code}.`, url: joinLink(r.code) }).catch(() => {}); return; }
+      case 'onresume': { const d = onlineGet().duel; if (d && d.match) runOnlineDuel(d.match, { resume: true }); return; }
+      case 'onreload': location.reload(); return;
+      case 'rematchno': {
+        const o = ui.result && ui.result.online;
+        if (o && o.again === 'waiting') { ON.call('rematch', { match: o.match, off: true }).catch(() => {}); o.again = null; o.room = null; if (o.roomWatch) { o.roomWatch(); o.roomWatch = null; } }
+        break;
+      }
       case 'log': ui.logOpen = !ui.logOpen; break;
       case 'speed': ui.speed = ui.speed === 'fast' ? 'normal' : 'fast'; store.set('rstcg-speed', ui.speed); break;
       case 'viewdiscard': ui.view = +v; break;
@@ -4192,7 +4933,7 @@ html, body { touch-action: manipulation; }
         }
         break;
       case 'toss':
-        if (pend && pend.type === 'discard') { const n = g.players[ui.you].hand[+v]; g.log.push({ text: `You discard ${n} (hand limit)`, who: ui.you }); pend.resolve(n); return; }
+        if (pend && pend.type === 'discard') { const n = g.players[ui.you].hand[+v]; if (!ui.od) g.log.push({ text: `You discard ${n} (hand limit)`, who: ui.you }); pend.resolve(n); return; }
         break;
       default: break;
     }
@@ -4441,7 +5182,7 @@ html, body { touch-action: manipulation; }
   stageFor(null);
 
   // test hook
-  window.__arena = { get ui() { return ui; }, render, act, CARDS, zoneFor, get profile() { return profile; }, deckRules, POOL, PACK_POOL, cardFace, mini, AS, ART, ICON, get CREST() { return CREST; }, get EMBLEM() { return EMBLEM; },
+  window.__arena = { get ui() { return ui; }, render, act, CARDS, zoneFor, online: { sync: () => odSync(), get od() { return ui.od; }, ON, VERSION, idle: () => !anim.playing && !ui.intro && (!ui.od || !ui.od.jobs) }, get profile() { return profile; }, deckRules, POOL, PACK_POOL, cardFace, mini, AS, ART, ICON, get CREST() { return CREST; }, get EMBLEM() { return EMBLEM; },
     // for tests: does the duel board, redrawn in place, read the same as a board drawn from scratch?
     // (attribute order aside). Returns true, or the first place they differ.
     morphCheck() {
@@ -4457,7 +5198,13 @@ html, body { touch-action: manipulation; }
 
   // ---------- boot ----------
   function snapshot() { return ui.config && ui.g && ui.g.winner === null ? duelSave() : {}; }
+  {
+    const m = /^#duel-([A-Za-z0-9]{5})$/.exec(location.hash || '');     // a friend's link: runescapetcg.netlify.app/#duel-K7MQX
+    if (m) { ui.on.code = m[1].toUpperCase(); try { history.replaceState(null, '', location.pathname + location.search); } catch (e) { /* fine */ } }
+  }
+  document.addEventListener('visibilitychange', () => { if (document.hidden || !ON) return; ON.wake(); if (ui.od) odSync(); });
   function start(data) {
+    if (ui.on.code && ON) { render(); onlineEnter(); return; }
     if (data && data.config && Array.isArray(data.decisions)) { runDuel(data.config, data.decisions, data.bot); return; }
     if (!profile.tutorial && !profile.wins && !profile.losses && !store.get(STORE)) ui.modal = 'welcome';
     render();

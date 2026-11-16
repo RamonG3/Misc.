@@ -1,10 +1,10 @@
-# RuneScape TCG: handoff (2026-11-15)
+# RuneScape TCG: handoff (2026-11-16)
 
 This file describes where things stand. `CLAUDE.md` covers how the code fits together and the ground rules. `README.md` covers the balance history (Rounds 1–27).
 
 ## Links
 
-- **The Arena (latest build, claude.ai artifact):** https://claude.ai/artifact/DTVmjFMHpVvqVYmtS29tRm (version 24, built from `web/dist/arena.html`).
+- **The Arena (latest build, claude.ai artifact):** https://claude.ai/artifact/DTVmjFMHpVvqVYmtS29tRm (version 25, built from `web/dist/arena.html`). Online play needs the Netlify app; the artifact can't reach the server.
 - **The installable app (Netlify):** https://runescapetcg.netlify.app, deployed from `web/dist/netlify/` (see "Phone version" below).
 - **The online server (Supabase):** project "RuneScape TCG" (`udmaqoxyhiwpvxkrugwr`, https://udmaqoxyhiwpvxkrugwr.supabase.co), Edge Function `duel`. See `ONLINE_BRIEF.md`.
 - **Rules doc:** https://claude.ai/artifact/AA5kzzcL6QWhBjmwqwhntj
@@ -28,6 +28,7 @@ This file describes where things stand. `CLAUDE.md` covers how the code fits tog
   - The log drawer is at the top right.
   - Phone-width stages get a shorter, wider table automatically; 16:10 screens get a taller one.
 - **Results:** GP payout (100 win / 50 loss / 0 concede). Leaving a duel saves it; concede is a separate choice.
+- **Play Online: Challenge a friend** (2026-11-16): a name, a code or link, the duel against another person, rematch. See "Online play" below and `ONLINE_BRIEF.md`.
 - **Collection:** you start with the three starter decks' cards; basic materials are unlimited.
 - **My Decks and the deck editor:** filters, search, paging, drag to add, live legality.
 - **Deck Wizard:** pick up to 2 cards you own and it builds a whole 60-card deck around them.
@@ -112,11 +113,17 @@ Ramon decided: landscape only, the same file as the PC version, an installable a
   - If it still crackles, the next step is to render each song once in the background (`OfflineAudioContext`) and loop the recording, which costs almost nothing to play.
 - **Not done / ideas:** the duel itself is unchanged apart from touch (its HUD is fine at phone size but could use bigger buttons); the show-off screens (packs, results) are only shrunk to fit, not re-laid out for phones.
 
-### 3. Later
+### 3. Online play: Challenge a friend works (2026-11-16)
+Phases 0 to 2 of `ONLINE_BRIEF.md` are built: the server referee (phase 0, 2026-11-15), the duel screen online (phase 1) and Challenge a friend (phase 2). The brief has the details, Ramon's decisions and how it's tested and deployed.
+
+- **To try it:** deploy `web/dist/netlify` to the `runescapetcg` site, open it on two devices (or two browsers), **Play Online** on both, pick names, **Challenge a friend** on one and send the link or code to the other.
+- **What's in it:** names (3 to 12 letters or numbers, unique); codes and links (`runescapetcg.netlify.app/#duel-K7MQX`) with copy and share; a waiting room; the duel as against the bot, with the other player's name, their hand as card backs, a clock for the last 15 seconds of each decision, and "Reconnecting…" when the network drops; leaving and coming back (Resume on the menu); concede; results that name the opponent and pay as for bots (nothing for conceding or losing on time); rematch, which both players press.
+- **Server:** Supabase project "RuneScape TCG" (`udmaqoxyhiwpvxkrugwr`): tables `profiles`, `matches`, `match_secrets`, `moves`; Edge Function `duel` (version 3), deployed by the GitHub Action on every push that touches the rules or `server/`. Keep-alive: `RamonG3/rstcg-keepalive`.
+- **Code:** `web/referee.js` (the referee), `web/deckrules.js` (deck rules, shared), `web/online.js` (sign-in, names, the function, Realtime; no library), the Online section of `web/arena.src.html` (`runOnlineDuel`, `odStep`, the hub `onlineHTML`, rematches), `server/` (the function, migrations, build, tests, the stand-in `fake_supabase.mjs`, `smoke.sql`).
+- **Next:** Ramon's test with friends. Then accounts (phase 3: progress that follows you between devices), then Find a match (phase 4). Open questions are at the end of the brief.
+
+### 4. Later
 - **Card art** for the 64 cards in `rstcg_missing_art.csv`. Rune Arrows art exists on Drive but isn't downloaded yet.
-- **Online play against other people.** Phase 0 (the server) is built and live (2026-11-15); the game has no online screens yet. `ONLINE_BRIEF.md` has the two modes (Find a match, Challenge a friend), Ramon's decisions (the server referees from day one, a name now with accounts soon after, your own decks online, GP as for bots), what's built, how to test and deploy it, Ramon's two set-up steps (turn on anonymous sign-ins; optionally a deploy token), and the next phase.
-  - Supabase project "RuneScape TCG" (`udmaqoxyhiwpvxkrugwr`): tables `profiles`, `matches`, `match_secrets`, `moves`; Edge Function `duel`. Keep-alive: `RamonG3/rstcg-keepalive`.
-  - Code: `web/referee.js` (the referee), `web/deckrules.js` (deck rules, now shared with the Arena), `server/` (the function, migrations, build, tests, `smoke.sql`).
 - **Rebuild decks from the full tested pool,** to see what independent deckbuilding does to balance.
 - **Print-and-play:** `print/build_pnp.py` + `print/render.js` → PDFs. Done for the 3 starters.
 

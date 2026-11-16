@@ -3,6 +3,7 @@
 One self-contained file, like dist/game.html: card data, art, fonts, the engine and the bot are all inlined.
 Run python web/arena_assets.py first when art or fonts change (this script runs it if its output is missing).
 """
+import hashlib
 import json
 import os
 import re
@@ -23,6 +24,13 @@ def engine_without_waiting(src):
             "\n  })({});\n  window.RSTCGSync = module.exports;\n})();")
 
 
+def version_stamp():
+    """The rules' version: the first 10 hex digits of sha256(engine.js + "\n" + cards.json), worked out exactly as
+    server/build.js does for the online referee. The page sends it with every challenge; a mismatch means "update"."""
+    raw = lambda f: open(os.path.join(HERE, f), "rb").read().replace(b"\r\n", b"\n")
+    return hashlib.sha256(raw("engine.js") + b"\n" + raw("cards.json")).hexdigest()[:10]
+
+
 src = open(os.path.join(HERE, "arena.src.html")).read()
 data = json.load(open(os.path.join(HERE, "cards.json")))
 parts = {
@@ -34,6 +42,9 @@ parts = {
     "/*__AUDIO__*/": open(os.path.join(HERE, "arena_audio.js")).read(),
     "/*__WIZ__*/": open(os.path.join(HERE, "deckwiz.js")).read(),
     "/*__DECKRULES__*/": read("deckrules.js"),
+    "/*__REFEREE__*/": read("referee.js"),
+    "/*__ONLINE__*/": read("online.js"),
+    "/*__VERSION__*/": "window.RSTCG_VERSION = %s;" % json.dumps(version_stamp()),
     "/*__ENGINESYNC__*/": engine_without_waiting(read("engine.js")),
     "/*__BOTLEVELS__*/": read("bot_levels.js"),
 }
@@ -44,4 +55,4 @@ for k, v in parts.items():
 os.makedirs(os.path.join(HERE, "dist"), exist_ok=True)
 out = os.path.join(HERE, "dist", "arena.html")
 open(out, "w").write(src)
-print(out, len(src) // 1024, "KB")
+print(out, len(src) // 1024, "KB", "version", version_stamp())

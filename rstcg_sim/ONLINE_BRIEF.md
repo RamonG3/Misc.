@@ -1,6 +1,6 @@
 # Brief: online play for the RuneScape TCG Arena
 
-**Status (2026-11-15): phase 0 is built and live.** The server referee runs on Supabase and passed its tests and a live smoke test; the game itself has no online screens yet (that is phase 1). Ramon has made the main decisions (below). This file sets out what he wants, how it works, what is built, and what is still open. Read `HANDOFF.md` for the wider project and `CLAUDE.md` for how the Arena's code fits together.
+**Status (2026-11-16): phases 0 to 2 are built. Challenge a friend works end to end** (Play Online → a name → a deck and cape → a code or link → the duel → rematch), against the real server. Next is Ramon's test with friends, then accounts (phase 3). Ramon has made the main decisions (below). This file sets out what he wants, how it works, what is built, and what is still open. Read `HANDOFF.md` for the wider project and `CLAUDE.md` for how the Arena's code fits together.
 
 ## What I want
 
@@ -63,11 +63,40 @@ It is one web app, so PC and phone play each other.
 
 **Ramon's set-up steps:**
 1. ~~Turn on anonymous sign-ins~~: done 2026-11-15, and checked: an anonymous sign-up gets a token the `duel` function accepts.
-2. **Optional, for automatic deploys:** make a personal access token at supabase.com/dashboard/account/tokens and add it to the Misc. repo as the Actions secret `SUPABASE_ACCESS_TOKEN`.
+2. ~~A deploy token~~: done 2026-11-15 (the Actions secret `SUPABASE_ACCESS_TOKEN` in the Misc. repo). Pushes that touch the rules, the cards or `server/` now test and deploy the function by themselves (version 3 went out that way on 2026-11-16).
 
 **Also installed:** `pg_net` (database HTTP calls), for the smoke test and perhaps a scheduled clock sweep later.
 
-**Phase 1 starts here:** `online.js` (sign in anonymously, pick a name by inserting your `profiles` row, call the function, subscribe to your `matches` row), `runOnlineDuel` playing each view's steps through the existing animations, the Play Online screen, and a two-browser test. The Supabase JS client has to be bundled (no CDN).
+## Phases 1 and 2: what's built (2026-11-16)
+
+**In the game** (`web/online.js` and the Online section of `web/arena.src.html`):
+- **Play Online** on the main menu (it shows your online record once you have one). The first time, it asks for a name. Then the duel screen in "online" mode: your deck and cape as usual, and **Challenge a friend** or **Join with a code** where the bot picker was.
+  - **Challenge a friend** opens the waiting room: the 5-character code shown big, **Copy code**, **Copy link** (`https://runescapetcg.netlify.app/#duel-K7MQX`), **Share…** on phones, and Cancel. The duel starts on both screens when the friend joins.
+  - **The link** opens the game straight on the challenge, past the first-launch welcome: pick a name if you need one, then "Duel Ann", your deck and cape, **Accept duel**.
+  - **Join with a code**: a box near the top of the screen (a phone's keyboard covers the bottom half), then the same Accept screen.
+- **The duel** looks and plays as against the bot. The page keeps a `Game` it never plays, sets it to each picture the server sends, and lets the bot duel's animations play the difference: cards fly, damage mills, capes tick. The other player's hand and deck are only counts (cards called `'?'`); when a card leaves their hand, the move names it, so it still flies from their hand. Your choices come from the server and go back to it; a card you play leaves your hand at once while the server answers.
+  - Words: the other side is the player's name ("Ann swings…", "THEIR TURN", "THEY CAN CLAIM"), and "Ann is deciding" or "Ann may react" (the reaction tell) where the bot's "thinking" was.
+  - **The clock** shows in a decision's last 15 seconds: on the End turn button, the reaction box or the hand-limit box, red and pulsing in the last 5. The other player's clock shows on their side. When time runs out, either page asks the server, the server settles it, and both pages say so ("Your time ran out: your turn ended (1 of 3)").
+  - **Hearing moves:** Supabase Realtime pings the page when the duel's row changes (live: about a tenth of a second). If the live connection drops, the page asks every 2.5 seconds instead, and every 20 seconds anyway. "Reconnecting…" shows while the server can't be reached; the page keeps trying.
+  - **Leaving and coming back:** Back to menu leaves the duel running (your clock too). The menu then shows **Resume duel · Online · vs Ann**, and reopening the app does the same. The page keeps its log and its last picture (`rstcg-online-v1`), so it catches up on the moves it missed without animating them.
+  - **Concede** is in the duel menu, as against the bot.
+- **Results:** the opponent is named ("Ann conceded", "Ann ran out of time"). 100 GP for a win, 50 for a loss or a draw, nothing for conceding or for losing on time (my call: it's walking away, the same as conceding). Each duel pays once on each device (`profile.onlinePaid`), and wins and losses go into an online record of their own (`profile.online`).
+- **Rematch:** either player presses Rematch; the other sees "Ann wants a rematch" and presses it too, and the new duel starts on both screens with a new coin toss, each with the deck they have picked. Leaving the result screen takes back an offer nobody took up.
+- **No library:** `online.js` is about 150 lines of fetch and WebSocket (Supabase's sign-in, names table, the function and Realtime's channel protocol), instead of bundling the Supabase client.
+- **Same version check:** `build_arena.py` works out the version stamp exactly as `server/build.js` does (now ignoring Windows line endings in both) and puts it in the page; the server refuses a challenge from another version, and the page says "A new version is out: reload".
+- **The artifact can't play online** (claude.ai blocks other sites): Play Online there says so and points to the app.
+
+**On the server:**
+- **Rematches:** a `rematch` op (offer, take up, or take back) and migration `20261116035711_online_rematch.sql`: `matches.next` points a finished duel at the room for its rematch; `duel_room` and `duel_next`; closing a room clears the offers pointing at it; two offers at once end in one duel.
+- **Views now include what's left in your own deck** (`left`: how many of each card, never the order), for the "no Silverlight in your deck" kind of preview.
+- Function version 3, deployed by the GitHub Action.
+
+**Tested:**
+- `node web/test/ui/online.js [decisions]` (about 2.5 minutes, in `run_all.js`): two browsers against `server/fake_supabase.mjs`, a stand-in for Supabase that runs the real function on the pretend database and speaks Realtime's protocol. Ann challenges; Bob joins with the link and brings a deck full of reactions; they play by clicking and choosing; Ann reloads mid-duel and resumes from the menu while Bob plays on; Ann's clock runs out once; the live connection drops for a while and the pages poll; the board is checked against a fresh redraw; then a concede, the results and GP, a rematch offered and taken up, and the refusals (a taken name, a code that isn't there). Screenshots in `web/test/ui/shots/online/`.
+- `node server/test_local.mjs` now also covers rematches (offered, taken up, taken back, replaced by a new challenge, two at once, an offer from an older version).
+- **Live, 2026-11-16:** in the desktop app's browser pane (on the live site, with `online.js` pasted in), two pretend players went through sign-up, names (a taken one refused), challenge, peek, join, six moves, a token refresh, concede, and a rematch offered and taken up. Realtime pinged both players for every change, in about 0.1 s; moves took 230 to 400 ms. The test players were deleted afterwards.
+
+**Not done yet:** Find a match (phase 4), accounts (phase 3). A duel in progress when the rules change stops with "a new version is out" and pays nobody.
 
 ## Why the server referees
 
@@ -152,7 +181,7 @@ So the server can afford to rebuild the duel from scratch on every move.
 4. **The duel starts:** the server flips for first player, picks the seed, and starts the duel.
 
 - **Waiting room:** "Waiting for your friend…" with Cancel. Rooms expire after a day.
-- **Afterwards:** Rematch, which both players must press. It keeps the same room.
+- **Afterwards:** Rematch, which both players must press: the first press offers it, the second takes it up.
 
 ### Find a match
 
@@ -227,7 +256,8 @@ Even if every move costs three function calls (the move, plus each player fetchi
 - **`profiles`:** user id, name, created. With accounts, it also holds progress.
 - **`matches`:**
   - id, invite code, kind (challenge or queue), status (waiting, ready, playing, done, abandoned);
-  - the two players, version stamp, the pending decision and its deadline, result, timestamps.
+  - the two players, version stamp, the pending decision and its deadline, result, timestamps;
+  - `next`: the room for a rematch (added in phase 2).
   - Both players can read these.
 - **`match_secrets`:** the seed, both deck lists and both capes. **No player can read this table.** Only the referee function can.
 - **`moves`:** match id, sequence number, seat, the move. Moves are only ever added, and only by the referee.
@@ -243,7 +273,7 @@ Even if every move costs three function calls (the move, plus each player fetchi
   - It sends your answer instead of resolving a local promise.
   - Names come from the match, not "Bot": `oppName()` already names the other side on the nameplate and in the intro (the bot's level name for now).
 - **Network code:** a new module `online.js`, inlined by `build_arena.py` like the others.
-  - The Supabase JavaScript client is bundled into the build. No CDN.
+  - Built without the Supabase JavaScript client (fetch and WebSocket only). No CDN.
   - Offline play makes no network calls.
 - **Server code:** `server/supabase/functions/duel/` holds the Edge Function. `node server/build.js` copies the current `engine.js` (synchronous), `cards.json`, `referee.js` and `deckrules.js` into its `gen/` folder.
 - **Saves:** a new key, `rstcg-online-v1`, holds your online id and name and the duel you're in. Don't touch the existing keys.
@@ -259,8 +289,8 @@ Even if every move costs three function calls (the move, plus each player fetchi
    - anonymous sign-in and names;
    - the referee function (rebuild, move checks, views, clock);
    - its node tests (no leaks, replays, refused moves).
-1. **The duel screen online:** `runOnlineDuel`, the display-only `Game`, waiting and clocks, rejoining. Tested with two headless browsers.
-2. **Challenge a friend:** links and codes, the waiting room, rematch.
+1. **The duel screen online (done 2026-11-16):** `runOnlineDuel`, the display-only `Game`, waiting and clocks, rejoining. Tested with two headless browsers.
+2. **Challenge a friend (done 2026-11-16):** links and codes, the waiting room, rematch. Next: Ramon's test with friends.
 3. **Accounts and cloud progress** (soon after, at Ramon's request):
    - **Signing in:** sign in with Google and/or email, linked to the name you already have.
    - **Progress on the server:** GP, collection, decks, packs and tutorial state, so PC and phone share progress.
@@ -284,6 +314,8 @@ Even if every move costs three function calls (the move, plus each player fetchi
 
 ## Done means (phases 0 to 2)
 
+Everything below is met in tests (2026-11-16) except the first, which is Ramon's test with friends.
+
 - **Full duels across devices:** two people on different devices (PC and phone) can duel by link or code from start to finish, with no page errors.
 - **Nothing leaks:** no view either player receives contains a card they shouldn't see. The node "no leaks" test checks thousands of duels.
 - **The server enforces the rules:** it refuses moves that are illegal, out of turn or from the wrong player.
@@ -291,7 +323,7 @@ Even if every move costs three function calls (the move, plus each player fetchi
 - **Clocks work:**
   - A player who stops moving loses on time.
   - A player who leaves loses on time automatically; nobody has to press anything.
-- **Tested:** two headless browsers play full duels through the real server in a test.
+- **Tested:** two headless browsers play full duels in a test (against a stand-in for Supabase that runs the real function), and the page's network code was checked live against the real server.
 - **Nothing else changes:** the bot game, offline play and the artifact work as before.
 
 ## Sources

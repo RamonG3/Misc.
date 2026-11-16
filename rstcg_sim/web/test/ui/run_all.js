@@ -18,6 +18,7 @@ const tests = [
   ['fingers on a phone (touch)', [T('touch.js')]],
   ['every screen shape (layouts)', [T('layouts.js')]],
   ['installable app (pwa)', [T('pwa.js')]],
+  ['online duels, two browsers (online)', [T('online.js'), '40']],
 ];
 let bad = 0;
 for (const [name, args] of tests) {
