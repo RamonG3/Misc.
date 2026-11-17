@@ -21,9 +21,10 @@ This file describes where things stand. `CLAUDE.md` covers how the code fits tog
 
 - **Everything below is built, pushed** to `RamonG3/Misc.` branch `claude/card-game-ai-opponents-e90esn` (`rstcg_sim/`), **and copied to Ramon's PC** (`C:\Users\ramon\Downloads\rstcg_project\rstcg_sim`). Latest work: accounts, the menu tour, Air Battlestaff and Lumbridge art, 18 recorded spell sounds, the Jagex fan-content notice.
 - **Tests:** `node web/test/ui/run_all.js` passed every test that reported on 2026-11-16; on 2026-11-17 `spellsound.js` (with the real sounds) and `accounts.js` passed again.
-- **Ramon got a Netlify zip on 2026-11-17** built from this code. If he hasn't deployed it, that's the first thing to check.
+- **Deployed:** that build is live on Netlify (Ramon dropped it in at 13:40 on 2026-11-17, Central time).
+- **Google sign-in works for real (2026-11-17):** Ramon signed in with Google on the Pixel's installed app and came back into the app; his Pixel progress is saved to his account. See "Accounts" below.
 - **Open items, in order:**
-  1. **Google sign-in:** make the OAuth client in Google Cloud and switch Google on in Supabase (`ONLINE_BRIEF.md`, set-up step 3). Then try it for real on the Pixel's installed app (step 5) and delete test players afterwards.
+  1. **Accounts, second device:** sign in on the PC with the same Google account. Both sides have progress, so it should ask "which progress do you keep?" (the one not kept goes to `rstcg-backup-v1`). Then earn on one and check the other picks it up. Before friends can sign in, publish the consent screen (`ONLINE_BRIEF.md`, set-up step 3).
   2. **The fan-content notice:** Ramon was told the Jagex policy (clauses 6.1.3 and 2.4) doesn't cover video games or the RuneScape trade marks. He hasn't said whether to keep the policy's wording or swap to a plain "fan-made, not endorsed by Jagex" line.
   3. **Email codes,** if he wants them: a sender and `{{ .Token }}` in three templates (step 4), then switch Email back on.
   4. **The server as the bank** (phase 3b), then Find a match (phase 4).
@@ -138,14 +139,15 @@ Phases 0 to 2 of `ONLINE_BRIEF.md` are built: the server referee (phase 0, 2026-
 - **Code:** `web/referee.js` (the referee), `web/deckrules.js` (deck rules, shared), `web/online.js` (sign-in, names, the function, Realtime; no library), the Online section of `web/arena.src.html` (`runOnlineDuel`, `odStep`, the hub `onlineHTML`, rematches), `server/` (the function, migrations, build, tests, the stand-in `fake_supabase.mjs`, `smoke.sql`).
 - **Accounts (phase 3) came next:** see below.
 
-### 4. Accounts: built, waiting on set-up (2026-11-16)
+### 4. Accounts: built (2026-11-16), Google live (2026-11-17)
 Ramon chose: Google and emailed codes both; ask each time when a device with progress meets an account with progress; a cloud save now, and the server as the bank before Find a match. `ONLINE_BRIEF.md` ("Phase 3 (accounts): what's built") has how it works, the tests and the set-up steps.
 
 - **In the game:** an account button on the main menu and an Account row in Settings; the account screen (sign in, the emailed code, which progress to keep, signed in, sign out); saving in the background, with a quiet retry when offline.
 - **Code:** `web/cloudsave.js` (the sync and the merge), the account calls in `web/online.js`, the "Accounts and the cloud save" section of `web/arena.src.html`, `server/supabase/migrations/20261116155830…` and `…155904…` (table `progress`, its policies and `progress_save`), `server/progress_check.sql`, and `server/fake_supabase.mjs` (now signs players in, for the tests).
 - **Save data:** `rstcg-profile-v1` gained `cloud` (which account this progress was last saved to, at which revision, and the save both sides agreed on); old profiles load as they are. `rstcg-online-v1`'s sign-in now says whether it is a guest or an account. New: `rstcg-backup-v1`, the progress that "which progress do you keep?" replaced.
-- **Live server:** both migrations are applied and checked (17 checks; a real guest is refused). As of 2026-11-17 the return address and manual linking are set and **Email is switched off**; **Google is not set up yet**, so nobody can sign in yet (the account screen says so). Next step: make the Google OAuth client and switch Google on (step 3 of the set-up in the brief).
-- **Not tried for real yet:** the trip to Google and back (on the Pixel, in the installed app), and an emailed code. Do that with Ramon once the set-up is done, and delete any test players afterwards.
+- **Live server:** both migrations are applied and checked (17 checks; a real guest is refused). As of 2026-11-17 the return address and manual linking are set, **Google is on** and **Email is switched off**.
+- **Tried for real (2026-11-17):** Google on the Pixel's installed app: there and back into the app, an account made, and the Pixel's progress saved to it (revision 1). That account is Ramon's own; don't delete it.
+- **Not tried for real yet:** a second device signing in to the same account ("which progress"), and an emailed code.
 - **Next:** the server as the bank (phase 3b), then Find a match (phase 4).
 
 ### 5. Small things done alongside (2026-11-16)

@@ -1,6 +1,6 @@
 # Brief: online play for the RuneScape TCG Arena
 
-**Status (2026-11-16): phases 0 to 3 are built. Challenge a friend works end to end** (Play Online → a name → a deck and cape → a code or link → the duel → rematch), against the real server. **Accounts are built and tested against a stand-in server** (sign in with Google or an emailed code; progress saved to the account and shared between devices); they wait on Ramon's set-up in the Supabase dashboard before they can be tried for real: see "Phase 3 (accounts): what's built". Next is Find a match (phase 4), with the server as the bank first. Ramon has made the main decisions (below). This file sets out what he wants, how it works, what is built, and what is still open. Read `HANDOFF.md` for the wider project and `CLAUDE.md` for how the Arena's code fits together.
+**Status (2026-11-16): phases 0 to 3 are built. Challenge a friend works end to end** (Play Online → a name → a deck and cape → a code or link → the duel → rematch), against the real server. **Accounts are built and tested against a stand-in server** (sign in with Google or an emailed code; progress saved to the account and shared between devices); **Google sign-in is live (2026-11-17)** and worked on Ramon's Pixel; emailed codes wait on a sender. See "Phase 3 (accounts): what's built". Next is Find a match (phase 4), with the server as the bank first. Ramon has made the main decisions (below). This file sets out what he wants, how it works, what is built, and what is still open. Read `HANDOFF.md` for the wider project and `CLAUDE.md` for how the Arena's code fits together.
 
 ## What I want
 
@@ -141,14 +141,19 @@ It is one web app, so PC and phone play each other.
 - `node web/test/accounts_test.js`: every account call in `online.js` against `server/fake_supabase.mjs`, which now speaks enough of Supabase Auth to be signed in to (Google with a pretend consent page, emailed codes read back through `/__test/mail`, linking on or off, sessions ended from the server) and holds `progress` with the same rules as the SQL.
 - `node web/test/ui/accounts.js` (about 3 minutes, in `run_all.js`): browsers as a PC, a phone, a tablet and a laptop. A guest plays, signs in with Google and keeps their name; a second device signs in and gets the progress; both earn apart, one of them offline, and the totals add up; "which progress" both ways, and when the account changes mid-choice; emailed codes, a wrong code, a mailer that refuses; signing out and in; a second window; a session ended by the server; neither way switched on; and signing in held back during an online duel. Screenshots in `web/test/ui/shots/accounts/`.
 - `server/progress_check.sql`: 17 checks of the live table as an account, another account, a guest and a stranger; it rolls itself back. Run through the connector.
-- **Live, 2026-11-16** (through the connector, with `pg_net`): a real guest sign-in was refused a save (403) and read nothing; linking Google answered `manual_linking_disabled`, as the page expects; `/auth/v1/settings` reads as the page reads it. The test guest was deleted. **The Google and email round trips have not been tried live**: they need Ramon's set-up below.
+- **Live, 2026-11-16** (through the connector, with `pg_net`): a real guest sign-in was refused a save (403) and read nothing; linking Google answered `manual_linking_disabled`, as the page expects; `/auth/v1/settings` reads as the page reads it. The test guest was deleted. **Live, 2026-11-17:** with Google switched on, `/auth/v1/authorize?provider=google` leads to Google's normal sign-in page (a wrong client would give Google's error page). Then Ramon signed in with Google in the installed app on his Pixel: he came back into the app (not a Chrome tab), and the server holds one account with a `google` identity and a `progress` row at revision 1 holding the Pixel's progress. The Pixel had no live guest, so the page made a fresh guest and linked Google to it (made and signed in a second apart); that account has no online name yet, so Play Online will ask for one. It is Ramon's real account: keep it. **Emailed codes have not been tried live** (email is off), nor a second device signing in to the same account.
 
-**Set-up in the Supabase dashboard** (none of it can be done through the connector; Claude can do it in the desktop app's browser pane once Ramon has signed in there). **As of 2026-11-17: steps 1 and 2 are done, Email is switched off, Google is not set up yet**; `/auth/v1/settings` reads `email: false, google: false, anonymous_users: true`. Until Google is on, the account screen says signing in isn't switched on yet; guest play and Challenge a friend are unaffected.
+**Set-up in the Supabase dashboard** (none of it can be done through the connector; Claude can do it in the desktop app's browser pane once Ramon has signed in there). **As of 2026-11-17: steps 1, 2, 3 and 5 are done; Email is switched off**; `/auth/v1/settings` reads `email: false, google: true, anonymous_users: true`.
 1. ✅ **Authentication → URL Configuration:** Site URL `https://runescapetcg.netlify.app`, and `https://runescapetcg.netlify.app/**` in Redirect URLs (done 2026-11-17).
 2. ✅ **Authentication → Sign In / Providers:** **Allow manual linking** on (done 2026-11-17).
-3. **Google (next):** in Google Cloud, make an OAuth client (type Web application) with the redirect URI `https://udmaqoxyhiwpvxkrugwr.supabase.co/auth/v1/callback`; paste its id and secret into Providers → Google and switch it on. While the consent screen is in "Testing", only the test users listed there can sign in; publish it for everyone else.
+3. ✅ **Google** (done 2026-11-17):
+   - **Google Cloud:** project "RuneScape TCG" (id `runescape-tcg`), owned by Ramon's Gmail (Google Cloud made him turn on 2-step verification first). Google Auth Platform: app name "RuneScape TCG", audience External, his Gmail as support and developer contact, basic scopes only.
+   - **Client:** "Supabase sign-in", Web application, id `604614878740-gb9l3f6psblf1ic44a4k6tif0th7pkhb.apps.googleusercontent.com`; JavaScript origin `https://runescapetcg.netlify.app`; redirect URI `https://udmaqoxyhiwpvxkrugwr.supabase.co/auth/v1/callback`. Ramon pasted the secret into Supabase himself and has the downloaded JSON; it is in no repo. Google can't show it again: a lost secret means adding a new one on the client and pasting that.
+   - **Supabase:** Providers → Google on, with that client id and secret.
+   - **Still in "Testing":** only listed test users can sign in (Ramon is the only one; 100 at most, counted over the app's whole life). **To let friends in, publish it** (Audience → Publish app); Google first wants the Branding page finished (it says so on the Audience page). With only email, profile and openid, publishing needs no review.
+   - Google's sign-in screen says "to continue to udmaqoxyhiwpvxkrugwr.supabase.co". Showing the game's own address there needs a Supabase custom domain (a paid add-on).
 4. **Email, when wanted (switched off 2026-11-17 until then):** a sender (Authentication → Emails → SMTP Settings: a Gmail app password, or a domain of Ramon's), and `{{ .Token }}` added to the Confirm signup, Magic Link and Change Email Address templates. **Until then, switch the Email provider off** (Providers → Email), or the game offers a way to sign in that can't deliver its code.
-5. **On the Pixel, in the installed app:** check that Google's round trip comes back into the app and not into a Chrome tab.
+5. ✅ **On the Pixel, in the installed app:** Google's round trip comes back into the app, not a Chrome tab (Ramon, 2026-11-17).
 
 **Not done yet:**
 - **The server as the bank** (GP and cards kept and paid by the server, packs opened there, online decks checked against the collection). Decided for before Find a match.
@@ -351,7 +356,7 @@ Even if every move costs three function calls (the move, plus each player fetchi
 3. **Accounts and cloud progress (built 2026-11-16; see "Phase 3 (accounts): what's built"):**
    - **Signing in:** Google or an emailed code, linked to the name you already have.
    - **Progress in the account:** GP, collection, decks, packs and tutorial state, so PC and phone share progress; a second device with progress of its own asks which to keep.
-   - **Waiting on set-up:** the Google OAuth client, manual linking, the return address, and a sender for email (Ramon's clicks in the dashboard).
+   - **Set up and live for Google (2026-11-17).** Email waits on a sender.
    - **Left for 3b, before Find a match: the server takes over.** Online decks are checked against your collection, and the server pays online GP and opens packs.
 4. **Find a match:** the queue, players online, emotes, blocking, and recent opponents you can challenge again.
 
@@ -362,7 +367,7 @@ Even if every move costs three function calls (the move, plus each player fetchi
 
 ## Still open for Ramon
 
-- **Accounts (phase 3):** the dashboard set-up in "Phase 3 (accounts): what's built", then a real try on two devices. And for email: which address the codes should come from (a Gmail mailbox, or a domain of his own).
+- **Accounts (phase 3):** a real try on a second device (the PC) with the same Google account; publishing the consent screen when friends should sign in. And for email: which address the codes should come from (a Gmail mailbox, or a domain of his own).
 - **Capes still hint at the deck.** Both capes flip face up when the duel starts, and an Attack Cape points at melee about as clearly as the old sword icon did. That's a rule (Ramon's call): keeping capes hidden until claimed would close it.
 
 ## Done means (phases 0 to 2)
