@@ -143,11 +143,11 @@ It is one web app, so PC and phone play each other.
 - `server/progress_check.sql`: 17 checks of the live table as an account, another account, a guest and a stranger; it rolls itself back. Run through the connector.
 - **Live, 2026-11-16** (through the connector, with `pg_net`): a real guest sign-in was refused a save (403) and read nothing; linking Google answered `manual_linking_disabled`, as the page expects; `/auth/v1/settings` reads as the page reads it. The test guest was deleted. **The Google and email round trips have not been tried live**: they need Ramon's set-up below.
 
-**Ramon's set-up, in the Supabase dashboard** (none of it can be done through the connector; as of 2026-11-16 the server has email on, Google off and manual linking off):
-1. **Authentication → URL Configuration:** Site URL `https://runescapetcg.netlify.app`, and add `https://runescapetcg.netlify.app/**` to Redirect URLs.
-2. **Authentication → Sign In / Providers:** turn on **Allow manual linking**.
-3. **Google:** in Google Cloud, make an OAuth client (type Web application) with the redirect URI `https://udmaqoxyhiwpvxkrugwr.supabase.co/auth/v1/callback`; paste its id and secret into Providers → Google and switch it on. While the consent screen is in "Testing", only the test users listed there can sign in; publish it for everyone else.
-4. **Email, when wanted:** a sender (Authentication → Emails → SMTP Settings: a Gmail app password, or a domain of Ramon's), and `{{ .Token }}` added to the Confirm signup, Magic Link and Change Email Address templates. **Until then, switch the Email provider off** (Providers → Email), or the game offers a way to sign in that can't deliver its code.
+**Set-up in the Supabase dashboard** (none of it can be done through the connector; Claude can do it in the desktop app's browser pane once Ramon has signed in there). **As of 2026-11-17: steps 1 and 2 are done, Email is switched off, Google is not set up yet**; `/auth/v1/settings` reads `email: false, google: false, anonymous_users: true`. Until Google is on, the account screen says signing in isn't switched on yet; guest play and Challenge a friend are unaffected.
+1. ✅ **Authentication → URL Configuration:** Site URL `https://runescapetcg.netlify.app`, and `https://runescapetcg.netlify.app/**` in Redirect URLs (done 2026-11-17).
+2. ✅ **Authentication → Sign In / Providers:** **Allow manual linking** on (done 2026-11-17).
+3. **Google (next):** in Google Cloud, make an OAuth client (type Web application) with the redirect URI `https://udmaqoxyhiwpvxkrugwr.supabase.co/auth/v1/callback`; paste its id and secret into Providers → Google and switch it on. While the consent screen is in "Testing", only the test users listed there can sign in; publish it for everyone else.
+4. **Email, when wanted (switched off 2026-11-17 until then):** a sender (Authentication → Emails → SMTP Settings: a Gmail app password, or a domain of Ramon's), and `{{ .Token }}` added to the Confirm signup, Magic Link and Change Email Address templates. **Until then, switch the Email provider off** (Providers → Email), or the game offers a way to sign in that can't deliver its code.
 5. **On the Pixel, in the installed app:** check that Google's round trip comes back into the app and not into a Chrome tab.
 
 **Not done yet:**

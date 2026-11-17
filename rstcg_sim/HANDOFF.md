@@ -1,4 +1,4 @@
-# RuneScape TCG: handoff (2026-11-16)
+# RuneScape TCG: handoff (2026-11-17)
 
 This file describes where things stand. `CLAUDE.md` covers how the code fits together and the ground rules. `README.md` covers the balance history (Rounds 1–27).
 
@@ -16,6 +16,19 @@ This file describes where things stand. `CLAUDE.md` covers how the code fits tog
   - `rstcg_missing_art.csv` (one folder up, on Ramon's PC) lists the 62 cards still without art.
 - **Spell sounds:** Ramon's Drive folder RuneScape Kingdoms > Images > Spells > Spell Sounds (53 `.ogg` files, named by spell). On his PC they go in `art/sounds/`; see "Spell sounds" below.
 - **Jagex's Fan Content Policy:** https://legal.jagex.com/docs/policies/fan-content-policy (version 1.4, 29 September 2026, when the notice was added). See "The fan-content notice" below.
+
+## Start here (for a new chat, 2026-11-17)
+
+- **Everything below is built, pushed** to `RamonG3/Misc.` branch `claude/card-game-ai-opponents-e90esn` (`rstcg_sim/`), **and copied to Ramon's PC** (`C:\Users\ramon\Downloads\rstcg_project\rstcg_sim`). Latest work: accounts, the menu tour, Air Battlestaff and Lumbridge art, 18 recorded spell sounds, the Jagex fan-content notice.
+- **Tests:** `node web/test/ui/run_all.js` passed every test that reported on 2026-11-16; on 2026-11-17 `spellsound.js` (with the real sounds) and `accounts.js` passed again.
+- **Ramon got a Netlify zip on 2026-11-17** built from this code. If he hasn't deployed it, that's the first thing to check.
+- **Open items, in order:**
+  1. **Google sign-in:** make the OAuth client in Google Cloud and switch Google on in Supabase (`ONLINE_BRIEF.md`, set-up step 3). Then try it for real on the Pixel's installed app (step 5) and delete test players afterwards.
+  2. **The fan-content notice:** Ramon was told the Jagex policy (clauses 6.1.3 and 2.4) doesn't cover video games or the RuneScape trade marks. He hasn't said whether to keep the policy's wording or swap to a plain "fan-made, not endorsed by Jagex" line.
+  3. **Email codes,** if he wants them: a sender and `{{ .Token }}` in three templates (step 4), then switch Email back on.
+  4. **The server as the bank** (phase 3b), then Find a match (phase 4).
+  5. Smaller: sounds for the six Flurry spells (the Surge sounds are spare), 62 cards still without art.
+- **Working with the PC:** the art and spell sounds live only in its `art/` folder. Its device shell has python3, PIL and ffmpeg, so `python3 web/arena_assets.py` and `python3 web/arena_sounds.py` run there. Copy files to it only after the command that writes them has finished.
 
 ## The Arena: what's done
 
@@ -131,7 +144,7 @@ Ramon chose: Google and emailed codes both; ask each time when a device with pro
 - **In the game:** an account button on the main menu and an Account row in Settings; the account screen (sign in, the emailed code, which progress to keep, signed in, sign out); saving in the background, with a quiet retry when offline.
 - **Code:** `web/cloudsave.js` (the sync and the merge), the account calls in `web/online.js`, the "Accounts and the cloud save" section of `web/arena.src.html`, `server/supabase/migrations/20261116155830…` and `…155904…` (table `progress`, its policies and `progress_save`), `server/progress_check.sql`, and `server/fake_supabase.mjs` (now signs players in, for the tests).
 - **Save data:** `rstcg-profile-v1` gained `cloud` (which account this progress was last saved to, at which revision, and the save both sides agreed on); old profiles load as they are. `rstcg-online-v1`'s sign-in now says whether it is a guest or an account. New: `rstcg-backup-v1`, the progress that "which progress do you keep?" replaced.
-- **Live server:** both migrations are applied and checked (17 checks; a real guest is refused). As of 2026-11-16 it has **email on, Google off and manual linking off**, so nobody can sign in yet: Ramon's dashboard steps are in the brief. Until he does them, the game offers only the emailed code, which can't arrive: step 4 there says to switch the Email provider off meanwhile.
+- **Live server:** both migrations are applied and checked (17 checks; a real guest is refused). As of 2026-11-17 the return address and manual linking are set and **Email is switched off**; **Google is not set up yet**, so nobody can sign in yet (the account screen says so). Next step: make the Google OAuth client and switch Google on (step 3 of the set-up in the brief).
 - **Not tried for real yet:** the trip to Google and back (on the Pixel, in the installed app), and an emailed code. Do that with Ramon once the set-up is done, and delete any test players afterwards.
 - **Next:** the server as the bank (phase 3b), then Find a match (phase 4).
 
