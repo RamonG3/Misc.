@@ -137,6 +137,7 @@ python simulate.py 300                    # Python simulator, starter decks
 - **The menu's tour:** `TOUR`, `tourStep()`. It changes the menu in place and never calls `render()`.
 - **Audio:** `arena_audio.js`. Everything is synthesised except the casting sound of each spell that has a recording (`RSAudio.clip(name)`, from `window.ARENA_SOUNDS`). It has music layers, an "intense" layer that latches on once either deck is ≤10, and sfx by name: `sfx('tick')` etc.
   - Notes are scheduled 1 s ahead (`LOOKAHEAD`) so a busy page can't make the music drop notes, and touch screens ask for a bigger output buffer. `RSAudio.health()` (Settings → Sound check) reports glitches, dropped notes and the buffer. The busiest battle song costs about half a desktop core to synthesize, so keep new instruments cheap.
+  - **A silent layer costs as much as a loud one.** Web Audio synthesizes a note at 1/10,000 volume exactly as hard as at full. The intense layer's notes are only played while it is on or fading out (`intenseUntil`, `catchUp`); do the same for any new layer that waits in silence.
 
 ## Gotchas already paid for
 

@@ -415,7 +415,11 @@ window.RSAudio = (() => {
     g.connect(musicBus);
     for (const ev of song.events) if (!layers[ev.layer]) { layers[ev.layer] = gainNode(ev.layer === 'intense' ? (wantIntense ? 1 : 0.0001) : 1); layers[ev.layer].connect(g); }
     g.gain.setValueAtTime(0.0001, at); g.gain.linearRampToValueAtTime(song.kind === 'sting' ? 1 : 0.9, at + fadeIn);
-    const p = { song, g, layers, start: at + 0.05, idx: 0, loop: 0, spb: 60 / song.bpm, done: false };
+    // intenseUntil: notes of the intense layer after this time aren't played at all while it is off. A silent
+    // layer still costs as much to synthesize as a loud one, and on a phone that was most of the music's cost
+    // (2026-11-17: the audio thread fell behind and the sound cut out). horizon: how far notes are scheduled.
+    const p = { song, g, layers, start: at + 0.05, idx: 0, loop: 0, spb: 60 / song.bpm, done: false,
+      intenseUntil: wantIntense ? Infinity : -Infinity, horizon: 0 };
     players.push(p);
     return p;
   }
@@ -437,11 +441,30 @@ window.RSAudio = (() => {
       const ev = s.events[p.idx], t = p.start + (p.loop * L + ev.beat) * p.spb;
       if (t > until) break;
       p.idx += 1;
+      if (ev.layer === 'intense' && t > p.intenseUntil) continue;     // silent layer: not synthesized
       if (t < ctx.currentTime - 0.05) { stats.dropped += 1; continue; }   // fell behind (tab was asleep): skip, don't pile up
       if (t < ctx.currentTime) stats.late += 1;
-      const dest = p.layers[ev.layer];
-      if (ev.note === null) D[ev.inst](t, ev.v, dest);
-      else I[ev.inst](t, hz(ev.note), ev.d * p.spb, ev.v, dest, ev.pan || 0);
+      play(p, ev, t);
+    }
+    p.horizon = Math.max(p.horizon, until);
+  }
+  function play(p, ev, t) {
+    const dest = p.layers[ev.layer];
+    if (ev.note === null) D[ev.inst](t, ev.v, dest);
+    else I[ev.inst](t, hz(ev.note), ev.d * p.spb, ev.v, dest, ev.pan || 0);
+  }
+  // The intense layer has just come on: play its notes that the scheduler already passed while it was off
+  // (up to a second of them), so it fades in complete. Notes it did play (during a fade-out) aren't repeated.
+  function catchUp(p, from, skippedAfter) {
+    const s = p.song, L = s.length, lo = Math.max(from + 0.02, skippedAfter);
+    for (let loop = Math.max(0, p.loop - 1); loop <= p.loop; loop++) {
+      for (let i = 0; i < s.events.length; i++) {
+        if (loop === p.loop && i >= p.idx) break;                     // not reached yet: schedule() will play it
+        const ev = s.events[i];
+        if (ev.layer !== 'intense') continue;
+        const t = p.start + (loop * L + ev.beat) * p.spb;
+        if (t > lo && t <= p.horizon) play(p, ev, t);
+      }
     }
   }
   function nextIdle() {
@@ -479,6 +502,9 @@ window.RSAudio = (() => {
     g.cancelScheduledValues(t); g.setValueAtTime(Math.max(0.0001, g.value), t);
     if (on) g.linearRampToValueAtTime(1, t + 1.6);        // linear in: an exponential ramp from silence stays silent for most of its length
     else g.exponentialRampToValueAtTime(0.0001, t + 4);
+    const was = current.intenseUntil;
+    current.intenseUntil = on ? Infinity : t + 4;          // off: keep playing its notes until the fade has finished
+    if (on) catchUp(current, t, was);
   }
 
   // ---------------------------------------------------------------------------------
