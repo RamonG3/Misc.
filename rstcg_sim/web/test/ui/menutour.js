@@ -1,5 +1,5 @@
 // The main menu's tour: left alone, the menu moves on to another place every so often.
-// node web/test/ui/menutour.js      ends "all passed" (about a minute); screenshots in web/test/ui/shots/menutour/
+// node web/test/ui/menutour.js      ends "all passed" (about two minutes); screenshots in web/test/ui/shots/menutour/
 //
 // Checks that the painting, its motes and the place's name all change together, that every place comes up once
 // a lap and never twice running, that the clock stops with a dialog open or on another screen, that a redraw

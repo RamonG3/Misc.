@@ -1,6 +1,6 @@
 # Brief: online play for the RuneScape TCG Arena
 
-**Status (2026-11-16): phases 0 to 2 are built. Challenge a friend works end to end** (Play Online → a name → a deck and cape → a code or link → the duel → rematch), against the real server. Next is accounts (phase 3, from 2026-11-16): see "Phase 3 (accounts): start here", which ends with the questions to ask Ramon first. Ramon has made the main decisions (below). This file sets out what he wants, how it works, what is built, and what is still open. Read `HANDOFF.md` for the wider project and `CLAUDE.md` for how the Arena's code fits together.
+**Status (2026-11-16): phases 0 to 3 are built. Challenge a friend works end to end** (Play Online → a name → a deck and cape → a code or link → the duel → rematch), against the real server. **Accounts are built and tested against a stand-in server** (sign in with Google or an emailed code; progress saved to the account and shared between devices); they wait on Ramon's set-up in the Supabase dashboard before they can be tried for real: see "Phase 3 (accounts): what's built". Next is Find a match (phase 4), with the server as the bank first. Ramon has made the main decisions (below). This file sets out what he wants, how it works, what is built, and what is still open. Read `HANDOFF.md` for the wider project and `CLAUDE.md` for how the Arena's code fits together.
 
 ## What I want
 
@@ -96,44 +96,64 @@ It is one web app, so PC and phone play each other.
 - `node server/test_local.mjs` now also covers rematches (offered, taken up, taken back, replaced by a new challenge, two at once, an offer from an older version).
 - **Live, 2026-11-16:** in the desktop app's browser pane (on the live site, with `online.js` pasted in), two pretend players went through sign-up, names (a taken one refused), challenge, peek, join, six moves, a token refresh, concede, and a rematch offered and taken up. Realtime pinged both players for every change, in about 0.1 s; moves took 230 to 400 ms. The test players were deleted afterwards.
 
-**Not done yet:** Find a match (phase 4), accounts (phase 3). A duel in progress when the rules change stops with "a new version is out" and pays nobody.
+**Not done yet (as of phases 1 and 2):** Find a match (phase 4). Accounts came next, below. A duel in progress when the rules change stops with "a new version is out" and pays nobody.
 
-## Phase 3 (accounts): start here
+## Phase 3 (accounts): what's built (2026-11-16)
 
-Ramon moved on to accounts on 2026-11-16, and nothing for them is built yet. This section was written before the chat that builds them, as the ground to stand on. Ask Ramon the three questions at the end before building.
+**Ramon's answers** to the three questions (2026-11-16):
+1. **Sign in with both:** Google, and a code sent by email. Google goes first; email switches on once there is something to send it with.
+2. **A device with progress meets an account with progress: ask each time.**
+3. **Cloud save now;** the server becomes the bank before Find a match lets strangers in.
+4. His real progress is in the Netlify app, so nothing had to be carried across from the claude.ai artifact.
 
-**Progress today** lives only in the browser's `localStorage` (through `store` in `arena.src.html`):
-- **`rstcg-profile-v1`, the progress itself:**
-  - `gp`; `coll` (the cards you own, name → count; basic materials aren't in it, they're unlimited); `decks` (your own decks);
-  - `packs` (how many opened) and `lastPack`; `tutorial` and `tutorialPack` (the free pack, given once); `tips` (one-time tips already seen);
-  - `wins` and `losses` against bots, `online` (`{wins, losses}`), and `paid` / `onlinePaid` (so a duel pays once).
-- **Per device, and probably staying so:** `rstcg-settings` and `rstcg-speed`, `rstcg-arena-setup` (the last deck, cape and level picked), `rstcg-arena-duel-v1` (a bot duel in progress).
-- **`rstcg-online-v1`:** the anonymous sign-in (`auth`), your online name, the online duel you're in.
-- **The device is the bank:** packs are rolled on it (`grantPack`), and bot duels pay on it.
+**What a player sees:**
+- **An account button** in the main menu's corner: "Sign in", or your name with a tick (saved), a turning arrow (saving), a cloud with a line through it (offline) or a warning (a question is waiting). Settings has an **Account** row too.
+- **The account screen.** Signed out: **Sign in with Google** and **Sign in with an emailed code** (whichever the server has switched on), and a line on what an account is for. Email asks for the address, then the 6-digit code. Signed in: who you are, when progress was last saved, **Sign out**.
+- **Which progress do you keep?** When a device that has been played on signs in to an account that has progress too, the two are shown side by side (GP, cards, decks, record, when last played) and you pick one, with a second press to confirm. The one you didn't pick is put aside on the device (`rstcg-backup-v1`), in case it was the wrong button. A device nobody has played on just takes the account's; an account with nothing takes the device's.
+- **After that it is invisible:** progress is saved a moment after it changes, fetched when you come back to the menu or the app, and what two devices earned apart is added together.
+- **Signing out** makes a last save, then the device forgets the sign-in and the online name. The progress stays on the device as it was.
+- **Accounts need the app** (`runescapetcg.netlify.app`): the artifact and a page opened from a file say so, as Play Online does.
 
-**What Supabase offers** (its docs, read 2026-11-16):
-- **An anonymous player becomes a permanent one by linking a sign-in, and keeps the same user id,** so the online name, the duels and anything stored against that id carry over.
-  - Email: `updateUser({email})`, then the player confirms with what's emailed.
-  - Google: `linkIdentity({provider: 'google'})`, a round trip to Google and back.
-  - Both need **manual linking** turned on (dashboard: Authentication → Sign In / Providers).
-- **On a second device, the player simply signs in** (Google, or an emailed code). That device's own anonymous player and its progress are left behind, which is question 2 below.
-- **An emailed 6-digit code can replace the link:** the email templates need `{{ .Token }}`, and the game checks the code (`verifyOtp`). A code typed into the game never has to find its way back into the installed app, which a link opened from an email app might not.
-- **Sign-ins only return to allowed addresses:** `https://runescapetcg.netlify.app` goes in Authentication → URL Configuration.
-- **Anonymous sign-ups are limited to 30 an hour per IP address** (the default). Fine for friends; Supabase advises a CAPTCHA before strangers come (phase 4).
-- **No library:** `online.js` talks to Supabase with fetch alone, so each of these becomes a plain call to its Auth API. Check every call against the docs or the supabase-js source before building on it, and teach `server/fake_supabase.mjs` the same calls so the browser tests cover them.
-- **Check early, on the Pixel, in the installed app,** that Google's round trip comes back into the app and not into a Chrome tab.
-- **The connector can't change Auth settings:** manual linking, providers, email templates, SMTP and allowed addresses are Ramon's clicks in the dashboard.
+**How signing in works** (`web/online.js`, plain calls to Supabase's Auth API, no library; each checked against auth-js 2.119.0 and the Auth server's source):
+- **A guest who signs in stays the same player.** Their anonymous user is *linked* to the sign-in, so the id, the online name and any duel carry over.
+  - Google: `GET /auth/v1/user/identities/authorize?provider=google&redirect_to=…&code_challenge=…&code_challenge_method=s256&skip_http_redirect=true` (needs **manual linking** on), then the page goes to the address it returns.
+  - Email: `PUT /auth/v1/user {email}`, then `POST /auth/v1/verify {email, token, type: 'email_change'}` with the code.
+- **If that sign-in already belongs to a player** (the second device), linking is refused (`identity_already_exists` / `email_exists`) and the page signs in as that player instead: Google by going to `/auth/v1/authorize?…`, email by `POST /auth/v1/otp {email, create_user: true}` and `verify` with type `email`. The device's guest is left behind.
+- **PKCE:** the page makes a verifier (48 random bytes, base64url), sends its SHA-256 as the challenge, and keeps the verifier in `rstcg-online-v1` (`flow`) across the trip to Google. Google sends the player back to the game with `?code=…`; `POST /auth/v1/token?grant_type=pkce {auth_code, code_verifier}` turns it into a session. Errors come back as `?error=…&error_code=…` (sometimes after `#`). The address is cleaned as soon as it has been read.
+- **Codes, not links, for email:** a link opened from an email app might land in a browser tab instead of the installed app. The three templates a player can get (Confirm signup, Magic Link, Change Email Address) must show `{{ .Token }}`.
+- **Which ways are offered** comes from `GET /auth/v1/settings` (`external.google`, `external.email`), asked at most once a minute. With neither on, the screen says signing in isn't switched on yet.
+- **A sign-in that ends on the server** (signed out elsewhere, or the account deleted): the next refresh fails, the device forgets it, says so once, and keeps the progress it has. A guest whose session ends silently becomes a new guest, as before.
+- **Two windows:** signing in or out in one reloads the other (a `storage` listener), unless it is in the middle of a duel.
 
-**Ask Ramon first:**
-1. **Sign in with Google, email, or both?**
-   - **Google:** no passwords and no emails to send. Ramon makes a free OAuth client in Google Cloud (type Web application; its redirect URI is the callback the Supabase dashboard shows under Providers → Google, `https://udmaqoxyhiwpvxkrugwr.supabase.co/auth/v1/callback`) and pastes its id and secret into Supabase. Google's sign-in screen may name the Supabase address rather than the game.
-   - **Email:** for anyone, with or without Google. Supabase's own email only reaches the project's team, so it needs a sending service (custom SMTP). Most want a domain of your own to send from, and `runescapetcg.netlify.app` can't be one (Netlify owns `netlify.app`): so a domain of Ramon's, or a personal mailbox such as Gmail (the sign-in emails then come from that address).
-   - **Both:** they sit side by side; the extra work is mostly email's set-up.
-2. **A device that already has progress signs in to an account that has some too: which wins?** Keep the account's; keep whichever has more cards; merge (every card from both, the higher GP); or ask each time.
-3. **How much should the server trust the device?** Today someone with the browser's developer tools can give themselves GP or cards. Offline that hurts nobody; online it decides which cards they can bring.
-   - **Cloud save:** the account stores progress as the devices report it, and they sync. Quick to build; bot play stays offline; cheating stays possible.
-   - **The server is the bank:** GP and cards live on the server; it opens packs, pays online duels (it referees them, so it knows who won) and checks online decks against the collection, as planned above. Bot duels still run on the device, so their GP either comes on the device's word (perhaps with a daily cap) or is checked: a bot duel is its seed plus your choices, which the save already keeps, so the server could replay it before paying. Mind the 2 s CPU limit with Champion (about 36 ms a move), and that a device choosing its own seeds could choose kind ones.
-   - A suggestion (Claude's, 2026-11-16): cloud save while it's friends, and the bank before Find a match lets strangers in.
+**How the cloud save works:**
+- **One row per account** in `progress` (migrations `20261116155830_accounts_progress.sql` and `20261116155904_accounts_progress_accounts_only.sql`): `data` (the profile as jsonb, 400 KB at most), `rev` (a trigger adds one on every change), `updated_at`. Row security: only a signed-in *account* can read or write its own row; guests and strangers get nothing.
+- **`progress_save(p_data, p_rev)`** saves only if the row is still at the revision the device last saw (`p_rev` null = "there is no row yet"). Otherwise it changes nothing and hands back the newer save. That is what stops a device with an old copy overwriting a newer one.
+- **`web/cloudsave.js`** (`RSTCGCloud`) is the sync, with no knowledge of the page:
+  - the device keeps a **mark** inside the profile itself (`profile.cloud`: the account's id, the revision, when, and `base`, the save as both sides last agreed it), so progress and mark are always written together;
+  - nothing changed here: fetch anything newer; something changed here: save, and if the server has moved on, **merge** and try again;
+  - **merging** is three-way against `base`. GP, wins, losses and packs opened: theirs plus what this device added. Cards: the same, card by card. Decks: by id (changed here wins, made on either side kept, deleted on one side gone unless the other changed it, never left with none). Tips already seen and online duels already paid: either side's. Anything else (the tutorial flags, the last pack): this device's if it changed it, else theirs;
+  - a device that has never met this account asks (see above) instead of merging: there is no shared `base` to merge from.
+- **Still per device:** settings, speed, the last deck and cape picked, a bot duel in progress, and the online duel's log.
+- **The device is still the bank.** Someone with the developer tools can give themselves GP and the save will carry it. Decided: that changes before Find a match (see "Phases").
+
+**Tested:**
+- `node web/test/cloud_test.js [worlds]`: the merge rules case by case, the sync step by step against a pretend server that reorders keys as jsonb does, and thousands of random "worlds" of three devices earning, spending, deleting and syncing in any order with the network failing at random. Every world must end with all devices and the server agreeing, nothing earned lost and nothing counted twice. (3,000 worlds: about 360,000 steps and 27,000 merges.)
+- `node web/test/accounts_test.js`: every account call in `online.js` against `server/fake_supabase.mjs`, which now speaks enough of Supabase Auth to be signed in to (Google with a pretend consent page, emailed codes read back through `/__test/mail`, linking on or off, sessions ended from the server) and holds `progress` with the same rules as the SQL.
+- `node web/test/ui/accounts.js` (about 3 minutes, in `run_all.js`): browsers as a PC, a phone, a tablet and a laptop. A guest plays, signs in with Google and keeps their name; a second device signs in and gets the progress; both earn apart, one of them offline, and the totals add up; "which progress" both ways, and when the account changes mid-choice; emailed codes, a wrong code, a mailer that refuses; signing out and in; a second window; a session ended by the server; neither way switched on; and signing in held back during an online duel. Screenshots in `web/test/ui/shots/accounts/`.
+- `server/progress_check.sql`: 17 checks of the live table as an account, another account, a guest and a stranger; it rolls itself back. Run through the connector.
+- **Live, 2026-11-16** (through the connector, with `pg_net`): a real guest sign-in was refused a save (403) and read nothing; linking Google answered `manual_linking_disabled`, as the page expects; `/auth/v1/settings` reads as the page reads it. The test guest was deleted. **The Google and email round trips have not been tried live**: they need Ramon's set-up below.
+
+**Ramon's set-up, in the Supabase dashboard** (none of it can be done through the connector; as of 2026-11-16 the server has email on, Google off and manual linking off):
+1. **Authentication → URL Configuration:** Site URL `https://runescapetcg.netlify.app`, and add `https://runescapetcg.netlify.app/**` to Redirect URLs.
+2. **Authentication → Sign In / Providers:** turn on **Allow manual linking**.
+3. **Google:** in Google Cloud, make an OAuth client (type Web application) with the redirect URI `https://udmaqoxyhiwpvxkrugwr.supabase.co/auth/v1/callback`; paste its id and secret into Providers → Google and switch it on. While the consent screen is in "Testing", only the test users listed there can sign in; publish it for everyone else.
+4. **Email, when wanted:** a sender (Authentication → Emails → SMTP Settings: a Gmail app password, or a domain of Ramon's), and `{{ .Token }}` added to the Confirm signup, Magic Link and Change Email Address templates. **Until then, switch the Email provider off** (Providers → Email), or the game offers a way to sign in that can't deliver its code.
+5. **On the Pixel, in the installed app:** check that Google's round trip comes back into the app and not into a Chrome tab.
+
+**Not done yet:**
+- **The server as the bank** (GP and cards kept and paid by the server, packs opened there, online decks checked against the collection). Decided for before Find a match.
+- **Deleting an account** from inside the game (today: the dashboard).
+- **A CAPTCHA** on sign-ups, which Supabase advises before strangers come.
 
 ## Why the server referees
 
@@ -328,15 +348,11 @@ Even if every move costs three function calls (the move, plus each player fetchi
    - its node tests (no leaks, replays, refused moves).
 1. **The duel screen online (done 2026-11-16):** `runOnlineDuel`, the display-only `Game`, waiting and clocks, rejoining. Tested with two headless browsers.
 2. **Challenge a friend (done 2026-11-16):** links and codes, the waiting room, rematch.
-3. **Accounts and cloud progress** (next, from 2026-11-16; see "Phase 3 (accounts): start here"):
-   - **Signing in:** sign in with Google and/or email, linked to the name you already have.
-   - **Progress on the server:** GP, collection, decks, packs and tutorial state, so PC and phone share progress.
-   - **The server takes over:** online decks are checked against your collection, and the server pays online GP.
-   - **Setup needed:**
-     - Google sign-in needs a Google OAuth client, made once in Google Cloud.
-     - Email sign-in needs a mail-sending service, because Supabase's built-in email only reaches the project's own team members.
-   - **The first sign-in on a second device** asks which progress to keep.
-   - Decided: this comes after a test of Challenge a friend with real people.
+3. **Accounts and cloud progress (built 2026-11-16; see "Phase 3 (accounts): what's built"):**
+   - **Signing in:** Google or an emailed code, linked to the name you already have.
+   - **Progress in the account:** GP, collection, decks, packs and tutorial state, so PC and phone share progress; a second device with progress of its own asks which to keep.
+   - **Waiting on set-up:** the Google OAuth client, manual linking, the return address, and a sender for email (Ramon's clicks in the dashboard).
+   - **Left for 3b, before Find a match: the server takes over.** Online decks are checked against your collection, and the server pays online GP and opens packs.
 4. **Find a match:** the queue, players online, emotes, blocking, and recent opponents you can challenge again.
 
 **Later:**
@@ -346,7 +362,7 @@ Even if every move costs three function calls (the move, plus each player fetchi
 
 ## Still open for Ramon
 
-- **Accounts (phase 3):** the three questions at the end of "Phase 3 (accounts): start here": Google, email or both; which progress wins when a second device signs in; and how much the server trusts the device.
+- **Accounts (phase 3):** the dashboard set-up in "Phase 3 (accounts): what's built", then a real try on two devices. And for email: which address the codes should come from (a Gmail mailbox, or a domain of his own).
 - **Capes still hint at the deck.** Both capes flip face up when the duel starts, and an Attack Cape points at melee about as clearly as the old sword icon did. That's a rule (Ramon's call): keeping capes hidden until claimed would close it.
 
 ## Done means (phases 0 to 2)

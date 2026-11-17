@@ -525,6 +525,11 @@ html, body { touch-action: manipulation; }
 @keyframes mfadein { from { opacity: 0; } }
 @keyframes mfadeout { to { opacity: 0; } }
 #mplace { transition: opacity .7s ease; }
+/* the foot of the main menu: set, collection and record on the left, the place on the right, and under them the
+   fan-content notice (menuHTML sizes it, so it stays readable when a short stage is scaled down to a phone) */
+.mfoot { position: absolute; right: 48px; display: flex; flex-direction: column; gap: 9px; }
+.mlegal { margin: 0; font-family: var(--body); font-size: 14px; font-weight: 600; line-height: 1.35; letter-spacing: .01em; color: rgba(233,223,199,.78); text-shadow: 0 1px 2px rgba(0,0,0,.95), 0 0 8px rgba(0,0,0,.7); }
+.short .mfoot { gap: 7px; }
 #mplace.off { opacity: 0; }
 .menu-bg { position: absolute; left: 0; top: 0; width: 100%; height: 100%; object-fit: cover; animation: kenburns 52s ease-in-out infinite alternate; transform-origin: 62% 42%; will-change: transform; }
 @keyframes kenburns { from { transform: scale(1.03) translate(0, 0); } to { transform: scale(1.13) translate(-34px, -16px); } }
@@ -742,6 +747,7 @@ html, body { touch-action: manipulation; }
 <script>/*__BOT__*/</script>
 <script>/*__ENGINESYNC__*/</script>
 <script>/*__BOTLEVELS__*/</script>
+<script>/*__SOUNDS__*/</script>
 <script>/*__AUDIO__*/</script>
 <script>/*__WIZ__*/</script>
 <script>/*__DECKRULES__*/</script>
@@ -1220,7 +1226,7 @@ html, body { touch-action: manipulation; }
       const name = ['play', 'varrock', 'exchange'].includes(a[0]) ? a[1] : null;
       if (!ui.replaying) {
         render();
-        anim.hint = { i, name, from: null };
+        anim.hint = { i, name, act: a[0], from: null };
         if (name && i === ui.you) await liftYourCard(a, name);
       }
       anim.inApply = true;
@@ -1416,7 +1422,11 @@ html, body { touch-action: manipulation; }
     anim.shown = after;
     const hint = anim.hint, held = anim.held, reactFrom = anim.reactFrom, drop = anim.drop;
     anim.hint = anim.held = anim.reactFrom = anim.drop = null;
-    if (ui.replaying || ui.intro || !before || !T) { if (held) held.el.remove(); $('#reveal').innerHTML = ''; render(); return; }
+    if (ui.replaying || ui.intro || !before || !T) {
+      // reduced motion plays no flights or blows, but a spell that was just cast still makes its own sound
+      if (!ui.replaying && !ui.intro && before && hint && hint.act === 'play' && CARDS[hint.name] && !STAYS.has(CARDS[hint.name].kind)) AU.clip(hint.name);
+      if (held) held.el.remove(); $('#reveal').innerHTML = ''; render(); return;
+    }
     const R0 = capture();
     anim.playing = true;
     try { await playChanges(g, before, after, evs, { hint, held, reactFrom, drop }, R0, T); }
@@ -1479,7 +1489,10 @@ html, body { touch-action: manipulation; }
     };
 
     // ---- the card that was played ----
-    let cast = null;
+    // A spell with a recording of its own makes that sound as it is cast, whoever casts it and whether or not
+    // it lands (a Protect prayer can still turn it away); castSound is then the caster, and the attack that
+    // follows doesn't add the synthesized spell sound on top.
+    let cast = null, castSound = null;
     const phase1 = [];
     const h = ctx.hint;
     if (h && h.name && take(M[h.i].lostHand, h.name)) {
@@ -1497,6 +1510,7 @@ html, body { touch-action: manipulation; }
       } else if (take(m.discIn, h.name)) {
         const hold = i === you ? HOLD_YOU : HOLD_BOT;
         cast = { i, name: h.name, rect: hold };
+        castSound = h.act === 'play' && AU.clip(h.name, { pan: i === you ? -0.2 : 0.2 }) ? i : null;
         if (ctx.held) cast.el = ctx.held.el;
         else { sfx('reveal', { v: 0.6 }); phase1.push(flyCard({ name: h.name, from: src, to: hold, dur: D(380), rot0: src.rot || 0, keep: true }).then((el) => { cast.el = el; })); }
       } else {
@@ -1596,7 +1610,7 @@ html, body { touch-action: manipulation; }
     async function projectile(e, from, to) {
       const a = mid(from), b = mid(to);
       const pan = Math.max(-1, Math.min(1, (a.x - 960) / 960));
-      sfx(e.src === 'punch' ? 'punch' : e.style === 'melee' ? 'swing' : e.style === 'ranged' ? 'arrow' : e.style === 'magic' ? 'magic' : 'swing', { pan });
+      if (!(e.src === 'spell' && castSound === e.by)) sfx(e.src === 'punch' ? 'punch' : e.style === 'melee' ? 'swing' : e.style === 'ranged' ? 'arrow' : e.style === 'magic' ? 'magic' : 'swing', { pan });
       const col = STYLE_COL[e.style] || STYLE_COL.none;
       const fromWeapon = ['weapon', 'spec', 'autocast', 'bow', 'thrown', 'ability'].includes(e.src);
       if (e.src === 'punch' && ICON.punch) {
@@ -2025,6 +2039,7 @@ html, body { touch-action: manipulation; }
   async function runDuel(config, decisions, botMoves) {
     if (!config.tutorial) ui.tut = null;
     ui.tip = null;
+    AU.warm();                                    // the recorded spell sounds, decoded ahead of the first cast
     ui.config = config; ui.decisions = [];
     ui.botMoves = []; ui.botQueue = Array.isArray(botMoves) ? [...botMoves] : [];
     ui.queue = decisions ? [...decisions] : [];
@@ -2262,7 +2277,7 @@ html, body { touch-action: manipulation; }
       g.log.push(entry);
       if (!(mine && od.lift && sameMove(od.lift, a))) {     // (your card left the hand when you picked it)
         render();
-        anim.hint = { i, name, from: null };
+        anim.hint = { i, name, act: a[0], from: null };
         if (name && mine && !ui.replaying) await liftYourCard(a, name);
       }
       od.lift = null;
@@ -2309,7 +2324,7 @@ html, body { touch-action: manipulation; }
     const a = move.v;
     if (move.t === 'choose' && Array.isArray(a) && ['play', 'varrock', 'exchange'].includes(a[0])) {
       render();
-      anim.hint = { i: ui.you, name: a[1], from: null };
+      anim.hint = { i: ui.you, name: a[1], act: a[0], from: null };
       od.lift = a;
       od.lifting = liftYourCard(a, a[1]);       // the card leaves your hand at once; the server's answer follows
     } else render();
@@ -2338,6 +2353,7 @@ html, body { touch-action: manipulation; }
   // ---------- starting, leaving and ending ----------
   async function runOnlineDuel(id, o = {}) {
     if (!ON) return;
+    AU.warm();                                    // the recorded spell sounds, decoded ahead of the first cast
     if (ui.g && ui.g.winner === null) stopDuel();
     resultLeave(false);
     hubStop();
@@ -3236,7 +3252,7 @@ html, body { touch-action: manipulation; }
   const saveProfile = () => { store.set(PROFILE, profile); cloudTouch(); };
   const settings = Object.assign({ motion: 'full', music: 'med', sfx: 'med', tips: 'on' }, store.get('rstcg-settings') || {});
   const VOL = { music: { off: 0, low: 0.3, med: 0.55, high: 0.85 }, sfx: { off: 0, low: 0.4, med: 0.8, high: 1 } };
-  const AU = window.RSAudio || { unlock() {}, want() {}, intense() {}, sting() {}, sfx() {}, volumes() {}, health() { return null; } };
+  const AU = window.RSAudio || { unlock() {}, want() {}, intense() {}, sting() {}, sfx() {}, clip() { return false; }, warm() {}, volumes() {}, health() { return null; } };
   const sfx = (n, o) => AU.sfx(n, o);
   AU.volumes({ music: VOL.music[settings.music] ?? 0.55, sfx: VOL.sfx[settings.sfx] ?? 0.8 });
   const calm = () => settings.motion === 'reduced' || !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
@@ -3351,11 +3367,19 @@ html, body { touch-action: manipulation; }
     if (TOUR.shown >= TOUR.every) tourStep();
   }, 1000);
 
+  // The notice Jagex's Fan Content Policy asks fan-made work to carry, in the policy's own words (clause 8.1 of
+  // version 1.4, 29 September 2026: https://legal.jagex.com/docs/policies/fan-content-policy). It sits at the foot
+  // of the main menu (Ramon, 2026-11-16). Don't reword it; if the policy's wording changes, change it to match.
+  const FAN_NOTICE = "Created using intellectual property belonging to Jagex Limited under the terms of Jagex's Fan Content Policy. This content is not endorsed by or affiliated with Jagex.";
   function menuHTML() {
     if (!MENU_BG) { const k = Object.keys(AS.backdrop); MENU_BG = k.length ? k[Math.floor(Math.random() * k.length)] : ''; }
     const saved = store.get(STORE);
     const life = menuLife();
     const short = SH() < 1000;                       // not enough height for one long column: two columns, smaller crest
+    // The fan-content notice: as big as stays on one line (it runs about 67 px wide for each px of type), so that
+    // it is still readable once a phone has scaled the stage down, and never grows up into the buttons.
+    const noticeFit = Math.floor((SW() - (short ? 90 : 110) - 48) / 67);
+    const noticePx = SH() < 800 ? Math.max(17, Math.min(21, noticeFit)) : short ? Math.min(15, noticeFit) : 14;
     const live = ON && onlineGet().duel;              // an online duel this device is in: it goes on without you
     const big = (what, inner) => `<button type="button" class="btn-g breathe" data-do="${what}" style="animation-delay:${life.breatheDelay};width:460px;height:104px;font-size:30px;justify-content:flex-start;padding:0 28px;gap:20px">${ICN.resume}<span style="display:flex;flex-direction:column;align-items:flex-start;gap:4px">${inner}</span></button>`;
     const sub = (t) => `<small style="font-family:var(--body);font-size:15px;font-weight:700;letter-spacing:.04em;color:#ffe2b8">${esc(t)}</small>`;
@@ -3373,7 +3397,7 @@ html, body { touch-action: manipulation; }
       <div style="position:absolute;inset:0;background:radial-gradient(ellipse at 70% 50%,rgba(0,0,0,0) 40%,rgba(0,0,0,.55) 100%)"></div>
       <div id="mmotes" style="position:absolute;inset:0;pointer-events:none">${life.motes}</div>
       <div style="position:absolute;right:48px;top:36px;display:flex;align-items:center;gap:14px">${accountChip()}${gpChip(26)}</div>
-      <div style="position:absolute;left:0;top:0;width:900px;height:300px"><div style="position:absolute;inset:0;${short ? 'transform:scale(.72);transform-origin:30px 20px' : ''}">
+      <div style="position:absolute;left:0;top:0;width:${short ? 660 : 900}px;height:${short ? 224 : 300}px;pointer-events:none"><div style="position:absolute;left:0;top:0;width:900px;height:300px;${short ? 'transform:scale(.72);transform-origin:30px 20px' : ''}">
       <div class="crest-ring" style="animation-delay:${life.ringDelay}"></div>
       ${EMBLEM ? `<img class="crest-glow" src="${EMBLEM}" alt="" style="position:absolute;left:96px;top:70px;width:210px;height:210px;animation-delay:${life.glowDelay}">` : ''}
       ${ICON.logo ? `<div class="logo-wrap"><img src="${ICON.logo}" alt="RuneScape"><div class="logo-sheen" style="-webkit-mask-image:url(${ICON.logo});mask-image:url(${ICON.logo});animation-delay:${life.sheenDelay}"></div></div>` : ''}
@@ -3388,10 +3412,12 @@ html, body { touch-action: manipulation; }
         <button type="button" class="mi" data-do="how">${ICN.book}How to Play</button>
         <button type="button" class="mi" data-do="settings">${ICN.gear}Settings</button>
       </nav>
-      <div style="position:absolute;left:${short ? 90 : 110}px;bottom:${short ? 28 : 40}px;display:flex;align-items:center;gap:12px;font-size:13px;font-weight:700;letter-spacing:.14em;color:var(--faint)">
-        <span>SET 1</span><span style="width:4px;height:4px;border-radius:50%;background:var(--faint)"></span><span>COLLECTED ${collected()} / ${POOL.length}</span>
-        <span style="width:4px;height:4px;border-radius:50%;background:var(--faint)"></span><span>RECORD ${profile.wins} W · ${profile.losses} L</span></div>
-      ${MENU_BG ? `<span id="mplace" style="position:absolute;right:48px;bottom:40px;font-size:13px;font-weight:700;letter-spacing:.14em;color:rgba(233,223,199,.6)">${esc(MENU_BG.toUpperCase())}</span>` : ''}
+      <div class="mfoot" style="left:${short ? 90 : 110}px;bottom:${short ? 16 : 22}px">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:24px;font-size:13px;font-weight:700;letter-spacing:.14em;color:var(--faint)">
+          <span style="display:flex;align-items:center;gap:12px"><span>SET 1</span><span style="width:4px;height:4px;border-radius:50%;background:var(--faint)"></span><span>COLLECTED ${collected()} / ${POOL.length}</span>
+          <span style="width:4px;height:4px;border-radius:50%;background:var(--faint)"></span><span>RECORD ${profile.wins} W · ${profile.losses} L</span></span>
+          ${MENU_BG ? `<span id="mplace" style="color:rgba(233,223,199,.6)">${esc(MENU_BG.toUpperCase())}</span>` : ''}</div>
+        <p class="mlegal" style="font-size:${noticePx}px">${esc(FAN_NOTICE)}</p></div>
       ${modalHTML()}`;
   }
 
@@ -5720,6 +5746,9 @@ html, body { touch-action: manipulation; }
 
   // test hook
   window.__arena = { get ui() { return ui; }, render, act, CARDS, zoneFor, online: { sync: () => odSync(), get od() { return ui.od; }, ON, VERSION, idle: () => !anim.playing && !ui.intro && (!ui.od || !ui.od.jobs) }, get profile() { return profile; }, cloud: { get state() { return cloud; }, sync: () => cloudSync(), signedIn, account, progress: () => progressNow(), untouched },
+    // for tests that arrange the table by hand (a card put into a hand, a deck cut short): take the picture the
+    // next move's animation starts from again, so it plays from the table as arranged
+    resnap() { if (ui.g) { anim.shown = snap(ui.g); render(); } },
     tour: { get place() { return MENU_BG; }, get places() { return tourPlaces(); }, get busy() { return TOUR.busy; }, get shown() { return TOUR.shown; }, get every() { return TOUR.every; }, set every(ms) { TOUR.every = ms; }, step: (to) => tourStep(to) }, deckRules, POOL, PACK_POOL, cardFace, mini, AS, ART, ICON, get CREST() { return CREST; }, get EMBLEM() { return EMBLEM; },
     // for tests: does the duel board, redrawn in place, read the same as a board drawn from scratch?
     // (attribute order aside). Returns true, or the first place they differ.

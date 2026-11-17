@@ -1,12 +1,14 @@
-// RuneScape TCG Arena: music and sound, synthesized live with the Web Audio API (no audio files).
+// RuneScape TCG Arena: music and sound, synthesized live with the Web Audio API.
 // The tunes are original, written in the spirit of a medieval-fantasy MMO score: modal melodies on
-// flute and harp over strings, tavern lutes, war drums and brass for battle.
+// flute and harp over strings, tavern lutes, war drums and brass for battle. The one thing that is
+// recorded, not synthesized, is the casting sound of each spell that has one (see "Recorded sounds").
 //
 //   RSAudio.unlock()            start audio after the first click / key / pad press (browser rule)
 //   RSAudio.want('menu'|'duel'|'quiet')   what should be playing; idempotent, call as often as you like
 //   RSAudio.intense(true)       battle music: bring in the intense layer (either deck at 10 or less)
 //   RSAudio.sting(name)         'victory' | 'defeat' | 'claim' | 'quest' | 'legendary'
 //   RSAudio.sfx(name, opts)     one-shot sound effects
+//   RSAudio.clip(name, opts)    a recorded sound, by card name; false if there is none (make the usual sound instead)
 //   RSAudio.volumes({ music, sfx })   0..1 each
 window.RSAudio = (() => {
   let ctx = null, master = null, musicBus = null, sfxBus = null, revIn = null, noiseBuf = null;
@@ -558,6 +560,60 @@ window.RSAudio = (() => {
   };
 
   // ---------------------------------------------------------------------------------
+  // Recorded sounds: the casting sound of each spell that has one. web/arena_sounds.py packs them into
+  // the page as window.ARENA_SOUNDS = { 'Air Bolt': 'data:audio/mpeg;base64,...' }, keyed by card name.
+  // A clip is decoded the first time it is wanted (or by warm(), ahead of a duel) and kept. It plays
+  // through the effects bus, so the Sound effects setting and the limiter treat it like any other effect.
+  // ---------------------------------------------------------------------------------
+  const CLIPS = (typeof window !== 'undefined' && window.ARENA_SOUNDS) || {};
+  // One volume for all of them: they keep the balance they were recorded with (a Strike is softer than a Wave).
+  // Set by measuring (RSAudio.measure, 2026-11-16): at 1.3 the eighteen average -28 dB through the mixer, beside
+  // -30 for the hit that follows a spell and -36 for the synthesized spell sound they take the place of.
+  const CLIP_GAIN = 1.3;
+  const clips = {};                        // name -> AudioBuffer once decoded, a Promise while decoding, false if it can't be
+  const clipLog = [];                      // the last few that were started, for the tests: { n, name, at, secs }
+  let clipCount = 0;                       // how many have been started in all (n counts up from 1)
+  function clipBytes(uri) {
+    const b = atob(uri.slice(uri.indexOf(',') + 1)), u = new Uint8Array(b.length);
+    for (let i = 0; i < b.length; i++) u[i] = b.charCodeAt(i);
+    return u.buffer;
+  }
+  function loadClip(name) {
+    if (clips[name] !== undefined) return clips[name];
+    clips[name] = new Promise((res) => {
+      const ok = (buf) => { clips[name] = buf; res(buf); }, no = () => { clips[name] = false; res(false); };
+      // (old Safari only takes the callbacks; everything else also returns a promise, whose failure is the same failure)
+      try { const p = ctx.decodeAudioData(clipBytes(CLIPS[name]), ok, no); if (p && p.catch) p.catch(no); } catch (e) { no(); }
+    });
+    return clips[name];
+  }
+  // Play a recorded sound. True if this name has one (it starts as soon as it is decoded: at once, when it has
+  // been played or warmed before); false if it has none, and the caller makes its usual synthesized sound.
+  function clip(name, o = {}) {
+    if (!CLIPS[name]) return false;
+    if (!ctx || vol.sfx <= 0) return true;                 // it has a sound; it just isn't to be heard right now
+    const c = ctx, asked = c.currentTime;
+    const go = (buf) => {
+      if (!buf || c !== ctx || c.currentTime - asked > 0.6) return;        // can't be decoded, or too late to belong to its moment
+      const s = c.createBufferSource(), g = gainNode((o.v == null ? 1 : o.v) * CLIP_GAIN);
+      s.buffer = buf; s.connect(g);
+      out(g, sfxBus, o.rev == null ? 0.06 : o.rev, o.pan || 0);
+      s.start(c.currentTime + 0.01);
+      if (c.startRendering) return;                       // (being measured, not played)
+      clipLog.push({ n: ++clipCount, name, at: +c.currentTime.toFixed(3), secs: +buf.duration.toFixed(2) });
+      if (clipLog.length > 40) clipLog.shift();
+    };
+    const have = loadClip(name);
+    if (have && have.then) have.then(go); else go(have);
+    return true;
+  }
+  // Decode clips ahead of need (all of them, or the ones named), one after another so nothing piles up.
+  async function warm(names) {
+    if (!ctx) return;
+    for (const n of names || Object.keys(CLIPS)) if (CLIPS[n]) await loadClip(n);
+  }
+
+  // ---------------------------------------------------------------------------------
   // Public face
   // ---------------------------------------------------------------------------------
   // Audio can only start after the player's first click, key or button press (a browser rule).
@@ -604,12 +660,37 @@ window.RSAudio = (() => {
     for (let i = 0; i < d0.length; i++) { const a = Math.max(Math.abs(d0[i]), Math.abs(d1[i])); if (a > peak) peak = a; sum += d0[i] * d0[i]; }
     return { peak: +peak.toFixed(3), rms: +Math.sqrt(sum / d0.length).toFixed(4), nan: Number.isNaN(peak) };
   }
+  // How loud is something? Renders what `make` schedules (effects, clips already warmed) through a copy of the
+  // mixer, offline and unheard, at full Sound effects volume, and reports its peak and its loudness over the
+  // part that sounds. For setting levels and for the tests.
+  async function measure(make, secs = 4) {
+    const OAC = window.OfflineAudioContext || window.webkitOfflineAudioContext;
+    const c = new OAC(2, Math.floor(44100 * secs), 44100);
+    const saved = { ctx, master, musicBus, sfxBus, revIn, noiseBuf }, savedSfx = vol.sfx;
+    use(c, build(c)); sfxBus.gain.value = 1; vol.sfx = 1;
+    try { make(); } finally { ({ ctx, master, musicBus, sfxBus, revIn, noiseBuf } = saved); vol.sfx = savedSfx; }
+    const buf = await c.startRendering();
+    const d0 = buf.getChannelData(0), d1 = buf.getChannelData(1);
+    let peak = 0, sum = 0, n = 0;
+    for (let i = 0; i < d0.length; i++) {
+      const a = Math.max(Math.abs(d0[i]), Math.abs(d1[i]));
+      if (a > peak) peak = a;
+      if (a > 0.001) { sum += (d0[i] * d0[i] + d1[i] * d1[i]) / 2; n += 1; }
+    }
+    const db = (x) => +(20 * Math.log10(Math.max(x, 1e-6))).toFixed(1);
+    return { peak: db(peak), rms: db(Math.sqrt(sum / Math.max(n, 1))), secs: +(n / 44100).toFixed(2) };
+  }
   return {
     unlock: start,
     want(w) { if (w === wanted) return; wanted = w; if (w !== 'duel') setIntense(false); apply(); },
     intense: setIntense,
     sting,
     sfx,
+    clip,
+    warm,
+    get clips() { return Object.keys(CLIPS); },
+    get clipLog() { return clipLog.slice(); },
+    measure,
     volumes,
     get ready() { return !!ctx; },
     // How the sound is holding up on this device: glitches (the audio thread missed its deadline, where the

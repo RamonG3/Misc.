@@ -1,11 +1,11 @@
-"""Recover the generated build inputs (arena_fonts.css, arena_assets.js) from a built Arena page.
+"""Recover the generated build inputs (arena_fonts.css, arena_assets.js, arena_sounds.js) from a built Arena page.
 
 build_arena.py replaces each /*__NAME__*/ placeholder in arena.src.html with a file's contents. Given the
 source and a built page (web/dist/arena.html, or the published claude.ai artifact saved as HTML), this
 works backwards: the text between placeholders is fixed, so whatever sits between those fixed pieces in
 the built page is what was inlined.
 
-    python web/recover_generated.py path/to/built.html            # writes web/arena_fonts.css, web/arena_assets.js
+    python web/recover_generated.py path/to/built.html            # writes web/arena_fonts.css, arena_assets.js, arena_sounds.js
     python web/recover_generated.py path/to/built.html --all      # also writes the other inlined parts to web/recovered/ to compare
 
 The published artifact has its <!doctype>/<html>/<head>/<body>/<meta> lines stripped; that's handled.
@@ -43,8 +43,11 @@ for name, nxt in zip(names, pieces[1:]):
     out[name] = built[pos:j]
     _, pos = find(built, nxt, j)
 
-targets = {"FONTS": "arena_fonts.css", "ASSETS": "arena_assets.js"}
+targets = {"FONTS": "arena_fonts.css", "ASSETS": "arena_assets.js", "SOUNDS": "arena_sounds.js"}
 for name, fn in targets.items():
+    if name not in out:              # a page built before that part existed (spell sounds came in November 2026)
+        print(f"web/{fn}: not in this page; left alone")
+        continue
     open(os.path.join(HERE, fn), "w", encoding="utf-8").write(out[name])
     print(f"wrote web/{fn} ({len(out[name]) // 1024} KB)")
 if "--all" in sys.argv:

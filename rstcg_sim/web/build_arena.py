@@ -1,7 +1,8 @@
 """Build the Arena client: python web/build_arena.py  ->  web/dist/arena.html
 
-One self-contained file, like dist/game.html: card data, art, fonts, the engine and the bot are all inlined.
-Run python web/arena_assets.py first when art or fonts change (this script runs it if its output is missing).
+One self-contained file, like dist/game.html: card data, art, fonts, spell sounds, the engine and the bot are all
+inlined. Run python web/arena_assets.py first when art or fonts change, and python web/arena_sounds.py when the
+spell sounds do (this script runs each if its output is missing).
 """
 import hashlib
 import json
@@ -12,6 +13,8 @@ import subprocess
 HERE = os.path.dirname(os.path.abspath(__file__))
 if not os.path.exists(os.path.join(HERE, "arena_assets.js")) or not os.path.exists(os.path.join(HERE, "arena_fonts.css")):
     subprocess.run(["python3", os.path.join(HERE, "arena_assets.py")], check=True)
+if not os.path.exists(os.path.join(HERE, "arena_sounds.js")):
+    subprocess.run(["python3", os.path.join(HERE, "arena_sounds.py")], check=True)
 
 def read(name):
     return open(os.path.join(HERE, name)).read()
@@ -39,6 +42,7 @@ parts = {
     "/*__ASSETS__*/": open(os.path.join(HERE, "arena_assets.js")).read(),
     "/*__ENGINE__*/": open(os.path.join(HERE, "engine.js")).read(),
     "/*__BOT__*/": open(os.path.join(HERE, "bot.js")).read(),
+    "/*__SOUNDS__*/": read("arena_sounds.js"),
     "/*__AUDIO__*/": open(os.path.join(HERE, "arena_audio.js")).read(),
     "/*__WIZ__*/": open(os.path.join(HERE, "deckwiz.js")).read(),
     "/*__DECKRULES__*/": read("deckrules.js"),
@@ -56,4 +60,5 @@ for k, v in parts.items():
 os.makedirs(os.path.join(HERE, "dist"), exist_ok=True)
 out = os.path.join(HERE, "dist", "arena.html")
 open(out, "w").write(src)
-print(out, len(src) // 1024, "KB", "version", version_stamp())
+sounds = json.loads(parts["/*__SOUNDS__*/"][len("window.ARENA_SOUNDS = "):-1])
+print(out, len(src) // 1024, "KB", "version", version_stamp(), "|", len(sounds), "spell sounds")

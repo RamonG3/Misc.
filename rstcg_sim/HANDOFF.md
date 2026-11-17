@@ -4,7 +4,7 @@ This file describes where things stand. `CLAUDE.md` covers how the code fits tog
 
 ## Links
 
-- **The Arena (latest build, claude.ai artifact):** https://claude.ai/artifact/DTVmjFMHpVvqVYmtS29tRm (version 25, built from `web/dist/arena.html`). Online play needs the Netlify app; the artifact can't reach the server.
+- **The Arena (latest build, claude.ai artifact):** https://claude.ai/artifact/DTVmjFMHpVvqVYmtS29tRm (version 26, built from `web/dist/arena.html`). Online play and accounts need the Netlify app; the artifact can't reach the server.
 - **The installable app (Netlify):** https://runescapetcg.netlify.app, deployed from `web/dist/netlify/` (see "Phone version" below).
 - **The online server (Supabase):** project "RuneScape TCG" (`udmaqoxyhiwpvxkrugwr`, https://udmaqoxyhiwpvxkrugwr.supabase.co), Edge Function `duel`. See `ONLINE_BRIEF.md`.
 - **Rules doc:** https://claude.ai/artifact/AA5kzzcL6QWhBjmwqwhntj
@@ -13,11 +13,14 @@ This file describes where things stand. `CLAUDE.md` covers how the code fits tog
 - **Card art:** Ramon's Google Drive folder (the link is kept out of this public repo; ask Ramon).
   - Files are named by item; look in a `Detail` subfolder when there is one.
   - `art/art_map.json` maps each card to its Drive file ID; downloaded images are in `art/img/`.
-  - `rstcg_missing_art.csv` (one folder up, on Ramon's PC) lists the 64 cards still without art.
+  - `rstcg_missing_art.csv` (one folder up, on Ramon's PC) lists the 62 cards still without art.
+- **Spell sounds:** Ramon's Drive folder RuneScape Kingdoms > Images > Spells > Spell Sounds (53 `.ogg` files, named by spell). On his PC they go in `art/sounds/`; see "Spell sounds" below.
+- **Jagex's Fan Content Policy:** https://legal.jagex.com/docs/policies/fan-content-policy (version 1.4, 29 September 2026, when the notice was added). See "The fan-content notice" below.
 
 ## The Arena: what's done
 
-- **Main menu** with an idle attract mode, GP, and How to Play.
+- **Main menu** with an idle attract mode that tours the Location paintings (a new place every 20 seconds), GP, the account button, How to Play, and the fan-content notice at its foot.
+- **Accounts** (2026-11-16): sign in with Google or an emailed code, and progress follows you between devices. See "Accounts" below and `ONLINE_BRIEF.md`.
 - **Settings:** motion, music, sfx, tips, "show tutorial again".
 - **Pick screen:** your deck, your cape (blind), the opponent's deck.
 - **Duel on a tilted 3D table.**
@@ -38,7 +41,7 @@ This file describes where things stand. `CLAUDE.md` covers how the code fits tog
 - **Guided tutorial:** a scripted 19-step first duel with stacked decks and a scripted bot.
   - It is offered on first launch and from the menu, and finishing it grants a free pack.
   - After it, one-time tips show up in real duels.
-- **Audio:** synthesised music with an intense layer (latches on once either deck is ≤10), plus sfx.
+- **Audio:** synthesised music with an intense layer (latches on once either deck is ≤10), plus sfx. A spell that has a recording makes its real casting sound (see "Spell sounds").
 - **Xbox controller:** gold focus ring; A/B/X/Y, LB/RB, Menu/View; the right stick scrolls.
 - **Phones and any screen shape:** touch controls, a rotate-your-phone screen, layouts that fill 4:3 to 21:9, and an installable offline app. See "Phone version and adaptive layout" below.
 
@@ -104,7 +107,7 @@ Ramon decided: landscape only, the same file as the PC version, an installable a
 - **Installable app.** `python web/build_netlify.py` (after `build_arena.py`) makes `web/dist/netlify/`: `index.html` (the built Arena plus the manifest link and service-worker registration), `manifest.webmanifest` (landscape, full screen), `sw.js` (network first for the page, so a new deploy shows up straight away, with the saved copy used offline), `_headers` and the icons from `web/app/` (made by `node web/make_icons.js` from the Crest). `web/dist/arena.html` itself is untouched and stays the artifact.
   - Deploy: drag `web/dist/netlify` onto the Deploys page of the `runescapetcg` site, or `netlify deploy --prod --dir web/dist/netlify`.
   - On the phone: open https://runescapetcg.netlify.app in Chrome → menu → **Add to Home screen / Install**. It opens full screen in landscape and works offline.
-- **Tests:** `touch.js` (fingers), `layouts.js` (every screen at 7 window shapes: no button off screen or covered), `pwa.js` (manifest, install, offline), all in `run_all.js`. `tour.js W H` takes screenshots of every screen at one size.
+- **Tests:** `touch.js` (fingers), `layouts.js` (every screen at 7 window shapes: no button off screen or covered), `pwa.js` (manifest, install, offline), all in `run_all.js` (18 tests, about 22 minutes; all passed on 2026-11-16 on the build that was published as version 26). `tour.js W H` takes screenshots of every screen at one size.
 - **Fixed after Ramon's first phone test (2026-11-15):** the board blinked on the phone whenever a card was played (the duel is now redrawn in place, `morphInto`; the test browser never blinked, so this is the likely cause rather than a proven one: confirm on the Pixel); the bot's face-down hand arced the same way as yours (it now arcs the other way, as if held across the table); playing Staff of Light drew a dashed card-sized outline at the bottom left (the "+2 any element" chip was picking up the dragged card's `.ghost` style).
 - **Music on the phone (2026-11-15):** Ramon heard it crackle, "like it was buffering". Two causes, both fixed in `arena_audio.js`:
   - Notes were scheduled only 0.3 s ahead from the page's own thread, so when the page was busy (a hard bot thinking, a big redraw; up to half a second on a phone), the notes it missed were dropped. Measured with 600 ms stalls: 89 notes dropped in 12 s before, none after. They are now scheduled 1 s ahead (`LOOKAHEAD`).
@@ -120,10 +123,46 @@ Phases 0 to 2 of `ONLINE_BRIEF.md` are built: the server referee (phase 0, 2026-
 - **What's in it:** names (3 to 12 letters or numbers, unique); codes and links (`runescapetcg.netlify.app/#duel-K7MQX`) with copy and share; a waiting room; the duel as against the bot, with the other player's name, their hand as card backs, a clock for the last 15 seconds of each decision, and "Reconnecting…" when the network drops; leaving and coming back (Resume on the menu); concede; results that name the opponent and pay as for bots (nothing for conceding or losing on time); rematch, which both players press.
 - **Server:** Supabase project "RuneScape TCG" (`udmaqoxyhiwpvxkrugwr`): tables `profiles`, `matches`, `match_secrets`, `moves`; Edge Function `duel` (version 4 on 2026-11-16), deployed by the GitHub Action on every push that touches the rules or `server/`. Keep-alive: `RamonG3/rstcg-keepalive`.
 - **Code:** `web/referee.js` (the referee), `web/deckrules.js` (deck rules, shared), `web/online.js` (sign-in, names, the function, Realtime; no library), the Online section of `web/arena.src.html` (`runOnlineDuel`, `odStep`, the hub `onlineHTML`, rematches), `server/` (the function, migrations, build, tests, the stand-in `fake_supabase.mjs`, `smoke.sql`).
-- **Next: accounts** (phase 3: progress that follows you between devices). Ramon moved on to them on 2026-11-16, in a new chat. Start at "Phase 3 (accounts): start here" in `ONLINE_BRIEF.md`: what progress is, how Supabase turns an anonymous player into an account, and three questions to ask Ramon before building. Then Find a match (phase 4).
+- **Accounts (phase 3) came next:** see below.
 
-### 4. Later
-- **Card art** for the 64 cards in `rstcg_missing_art.csv`. Rune Arrows art exists on Drive but isn't downloaded yet.
+### 4. Accounts: built, waiting on set-up (2026-11-16)
+Ramon chose: Google and emailed codes both; ask each time when a device with progress meets an account with progress; a cloud save now, and the server as the bank before Find a match. `ONLINE_BRIEF.md` ("Phase 3 (accounts): what's built") has how it works, the tests and the set-up steps.
+
+- **In the game:** an account button on the main menu and an Account row in Settings; the account screen (sign in, the emailed code, which progress to keep, signed in, sign out); saving in the background, with a quiet retry when offline.
+- **Code:** `web/cloudsave.js` (the sync and the merge), the account calls in `web/online.js`, the "Accounts and the cloud save" section of `web/arena.src.html`, `server/supabase/migrations/20261116155830…` and `…155904…` (table `progress`, its policies and `progress_save`), `server/progress_check.sql`, and `server/fake_supabase.mjs` (now signs players in, for the tests).
+- **Save data:** `rstcg-profile-v1` gained `cloud` (which account this progress was last saved to, at which revision, and the save both sides agreed on); old profiles load as they are. `rstcg-online-v1`'s sign-in now says whether it is a guest or an account. New: `rstcg-backup-v1`, the progress that "which progress do you keep?" replaced.
+- **Live server:** both migrations are applied and checked (17 checks; a real guest is refused). As of 2026-11-16 it has **email on, Google off and manual linking off**, so nobody can sign in yet: Ramon's dashboard steps are in the brief. Until he does them, the game offers only the emailed code, which can't arrive: step 4 there says to switch the Email provider off meanwhile.
+- **Not tried for real yet:** the trip to Google and back (on the Pixel, in the installed app), and an emailed code. Do that with Ramon once the set-up is done, and delete any test players afterwards.
+- **Next:** the server as the bank (phase 3b), then Find a match (phase 4).
+
+### 5. Small things done alongside (2026-11-16)
+- **The menu's tour.** `TOUR` in `arena.src.html`: every 20 seconds (`TOUR.every`) the next place fades in over the last (painting, light, motes and the name in the corner), in one shuffled order per visit. The clock stops with a dialog open, on another screen or with the tab hidden, and starts a place's time again when you come back to the menu. It changes the page in place, never by `render()`, so a pressed button or the controller's focus isn't disturbed. Test: `web/test/ui/menutour.js`.
+- **Art:** Air Battlestaff, and Lumbridge (its card, and a wider view as the backdrop behind the board and on the menu, with its own motes in `SCENE_FX`). Water, Fire and Earth Battlestaff pictures are in `art/img` for when those cards exist (Ramon: "I'll look at making the other cards later").
+- **Art pipeline, two things learnt:**
+  - Pictures copied to Ramon's PC through Claude come out about 6 KB bigger: the transfer adds a provenance tag (C2PA) to image files. The pixels are untouched, but the old "a file under 12 KB is a tiny icon" rule flipped for one icon. `is_pixel_icon` in `print/build_pnp.py` now goes by the picture's size in pixels, and `arena_assets.py` uses it.
+  - The PC's `print/build_pnp.py` had lost the Enchanted Bar's art entry; it is back. After any art change, compare the new `arena_assets.js` with the old one entry by entry before trusting it (2026-11-16: only the three new entries differ).
+- **The crest no longer jumps** while the menu slides in on phones and laptops (its `scale` sat on the element the slide animates; it is on an inner one now).
+
+### Spell sounds (2026-11-16)
+Ramon: "if you successfully cast Air Bolt, it'll play the Air Bolt.ogg sound".
+
+- **What plays:** a spell with a recording makes it as it is cast, for either player, and whether or not it lands (a Protect prayer can still turn it away: the cast worked, the landing didn't). It takes the place of the synthesized spell sound; the hit keeps its own. A spell discarded (resting in Varrock, trading at the Grand Exchange) is not a cast. Reduced motion, which plays no flights, still plays a cast.
+- **Which:** a sound belongs to the card its file is named after. `ALIAS` in `web/arena_sounds.py` holds the two that differ: Superheat ("Superheat Item") and Varrock Teleport ("Standard Teleport", the sound every standard teleport makes; Claude's call, Ramon can veto). The six Flurry spells have no file and keep the synthesized sound. The folder's other files (Surge spells, curses, alchemy and so on) have no cards yet; a card added under one of those names picks its sound up by itself.
+- **Pipeline:** `python web/arena_sounds.py` reads `art/sounds/*.ogg`, converts each sound that has a card to a small mono MP3 with ffmpeg (Safari on older Macs and iPhones doesn't play Ogg), keeps those in `art/sounds/game/`, and writes `web/arena_sounds.js` (`window.ARENA_SOUNDS`, 18 sounds, about 340 KB), which `build_arena.py` inlines like the art. The sounds and the generated file stay out of the repo (`.gitignore` has `art/` and `web/arena_sounds.js`); `recover_generated.py` gets the pack back out of a built page.
+  - **Run it on Ramon's PC** (Claude's shell there has ffmpeg 4.4; plain Windows may not), then bring `web/arena_sounds.js` back, as with the art. The copies made there are the ones that ship: another ffmpeg makes the same sound as slightly different bytes.
+  - The conversion leaves the level as recorded (a plain average of left and right, which are the same in these files), takes off the silence ahead of the sound (up to a fifth of a second), and writes no tags.
+  - **One volume for them all:** `CLIP_GAIN` in `arena_audio.js`, set by measuring (`RSAudio.measure`): the 18 average -28 dB through the mixer, beside -30 for a hit and -36 for the synthesized spell sound. They keep their own balance: a Strike is softer than a Wave.
+  - `.ogg` files copied to the PC through Claude arrive untouched; `.mp3` files (like pictures) arrive with a provenance tag inside. So the MP3s are made on the PC, never copied there.
+- **In the page:** `RSAudio.clip(name)` in `arena_audio.js` (decoded on first use, played through the effects bus, so the Sound effects setting applies); `playChanges` asks for it where it works out the card that was cast (`castSound`).
+- **Test:** `web/test/ui/spellsound.js` (in `run_all.js`). Where there is no `art/sounds` folder it only checks that spells keep their synthesized sound.
+
+### The fan-content notice (2026-11-16)
+- The foot of the main menu carries the notice Jagex's Fan Content Policy asks fan-made work to show, in the policy's own words (clause 8.1; `FAN_NOTICE` in `arena.src.html`). Ramon asked for it. Don't reword it; if the policy's wording changes, change it to match. `layouts.js` checks it is on screen, readable and clear of the buttons at every window shape.
+- Ramon has been told what else the policy says that bears on this project: clause 6.1.3 (video games and other software made with Jagex Property are not among the things it allows) and clause 2.4 (it doesn't cover Jagex's trade marks). What to do about that is his call; the policy gives IP@Jagex.com for questions. Claude isn't a lawyer.
+
+### 6. Later
+- **Card art** for the 62 cards in `rstcg_missing_art.csv`. Rune Arrows art exists on Drive but isn't downloaded yet.
+- **Sounds for the six Flurry spells,** if Ramon wants them (the four Surge sounds are spare).
 - **Rebuild decks from the full tested pool,** to see what independent deckbuilding does to balance.
 - **Print-and-play:** `print/build_pnp.py` + `print/render.js` → PDFs. Done for the 3 starters.
 

@@ -43,6 +43,19 @@ const fails = [];
           const top = document.elementFromPoint(x, y);
           if (top && !el.contains(top) && !top.contains(el) && !top.closest('[data-stop]') && !el.closest('.over')) out.push(`${what} covered by ${top.className || top.tagName}`);
         }
+        // the fan-content notice at the foot of the main menu: all of it on screen, big enough to read once the
+        // stage is scaled to this window (9 px), and clear of the menu's buttons
+        const legal = document.querySelector('#board > .mfoot .mlegal');
+        if (legal) {
+          const r = legal.getBoundingClientRect(), px = parseFloat(getComputedStyle(legal).fontSize) * (r.height / legal.offsetHeight || 1);
+          if (r.left < -1 || r.top < -1 || r.right > W + 1 || r.bottom > H + 1) out.push('the fan-content notice runs off screen');
+          if (px < 9) out.push(`the fan-content notice is only ${px.toFixed(1)} px tall on screen`);
+          if (!/not endorsed by or affiliated with Jagex\.$/.test(legal.textContent.trim())) out.push('the fan-content notice has lost its wording');
+          for (const bt of document.querySelectorAll('#board > nav button, #board > .mfoot > div')) {
+            const q = bt.getBoundingClientRect();
+            if (q.left < r.right && q.right > r.left && q.top < r.bottom - 1 && q.bottom > r.top + 1) out.push(`the fan-content notice overlaps "${bt.textContent.trim().slice(0, 20)}"`);
+          }
+        }
         const sets = document.querySelector('#board .modal:has(.setrow)');       // Settings shows every row at once
         if (sets && sets.scrollHeight > sets.clientHeight + 1) out.push(`the Settings dialog scrolls (${sets.scrollHeight - sets.clientHeight} px too tall)`);
         return out;
@@ -51,6 +64,18 @@ const fails = [];
       for (const x of bad) fails.push(`${tag} ${name}: ${x}`);
     };
     await A('menu'); await look('menu');
+    // the fullest the menu gets: a duel against the bot and an online duel both waiting to be resumed
+    await page.evaluate(() => {
+      localStorage.setItem('rstcg-arena-duel-v1', JSON.stringify({ config: { youDeck: 'Melee', botDeck: 'Air Mage' }, decisions: [] }));
+      const o = JSON.parse(localStorage.getItem('rstcg-online-v1') || '{}'); o.duel = { match: 'x', opp: 'WWWWWWWWWWWW' }; localStorage.setItem('rstcg-online-v1', JSON.stringify(o));
+      window.__arena.render();
+    });
+    await look('menu-full');
+    await page.evaluate(() => {
+      localStorage.removeItem('rstcg-arena-duel-v1');
+      const o = JSON.parse(localStorage.getItem('rstcg-online-v1') || '{}'); delete o.duel; localStorage.setItem('rstcg-online-v1', JSON.stringify(o));
+      window.__arena.render();
+    });
     await A('settings'); await look('settings'); await A('closemodal');
     await A('play'); await page.waitForTimeout(400); await look('pick');
     await A('opp'); await look('pick-opponent'); await A('opp');
