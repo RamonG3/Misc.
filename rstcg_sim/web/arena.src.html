@@ -81,6 +81,18 @@ button:focus-visible, [tabindex]:focus-visible { outline: 3px solid var(--gold-p
 .chip { padding: 3px 9px; border-radius: 6px; background: #e3d5b5; border: 1px solid #b9a982; font-family: var(--display); font-weight: 700; font-size: 16px; }
 .cf-ft { display: flex; justify-content: space-between; padding: 5px 12px 7px; font-size: 11px; color: #5a4e40; letter-spacing: .04em; flex: none; }
 .sc { position: absolute; transform-origin: 0 0; }
+/* Large card text (Settings, 2026-11-18: Ramon plays on a TV from the sofa): bigger, heavier, darker words on every
+   card face, with the picture a little shorter to make the room. Checked against every card (cardtext.js). */
+html.bigtext .art { height: 150px; }
+html.bigtext .cf-nm { font-size: 23px; letter-spacing: .01em; }
+html.bigtext .cf-sb { font-size: 14px; font-weight: 800; letter-spacing: .04em; }
+html.bigtext .cf-strip { font-size: 14px; font-weight: 800; padding: 5px 12px; }
+html.bigtext .cf-bd { padding: 9px 13px 4px; gap: 6px; }
+html.bigtext .cf-bd p { font-size: 19px; line-height: 1.22; font-weight: 700; color: #120d08; }
+html.bigtext .chip { font-size: 19px; padding: 2px 9px; }
+html.bigtext .cf-ft { font-size: 12px; font-weight: 700; }
+html.bigtext .cf-nm.long { font-size: 20px; letter-spacing: 0; }
+html.bigtext .mc-nm { font-size: 13px; padding: 4px 5px 3px; letter-spacing: -.01em; }
 
 /* ---------- the tilted table ---------- */
 .scene { position: absolute; inset: 0; pointer-events: none; }
@@ -473,6 +485,7 @@ html, body { touch-action: manipulation; }
 .setrow { display: flex; align-items: center; gap: 14px; padding: 14px 0; border-top: 1px solid rgba(201,165,75,.2); }
 .setrow > span { flex: 1; font-size: 18px; }
 .setrow small { display: block; font-size: 14px; color: var(--faint); }
+.setrow > span.sp2 { margin-left: 14px; padding-left: 20px; border-left: 1px solid rgba(201,165,75,.2); }
 /* Settings has nine rows: a little closer together everywhere, and closer still on a laptop's shorter stage */
 .modal:has(.setrow) { gap: 10px; }
 .short .modal:has(.setrow) { gap: 6px; padding-top: 26px; padding-bottom: 26px; }
@@ -485,7 +498,7 @@ html, body { touch-action: manipulation; }
 .phone .setrow small { font-size: 18px; }
 /* phones: Settings packed tighter so every row, Reset included, fits without scrolling */
 .phone .modal:has(.setrow) { gap: 4px; padding-top: 20px; padding-bottom: 20px; }
-.phone .setrow { padding: 7px 0; }
+.phone .setrow { padding: 6px 0; }
 .res { position: absolute; inset: 0; background-color: #15110d; }
 .res.lose { background-color: #0f1014; }
 .rays { position: absolute; left: 460px; top: -260px; width: 1000px; height: 1000px; border-radius: 50%; background: repeating-conic-gradient(from 0deg, rgba(243,210,122,.10) 0deg 6deg, transparent 6deg 18deg); -webkit-mask-image: radial-gradient(circle, #000 20%, transparent 68%); mask-image: radial-gradient(circle, #000 20%, transparent 68%); animation: spin 90s linear infinite; }
@@ -1094,7 +1107,7 @@ html, body { touch-action: manipulation; }
     const s1 = SET1[name] || {};
     const foot = c.story === 'reward' ? 'Story reward · Chapter 1' : c.story === 'boss' ? 'Story · boss only' : `Set 1 · #${s1.num || '—'}${s1.rarity ? ' · ' + RARITY[s1.rarity] : ''}`;
     return `<div class="cf" style="--frame:${frameOf(c)}"><div class="cf-in">
-      <div class="cf-hd">${circle}<div class="cf-tt"><span class="cf-nm">${esc(name)}</span><span class="cf-sb">${esc(sub)}</span></div></div>
+      <div class="cf-hd">${circle}<div class="cf-tt"><span class="cf-nm${name.length >= 19 ? ' long' : ''}">${esc(name)}</span><span class="cf-sb">${esc(sub)}</span></div></div>
       ${artBlock(name)}
       <div class="cf-strip"><span>${esc(info.type)}</span><span>${S[c.style] && c.kind !== 'material' ? S[c.style] : ''}</span></div>
       <div class="cf-bd">${chips}${info.text.map((l) => `<p>${esc(l)}</p>`).join('')}</div>
@@ -3369,7 +3382,9 @@ html, body { touch-action: manipulation; }
   const cloud = { live: false, state: 'idle', busy: null, again: false, timer: 0, retry: 0, ask: null, looked: 0, leaving: 0, err: '' };
   ui.acct = { state: null, ways: null, email: '', emailErr: '', code: '', codeErr: '', kind: null, busy: false, msg: '', note: '', confirm: null };
   const saveProfile = () => { store.set(PROFILE, profile); cloudTouch(); };
-  const settings = Object.assign({ motion: 'full', music: 'med', sfx: 'med', tips: 'on' }, store.get('rstcg-settings') || {});
+  const settings = Object.assign({ motion: 'full', music: 'med', sfx: 'med', tips: 'on', cardtext: 'normal' }, store.get('rstcg-settings') || {});
+  const applyCardText = () => document.documentElement.classList.toggle('bigtext', settings.cardtext === 'large');
+  applyCardText();
   const VOL = { music: { off: 0, low: 0.3, med: 0.55, high: 0.85 }, sfx: { off: 0, low: 0.4, med: 0.8, high: 1 } };
   const AU = window.RSAudio || { unlock() {}, want() {}, intense() {}, sting() {}, sfx() {}, clip() { return false; }, warm() {}, volumes() {}, health() { return null; } };
   const sfx = (n, o) => AU.sfx(n, o);
@@ -3641,8 +3656,9 @@ html, body { touch-action: manipulation; }
         ${ON ? `<div class="setrow"><span>Account<small>${inn ? `Signed in${me.email ? ` as ${esc(me.email)}` : ''}. Your progress is saved to your account` : 'Sign in to keep your progress and carry on from any device'}</small></span>
           <button type="button" class="btn-d" data-do="account" style="height:44px;padding:0 18px;font-size:15px">${inn ? 'Your account' : 'Sign in'}</button></div>` : ''}
         <div class="setrow"><span>Bot speed<small>How long the bot takes to think and show each move</small></span>${seg('speed', 'normal', 'Normal')}${seg('speed', 'fast', 'Fast')}</div>
-        <div class="setrow"><span>Animations<small>Reduced skips the deal, card flights and banners</small></span>${seg('motion', 'full', 'Full')}${seg('motion', 'reduced', 'Reduced')}</div>
-        <div class="setrow"><span>Music<small>Three menu songs and three battle songs that build when a deck runs low</small></span>${['off', 'low', 'med', 'high'].map((x) => seg('music', x, x === 'med' ? 'Medium' : x[0].toUpperCase() + x.slice(1))).join('')}</div>
+        <div class="setrow setpair"><span>Card text<small>Large: bigger, bolder words on cards, for a TV</small></span>${seg('cardtext', 'normal', 'Normal')}${seg('cardtext', 'large', 'Large')}
+          <span class="sp2">Animations<small>Reduced skips the deal, flights and banners</small></span>${seg('motion', 'full', 'Full')}${seg('motion', 'reduced', 'Reduced')}</div>
+        <div class="setrow"><span>Music<small>Menu songs, battle songs that build when a deck runs low, and Story Mode's own</small></span>${['off', 'low', 'med', 'high'].map((x) => seg('music', x, x === 'med' ? 'Medium' : x[0].toUpperCase() + x.slice(1))).join('')}</div>
         <div class="setrow"><span>Tips<small>Short explanations the first time something new happens in a duel</small></span>${seg('tips', 'on', 'On')}${seg('tips', 'off', 'Off')}<button type="button" class="btn-d" data-do="tipsreset" style="height:44px;padding:0 14px;font-size:14px">Show again</button></div>
         <div class="setrow"><span>Sound effects</span>${['off', 'low', 'med', 'high'].map((x) => seg('sfx', x, x === 'med' ? 'Medium' : x[0].toUpperCase() + x.slice(1))).join('')}</div>
         <div class="setrow"><span>Sound check<small>Hiccups in the music on this device since the app opened. None is the goal</small></span><span id="soundOut" style="flex:0 0 auto;font-size:15px;color:var(--faint)">${esc(soundCheckText())}</span>
@@ -6141,6 +6157,7 @@ html, body { touch-action: manipulation; }
         const [k, val] = v.split(':');
         if (k === 'speed') { ui.speed = val; store.set('rstcg-speed', val); } else { settings[k] = val; store.set('rstcg-settings', settings); }
         if (k === 'music' || k === 'sfx') AU.volumes({ music: VOL.music[settings.music], sfx: VOL.sfx[settings.sfx] });
+        if (k === 'cardtext') applyCardText();
         break;
       }
       case 'reset':
