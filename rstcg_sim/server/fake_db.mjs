@@ -6,12 +6,13 @@
 //   RPC.duel_create({ p_host, ... }) ...         the functions, called with the arguments PostgREST passes
 //   onChange(row)                                after a matches row changes (the browser tests' Realtime)
 //   db.progress                                  the cloud save: user id -> { user_id, data, rev, created_at, updated_at }
+//   db.bank / db.bankLog                         the bank (migration *_bank.sql): user id -> row; user id -> Map(ref -> line)
 //   progress.load(who, since) / .save(who, data, rev)    what a player may do with it, as the policies and
 //                                                progress_save() decide. who: { id, guest } from their token
 //
 // Used by server/test_local.mjs and server/fake_supabase.mjs. A database error is thrown as { status, text }.
 export function makeDb({ now = () => Date.now(), uuid = () => crypto.randomUUID(), onChange = () => {} } = {}) {
-  const db = { profiles: new Map(), matches: new Map(), secrets: new Map(), moves: new Map(), progress: new Map() };
+  const db = { profiles: new Map(), matches: new Map(), secrets: new Map(), moves: new Map(), progress: new Map(), bank: new Map(), bankLog: new Map() };
   const J = JSON.stringify;
   const iso = () => new Date(now()).toISOString();
   const touch = (m) => { m.updated_at = iso(); onChange(m); };
@@ -71,6 +72,7 @@ export function makeDb({ now = () => Date.now(), uuid = () => crypto.randomUUID(
       Object.assign(m, { seq: p_seq + 1, pending: p_pending, deadline: p_deadline, strikes: p_strikes, result: p_result,
         status: p_result ? 'done' : 'playing', ended_at: p_result ? iso() : null });
       db.moves.get(p_match).push({ seq: p_seq, move: JSON.parse(J(p_move)) });
+      if (p_result) payDuel(p_match, m.seats, p_result);
       touch(m);
       return true;
     },
@@ -91,6 +93,52 @@ export function makeDb({ now = () => Date.now(), uuid = () => crypto.randomUUID(
       return true;
     },
   };
+  // ---------- the bank (migration *_bank.sql) ----------
+  const bankRow = (v) => JSON.parse(J({ gp: v.gp, coll: v.coll, packs: v.packs, free: v.free_pack, rev: v.rev, at: v.updated_at }));
+  const addCards = (a, b) => {
+    const out = { ...(a || {}) };
+    for (const [k, n] of Object.entries(b || {})) out[k] = (out[k] || 0) + n;
+    for (const k of Object.keys(out)) if (!(out[k] > 0)) delete out[k];
+    return out;
+  };
+  const logOf = (u) => { if (!db.bankLog.has(u)) db.bankLog.set(u, new Map()); return db.bankLog.get(u); };
+  Object.assign(RPC, {
+    bank_get({ p_user }) { const v = db.bank.get(p_user); return v ? bankRow(v) : null; },
+    bank_progress({ p_user }) { const r = db.progress.get(p_user); return r ? JSON.parse(J(r.data)) : null; },
+    bank_open({ p_user, p_gp, p_coll, p_packs, p_free, p_how }) {
+      if (!db.bank.has(p_user)) {
+        db.bank.set(p_user, { user_id: p_user, gp: p_gp, coll: JSON.parse(J(p_coll)), packs: p_packs, free_pack: !!p_free, rev: 1, created_at: iso(), updated_at: iso() });
+        logOf(p_user).set('open', { kind: p_how, gp: p_gp, cards: null, at: now() });
+      }
+      return bankRow(db.bank.get(p_user));
+    },
+    bank_apply({ p_user, p_ref, p_kind, p_gp, p_cards, p_packs, p_free }) {
+      const v = db.bank.get(p_user);
+      if (!v) return { ok: false, why: 'nobank' };
+      const log = logOf(p_user), l = log.get(p_ref);
+      if (l) return { ok: true, again: true, bank: bankRow(v), cards: l.cards };
+      if (v.gp + p_gp < 0) return { ok: false, why: 'short', bank: bankRow(v) };
+      if (p_free && v.free_pack) return { ok: false, why: 'free', bank: bankRow(v) };
+      if (p_kind === 'bot' && [...log.values()].filter((x) => x.kind === 'bot' && x.at > now() - DAY).length >= 200) return { ok: false, why: 'cap', bank: bankRow(v) };
+      Object.assign(v, { gp: v.gp + p_gp, coll: addCards(v.coll, p_cards), packs: v.packs + p_packs, free_pack: v.free_pack || !!p_free, rev: v.rev + 1, updated_at: iso() });
+      log.set(p_ref, { kind: p_kind, gp: p_gp, cards: p_cards ? JSON.parse(J(p_cards)) : null, at: now() });
+      return { ok: true, bank: bankRow(v), cards: p_cards ? JSON.parse(J(p_cards)) : null };
+    },
+    bank_set({ p_user, p_ref, p_kind, p_gp, p_coll, p_packs, p_free }) {
+      const v = db.bank.get(p_user);
+      const row = { user_id: p_user, gp: p_gp, coll: JSON.parse(J(p_coll)), packs: p_packs, free_pack: !!p_free, rev: v ? v.rev + 1 : 1, created_at: v ? v.created_at : iso(), updated_at: iso() };
+      db.bank.set(p_user, row);
+      if (!logOf(p_user).has(p_ref)) logOf(p_user).set(p_ref, { kind: p_kind, gp: p_gp, cards: null, at: now() });
+      return bankRow(row);
+    },
+  });
+  function payDuel(match, seats, result) {                 // public.bank_pay_duel
+    const w = result.winner, quit = result.reason === 'concede' || result.reason === 'time';
+    for (let i = 0; i < 2; i++) {
+      const pay = w == null ? 50 : w === i ? 100 : quit ? 0 : 50;
+      if (pay > 0 && seats && seats[i]) RPC.bank_apply({ p_user: seats[i], p_ref: `online:${match}`, p_kind: 'online', p_gp: pay, p_cards: null, p_packs: 0, p_free: false });
+    }
+  }
   // ---------- the cloud save (migrations *_accounts_progress*.sql) ----------
   // jsonb hands a document's keys back shortest first, then in byte order: so does this, to keep the page honest
   const jsonb = (x) => (Array.isArray(x) ? x.map(jsonb) : x && typeof x === 'object'

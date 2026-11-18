@@ -9,7 +9,8 @@
 //
 // Card rarities (for the one-Legendary rule) come from web/arena_assets.js, which is generated on Ramon's
 // PC and isn't in the repo; server/rarity.json keeps the rarities that aren't Common, and is refreshed
-// here whenever arena_assets.js is present.
+// here whenever arena_assets.js is present. server/set1.json (every card in Set 1, refreshed the same way)
+// and the starter decks go with web/packs.js to the bank: what a pack can hold, and where a collection starts.
 //
 // --min shrinks the generated code with terser (npm i terser), for deploying through the Supabase connector.
 const fs = require('fs');
@@ -40,6 +41,7 @@ async function shrink(code) {
   const cards = JSON.parse(cardsText);
 
   const rarityFile = path.join(__dirname, 'rarity.json');
+  const set1File = path.join(__dirname, 'set1.json');
   const assets = path.join(WEB, 'arena_assets.js');
   if (fs.existsSync(assets)) {
     const a = fs.readFileSync(assets, 'utf8');
@@ -51,9 +53,16 @@ async function shrink(code) {
       fs.writeFileSync(rarityFile, text);
       console.log('server/rarity.json updated from web/arena_assets.js');
     }
+    const names = JSON.stringify(Object.keys(set1).sort(), null, 1) + '\n';
+    if (!fs.existsSync(set1File) || fs.readFileSync(set1File, 'utf8') !== names) {
+      fs.writeFileSync(set1File, names);
+      console.log('server/set1.json updated from web/arena_assets.js');
+    }
   }
   const rare = JSON.parse(fs.readFileSync(rarityFile, 'utf8'));
   const set1 = Object.fromEntries(Object.entries(rare).map(([n, r]) => [n, { rarity: r }]));
+  const packSet = Object.fromEntries(JSON.parse(fs.readFileSync(set1File, 'utf8')).map((n) => [n, { rarity: rare[n] || 'C' }]));
+  const starters = cards.decks.filter((d) => d.group === 'Starter decks');
 
   // The fingerprint: the card data, the rarities and one fixed duel played through the referee. The function
   // works it out again from its own copy (index.js, op hello -> intact).
@@ -73,6 +82,8 @@ async function shrink(code) {
     'cards.js': `${head('web/cards.json')}export default ${JSON.stringify(serverData)};\n`,
     'rarity.js': `${head('server/rarity.json')}export default ${JSON.stringify(set1)};\n`,
     'deckrules.js': await shrink(wrap(read('deckrules.js'), 'web/deckrules.js')),
+    'packs.js': await shrink(wrap(read('packs.js'), 'web/packs.js')),
+    'packdata.js': `${head('server/set1.json, server/rarity.json and the starter decks in web/cards.json')}export default ${JSON.stringify({ set1: packSet, decks: starters })};\n`,
     'referee.js': await shrink(wrap(read('referee.js'), 'web/referee.js')),
     'version.js': `${head('web/engine.js + web/cards.json')}export const VERSION = '${version}';\n` +
       `export const FINGERPRINT = '${fingerprint}';\nexport const FIXTURE = ${JSON.stringify(fixture)};\n`,

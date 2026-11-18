@@ -13,6 +13,7 @@
     "server:test": "node server/test_local.mjs"
   },
   "devDependencies": {
-    "playwright": "1.63.0"
+    "playwright": "1.63.0",
+    "@electric-sql/pglite": "^0.5.16"
   }
 }

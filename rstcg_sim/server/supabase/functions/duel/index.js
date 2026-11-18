@@ -16,16 +16,33 @@
 //                                    after a duel: offer a rematch (a room the other player can take), or take
 //                                    up theirs (the new duel starts). { match, off: true } withdraws your offer.
 //
+// The bank (phase 3b, ONLINE_BRIEF.md): every player's GP, cards and packs live on the server. Each answers
+// { bank: { gp, coll, packs, free, rev, at } } and more:
+//   bank { snapshot? }            -> { bank, opened?, doubt? }      opens it the first time: the account's cloud save,
+//                                    else this device's progress (snapshot) if honest play could have made it,
+//                                    else the starter decks (doubt: why the device's progress wasn't taken)
+//   earn { claims: [{ ref: 'bot:<seed>', result: 'win' | 'loss' | 'draw' }] }  -> { bank, done: [ref], refused: [{ ref, why }] }
+//                                    bot duels, as the device reports them (believed: Ramon's call), each once
+//   pack { ref: 'pack:<nonce>' } or { free: true }   -> { bank, cards: [{ name, rar }] }   200 GP (the tutorial's: free,
+//                                    once); the server picks the cards. The same ref again gives the same pack.
+//   replace { snapshot }          -> { bank }           "keep this device's progress": the same check as opening
+//   reset                         -> { bank }           back to the starter decks and 0 GP
+// Online duels are paid by the database as the result is recorded (duel_append), and a deck taken online must
+// be one you own (challenge, join, rematch).
+//
 // A decision whose time has run out is settled on the next request from either player.
 import S from './gen/engine.js';
 import DATA from './gen/cards.js';
 import RARITY from './gen/rarity.js';
 import DR from './gen/deckrules.js';
+import PK from './gen/packs.js';
+import PD from './gen/packdata.js';
 import REF from './gen/referee.js';
 import { VERSION, FINGERPRINT, FIXTURE } from './gen/version.js';
 
 S.setData(DATA);
 const F = REF.make(S, DR.make(S.CARDS, RARITY));
+const P = PK.make(S.CARDS, PD.set1, PD.decks);
 
 const BASE = Deno.env.get('SUPABASE_URL');
 const SECRET = (() => { try { return JSON.parse(Deno.env.get('SUPABASE_SECRET_KEYS') || '{}').default || null; } catch { return null; } })();
@@ -153,6 +170,38 @@ async function startDuel(uid, room, entry) {
 }
 const fresh = (room) => Date.now() - Date.parse(room.created_at) <= ROOM_HOURS * 3600e3;
 
+// ---------- the bank ----------
+const rnd = () => crypto.getRandomValues(new Uint32Array(1))[0] / 2 ** 32;
+const MAX_CLAIMS = 50;
+async function openBank(uid, snapshot) {
+  const had = await rpc('bank_get', { p_user: uid });
+  if (had) return { bank: had };
+  const saved = await rpc('bank_progress', { p_user: uid });     // an account's cloud save is believed as it is
+  const from = saved || (snapshot && typeof snapshot === 'object' ? snapshot : null);
+  const c = from ? P.plausible(from) : null;
+  let how, doubt;
+  if (saved) how = 'progress';
+  else if (c && c.ok) how = 'device';
+  else { how = 'starter'; if (c) doubt = c.why; }
+  const v = how === 'starter' ? { gp: 0, coll: P.starter().coll, packs: 0 } : c;
+  const bank = await rpc('bank_open', { p_user: uid, p_gp: v.gp, p_coll: v.coll, p_packs: v.packs,
+    p_free: how !== 'starter' && !!from.tutorialPack, p_how: how });
+  return doubt ? { bank, opened: how, doubt } : { bank, opened: how };
+}
+async function bankOrOops(uid) {
+  const b = await rpc('bank_get', { p_user: uid });
+  if (!b) throw new Oops('nobank', 'Your progress isn\'t on the server yet. Go back to the menu and try again.', 409);
+  return b;
+}
+// a deck taken online must be one you own
+async function owns(uid, cards) {
+  const b = await bankOrOops(uid);
+  const short = Object.entries(cards).filter(([n, k]) => !P.isBasic(n) && k > (b.coll[n] || 0)).map(([n]) => n);
+  if (short.length) throw new Oops('deck', `You don't own enough copies of ${short.join(', ')}.`);
+}
+const packList = (cards) => Object.entries(cards || {}).flatMap(([name, k]) => Array(k).fill(name))
+  .map((name) => ({ name, rar: P.rarityOf(name) })).sort((a, b) => 'CURL'.indexOf(a.rar) - 'CURL'.indexOf(b.rar));
+
 // ---------- the requests ----------
 const OPS = {
   async hello(uid) {
@@ -162,6 +211,7 @@ const OPS = {
   async challenge(uid, b) {
     checkVersion(b);
     const entry = entryOf(b);
+    await owns(uid, entry.cards);
     if (!(await profile(uid))) throw new Oops('noname', 'Pick a name first.');
     return openRoom(uid, entry);
   },
@@ -178,6 +228,7 @@ const OPS = {
     if (!room || !fresh(room)) throw new Oops('nocode', 'No duel is waiting with that code.', 404);
     if (room.host === uid) throw new Oops('own', "That's your own challenge.");
     if (room.version !== VERSION) throw new Oops('nocode', 'That challenge was made on an older version of the game.', 404);
+    await owns(uid, entry.cards);
     return { match: await startDuel(uid, room, entry) };
   },
   async cancel(uid, b) {
@@ -211,6 +262,7 @@ const OPS = {
     checkVersion(b);
     if (old.version !== VERSION) throw new Oops('update', 'That duel was played on an older version of the game.', 409);
     const entry = entryOf(b);
+    await owns(uid, entry.cards);
     if (!(await profile(uid))) throw new Oops('noname', 'Pick a name first.');
     for (let tries = 0; tries < 4; tries++) {
       const m = (await load(uid, old.id)).match;
@@ -227,6 +279,45 @@ const OPS = {
       await rpc('duel_cancel', { p_match: mine.match, p_host: uid });     // their offer got in first: take that one instead
     }
     throw new Oops('busy', 'Please try again.', 503);
+  },
+  async bank(uid, b) {
+    return openBank(uid, b.snapshot);
+  },
+  async earn(uid, b) {
+    const claims = Array.isArray(b.claims) ? b.claims.slice(0, MAX_CLAIMS) : [];
+    let bank = await bankOrOops(uid);
+    const done = [], refused = [];
+    for (const c of claims) {
+      const ref = c && typeof c.ref === 'string' ? c.ref : '', pay = c && { win: 100, loss: 50, draw: 50 }[c.result];
+      if (!/^bot:[\w-]{1,40}$/.test(ref) || !pay) { refused.push({ ref, why: 'bad' }); continue; }
+      const r = await rpc('bank_apply', { p_user: uid, p_ref: ref, p_kind: 'bot', p_gp: pay, p_cards: null, p_packs: 0, p_free: false });
+      if (r.bank) bank = r.bank;
+      if (r.ok) done.push(ref); else refused.push({ ref, why: r.why });
+    }
+    return { bank, done, refused };
+  },
+  async pack(uid, b) {
+    await bankOrOops(uid);
+    const free = b.free === true, ref = free ? 'free' : String(b.ref || '');
+    if (!free && !/^pack:[\w-]{8,40}$/.test(ref)) throw new Oops('bad', 'Unknown request.');
+    const cards = {};
+    for (const c of P.roll(rnd)) cards[c.name] = (cards[c.name] || 0) + 1;
+    const r = await rpc('bank_apply', { p_user: uid, p_ref: ref, p_kind: free ? 'free' : 'pack', p_gp: free ? 0 : -PK.PACK_COST, p_cards: cards, p_packs: 1, p_free: free });
+    if (!r.ok) {
+      if (r.why === 'short') throw new Oops('short', `A pack costs ${PK.PACK_COST} GP.`, 409);
+      if (r.why === 'free') throw new Oops('free', 'Your free pack has already been opened.', 409);
+      throw new Oops(r.why || 'bank', 'Please try again.', 409);
+    }
+    return { bank: r.bank, cards: packList(r.cards) };
+  },
+  async replace(uid, b) {
+    const c = P.plausible(b.snapshot);
+    if (!c.ok) throw new Oops('doubt', 'That progress doesn\'t add up, so it can\'t replace the account\'s.', 409);
+    const free = !!(b.snapshot && b.snapshot.tutorialPack);
+    return { bank: await rpc('bank_set', { p_user: uid, p_ref: `replace:${Date.now()}`, p_kind: 'replace', p_gp: c.gp, p_coll: c.coll, p_packs: c.packs, p_free: free }) };
+  },
+  async reset(uid) {
+    return { bank: await rpc('bank_set', { p_user: uid, p_ref: `reset:${Date.now()}`, p_kind: 'reset', p_gp: 0, p_coll: P.starter().coll, p_packs: 0, p_free: false }) };
   },
 };
 

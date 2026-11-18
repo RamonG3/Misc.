@@ -4,7 +4,9 @@
 // 1. the generated engine + referee give exactly the same views as web/referee.js on the source engine;
 // 2. index.js, with Deno's few calls stood in for and the database calls answered from memory (mirroring
 //    server/supabase/migrations/*.sql, see fake_db.mjs), plays whole duels between two "devices" that know only what the
-//    server sends them: challenge, peek, join, view, move, timeouts on a moved clock, concede, refusals, and rematches.
+//    server sends them: challenge, peek, join, view, move, timeouts on a moved clock, concede, refusals, and rematches;
+// 3. the bank: opening it (from a cloud save, an honest device, a dishonest one), bot duels reported, packs, the
+//    free pack, replacing and resetting, decks you don't own refused online, and online duels paid.
 // Ends "all passed".
 import { createRequire } from 'module';
 import { execFileSync } from 'child_process';
@@ -34,6 +36,8 @@ const G = {
   RAR: (await import(path.join(HERE, 'supabase/functions/duel/gen/rarity.js'))).default,
   DR: (await import(path.join(HERE, 'supabase/functions/duel/gen/deckrules.js'))).default,
   REF: (await import(path.join(HERE, 'supabase/functions/duel/gen/referee.js'))).default,
+  PK: (await import(path.join(HERE, 'supabase/functions/duel/gen/packs.js'))).default,
+  PD: (await import(path.join(HERE, 'supabase/functions/duel/gen/packdata.js'))).default,
 };
 G.S.setData(G.DATA);
 const GF = G.REF.make(G.S, G.DR.make(G.S.CARDS, G.RAR));
@@ -119,6 +123,10 @@ async function expectError(uid, body, code, msg, token) {
 const ann = uuid(), bo = uuid(), cy = uuid();
 db.profiles.set(ann, { id: ann, name: 'Ann' });
 db.profiles.set(bo, { id: bo, name: 'Bo' });
+// The duel tests bring tournament decks: these players own four of everything (as if they'd opened a lot of packs)
+const PK = G.PK.make(G.S.CARDS, G.PD.set1, G.PD.decks);
+const everything = Object.fromEntries(PK.POOL.filter((n) => !PK.isBasic(n)).map((n) => [n, 4]));
+for (const u of [ann, bo, cy]) RPC.bank_set({ p_user: u, p_ref: 'test', p_kind: 'test', p_gp: 0, p_coll: everything, p_packs: 0, p_free: false });
 const deckA = POOL[0], deckB = POOL[1];
 const entryA = { deck: deckA.cards, cape: deckA.capes[0], version: VERSION };
 const entryB = { deck: deckB.cards, cape: deckB.capes[0], version: VERSION };
@@ -136,7 +144,9 @@ const rng = new S.RNG(4242);
 const pick = (xs) => xs[Math.floor(rng.random() * xs.length)];
 let roomsChecked = false;
 const tally = { duels: 0, moves: 0, ends: {}, refused: 0, timeouts: 0, catchups: 0 };
+const paidSeen = {};
 for (let n = 0; n < DUELS; n++) {
+  const gp0 = { [ann]: db.bank.get(ann).gp, [bo]: db.bank.get(bo).gp };
   const ch = await call(ann, { ...entryA, op: 'challenge' });
   ok(ch.status === 200 && /^[A-HJKMNP-Z2-9]{5}$/.test(ch.body.code), `challenge: ${J(ch.body)}`);
   const { match, code } = ch.body;
@@ -220,6 +230,13 @@ for (let n = 0; n < DUELS; n++) {
   const end = dev[ann].v.result;
   ok(!!end, `duel ${n} never ended`);
   if (end) tally.ends[end.reason] = (tally.ends[end.reason] || 0) + 1;
+  if (end) {                         // the bank paid both players as the result was recorded: 100 / 50, nothing for walking away
+    for (const u of [ann, bo]) {
+      const seat = dev[u].v.you, want = end.winner == null ? 50 : end.winner === seat ? 100 : ['concede', 'time'].includes(end.reason) ? 0 : 50;
+      ok(db.bank.get(u).gp - gp0[u] === want, `duel ${n} (${J(end)}): seat ${seat} paid ${db.bank.get(u).gp - gp0[u]}, wanted ${want}`);
+      paidSeen[want] = (paidSeen[want] || 0) + 1;
+    }
+  }
   if (walkAway && end && end.reason === 'time') ok(end.winner !== dev[walkAway].v.you, 'the player who walked away won on time');
   await expectError(ann, { op: 'move', match, seq: dev[ann].v.seq, move: { t: 'concede' } }, 'over', 'a move after the end');
   // the server's copy replays to the same result
@@ -290,6 +307,64 @@ const offer = (uid, match, extra = {}) => call(uid, { ...(uid === ann ? entryA :
 
 console.error = errorLog;
 console.log(`rematches: offered, taken up, withdrawn, replaced, raced`);
+
+// ---------- 3. the bank ----------
+{
+  const gpOf = (u) => db.bank.get(u).gp;
+  // a deck you don't own is refused online; no bank, no challenge
+  const dee = uuid(), eve = uuid(), fay = uuid(), gus = uuid();
+  for (const [u, n] of [[dee, 'Dee'], [eve, 'Eve'], [fay, 'Fay'], [gus, 'Gus']]) db.profiles.set(u, { id: u, name: n });
+  await expectError(dee, { ...entryA, op: 'challenge' }, 'nobank', 'a challenge before the bank is open');
+  await expectError(dee, { op: 'earn', claims: [{ ref: 'bot:1', result: 'win' }] }, 'nobank', 'earning before the bank is open');
+  // opening: an honest device's progress is taken
+  const st = PK.starter();
+  const honest = { gp: 150, coll: { ...st.coll, Excalibur: (st.coll.Excalibur || 0) + 1, Lobster: (st.coll.Lobster || 0) + 2 }, packs: 1, wins: 4, losses: 2, tutorialPack: true };
+  let r = await call(dee, { op: 'bank', snapshot: honest });
+  ok(r.status === 200 && r.body.opened === 'device' && r.body.bank.gp === 150 && r.body.bank.packs === 1 && r.body.bank.free === true, `open from the device: ${J(r.body).slice(0, 200)}`);
+  r = await call(dee, { op: 'bank', snapshot: { ...honest, gp: 9000 } });
+  ok(r.body.bank.gp === 150 && !r.body.opened, 'the bank opens once: later snapshots change nothing');
+  // ...a dishonest one isn't: the starter decks instead
+  r = await call(eve, { op: 'bank', snapshot: { gp: 99999, coll: everything, packs: 0 } });
+  ok(r.body.opened === 'starter' && r.body.doubt && r.body.bank.gp === 0 && J(r.body.bank.coll) === J(st.coll), `a doubtful device: ${J(r.body).slice(0, 200)}`);
+  // ...and an account's cloud save is taken as it is
+  db.progress.set(fay, { user_id: fay, data: { gp: 70, coll: { Excalibur: 3 }, packs: 2, tutorialPack: false }, rev: 3, created_at: '', updated_at: '' });
+  r = await call(fay, { op: 'bank', snapshot: { gp: 5 } });
+  ok(r.body.opened === 'progress' && r.body.bank.gp === 70 && r.body.bank.coll.Excalibur === 3 && r.body.bank.free === false, `open from the cloud save: ${J(r.body)}`);
+  // bot duels, as the device reports them
+  r = await call(dee, { op: 'earn', claims: [{ ref: 'bot:11', result: 'win' }, { ref: 'bot:12', result: 'loss' }, { ref: 'bot:13', result: 'draw' }, { ref: 'bot:11', result: 'win' }, { ref: 'cheat', result: 'win' }, { ref: 'bot:14', result: 'lots' }] });
+  ok(r.body.bank.gp === 150 + 200 && J(r.body.done) === J(['bot:11', 'bot:12', 'bot:13', 'bot:11']) && r.body.refused.length === 2, `earn: ${J(r.body).slice(-200)}`);
+  // packs
+  await expectError(eve, { op: 'pack', ref: 'pack:abcdefgh' }, 'short', 'a pack without the GP');
+  await expectError(dee, { op: 'pack', ref: 'x' }, 'bad', 'a pack with a bad ref');
+  const before = J(db.bank.get(dee).coll);
+  r = await call(dee, { op: 'pack', ref: 'pack:abcdefgh' });
+  const cards = r.body.cards;
+  ok(r.status === 200 && cards.length === 6 && new Set(cards.map((c) => c.name)).size === 6 && J(cards.map((c) => c.rar)).replace(/"L"/, '"R"') === J(['C', 'C', 'C', 'U', 'U', 'R']), `a pack: ${J(r.body.cards)}`);
+  ok(cards.every((c) => PK.BY_RARITY[c.rar].includes(c.name)) && r.body.bank.gp === 150 && r.body.bank.packs === 2, 'a pack holds real cards of its rarity, costs 200 and counts');
+  ok(cards.every((c) => r.body.bank.coll[c.name] === (JSON.parse(before)[c.name] || 0) + 1), 'the pack is in the collection');
+  const again = await call(dee, { op: 'pack', ref: 'pack:abcdefgh' });
+  ok(J(again.body.cards) === J(cards) && again.body.bank.gp === 150, 'the same pack sent twice: the same cards, paid once');
+  await expectError(dee, { op: 'pack', free: true }, 'free', 'a second free pack (this device had used it)');
+  r = await call(eve, { op: 'pack', free: true });
+  ok(r.status === 200 && r.body.cards.length === 6 && r.body.bank.gp === 0 && r.body.bank.free, 'the free pack');
+  const free2 = await call(eve, { op: 'pack', free: true });
+  ok(J(free2.body.cards) === J(r.body.cards) && J(free2.body.bank) === J(r.body.bank), 'the free pack asked for again (a lost answer): the same pack, nothing more');
+  // replacing ("keep this device's progress") and resetting
+  await expectError(fay, { op: 'replace', snapshot: { gp: 99999, coll: everything } }, 'doubt', 'replacing with progress that does not add up');
+  r = await call(fay, { op: 'replace', snapshot: honest });
+  ok(r.body.bank.gp === 150 && r.body.bank.packs === 1 && r.body.bank.free === true, `replace: ${J(r.body)}`);
+  r = await call(fay, { op: 'reset' });
+  ok(r.body.bank.gp === 0 && r.body.bank.packs === 0 && J(r.body.bank.coll) === J(st.coll) && r.body.bank.free === false, 'reset');
+  // owning the deck: the starter collection holds the starter decks, but not a tournament deck
+  const starterDeck = G.PD.decks[0];
+  r = await call(fay, { op: 'challenge', deck: starterDeck.cards, cape: starterDeck.capes[0], version: VERSION });
+  ok(r.status === 200 && r.body.code, `a starter deck from a starter collection: ${J(r.body)}`);
+  const notMine = POOL.find((d) => Object.entries(d.cards).some(([n, k]) => !PK.isBasic(n) && k > (st.coll[n] || 0)));
+  await expectError(fay, { op: 'challenge', deck: notMine.cards, cape: notMine.capes[0], version: VERSION }, 'deck', "a deck you don't own");
+  void gus;
+  ok(paidSeen[0] && paidSeen[50] && paidSeen[100], `online pay: not every amount came up ${J(paidSeen)}`);
+  console.log('bank: opening (cloud save, honest device, doubtful device), bot duels, packs, the free pack, replace, reset, decks owned, online pay');
+}
 console.log(`function: ${tally.duels} duels, ${tally.moves} moves, ${tally.refused} bad moves tried, ${tally.timeouts} clock jumps, ${tally.catchups} catch-ups, ends ${J(tally.ends)}, ${dbCalls} database calls`);
 console.log(failures ? `${failures} FAILED` : 'all passed');
 process.exit(failures ? 1 : 0);
