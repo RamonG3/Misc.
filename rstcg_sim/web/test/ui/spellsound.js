@@ -117,10 +117,11 @@ const ok = (c, m) => { checks += 1; if (!c) { failures += 1; console.log('FAIL '
   const bad = names.filter((n) => !(played[n] > 0.15 && played[n] < 8));
   ok(!bad.length, `these sounds didn't decode, or are an odd length: ${bad.map((n) => `${n} (${played[n]})`).join(', ')}`);
   if (names.length) console.log('lengths, seconds: ' + names.map((n) => `${n} ${played[n]}`).join(', '));
-  // none of them far too quiet or too loud next to the rest of the game (measured through the mixer, unheard)
+  // none of them far too quiet or too loud next to the rest of the game (measured through the mixer, unheard;
+  // the spells were made louder on 2026-11-18, so the ceiling went up from -16 dB to -12)
   if (names.length) {
     const lv = await page.evaluate(async () => { const A = window.RSAudio, o = {}; for (const n of A.clips) o[n] = await A.measure(() => A.clip(n)); o.magic = await A.measure(() => A.sfx('magic')); o.hit = await A.measure(() => A.sfx('hit', { style: 'magic' })); return o; });
-    const off = names.filter((n) => !(lv[n].rms > -40 && lv[n].rms < -16 && lv[n].peak < -3));
+    const off = names.filter((n) => !(lv[n].rms > -40 && lv[n].rms < -12 && lv[n].peak < -1));
     ok(!off.length, `these sounds are far too quiet or too loud: ${off.map((n) => `${n} (${lv[n].rms} dB, peak ${lv[n].peak})`).join(', ')}`);
     const mean = names.reduce((s, n) => s + lv[n].rms, 0) / names.length;
     console.log(`loudness through the mixer: the recordings average ${mean.toFixed(1)} dB (from ${Math.min(...names.map((n) => lv[n].rms))} to ${Math.max(...names.map((n) => lv[n].rms))}); the synthesized spell sound ${lv.magic.rms} dB, a hit ${lv.hit.rms} dB`);

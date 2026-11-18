@@ -738,11 +738,13 @@ html, body { touch-action: manipulation; }
 /* ---------- Story Mode ---------- */
 .stbg { position: absolute; inset: 0; overflow: hidden; }
 .stbg img { position: absolute; inset: -20px; width: calc(100% + 40px); height: calc(100% + 40px); object-fit: cover; animation: stDrift 60s ease-in-out infinite alternate; }
+.stbg.fadein { animation: stBgIn 1.8s ease-in-out both; }
+@keyframes stBgIn { from { opacity: 0; } to { opacity: 1; } }
 @keyframes stDrift { from { transform: scale(1.02) translateX(-10px); } to { transform: scale(1.07) translateX(10px); } }
 .sttop { position: absolute; left: 60px; top: 34px; right: 60px; display: flex; align-items: center; gap: 18px; }
 .stplace { margin-left: auto; font-size: 30px; color: var(--gold-hi); text-shadow: 0 2px 12px #000; }
 .stbox { position: absolute; left: 0; right: 0; margin: 0 auto; bottom: 34px; width: min(1500px, calc(100% - 80px)); min-height: 250px; display: flex; align-items: center; gap: 30px; padding: 24px 34px;
-  background: linear-gradient(180deg, rgba(36,28,20,.96), rgba(22,17,13,.97)); border: 2px solid var(--gold); border-radius: 14px; box-shadow: 0 0 0 4px rgba(0,0,0,.45), 0 20px 50px rgba(0,0,0,.7); cursor: pointer; animation: stIn .22s ease-out both; }
+  background: linear-gradient(180deg, rgba(36,28,20,.96), rgba(22,17,13,.97)); border: 2px solid var(--gold); border-radius: 14px; box-shadow: 0 0 0 4px rgba(0,0,0,.45), 0 20px 50px rgba(0,0,0,.7); cursor: pointer; animation: stIn .34s ease-out both; }
 @keyframes stIn { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
 .stbox.right { flex-direction: row-reverse; }
 .stbox.nar { justify-content: center; text-align: center; background: rgba(14,11,9,.88); border-color: rgba(201,165,75,.5); }
@@ -1420,7 +1422,8 @@ html, body { touch-action: manipulation; }
   const HOLD_YOU = { x: 430, y: 236, w: 225, h: 315 }, HOLD_BOT = { x: 848, y: 150, w: 225, h: 315 };
   const tempo = () => (calm() ? 0 : fast() ? 0.12 : 1);
   const SLOTS = ['weapon', 'shield', 'armor', 'ammo', 'prayer', 'quest'];
-  const RUNE_V = 0.8;                       // runecrafting sounds: a little under the spells', since runes come down often
+  const RUNE_V = 0.45;                      // runecrafting sounds: well under the spells', since runes come down often (the spells
+                                            // were made twice as loud on 2026-11-18; this keeps the runes about where they were)
   const STAYS = new Set(['weapon', 'thrown', 'bow', 'staff', 'shield', 'armor', 'arrows', 'buff', 'material', 'quest', 'location']);
   const STYLE_COL = { melee: '#ff9b85', ranged: '#9fd986', magic: '#9cc3e6', none: '#f3d27a' };
 
@@ -4444,13 +4447,29 @@ html, body { touch-action: manipulation; }
     'Varrock Palace library': { bd: 'Varrock', tint: 'rgba(40,26,12,.5)', dim: 0.5 },
     'The stone circle': { art: 'Demon Slayer', tint: 'rgba(20,16,10,.35)', dim: 0.6 },
   };
-  function sceneBG(sc) {
+  // The music for each screen: Story Mode has its own (light, or dark for the manor and the stone circle), and
+  // a boss gets its own fight.
+  const darkScene = (sc) => !!(sc && (sc.night || /Draynor Manor|stone circle/i.test(sc.scene || '')));
+  function musicFor(key) {
+    const storyTrack = () => (darkScene(ui.sc && ui.sc.scene) ? 'storydark' : 'story');
+    if (key === 'duel') { const st = ui.config && ui.config.story, o = st && STY.OPP[st.opp]; return o && o.boss ? 'boss' : 'duel'; }
+    if (key === 'result') return 'quiet';
+    if (key === 'scene' || (key === 'pick' && ui.pickMode === 'story')) return storyTrack();
+    if (key === 'story' || key === 'map') return 'story';
+    return 'menu';
+  }
+  // Backdrops drift slowly; the drift runs on one clock, so a redraw (every line of dialogue) doesn't restart it.
+  const DRIFT_T0 = Date.now();
+  const BG_FADE = 1800;                                     // a new place fades in over the old one (ms)
+  function sceneBG(sc, o = {}) {
     const look = SCENE_LOOK[sc && sc.scene] || {};
     const own = sc && (AS.scene || {})[sc.scene];          // the place's own painting (art/scenes), when it has one
     const src = own || (look.bd && AS.backdrop[look.bd]) || (look.art && ART[look.art] && ART[look.art].src) || AS.backdrop.Lumbridge || '';
-    const night = sc && (sc.night || ui.sc.night);
+    const night = o.night != null ? o.night : sc && (sc.night || ui.sc.night);
     const dim = night ? 0.32 : look.dim || 0.75;
-    return `<div class="stbg${night ? ' night' : ''}">${src ? `<img src="${src}" alt="" style="filter:brightness(${own ? Math.min(1, dim + 0.2) : dim})${look.art && !own ? ' blur(2px)' : ''}${night ? ' saturate(.5) hue-rotate(190deg)' : ''}">` : ''}
+    const drift = -(((Date.now() - DRIFT_T0) / 1000) % 120);
+    const fade = o.fadeIn != null ? ` fadein" style="animation-delay:${-o.fadeIn}ms` : '';
+    return `<div class="stbg${night ? ' night' : ''}${fade}">${src ? `<img src="${src}" alt="" style="animation-delay:${drift.toFixed(2)}s;filter:brightness(${own ? Math.min(1, dim + 0.2) : dim})${look.art && !own ? ' blur(2px)' : ''}${night ? ' saturate(.5) hue-rotate(190deg)' : ''}">` : ''}
       <div style="position:absolute;inset:0;background:${look.tint || 'transparent'}"></div>
       ${night ? '<div style="position:absolute;inset:0;background:radial-gradient(ellipse at 50% 20%,rgba(140,160,255,.18),rgba(6,8,20,.65) 70%)"></div>' : ''}
       <div style="position:absolute;inset:0;background:radial-gradient(ellipse at 50% 45%,rgba(0,0,0,0) 40%,rgba(0,0,0,.6) 100%)"></div></div>`;
@@ -4653,7 +4672,15 @@ html, body { touch-action: manipulation; }
     } else if (st.t !== undefined) box = lineBox(st, 'stnext');
     const flash = ui.sc.flash && Date.now() - ui.sc.flash < 2400 ? `<div class="stflash${calm() ? ' calm' : ''}"></div>` : '';
     const ch = STY.chapter(run.ch);
-    return `<div class="table"></div>${sceneBG(sc)}
+    // a change of place (or nightfall) fades the new backdrop in over the old one, instead of cutting
+    const bk = sc ? `${sc.scene}|${!!(sc.night || ui.sc.night)}` : '';
+    if (ui.sc.bgKey !== bk) {
+      if (ui.sc.bgKey && shownScreen === 'scene') { ui.sc.bgPrev = ui.sc.bgSc; ui.sc.bgAt = Date.now(); } else ui.sc.bgPrev = null;   // (a new screen fades in whole)
+      ui.sc.bgKey = bk; ui.sc.bgSc = sc && { scene: sc.scene, night: !!(sc.night || ui.sc.night) };
+    }
+    const since = ui.sc.bgPrev ? Date.now() - ui.sc.bgAt : Infinity;
+    const bgs = since < BG_FADE && !calm() ? sceneBG(ui.sc.bgPrev, { night: ui.sc.bgPrev.night }) + sceneBG(sc, { fadeIn: since }) : sceneBG(sc);
+    return `<div class="table"></div>${bgs}
       <div class="sttop"><button type="button" class="btn-d" data-do="stmap" style="width:52px;height:52px" aria-label="Back">${ICN.back}</button>
         <span class="lbl" style="font-size:15px">Chapter ${ch.n} · ${esc(ch.title)}${storySlot() === 'replay' ? ' · replay' : ''}</span>
         <span class="ttl stplace">${esc(sc ? sc.scene : '')}</span></div>
@@ -5787,9 +5814,12 @@ html, body { touch-action: manipulation; }
     const SCREENS = { story: storyHTML, scene: sceneHTML, map: mapHTML, menu: menuHTML, online: onlineHTML, account: accountHTML, pick: pickHTML, decks: decksHTML, editor: editorHTML, wizard: wizHTML, packs: packsHTML, open: () => openHTML() + packCoach('open'), summary: () => summaryHTML() + packCoach('summary') };
     const key = SCREENS[ui.screen] && (ui.screen !== 'editor' || ui.ed) && (ui.screen !== 'wizard' || ui.wiz) && (ui.screen !== 'open' || ui.pack) ? ui.screen : ui.screen === 'result' && ui.result ? 'result' : ui.g ? 'duel' : 'menu';
     const from = shownScreen;
-    const sweeping = from && from !== key && (from in SWEEP || from === 'result') && key in SWEEP && !calm();
+    // Story Mode's screens (and going into and out of its duels) dip through black, slowly, instead of sweeping
+    const storyish = (k) => STORY_FADE.has(k) || ((k === 'duel' || k === 'result' || k === 'pick') && ui.config && ui.config.story && !ui.config.online) || (k === 'pick' && ui.pickMode === 'story');
+    const fading = from && from !== key && (storyish(from) && storyish(key) || (from === 'menu' && key === 'story') || (from === 'story' && key === 'menu')) && !calm();
+    const sweeping = !fading && from && from !== key && (from in SWEEP || from === 'result') && key in SWEEP && !calm();
     let old = null;
-    if (sweeping) {                                    // the screen you're leaving moves to its own layer and slides off
+    if (sweeping || fading) {                          // the screen you're leaving moves to its own layer and slides off
       endSweep();
       old = document.createElement('div');
       old.id = 'trans';
@@ -5801,9 +5831,10 @@ html, body { touch-action: manipulation; }
     if (key === 'duel' && from === 'duel') morphInto(board, html); else board.innerHTML = html;
     shownScreen = key;
     if (key === 'menu' && from !== 'menu') TOUR.shown = 0;        // back on the menu: the place you left stays its full time
-    AU.want(key === 'duel' ? 'duel' : key === 'result' ? 'quiet' : 'menu');
+    AU.want(musicFor(key));
     if (key === 'duel' && ui.g && !anim.playing) duelIntense(ui.g.winner === null && Math.min(ui.g.players[0].lp, ui.g.players[1].lp) <= 10);
-    if (sweeping) runSweep(old, board, from === 'result' || (SWEEP[key] >= (SWEEP[from] || 0)) ? 1 : -1);
+    if (fading) runFade(old, board);
+    else if (sweeping) runSweep(old, board, from === 'result' || (SWEEP[key] >= (SWEEP[from] || 0)) ? 1 : -1);
     if (key === 'duel') tutHighlight();
     if (fid) { const el = document.getElementById(fid); if (el) { el.focus(); try { el.setSelectionRange(caret, caret); } catch (e) { /* not a text box */ } } }
     const ll = $('#logl');
@@ -5870,6 +5901,14 @@ html, body { touch-action: manipulation; }
     while (sweepAnims.length) { try { sweepAnims.pop().finish(); } catch (e) { /* already gone */ } }
     const t = document.getElementById('trans');
     if (t) t.remove();
+  }
+  const STORY_FADE = new Set(['story', 'map', 'scene']);
+  // Out to black (0.6 s), then the new screen comes up out of it (0.9 s)
+  function runFade(old, board) {
+    const OUT = 600, IN = 900;
+    sweepAnims.push(old.animate([{ opacity: 1, filter: 'brightness(1)' }, { opacity: 0, filter: 'brightness(.3)' }], { duration: OUT, easing: 'ease-in', fill: 'forwards' }));
+    sweepAnims.push(board.animate([{ opacity: 0, filter: 'brightness(.3)' }, { opacity: 1, filter: 'brightness(1)' }], { duration: IN, delay: OUT - 150, easing: 'ease-out', fill: 'backwards' }));
+    sweepAnims[0].finished.then(() => old.remove(), () => old.remove());
   }
   function runSweep(old, board, dir) {
     sfx('sweep', { dir });

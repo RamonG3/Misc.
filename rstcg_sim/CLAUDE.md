@@ -91,7 +91,7 @@ python simulate.py 300                    # Python simulator, starter decks
 - Menus are swapped in with `innerHTML`. A duel that is already showing is redrawn **in place** by `morphInto()`: kept elements get only their differences, matched by `id`, `data-at`, `data-bh` or `data-zoom` (then by position). Rebuilding the tilted table from scratch made phones blink. `window.__arena.morphCheck()` compares the result with a board drawn from scratch; `arena_play.js` and `touch.js` call it.
 - So an element a duel animation holds on to can survive the next render. That is fine as long as WAAPI animations on board elements don't use `fill: 'forwards'`.
 - Each screen is a function in the `SCREENS` map: `menuHTML`, `pickHTML`, `decksHTML`, `editorHTML`, `wizHTML`, `packsHTML`, `duelHTML`, and so on.
-- `SWEEP` sets how menu screens slide between each other.
+- `SWEEP` sets how menu screens slide between each other. Story Mode's screens (`STORY_FADE`, and its duels) dip through black instead (`runFade`), and a scene's change of place crossfades its backdrop (`BG_FADE`).
 
 **Input goes through attributes, never per-element listeners.**
 - Clicks: `data-do="action"` plus `data-v="value"` → `act(what, v)`, one big `switch`.
@@ -148,6 +148,9 @@ python simulate.py 300                    # Python simulator, starter decks
 - **The menu's tour:** `TOUR`, `tourStep()`. It changes the menu in place and never calls `render()`.
 - **Audio:** `arena_audio.js`. Everything is synthesised except the casting sound of each spell that has a recording and the runecrafting sound of the seven basic runes when played (`RSAudio.clip(name)`, from `window.ARENA_SOUNDS`). It has music layers, an "intense" layer that latches on once either deck is ≤10, and sfx by name: `sfx('tick')` etc.
   - Notes are scheduled 1 s ahead (`LOOKAHEAD`) so a busy page can't make the music drop notes, and touch screens ask for a bigger output buffer. `RSAudio.health()` (Settings → Sound check) reports glitches, dropped notes and the buffer. The busiest battle song costs about half a desktop core to synthesize, so keep new instruments cheap.
+  - Two reverbs, one behind each bus, so an echo follows its own volume (one shared reverb into the master once kept the music's echo playing with the music off). Music turned off plays nothing at all (`apply()`).
+  - Story Mode has its own tracks: `story` (Tales of Gielinor), `storydark` (Shadows over Draynor: the manor, the stone circle, night) and `boss` (The Ancient Dark, a combat song with an intense layer). `musicFor(key)` in the page picks the `AU.want` for each screen.
+  - Recorded clips: `CLIP_GAIN` 2.6 plus a 5 dB low shelf (`CLIP_BODY`), since 2026-11-18; runes play at `RUNE_V` 0.45 so they stay where they were.
   - **A silent layer costs as much as a loud one.** Web Audio synthesizes a note at 1/10,000 volume exactly as hard as at full. The intense layer's notes are only played while it is on or fading out (`intenseUntil`, `catchUp`); do the same for any new layer that waits in silence.
 
 ## Gotchas already paid for

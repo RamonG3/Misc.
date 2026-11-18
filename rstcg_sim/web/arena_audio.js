@@ -11,7 +11,7 @@
 //   RSAudio.clip(name, opts)    a recorded sound, by card name; false if there is none (make the usual sound instead)
 //   RSAudio.volumes({ music, sfx })   0..1 each
 window.RSAudio = (() => {
-  let ctx = null, master = null, musicBus = null, sfxBus = null, revIn = null, noiseBuf = null;
+  let ctx = null, master = null, musicBus = null, sfxBus = null, revIn = null, fxRevIn = null, noiseBuf = null;
   const vol = { music: 0.55, sfx: 0.8 };
   const A4 = 440;
 
@@ -33,14 +33,19 @@ window.RSAudio = (() => {
     m.connect(comp); comp.connect(c.destination);
     const mus = c.createGain(); mus.gain.value = vol.music; mus.connect(m);
     const fx = c.createGain(); fx.gain.value = vol.sfx; fx.connect(m);
+    // Two reverbs, one behind each bus, so each echo follows its own volume. (2026-11-18: there was one, straight
+    // into the master, so with the music turned off the melody's echo still played on.) The effects' is shorter.
     const rv = c.createConvolver(); rv.buffer = impulse(c, 2.8, 2.4);
     const rin = c.createGain(); const rout = c.createGain(); rout.gain.value = 0.5;
-    rin.connect(rv); rv.connect(rout); rout.connect(m);
+    rin.connect(rv); rv.connect(rout); rout.connect(mus);
+    const frv = c.createConvolver(); frv.buffer = impulse(c, 1.4, 2.6);
+    const frin = c.createGain(); const frout = c.createGain(); frout.gain.value = 0.5;
+    frin.connect(frv); frv.connect(frout); frout.connect(fx);
     const nb = c.createBuffer(1, c.sampleRate * 2, c.sampleRate), nd = nb.getChannelData(0);
     for (let i = 0; i < nd.length; i++) nd[i] = Math.random() * 2 - 1;
-    return { master: m, musicBus: mus, sfxBus: fx, revIn: rin, noiseBuf: nb };
+    return { master: m, musicBus: mus, sfxBus: fx, revIn: rin, fxRevIn: frin, noiseBuf: nb };
   }
-  function use(c, b) { ctx = c; master = b.master; musicBus = b.musicBus; sfxBus = b.sfxBus; revIn = b.revIn; noiseBuf = b.noiseBuf; }
+  function use(c, b) { ctx = c; master = b.master; musicBus = b.musicBus; sfxBus = b.sfxBus; revIn = b.revIn; fxRevIn = b.fxRevIn; noiseBuf = b.noiseBuf; }
   const hz = (midi) => A4 * Math.pow(2, (midi - 69) / 12);
   function osc(type, f, t) { const o = ctx.createOscillator(); o.type = type; o.frequency.setValueAtTime(f, t); return o; }
   function gainNode(v = 1) { const g = ctx.createGain(); g.gain.value = v; return g; }
@@ -50,7 +55,7 @@ window.RSAudio = (() => {
     let n = node;
     if (pan && ctx.createStereoPanner) { const p = ctx.createStereoPanner(); p.pan.value = pan; n.connect(p); n = p; }
     n.connect(dest);
-    if (rev) { const s = gainNode(rev); n.connect(s); s.connect(revIn); }
+    if (rev) { const s = gainNode(rev); n.connect(s); s.connect(dest === sfxBus ? fxRevIn : revIn); }
   }
   function env(g, t, a, peak, d, sus, endT, rel) {  // attack-decay-sustain-release on a gain
     g.gain.setValueAtTime(0.0001, t);
@@ -370,6 +375,48 @@ window.RSAudio = (() => {
     s.drums('intense', 16, 2, 6, { kick: 'x..x..', snare: '...x..|...x.x', tamb: 'xxxxxx' }, 0.65);
   } });
 
+  // --- Story Mode (2026-11-18): the dialogue, light and dark, and the bosses
+  // Tales of Gielinor (F major, 76): harp and flute for Lumbridge, the roads, Draynor Village, the library
+  SONGS.story = S({ name: 'Tales of Gielinor', kind: 'story', bpm: 76, beats: 4, bars: 16, loops: 99, write(s) {
+    const prog = ['F', 'C', 'Dm', 'Bb', 'F', 'C', 'Bb', 'C', 'Dm', 'Bb', 'F', 'C', 'Bb', 'F', 'Gm', 'C'];
+    s.mel('base', 'flute', `C5:2 A4:1 F4:1 | G4:2 E4:1 G4:1 | A4:1.5 Bb4:.5 C5:1 D5:1 | D5:3 r:1 |
+      F5:1.5 E5:.5 D5:1 C5:1 | E5:1 D5:1 C5:2 | D5:1 C5:1 Bb4:1 A4:1 | G4:3 r:1 |
+      A4:1 D5:1 F5:1.5 E5:.5 | D5:1 Bb4:1 F4:2 | A4:1 C5:1 F5:1.5 G5:.5 | E5:2 C5:2 |
+      D5:1.5 C5:.5 Bb4:1 D5:1 | C5:1 A4:1 F4:2 | G4:1 Bb4:1 D5:1 C5:1 | C5:3 r:1`, 0, 0.6);
+    s.arp('base', 'harp', prog, 4, 3, [0, 2, 4, 2, 1, 2, 4, 2], 0.5, 0.5, -0.25);
+    s.pad('base', 'strings', prog, 4, 3, 0.38, 0.2);
+    s.bass('base', 'bass', prog, 4, 2, [[0, 3.8, 0]], 0.45);
+  } });
+  // Shadows over Draynor (A minor, 60): bells, low strings and a far-off choir, for the manor, the cellar, the circle
+  SONGS.storydark = S({ name: 'Shadows over Draynor', kind: 'story', bpm: 60, beats: 4, bars: 16, loops: 99, write(s) {
+    const prog = ['Am', 'Am', 'F', 'E', 'Am', 'Dm', 'F', 'E', 'Dm', 'Am', 'Bb', 'E', 'Am', 'F', 'E', 'E'];
+    s.mel('base', 'bells', `E5:2 C5:2 | B4:2 A4:2 | C5:1 D5:1 E5:2 | G#4:4 | A4:2 C5:1 E5:1 | F5:2 E5:1 D5:1 | C5:2 A4:2 | B4:3 r:1 |
+      D5:2 F5:2 | E5:2 A4:2 | D5:2 F5:1 D5:1 | E5:4 | C5:2 B4:1 A4:1 | A4:2 F4:2 | G#4:2 B4:2 | E4:3 r:1`, 0, 0.8, 0, 0.2);
+    s.arp('base', 'harp', prog, 4, 2, [0, 2, 4, 2], 1, 0.6, -0.3);
+    s.pad('base', 'strings', prog, 4, 2, 0.65);
+    s.pad('base', 'choir', prog, 4, 4, 0.3);
+    s.bass('base', 'bass', prog, 4, 2, [[0, 3.8, 0]], 0.7);
+    s.timp('base', prog, 4, 2, [0], 0.45);
+  } });
+  // The Ancient Dark (C minor, 116): the boss fights. Low brass over a driving ostinato; the intense layer
+  // brings timpani, a choir and the snare in when either side is low.
+  SONGS.boss = S({ name: 'The Ancient Dark', kind: 'combat', bpm: 116, beats: 4, bars: 16, loops: 99, write(s) {
+    const prog = ['Cm', 'Cm', 'Ab', 'G', 'Cm', 'Cm', 'Fm', 'G', 'Ab', 'Eb', 'Fm', 'G', 'Cm', 'Ab', 'G', 'G'];
+    const mel = `C4:2 G4:1.5 Eb4:.5 | F4:1 Eb4:1 D4:2 | Eb4:1.5 F4:.5 G4:1 C5:1 | B4:3 r:1 | C5:1.5 Bb4:.5 Ab4:1 G4:1 | Eb4:1 F4:1 G4:2 |
+      Ab4:1 G4:1 F4:1 Ab4:1 | G4:3 r:1 | C5:1.5 D5:.5 Eb5:2 | D5:1 C5:1 Bb4:2 | C5:1.5 Bb4:.5 Ab4:2 | B4:1 C5:1 D5:1 B4:1 |
+      C5:1 G4:1 Eb4:2 | F4:1 Ab4:1 C5:2 | B4:2 D5:2 | G4:3 r:1`;
+    s.mel('base', 'brass', mel, 0, 0.72);
+    s.arp('base', 'stacc', prog, 4, 3, [0, 0, 1, 0, 2, 0, 1, 0], 0.5, 0.62, -0.2);
+    s.bass('base', 'bass', prog, 4, 2, [[0, 0.45, 0], [0.5, 0.45, 0], [1, 0.45, 2], [1.5, 0.45, 0], [2, 0.45, 0], [2.5, 0.45, 0], [3, 0.45, 1], [3.5, 0.45, 2]], 0.62);
+    s.drums('base', 16, 4, 8, { kick: 'x...x...|x...x.x.', tom: '......xx|......x.', hat: '..o...o.' }, 0.72);
+    s.pad('base', 'strings', prog, 4, 3, 0.36);
+    s.mel('intense', 'strings', mel, 0, 0.55, 1);
+    s.timp('intense', prog, 4, 2, [0, 2, 3.5], 0.85);
+    s.pad('intense', 'choir', prog, 4, 4, 0.45);
+    s.stab('intense', 'brass', prog, 4, 3, [0, 1.5, 3], 0.3, 0.5);
+    s.drums('intense', 16, 4, 16, { snare: '....x.......x..x|....x.......x.xx', hat: 'x.x.x.x.x.x.x.x.' }, 0.66);
+  } });
+
   // --- Stingers
   SONGS.victory = S({ name: 'Victory', kind: 'sting', bpm: 110, beats: 4, bars: 3, write(s) {
     s.mel('base', 'brass', 'C4:.5 E4:.5 G4:.5 C5:1.5 r:.5 | G4:.5 C5:.5 E5:3 r:1', 0, 0.9);
@@ -482,10 +529,18 @@ window.RSAudio = (() => {
       if (now > end - 3) { const old = current; current = player(SONGS[nextIdle()], now + 0.5, 3); fadeOut(old, 3); }
     }
   }
+  // Story Mode's own tracks: the dialogue (light, or dark for the manor and the circle) and the bosses' fight
+  const STORY_SONG = { story: 'story', storydark: 'storydark', boss: 'boss' };
   function apply() {                          // make what's playing match what's wanted
     if (!ctx) return;
     const now = ctx.currentTime;
-    if (wanted === 'quiet') { fadeOut(current, 1.5); current = null; return; }
+    // music turned off: nothing is played at all (silent notes cost as much to make as loud ones)
+    if (wanted === 'quiet' || vol.music <= 0) { fadeOut(current, 1.5); current = null; return; }
+    if (STORY_SONG[wanted]) {
+      const song = SONGS[STORY_SONG[wanted]];
+      if (!current || current.song !== song) { fadeOut(current, 2.5); current = player(song, now + 0.4, 3); }
+      return;
+    }
     if (wanted === 'menu' && (!current || current.song.kind !== 'idle')) { fadeOut(current, 1.5); current = player(SONGS[nextIdle()], now + 0.3, 2.5); }
     if (wanted === 'duel' && (!current || current.song.kind !== 'combat')) {
       fadeOut(current, 1.2);
@@ -595,7 +650,10 @@ window.RSAudio = (() => {
   // One volume for all of them: they keep the balance they were recorded with (a Strike is softer than a Wave).
   // Set by measuring (RSAudio.measure, 2026-11-16): at 1.3 the eighteen average -28 dB through the mixer, beside
   // -30 for the hit that follows a spell and -36 for the synthesized spell sound they take the place of.
-  const CLIP_GAIN = 1.3;
+  // Ramon (2026-11-18): far too soft, no punch. Now twice as loud (+6 dB), with the lows lifted (CLIP_BODY) so a
+  // cast lands with some weight; the master's limiter catches the peaks.
+  const CLIP_GAIN = 2.6;
+  const CLIP_BODY = 5;                     // dB of low shelf, below 250 Hz
   const clips = {};                        // name -> AudioBuffer once decoded, a Promise while decoding, false if it can't be
   const clipLog = [];                      // the last few that were started, for the tests: { n, name, at, secs }
   let clipCount = 0;                       // how many have been started in all (n counts up from 1)
@@ -622,7 +680,8 @@ window.RSAudio = (() => {
     const go = (buf) => {
       if (!buf || c !== ctx || c.currentTime - asked > 0.6) return;        // can't be decoded, or too late to belong to its moment
       const s = c.createBufferSource(), g = gainNode((o.v == null ? 1 : o.v) * CLIP_GAIN);
-      s.buffer = buf; s.connect(g);
+      const body = c.createBiquadFilter(); body.type = 'lowshelf'; body.frequency.value = 250; body.gain.value = CLIP_BODY;
+      s.buffer = buf; s.connect(body); body.connect(g);
       out(g, sfxBus, o.rev == null ? 0.06 : o.rev, o.pan || 0);
       s.start(c.currentTime + 0.01);
       if (c.startRendering) return;                       // (being measured, not played)
@@ -667,20 +726,20 @@ window.RSAudio = (() => {
   }
   function volumes(v) {
     if (v) Object.assign(vol, v);
-    if (ctx) { musicBus.gain.setTargetAtTime(vol.music, ctx.currentTime, 0.1); sfxBus.gain.setTargetAtTime(vol.sfx, ctx.currentTime, 0.05); }
+    if (ctx) { musicBus.gain.setTargetAtTime(vol.music, ctx.currentTime, 0.1); sfxBus.gain.setTargetAtTime(vol.sfx, ctx.currentTime, 0.05); apply(); }
     return { ...vol };
   }
   // Render a stretch of a song offline (for level checks): peak and RMS of the result.
   async function analyse(name, secs = 20, intense = false) {
     const OAC = window.OfflineAudioContext || window.webkitOfflineAudioContext;
     const c = new OAC(2, Math.floor(44100 * secs), 44100);
-    const saved = { ctx, master, musicBus, sfxBus, revIn, noiseBuf };
+    const saved = { ctx, master, musicBus, sfxBus, revIn, fxRevIn, noiseBuf };
     const savedWI = wantIntense;
     use(c, build(c)); musicBus.gain.value = 1; wantIntense = intense;
     const p = player(SONGS[name], 0, 0.01); schedule(p, secs);
     players.splice(players.indexOf(p), 1);
     wantIntense = savedWI;
-    ({ ctx, master, musicBus, sfxBus, revIn, noiseBuf } = saved);
+    ({ ctx, master, musicBus, sfxBus, revIn, fxRevIn, noiseBuf } = saved);
     const buf = await c.startRendering();
     let peak = 0, sum = 0; const d0 = buf.getChannelData(0), d1 = buf.getChannelData(1);
     for (let i = 0; i < d0.length; i++) { const a = Math.max(Math.abs(d0[i]), Math.abs(d1[i])); if (a > peak) peak = a; sum += d0[i] * d0[i]; }
@@ -692,9 +751,9 @@ window.RSAudio = (() => {
   async function measure(make, secs = 4) {
     const OAC = window.OfflineAudioContext || window.webkitOfflineAudioContext;
     const c = new OAC(2, Math.floor(44100 * secs), 44100);
-    const saved = { ctx, master, musicBus, sfxBus, revIn, noiseBuf }, savedSfx = vol.sfx;
+    const saved = { ctx, master, musicBus, sfxBus, revIn, fxRevIn, noiseBuf }, savedSfx = vol.sfx;
     use(c, build(c)); sfxBus.gain.value = 1; vol.sfx = 1;
-    try { make(); } finally { ({ ctx, master, musicBus, sfxBus, revIn, noiseBuf } = saved); vol.sfx = savedSfx; }
+    try { make(); } finally { ({ ctx, master, musicBus, sfxBus, revIn, fxRevIn, noiseBuf } = saved); vol.sfx = savedSfx; }
     const buf = await c.startRendering();
     const d0 = buf.getChannelData(0), d1 = buf.getChannelData(1);
     let peak = 0, sum = 0, n = 0;
@@ -708,7 +767,7 @@ window.RSAudio = (() => {
   }
   return {
     unlock: start,
-    want(w) { if (w === wanted) return; wanted = w; if (w !== 'duel') setIntense(false); apply(); },
+    want(w) { if (w === wanted) return; wanted = w; if (w !== 'duel' && w !== 'boss') setIntense(false); apply(); },
     intense: setIntense,
     sting,
     sfx,
