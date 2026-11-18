@@ -1,6 +1,6 @@
 # Brief: online play for the RuneScape TCG Arena
 
-**Status (2026-11-16): phases 0 to 3 are built. Challenge a friend works end to end** (Play Online → a name → a deck and cape → a code or link → the duel → rematch), against the real server. **Accounts are built and tested against a stand-in server** (sign in with Google or an emailed code; progress saved to the account and shared between devices); **Google sign-in is live (2026-11-17)** and worked on Ramon's Pixel; emailed codes wait on a sender. See "Phase 3 (accounts): what's built". Next is Find a match (phase 4), with the server as the bank first. Ramon has made the main decisions (below). This file sets out what he wants, how it works, what is built, and what is still open. Read `HANDOFF.md` for the wider project and `CLAUDE.md` for how the Arena's code fits together.
+**Status (2026-11-16): phases 0 to 3 are built. Challenge a friend works end to end** (Play Online → a name → a deck and cape → a code or link → the duel → rematch), against the real server. **Accounts are built and tested against a stand-in server** (sign in with Google or an emailed code; progress saved to the account and shared between devices); **Google sign-in is live (2026-11-17)** and worked on Ramon's Pixel; emailed codes wait on a sender. See "Phase 3 (accounts): what's built". **The server is the bank (phase 3b, built 2026-11-17):** GP, cards and packs live on the server for everyone who has been online; see "Phase 3b (the bank): what's built". Next is Find a match (phase 4). Ramon has made the main decisions (below). This file sets out what he wants, how it works, what is built, and what is still open. Read `HANDOFF.md` for the wider project and `CLAUDE.md` for how the Arena's code fits together.
 
 ## What I want
 
@@ -134,7 +134,7 @@ It is one web app, so PC and phone play each other.
   - **merging** is three-way against `base`. GP, wins, losses and packs opened: theirs plus what this device added. Cards: the same, card by card. Decks: by id (changed here wins, made on either side kept, deleted on one side gone unless the other changed it, never left with none). Tips already seen and online duels already paid: either side's. Anything else (the tutorial flags, the last pack): this device's if it changed it, else theirs;
   - a device that has never met this account asks (see above) instead of merging: there is no shared `base` to merge from.
 - **Still per device:** settings, speed, the last deck and cape picked, a bot duel in progress, and the online duel's log.
-- **The device is still the bank.** Someone with the developer tools can give themselves GP and the save will carry it. Decided: that changes before Find a match (see "Phases").
+- **The device was still the bank** until phase 3b (below): GP, cards and packs now live on the server.
 
 **Tested:**
 - `node web/test/cloud_test.js [worlds]`: the merge rules case by case, the sync step by step against a pretend server that reorders keys as jsonb does, and thousands of random "worlds" of three devices earning, spending, deleting and syncing in any order with the network failing at random. Every world must end with all devices and the server agreeing, nothing earned lost and nothing counted twice. (3,000 worlds: about 360,000 steps and 27,000 merges.)
@@ -156,9 +156,41 @@ It is one web app, so PC and phone play each other.
 5. ✅ **On the Pixel, in the installed app:** Google's round trip comes back into the app, not a Chrome tab (Ramon, 2026-11-17).
 
 **Not done yet:**
-- **The server as the bank** (GP and cards kept and paid by the server, packs opened there, online decks checked against the collection). Decided for before Find a match.
 - **Deleting an account** from inside the game (today: the dashboard).
 - **A CAPTCHA** on sign-ups, which Supabase advises before strangers come.
+
+## Phase 3b (the bank): what's built (2026-11-17)
+
+**Ramon's answers** (2026-11-17):
+1. **Bot duels: trust the device.** They run on the device, so the server can't see them; the device reports each one and the server believes it. (Replaying them to check was offered and turned down.)
+2. **Everyone who has been online is banked,** guests included: a guest's GP and cards live on the server from their first time online, and signing in later keeps them. Find a match will be open to guests.
+
+**What it means for a player:**
+- **A device that has never been online is unchanged:** everything stays on it, packs included.
+- **Once online, the server keeps the GP, cards and packs.** The device shows them and can't change them. Opened the first time:
+  - an account that already has a cloud save: from that save, as it is;
+  - otherwise this device's progress, if honest play could have made it (`plausible` in `web/packs.js`: no more cards beyond the starter decks than 6 a pack opened, and no more GP than 100 a duel recorded, less 200 a pack, plus 500 to spare). Ramon's own save passed it to the card (102 extra cards from 17 packs);
+  - otherwise the three starter decks, and the player is told why ("This device's progress didn't add up...").
+- **Bot duels** pay on the device at once, as before, and are queued (`claims` in `rstcg-bank-v1`) until the server has them: straight away online, or when the device is back. Each duel once (by its seed), at most 200 a day. A duel played while signed out counts for the player this device last banked with, when they sign in again.
+- **Online duels** are paid by the database the moment the result is recorded (`duel_append` → `bank_pay_duel`): 100 for a win, 50 for a loss or a draw, nothing for conceding or running out of time. The page just fetches the bank afterwards.
+- **Packs are opened by the server** (it rolls them with `web/packs.js`, the same code the page uses offline), so they need a connection: offline, the player is told so and nothing is spent. Each pack has a ref the device keeps until the server answers, so asking again after a lost answer gives the same pack, not a second one. The tutorial's free pack: once per player.
+- **Online decks must be owned:** challenge, join and rematch check the deck against the bank's cards ("You don't own enough copies of ...").
+- **The cloud save no longer carries GP, cards or packs** once the device is banked (`progressNow()` leaves them out; `progressAll()` is everything). Decks, records, tutorial and tips still go through it as before.
+- **"Which progress do you keep?"** shows the account's bank beside this device's numbers (`bankPeek`). Keeping this device's: checked with `plausible` before anything changes, then the cloud save, then the bank (`replace`, sent by `bankSync`, again if the network drops).
+- **Reset progress** goes through the server for a banked device (offline: nothing changes, and it says so).
+
+**On the server** (migration `20261118023024_bank.sql`):
+- `bank` (one row per player: `gp`, `coll`, `packs`, `free_pack`, `rev`) and `bank_log` (one line per change, keyed by `ref`: `bot:<seed>`, `online:<match>`, `pack:<nonce>`, `free`, `open`, `replace:<time>`, `reset:<time>`, so nothing happens twice). Players may read their own `bank` row; nothing else.
+- Functions for the `duel` function only (the secret key): `bank_get`, `bank_progress` (the account's cloud save), `bank_open`, `bank_apply` (one change, refused if GP would go below 0, the free pack twice, or the 201st bot duel in a day), `bank_set` (replace or reset), `bank_pay_duel`; and `duel_append` now pays a finished online duel.
+- The `duel` function's new requests: `bank { snapshot? }`, `earn { claims }`, `pack { ref } | { free: true }`, `replace { snapshot }`, `reset` (the header of `server/supabase/functions/duel/index.js` lists them). Its copy of `web/packs.js` and the Set 1 list (`server/set1.json`, refreshed by `server/build.js` from `arena_assets.js` like `rarity.json`) go in `gen/`.
+
+**Tested:**
+- `node server/sql_test.mjs`: every migration applied in order to a real Postgres in node (PGlite), with stand-ins for Supabase's roles and `auth`; then opening once, paying once, packs (retried: the same cards, paid once), not enough GP, the free pack once, the daily cap, reset, online duels paid for a win, a concede and a draw, a stale move not paying again, and what a player may touch (their own row, read only).
+- `node server/test_local.mjs`: 40 online duels, each checked to pay both players right (every ending came up: 0, 50 and 100); and the bank requests: opening from a cloud save, an honest device and a doubtful one, bot duels (repeats and bad ones refused), packs (6 real cards of the right rarities, 200 GP, retried), the free pack, replace, reset, a deck you don't own refused, no bank no challenge.
+- `node web/test/ui/bank.js`: the page: Pat's offline progress opens her bank; packs from the server (and offline: explained, nothing spent, the same pack ref kept); the free pack; cards and GP handed out in the browser taken back; a bot duel reported; reset; Quinn's progress that doesn't add up. Screenshots in `web/test/ui/shots/bank/`.
+- `node web/test/ui/accounts.js` (reworked: devices with a bank earn through it, and GP and cards are checked at the bank, not in the cloud save) and `node web/test/ui/online.js` (Bob's extra cards go in at the server) pass.
+
+**Not done yet:** Find a match (phase 4). Bot duels are believed (Ramon's call); a determined cheater can still report wins they didn't play, up to 200 a day.
 
 ## Why the server referees
 
@@ -357,7 +389,7 @@ Even if every move costs three function calls (the move, plus each player fetchi
    - **Signing in:** Google or an emailed code, linked to the name you already have.
    - **Progress in the account:** GP, collection, decks, packs and tutorial state, so PC and phone share progress; a second device with progress of its own asks which to keep.
    - **Set up and live for Google (2026-11-17).** Email waits on a sender.
-   - **Left for 3b, before Find a match: the server takes over.** Online decks are checked against your collection, and the server pays online GP and opens packs.
+3b. **The server as the bank (built 2026-11-17; see "Phase 3b (the bank): what's built"):** GP, cards and packs kept on the server, online duels paid there, packs opened there, online decks checked against the collection.
 4. **Find a match:** the queue, players online, emotes, blocking, and recent opponents you can challenge again.
 
 **Later:**

@@ -23,11 +23,13 @@ This file describes where things stand. `CLAUDE.md` covers how the code fits tog
 - **Tests:** `node web/test/ui/run_all.js` passed every test that reported on 2026-11-16; on 2026-11-17 `spellsound.js` (with the real sounds) and `accounts.js` passed again.
 - **Deployed:** that build is live on Netlify (Ramon dropped it in at 13:40 on 2026-11-17, Central time).
 - **Google sign-in works for real (2026-11-17):** Ramon signed in with Google on the Pixel's installed app and came back into the app; his Pixel progress is saved to his account. See "Accounts" below.
+- **The bank (phase 3b) is built (2026-11-17):** GP, cards and packs live on the server for everyone who has been online; see `ONLINE_BRIEF.md`, "Phase 3b". Ramon chose: bot duels are believed as the device reports them, and guests are banked too.
 - **Open items, in order:**
+  0. **The bank went live on 2026-11-17** (migration `20261118023024_bank.sql` applied through the connector and checked; the `duel` function deployed by the Action). The app with the bank must be on Netlify too: the new function refuses challenges from an app without one. Then: Ramon opens the app on the PC and the Pixel and checks his GP and cards are as they were (his bank opens from his cloud save).
   1. **Accounts, second device:** sign in on the PC with the same Google account. Both sides have progress, so it should ask "which progress do you keep?" (the one not kept goes to `rstcg-backup-v1`). Then earn on one and check the other picks it up. Before friends can sign in, publish the consent screen (`ONLINE_BRIEF.md`, set-up step 3).
   2. **The fan-content notice:** Ramon was told the Jagex policy (clauses 6.1.3 and 2.4) doesn't cover video games or the RuneScape trade marks. He hasn't said whether to keep the policy's wording or swap to a plain "fan-made, not endorsed by Jagex" line.
   3. **Email codes,** if he wants them: a sender and `{{ .Token }}` in three templates (step 4), then switch Email back on.
-  4. **The server as the bank** (phase 3b), then Find a match (phase 4).
+  4. **Find a match** (phase 4).
   5. Smaller: sounds for the six Flurry spells (the Surge sounds are spare), 62 cards still without art.
 - **Working with the PC:** the art and spell sounds live only in its `art/` folder. Its device shell has python3, PIL and ffmpeg, so `python3 web/arena_assets.py` and `python3 web/arena_sounds.py` run there. Copy files to it only after the command that writes them has finished.
 

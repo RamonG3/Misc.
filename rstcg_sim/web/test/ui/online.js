@@ -82,9 +82,11 @@ const post = (p, b) => fetch(SERVER + p, { method: 'POST', body: JSON.stringify(
   await bo.page.click('[data-do="onname"]');
   await until(bo, () => window.__arena.ui.screen === 'pick' && window.__arena.ui.on.join && window.__arena.ui.on.join.host === 'Ann', null, 'Ann\'s challenge on Bo\'s screen');
   // Bob brings a deck full of answers to Melee (Protect from Melee, Mirror Shield), so reactions come up
+  // (the bank keeps his cards now, so they go in at the server: the page can't hand itself cards any more)
+  await post('/__test/bank', { uid: await bo.A(() => window.__arena.cloud.account().uid), cards: { 'Protect from Melee': 4, 'Mirror Shield': 4 } });
+  await bo.A(() => window.__arena.bank.sync(true));
   const legalDeck = await bo.A(() => {
     const A = window.__arena, p = A.profile;
-    p.coll['Protect from Melee'] = 4; p.coll['Mirror Shield'] = 4;
     const r = p.decks.find((d) => d.id === 'st-ranged');
     const cards = { ...r.cards, 'Normal Logs': 6, 'Willow Logs': 9, 'Protect from Melee': 4, 'Mirror Shield': 4 };
     p.decks.push({ id: 'd-answers', name: 'Answers', cards, cape: 'Defence Cape' });

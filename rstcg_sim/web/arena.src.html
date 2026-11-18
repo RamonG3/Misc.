@@ -754,6 +754,7 @@ html, body { touch-action: manipulation; }
 <script>/*__REFEREE__*/</script>
 <script>/*__ONLINE__*/</script>
 <script>/*__CLOUD__*/</script>
+<script>/*__PACKS__*/</script>
 <script>/*__VERSION__*/</script>
 <script>
 (function () {
@@ -2434,6 +2435,7 @@ html, body { touch-action: manipulation; }
     }
     odClose(od);
     onlineSave({ duel: null });
+    bankSync(true);                              // the server has paid it: fetch the bank's word on it
     const p = g.players[you], b = g.players[1 - you];
     ui.result = { online: { match: od.match, opp: od.opp, again: null, room: null, offered: false, busy: false, error: '' },
       won, draw, conceded: res.reason === 'concede' && !won, quit, reason: res.reason, turn: g.turn + 1, youLp: p.lp, botLp: b.lp, pay, before, after: profile.gp,
@@ -2515,6 +2517,9 @@ html, body { touch-action: manipulation; }
     try { h = await ON.call('hello'); } catch (e) { if (ui.screen === 'online') hubError(e); return; }
     if (ui.screen !== 'online' || ui.on.state !== 'connecting') return;
     if (h.version !== VERSION) { ui.on.state = 'update'; render(); return; }
+    if (!banked()) await bankSync(true);         // online decks are checked against the cards the server says you own
+    if (ui.screen !== 'online' || ui.on.state !== 'connecting') return;
+    if (!banked()) { hubError(Object.assign(new Error(bk.err || "Can't reach the game server."), { code: bk.state === 'offline' ? 'net' : 'bank' })); return; }
     ui.on.name = h.name || null;
     if (!h.name) { ui.on.state = 'name'; ui.on.nameText = ''; ui.on.nameErr = ''; render(); focusSoon('onname'); return; }
     onlineSave({ name: h.name });
@@ -3563,12 +3568,18 @@ html, body { touch-action: manipulation; }
   const acctKey = (a) => (a ? `${a.uid}:${a.guest ? 'guest' : 'account'}` : '');
   let knownAcct = acctKey(account());            // who this tab believes it is (another tab may sign in or out)
   const inOnlineDuel = () => !!(ui.od || (onlineGet().duel && onlineGet().duel.match));
-  const progressNow = () => { const { cloud: mark, ...rest } = profile; return JSON.parse(JSON.stringify(rest)); };
+  // what goes to the cloud save: the profile without the mark, and (once the bank keeps them) without GP, cards and packs
+  function progressAll() { const { cloud: mark, ...rest } = profile; return JSON.parse(JSON.stringify(rest)); }
+  function progressNow() {
+    const p = progressAll();
+    if (banked()) for (const k of BANK_OWNS) delete p[k];
+    return p;
+  }
   // a brand-new game: nothing in it that a player could miss
   function untouched(p) {
     const s = starterState(), n = (x) => +x || 0;
     return !n(p.gp) && !n(p.wins) && !n(p.losses) && !n(p.packs) && !(p.online && (n(p.online.wins) || n(p.online.losses)))
-      && CS.same(p.coll || {}, s.coll) && CS.same(p.decks || [], s.decks);
+      && (!p.coll || CS.same(p.coll, s.coll)) && CS.same(p.decks || [], s.decks);       // (a save with no coll: the bank keeps it)
   }
   // The progress under the screen was just replaced (another device's, or a merge): point the screen at what's there.
   function profileSwapped() {
@@ -3580,15 +3591,20 @@ html, body { touch-action: manipulation; }
   }
   function cloudPut(data, mark) {
     if (data) {
+      const kept = Object.fromEntries(BANK_OWNS.map((k) => [k, profile[k]]));     // a save without them: the bank's stand
       for (const k of Object.keys(profile)) delete profile[k];
       Object.assign(profile, { gp: START_GP, wins: 0, losses: 0, paid: null }, JSON.parse(JSON.stringify(data)));
+      for (const k of BANK_OWNS) if (data[k] === undefined && kept[k] !== undefined) profile[k] = kept[k];
+      bankApply(true);
     }
     if (mark) profile.cloud = mark; else delete profile.cloud;
     store.set(PROFILE, profile);                 // not saveProfile(): this is the server's news, not a change made here
     if (data) profileSwapped();
   }
-  const cloudDev = () => ({ uid: account().uid, untouched, put: cloudPut,
-    get: () => ({ data: progressNow(), mark: profile.cloud || null }),
+  const mineNow = new WeakSet();                 // this device's progress, as handed to cloudsave.js
+  const cloudDev = () => ({ uid: account().uid, put: cloudPut,
+    untouched: (p) => untouched(mineNow.has(p) ? progressAll() : p),       // this device: GP, cards and packs count too
+    get: () => { const data = progressNow(); mineNow.add(data); return { data, mark: profile.cloud || null }; },
     load: (since) => ON.progress.load(since),
     save: (data, rev) => ON.progress.save(data, rev, { keepalive: Date.now() - cloud.leaving < 3000 }) });
 
@@ -3618,6 +3634,7 @@ html, body { touch-action: manipulation; }
   }
   function cloudLook() {                         // a good moment to see whether another device has been busy
     if (cloud.live && !cloud.busy && !cloud.timer && Date.now() - cloud.looked > 15e3) cloudSync();
+    bankLook();
   }
   function cloudSync() {
     if (!cloud.live || !ON || !CS || cloud.ask || !signedIn()) return Promise.resolve();
@@ -3630,9 +3647,10 @@ html, body { touch-action: manipulation; }
         try {
           const r = await CS.sync(cloudDev());
           cloud.looked = Date.now();
-          if (r.ask) { cloud.ask = r.ask; cloudState('ask'); break; }
+          if (r.ask) { cloud.ask = r.ask; cloudState('ask'); bankPeek(); break; }
           cloud.retry = 0;
           cloudState('idle');
+          bankLook();
         } catch (e) {
           if (e && e.code === 'auth') { cloudState('idle'); break; }       // signed out under us: accountChanged says so
           cloudState(e && e.code === 'net' ? 'offline' : 'error', (e && e.message) || '');
@@ -3645,7 +3663,7 @@ html, body { touch-action: manipulation; }
     })();
     return cloud.busy;
   }
-  window.addEventListener('online', () => { if (cloud.state === 'offline') cloudSync(); });
+  window.addEventListener('online', () => { if (cloud.state === 'offline') cloudSync(); if (bk.state !== 'idle') bankSync(); });
   // leaving the app (a phone going to its home screen): send what hasn't gone yet, at once
   const cloudLeave = () => { if (cloud.timer && cloud.state !== 'offline') { cloud.leaving = Date.now(); cloudSync(); } };
   window.addEventListener('pagehide', cloudLeave);
@@ -3754,6 +3772,7 @@ html, body { touch-action: manipulation; }
     cloud.ask = null; cloudStop();
     accountBusy('Fetching your progress');
     await cloudSync();
+    if (!cloud.ask) await bankSync(true);
     ui.acct.confirm = null;
     ui.acct.state = cloud.ask ? 'choose' : 'in';
     if (ui.screen === 'account') render();
@@ -3811,18 +3830,162 @@ html, body { touch-action: manipulation; }
     accountBusy(which === 'device' ? 'Saving this device\'s progress to your account' : 'Fetching your account\'s progress');
     // what is about to be replaced is put aside first, in case it was the wrong button
     store.set(BACKUP, { at: Date.now(), uid: account().uid, why: which === 'device' ? "the account's progress, replaced by this device's" : "this device's progress, replaced by the account's",
-      data: which === 'device' ? asked.data : progressNow() });
+      data: which === 'device' ? Object.assign({}, asked.data, cloud.askBank ? { gp: cloud.askBank.gp, coll: cloud.askBank.coll, packs: cloud.askBank.packs } : {}) : progressAll() });
+    const snap = bankSnapshot();                 // (taken before anything changes the numbers on this device)
+    if (which === 'device') {                    // the server only takes progress that adds up: check before changing anything
+      const c = PACKS.plausible(snap);
+      if (!c.ok) { ui.acct.state = 'choose'; ui.acct.confirm = null; ui.acct.note = "This device's progress doesn't add up, so it can't replace your account's."; render(); return; }
+    }
+    // The bank follows: this device's numbers replace the account's (sent by bankSync, again if need be), or the
+    // account's bank comes down to this device. Set first, so the cloud save sent now already leaves them out.
+    const keptBank = bankKept();
+    store.set(BANK, which === 'device' ? { uid: account().uid, replace: snap, claims: [] } : {});
     try {
       const r = await CS.choose(cloudDev(), which, asked);
       ui.acct.confirm = null;
-      if (r.ask) { cloud.ask = r.ask; ui.acct.state = 'choose'; ui.acct.note = 'Your account changed while you were choosing. Have another look.'; render(); return; }
-      cloud.ask = null; cloud.looked = Date.now(); cloudState('idle');
+      if (r.ask) { store.set(BANK, keptBank); cloud.ask = r.ask; bankPeek(); ui.acct.state = 'choose'; ui.acct.note = 'Your account changed while you were choosing. Have another look.'; render(); return; }
+      cloud.ask = null; cloud.askBank = null; cloud.looked = Date.now(); cloudState('idle');
+      await bankSync(true);
       ui.acct.state = 'in'; ui.acct.note = '';
       render();
     } catch (e) {
+      store.set(BANK, keptBank);
       ui.acct.state = 'choose'; ui.acct.confirm = null; ui.acct.note = accountWords(e);
       render();
     }
+  }
+
+  // =====================================================================================
+  // The bank (ONLINE_BRIEF.md, phase 3b). Once this device has been online (as a guest or an account), the
+  // server keeps that player's GP, cards and packs, and profile.gp, .coll and .packs are this device's copy:
+  //   - bot duels pay here at once, and are reported to the server (`claims`) until it has them;
+  //   - packs (and the tutorial's free pack) are opened by the server, so they need a connection;
+  //   - online duels are paid by the server as they end; a reset goes through it too.
+  // A device that has never been online keeps everything to itself, as before. rstcg-bank-v1 holds
+  // { uid, bank: { gp, coll, packs, free, rev, at }, claims: [{ ref, result, pay }], packRef }.
+  // =====================================================================================
+  const BANK = 'rstcg-bank-v1';
+  const BANK_OWNS = ['gp', 'coll', 'packs'];
+  const bk = { busy: null, again: false, force: false, timer: 0, retry: 0, state: 'idle', err: '', looked: 0 };
+  function bankKept() { return store.get(BANK) || {}; }
+  // (a bank about to be replaced by this device's progress counts: its numbers are on their way to the server)
+  function banked() { const a = account(), k = bankKept(); return !!(a && (k.bank || k.replace) && k.uid === a.uid); }
+  function bankSnapshot() {
+    const p = profile;
+    return { gp: p.gp, coll: p.coll, packs: p.packs, wins: p.wins, losses: p.losses, online: p.online || null, tutorialPack: !!p.tutorialPack };
+  }
+  // the bank's numbers onto this device: what the server has, plus the bot duels it hasn't heard about yet
+  function bankApply(quiet) {
+    if (!banked()) return;
+    const k = bankKept();
+    if (!k.bank) return;
+    const owed = (k.claims || []).reduce((s, c) => s + c.pay, 0);
+    const was = JSON.stringify([profile.gp, profile.coll, profile.packs]);
+    profile.gp = k.bank.gp + owed; profile.coll = { ...k.bank.coll }; profile.packs = k.bank.packs;
+    if (k.bank.free) profile.tutorialPack = true;
+    store.set(PROFILE, profile);                 // not saveProfile(): the bank's numbers don't go in the cloud save
+    if (!quiet && was !== JSON.stringify([profile.gp, profile.coll, profile.packs])
+      && ['menu', 'decks', 'packs', 'pick', 'account', 'summary'].includes(ui.screen) && !ui.intro) render();
+  }
+  function bankLater() {
+    clearTimeout(bk.timer);
+    bk.retry = Math.min(60e3, bk.retry ? bk.retry * 2 : 5e3);
+    bk.timer = setTimeout(() => { bk.timer = 0; bankSync(); }, bk.retry);
+  }
+  // A visit to the bank: open it the first time (with this device's progress), send the bot duels it hasn't
+  // had, and bring back its numbers. Never while "which progress do you keep?" is waiting on the player.
+  function bankSync(force) {
+    if (!ON || PREVIEW || !cloud.live || !account() || cloud.ask) return Promise.resolve();
+    if (force) bk.force = true;
+    if (bk.busy) { bk.again = true; return bk.busy; }
+    clearTimeout(bk.timer); bk.timer = 0;
+    bk.busy = (async () => {
+      try {
+        do {
+          bk.again = false; bk.force = false;
+          const a = account();
+          let k = bankKept();
+          if (k.uid === a.uid && k.replace) {        // "keep this device's progress": the bank takes it too
+            let r;
+            try { r = await ON.call('replace', { snapshot: k.replace }); } catch (e) { if (e && e.code !== 'doubt') throw e; r = await ON.call('bank', {}); }
+            k = { uid: a.uid, bank: r.bank, claims: [] };
+            store.set(BANK, k);
+          } else if (k.uid !== a.uid || !k.bank) {
+            const r = await ON.call('bank', { snapshot: bankSnapshot() });
+            if (!account() || account().uid !== a.uid) return;
+            k = { uid: a.uid, bank: r.bank, claims: [] };
+            store.set(BANK, k);
+            if (r.doubt) odToast("This device's progress didn't add up, so the game server started you from the starter decks.");
+          } else if ((k.claims || []).length) {
+            const sent = k.claims.slice(0, 50);
+            const r = await ON.call('earn', { claims: sent.map(({ ref, result }) => ({ ref, result })) });
+            const now = bankKept(), gone = new Set(sent.map((c) => c.ref));
+            if (now.uid !== a.uid) return;
+            const left = (now.claims || []).filter((c) => !gone.has(c.ref));
+            store.set(BANK, { ...now, bank: r.bank, claims: left });
+            if (left.length) bk.again = true;
+          } else {
+            const r = await ON.call('bank', {});
+            const now = bankKept();
+            if (now.uid !== a.uid) return;
+            store.set(BANK, { ...now, bank: r.bank });
+          }
+          bankApply();
+        } while (bk.again || bk.force);
+        bk.retry = 0; bk.state = 'idle'; bk.err = ''; bk.looked = Date.now();
+      } catch (e) {
+        bk.state = e && e.code === 'net' ? 'offline' : 'error'; bk.err = (e && e.message) || '';
+        if (!(e && (e.code === 'net' || e.code === 'auth'))) console.error(e);
+        if (!(e && e.code === 'auth')) bankLater();
+      } finally { bk.busy = null; }
+    })();
+    return bk.busy;
+  }
+  // a good moment to look: there is something to send, or it's been a while
+  function bankLook() {
+    if (!account() || bk.busy || bk.timer) return;
+    const k = bankKept();
+    if (k.uid !== account().uid || (k.claims || []).length || Date.now() - bk.looked > 15e3) bankSync();
+  }
+  // "which progress do you keep?": the account's side is its bank (its cloud save no longer carries GP or cards)
+  async function bankPeek() {
+    cloud.askBank = null;
+    try { const r = await ON.call('bank', {}); if (cloud.ask) { cloud.askBank = r.bank; if (ui.screen === 'account') render(); } } catch (e) { /* shown without it */ }
+  }
+  // A bot duel's pay, for the server to hear about: kept for the player this device last banked with, signed in
+  // or not, so a duel played while signed out is paid when they sign in again (another player: it is dropped).
+  function bankClaim(seed, result, pay) {
+    const k = bankKept(), ref = `bot:${seed}`;
+    if (!k.uid || !k.bank || !pay) return;
+    if ((k.claims || []).some((c) => c.ref === ref)) return;
+    store.set(BANK, { ...k, claims: [...(k.claims || []), { ref, result, pay }] });
+    bankSync();
+  }
+  // A pack from the server (the tutorial's is free): the cards, in grantPack's shape, or null when it can't.
+  // The pack's ref is kept until the server answers, so asking again after a lost answer can't buy a second one.
+  async function bankPack(free) {
+    if (ui.packBusy) return null;
+    ui.packBusy = true; render();
+    try {
+      await bankSync();                          // its GP first: the bot duels it hasn't heard about
+      let k = bankKept();
+      const ref = free ? null : k.packRef || `pack:${Date.now().toString(36)}${Math.random().toString(36).slice(2, 10)}`;
+      if (!free) store.set(BANK, { ...k, packRef: ref });
+      const r = await ON.call('pack', free ? { free: true } : { ref });
+      k = bankKept();
+      store.set(BANK, { ...k, bank: r.bank, packRef: null });
+      const before = { ...profile.coll }, seen = new Set();
+      bankApply(true);
+      return r.cards.map((c) => {
+        const isNew = !(before[c.name] > 0) && !seen.has(c.name); seen.add(c.name);
+        return { name: c.name, rar: c.rar, isNew, have: profile.coll[c.name] || 0 };
+      });
+    } catch (e) {
+      if (e && (e.code === 'short' || e.code === 'free')) store.set(BANK, { ...bankKept(), packRef: null });
+      odToast(e && e.code === 'net' ? "Packs are opened by the game server, and it can't be reached. Check your connection and try again." : (e && e.message) || 'The pack could not be opened. Try again.');
+      bankSync(true);
+      return null;
+    } finally { ui.packBusy = false; }
   }
 
   // ---------- what it looks like ----------
@@ -3887,8 +4050,8 @@ html, body { touch-action: manipulation; }
       inner = `<span class="ttl" style="font-size:38px">Which progress do you keep?</span>
         <p>This device and your account both have progress. Keep one. The other is replaced.</p>
         ${note(a.note)}
-        <div class="acsaves">${saveCard('This device', progressNow(), 'What you have played here', 'device')}
-          ${saveCard('Your account', cloud.ask.data || {}, at ? `Last saved ${agoWords(at)}` : 'Saved from another device', 'account')}</div>
+        <div class="acsaves">${saveCard('This device', progressAll(), 'What you have played here', 'device')}
+          ${saveCard('Your account', Object.assign({}, cloud.ask.data || {}, cloud.askBank ? { gp: cloud.askBank.gp, coll: cloud.askBank.coll, packs: cloud.askBank.packs } : {}), at ? `Last saved ${agoWords(at)}` : 'Saved from another device', 'account')}</div>
         <button type="button" class="btn-d" data-do="aclater" style="height:48px;padding:0 24px;font-size:17px">Decide later, and sign out</button>`;
     } else if (a.state === 'in' && who && !who.guest) {
       const how = who.provider === 'google' ? 'with Google' : who.provider === 'email' ? 'with a code by email' : '';
@@ -4124,7 +4287,7 @@ html, body { touch-action: manipulation; }
     const fresh = profile.paid !== ui.config.seed;          // pays once, whatever happens next
     const before = profile.gp;
     const pay = !fresh || conceded ? 0 : won ? PAY.win : PAY.loss;
-    if (fresh) { profile.gp += pay; if (won) profile.wins += 1; else if (!draw) profile.losses += 1; profile.paid = ui.config.seed; saveProfile(); }
+    if (fresh) { profile.gp += pay; if (won) profile.wins += 1; else if (!draw) profile.losses += 1; profile.paid = ui.config.seed; saveProfile(); bankClaim(ui.config.seed, won ? 'win' : draw ? 'draw' : 'loss', pay); }
     const p = g.players[ui.you], b = g.players[1 - ui.you];
     const reason = conceded ? 'concede' : g.end_reason;
     ui.result = { won, draw, conceded, reason, turn: g.turn + 1, youLp: p.lp, botLp: b.lp, pay, before, after: profile.gp, shown: before, ticked: false,
@@ -4271,8 +4434,9 @@ html, body { touch-action: manipulation; }
     .sort((a, b) => (SET1[a].num || '').localeCompare(SET1[b].num || ''));          // every card you can own, in set order
   const PACK_POOL = { C: [], U: [], R: [], L: [] };
   for (const n of POOL) if (!isBasic(n)) PACK_POOL[rarityOf(n)].push(n);
-  const PACK_SLOTS = ['C', 'C', 'C', 'U', 'U', 'R'];          // 6 cards: 3 Common, 2 Uncommon, 1 Rare (sometimes Legendary)
-  const LEGEND_ODDS = 1 / 8;                   // the rare slot is a Legendary about one pack in eight
+  const PACKS = window.RSTCGPacks.make(CARDS, SET1, DECKS.map((d) => ({ group: d.group, name: d.name, cards: d.cards, capes: d.capes })));
+  const LEGEND_ODDS = window.RSTCGPacks.LEGEND_ODDS;
+  const PACK_SLOTS = window.RSTCGPacks.SLOTS;   // 6 cards: 3 Common, 2 Uncommon, 1 Rare (sometimes Legendary): packs.js, as the server rolls them
   const MAX_COPIES = window.RSTCGDeckRules.MAX_COPIES;
   const owned = (n) => (isBasic(n) ? Infinity : (profile.coll[n] || 0));
   const slug = (s) => s.toLowerCase().replace(/[^a-z0-9]+/g, '-');
@@ -4318,14 +4482,8 @@ html, body { touch-action: manipulation; }
   const ELEMENTALS = ['Air Rune', 'Water Rune', 'Earth Rune', 'Fire Rune'];
   // A booster: 3 Commons, 2 Uncommons, 1 Rare (sometimes a Legendary). Never basic materials, no
   // card twice in one pack. The cards are yours the moment you buy it.
-  function rollPack() {
-    const picked = new Set();
-    const draw = (r) => { const pool = PACK_POOL[r].filter((n) => !picked.has(n)); const n = pool[Math.floor(Math.random() * pool.length)]; picked.add(n); return n; };
-    return PACK_SLOTS.map((r) => {
-      const rar = r === 'R' && Math.random() < LEGEND_ODDS && PACK_POOL.L.length ? 'L' : r;
-      const name = draw(rar);
-      return { name, rar, isNew: false, have: 0 };
-    });
+  function rollPack() {                          // (a banked player's packs are rolled by the server instead: bankPack)
+    return PACKS.roll(Math.random).map((c) => ({ ...c, isNew: false, have: 0 }));
   }
   const buyPack = () => grantPack(PACK_COST);
   const cardsTotal = (cards) => Object.values(cards).reduce((s, k) => s + k, 0);
@@ -5387,7 +5545,14 @@ html, body { touch-action: manipulation; }
       }
       // --- packs ---
       case 'packs': ui.screen = 'packs'; ui.pack = null; break;
-      case 'buypack': { const cards = buyPack(); if (cards) { startPack(cards); return; } break; }
+      case 'buypack': {
+        if (banked()) {
+          if (ui.packBusy || profile.gp < PACK_COST) return;
+          bankPack(false).then((cards) => { if (!cards) { render(); return; } profile.lastPack = cards; saveProfile(); startPack(cards); });
+          return;
+        }
+        const cards = buyPack(); if (cards) { startPack(cards); return; } break;
+      }
       case 'flip': if (ui.pack) { flipCard(+v); return; } break;
       case 'revealall': if (ui.pack) { revealAll(); return; } break;
       case 'packsum': ui.pack = null; ui.screen = 'summary'; break;
@@ -5403,13 +5568,30 @@ html, body { touch-action: manipulation; }
       }
       case 'reset':
         if (!ui.confirmReset) { ui.confirmReset = true; break; }
+        if (banked()) {                          // the bank is reset at the server first: offline, nothing changes
+          ON.call('reset').then((r) => {
+            store.set(BANK, { uid: account().uid, bank: r.bank, claims: [] });
+            Object.assign(profile, { gp: START_GP, wins: 0, losses: 0 }, starterState(), { packs: 0, lastPack: null, tutorial: null, tutorialPack: false, tips: {} }); saveProfile();
+            bankApply(true);
+            ui.confirmReset = false; ui.setup.youDeck = profile.decks[0].id; render();
+          }).catch((e) => { ui.confirmReset = false; odToast(e && e.code === 'net' ? "Resetting goes through the game server, and it can't be reached. Nothing has changed." : (e && e.message) || 'Nothing has changed.'); render(); });
+          return;
+        }
         Object.assign(profile, { gp: START_GP, wins: 0, losses: 0 }, starterState(), { packs: 0, lastPack: null, tutorial: null, tutorialPack: false, tips: {} }); saveProfile(); ui.confirmReset = false; ui.setup.youDeck = profile.decks[0].id; break;
       case 'duelmenu': ui.duelMenu = !ui.duelMenu; break;
       case 'tutorial': ui.modal = null; startTutorial(); return;
       case 'tutskip': profile.tutorial = profile.tutorial || 'skipped'; saveProfile(); ui.modal = null; break;
       case 'tutnext': { const go = ui.tut && ui.tut.next; if (ui.tut) ui.tut.next = null; if (go) { sfx('click'); go(); } return; }
       case 'tutquit': stopDuel(); ui.tut = null; ui.screen = 'menu'; break;
-      case 'tutpack': { if (profile.tutorialPack) break; const cards = grantPack(0); profile.tutorialPack = true; saveProfile(); ui.packTut = true; if (cards) { startPack(cards); return; } break; }
+      case 'tutpack': {
+        if (profile.tutorialPack) break;
+        if (banked()) {
+          if (ui.packBusy) return;
+          bankPack(true).then((cards) => { if (!cards) { render(); return; } profile.tutorialPack = true; profile.lastPack = cards; saveProfile(); ui.packTut = true; startPack(cards); });
+          return;
+        }
+        const cards = grantPack(0); profile.tutorialPack = true; saveProfile(); ui.packTut = true; if (cards) { startPack(cards); return; } break;
+      }
       case 'tipok': if (ui.tip) { profile.tips = Object.assign(profile.tips || {}, { [ui.tip.t[0]]: true }); saveProfile(); ui.tip = null; } break;
       case 'tipsreset': profile.tips = {}; saveProfile(); break;
       case 'packtutok': ui.packTut = false; break;
@@ -5745,7 +5927,8 @@ html, body { touch-action: manipulation; }
   stageFor(null);
 
   // test hook
-  window.__arena = { get ui() { return ui; }, render, act, CARDS, zoneFor, online: { sync: () => odSync(), get od() { return ui.od; }, ON, VERSION, idle: () => !anim.playing && !ui.intro && (!ui.od || !ui.od.jobs) }, get profile() { return profile; }, cloud: { get state() { return cloud; }, sync: () => cloudSync(), signedIn, account, progress: () => progressNow(), untouched },
+  window.__arena = { get ui() { return ui; }, render, act, CARDS, zoneFor, online: { sync: () => odSync(), get od() { return ui.od; }, ON, VERSION, idle: () => !anim.playing && !ui.intro && (!ui.od || !ui.od.jobs) }, get profile() { return profile; }, cloud: { get state() { return cloud; }, sync: () => cloudSync(), signedIn, account, progress: () => progressNow(), untouched }, bank: { get state() { return bk; }, kept: () => bankKept(), sync: (f) => bankSync(f), banked: () => banked(),
+    earn: (seed, result, pay) => { profile.gp += pay; if (result === 'win') profile.wins += 1; else if (result === 'loss') profile.losses += 1; saveProfile(); bankClaim(seed, result, pay); } },
     // for tests that arrange the table by hand (a card put into a hand, a deck cut short): take the picture the
     // next move's animation starts from again, so it plays from the table as arranged
     resnap() { if (ui.g) { anim.shown = snap(ui.g); render(); } },
@@ -5782,7 +5965,7 @@ html, body { touch-action: manipulation; }
   function start(data) {
     cloud.live = true;
     if (landed) { accountLand(landed); return; }
-    if (signedIn()) cloudSync();
+    if (account()) (signedIn() ? cloudSync() : Promise.resolve()).then(() => bankSync(true));
     if (ui.on.code && ON) { render(); onlineEnter(); return; }
     if (data && data.config && Array.isArray(data.decisions)) { runDuel(data.config, data.decisions, data.bot); return; }
     if (!profile.tutorial && !profile.wins && !profile.losses && !store.get(STORE)) ui.modal = 'welcome';
