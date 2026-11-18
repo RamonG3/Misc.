@@ -769,6 +769,7 @@ html, body { touch-action: manipulation; }
 .stopt span { flex: none; width: 34px; height: 34px; border-radius: 50%; background: var(--gold); color: #1a1410; font-family: var(--display); font-weight: 700; font-size: 20px; display: flex; align-items: center; justify-content: center; }
 .stopt:hover, .stopt:focus-visible { border-color: var(--gold-hi); background: rgba(46,36,25,.92); color: var(--gold-hi); }
 .stopts.lose { flex-direction: row; width: auto; flex: none; }
+.stloc { display: flex; align-items: center; gap: 8px; font-size: 16px; font-weight: 700; letter-spacing: .04em; color: var(--bot-hi); }
 .stopts.lose button { height: 64px; padding: 0 26px; font-size: 22px; }
 .streward { position: absolute; left: 0; right: 0; margin: 0 auto; top: 50%; width: 760px; transform: translateY(-50%); display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 30px 40px;
   background: rgba(20,16,12,.95); border: 2px solid var(--gold); border-radius: 16px; box-shadow: 0 0 80px rgba(243,210,122,.25), 0 20px 60px #000; text-align: center; }
@@ -4607,6 +4608,7 @@ html, body { touch-action: manipulation; }
     const run = storyRun();
     if (!run) return storyHTML();
     const st = STY.step(run);
+    if (!ui.sc.scene) { const s0 = STY.sceneOf(run); ui.sc.scene = s0; ui.sc.night = !!(s0 && s0.night); }
     const sc = ui.sc.scene;
     let box = '';
     const lineBox = (line, action, more = '') => {
@@ -4641,9 +4643,11 @@ html, body { touch-action: manipulation; }
         <div class="stopts" role="group">${st.choose.map((o, k) => `<button type="button" class="stopt" data-do="stpick" data-v="${k}"><span>${k + 1}</span>${esc(o.t)}</button>`).join('')}</div></div></div>`;
     } else if (st.duel) {
       const o = STY.OPP[st.duel];
+      const cry = o.cry || { t: '' };
       box = `<div class="stbox left">${chathead(STY.SPEAKERS[o.speaker], 'left')}<div class="sttext"><b class="stname">${esc(o.name)}</b>
-        <p>${o.boss ? 'A boss fight.' : 'A duel.'}${o.location ? ` ${esc(o.location)} is in play from the start, and can't be replaced.` : ''}</p></div>
-        <div class="stopts lose" data-stop><button type="button" class="btn-g" data-do="stduel" style="height:68px;padding:0 30px;font-size:24px">Choose your deck</button></div></div>`;
+        <p${cry.act ? ' style="font-style:italic;color:var(--muted)"' : ''}>${esc(cry.t)}</p>
+        ${o.location ? `<small class="stloc">${ICN.lock} ${esc(o.location)} is in play from the start, and can't be replaced.</small>` : ''}</div>
+        <div class="stopts lose" data-stop><button type="button" class="btn-g" data-do="stduel" style="height:76px;padding:0 44px;font-size:30px">${o.boss ? 'Boss duel' : 'Duel'}</button></div></div>`;
     } else if (st.reward) {
       box = lineBox({ t: `${speakerOf(st.from) ? speakerOf(st.from).name : 'Someone'} holds something out to you.` }, 'streward');
     } else if (st.t !== undefined) box = lineBox(st, 'stnext');

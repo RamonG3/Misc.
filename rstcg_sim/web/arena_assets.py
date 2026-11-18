@@ -79,10 +79,14 @@ for cape in json.load(open(os.path.join(HERE, "cards.json")))["capes"]:
 
 # ---------- Location backdrops: the board's background while that Location is in play ----------
 BACKDROP = {"Wilderness": "wilderness.png", "Varrock": "varrock.jpg", "Grand Exchange": "grand_exchange.jpg",
-            "Wizards' Tower": "wizards_tower.jpg", "Lumbridge": "lumbridge_wide.jpg"}
+            "Wizards' Tower": "wizards_tower.jpg", "Lumbridge": "lumbridge_wide.jpg",
+            # Story Mode's boss Locations (2026-11-18): Count Draynor's cellar, and the stone circle
+            "Draynor Manor": "draynor_manor_cellar.png", "Moonlit Circle": "scene_stone_circle.png"}
 backdrop = {}
 for loc, f in BACKDROP.items():
     p = os.path.join(P.IMG, f)
+    if not os.path.exists(p):
+        p = os.path.join(ROOT, "art", "scenes", f)
     if os.path.exists(p):
         im = load(p).convert("RGB")
         backdrop[loc] = webp(fit(im, 1280, 1280), 68)
@@ -91,7 +95,8 @@ for loc, f in BACKDROP.items():
 # art/scenes/<file>: a painting behind the dialogue box, by the scene's name in web/story.js.
 # art/faces/<speaker>.png: a chathead, by the speaker's face name in web/story.js (square, see-through).
 STORY_SCENE = {"Lumbridge Swamp": "scene_lumbridge_swamp.png", "Draynor Village": "scene_draynor_village.png",
-               "Draynor Manor": "scene_draynor_manor_hall.png", "The stone circle": "scene_stone_circle.png"}
+               "Draynor Manor": "scene_draynor_manor_outside.png", "Draynor Manor stairs": "scene_draynor_manor_hall.png",
+               "Draynor Manor cellar": "scene_draynor_manor_cellar.png", "The stone circle": "scene_stone_circle.png"}
 SCENES = os.path.join(ROOT, "art", "scenes")
 FACES = os.path.join(ROOT, "art", "faces")
 scene = {}

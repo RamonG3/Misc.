@@ -47,28 +47,36 @@
 
   // ---------- the opponents ----------
   // deck: the card list (cards.json names). level: the bot level. capes: the capes it may bring (one at random).
+  // cry: what it says as the duel starts (the last line before the Duel button).
   // lose: what it says when you lose, before Retry. lines: what it says during the duel ("start", "firstHit").
   // location: a Location that starts in play and can't be replaced (STORY_BRIEF.md, rules change 1).
   // deckName: the opponent's deck in cards.json ("Story decks", from STORY_DECKS in cards.py, where the
   // simulator tunes them: STORY_OPPONENTS.md).
   const OPP = {
     bandit: { name: 'Bandit', speaker: 'bandit', deckName: 'Bandit', level: 'normal',
+      cry: { who: 'bandit', t: "Let's see how much you're worth!" },
       lose: { who: 'bandit', t: "Come back when you've grown a spine." } },
     highwayman: { name: 'Highwayman', speaker: 'highwayman', deckName: 'Highwayman', level: 'easy',
+      cry: { who: 'highwayman', t: "I'll take that purse off your corpse, then!" },
       lose: { who: 'highwayman', t: 'A pleasure doing business.' } },
     goblins: { name: 'Goblin Band', speaker: 'goblin', deckName: 'Goblin Band', level: 'normal',
+      cry: { who: 'goblin', t: 'Smash it! SMASH IT!' },
       lose: { who: 'goblin', t: 'We win! We never win!' } },
     skeleton: { name: 'Skeleton', speaker: 'skeleton', deckName: 'Skeleton', level: 'normal',
+      cry: { who: 'skeleton', t: 'The skeleton lurches out of the dark, its rusty blade raised high.', act: true },
       lose: { t: 'The skeleton clatters back into the shadows, waiting.' } },
     wizard: { name: 'Dark Wizard', speaker: 'wizard', deckName: 'Dark Wizard', level: 'hard',
+      cry: { who: 'wizard', t: 'Your bones will feed the circle!' },
       lose: { who: 'wizard', t: 'Run, little bookworm. Run while you can.' } },
     delrith: { name: 'Delrith', speaker: 'delrith', deckName: 'Delrith', level: 'hard', boss: true, location: 'Draynor Manor',
+      cry: { who: 'delrith', t: 'Kneel, and I might make it quick!' },
       lines: {
         start: [{ who: 'delrith', t: 'No Silverlight? Then you are already dead.' }],
         firstHit: [{ who: 'delrith', t: '...I felt that.' }, { who: 'delrith', t: 'Without Silverlight, nothing can harm me! ...Can it?' }],
       },
       lose: { who: 'delrith', t: 'Run along. Come back with a sword, if you can find one.' } },
     draynor: { name: 'Count Draynor', speaker: 'draynor', deckName: 'Count Draynor', level: 'hard', boss: true, location: 'Moonlit Circle',
+      cry: { who: 'draynor', t: 'Come closer. Let me taste your courage.' },
       lines: {
         start: [{ who: 'draynor', t: 'No stake? No garlic? Then you have no hope at all.' }],
         firstHit: [{ who: 'draynor', t: 'You... wounded me? That should not be possible.' }],
@@ -216,6 +224,7 @@
         say('wom', 'Ha! You get used to that. I once used those doors to chop a particularly stubborn log in half.'),
         nar('Something rattles in the dark.'),
         { duel: 'skeleton' },
+        { scene: 'Draynor Manor stairs' },
         nar('The skeleton collapses into a heap of dusty bones.'),
         you('There. Your ancient evil is slain. Very ancient, by the look of the dust.'),
         you('Can we talk now?'),

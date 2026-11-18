@@ -63,6 +63,8 @@ const site = require('http').createServer((req, res) => {
   }
   async function duel(won, name) {
     ok(await page.$('#board [data-do="stduel"]'), `${name}: a duel waits`);
+    { const t = await text(); ok(!/A duel\.|A boss fight\./.test(t) && /duel/i.test(t), `${name}: a battle cry and a Duel button (${t.slice(-80).replace(/\s+/g, ' ')})`); }
+    if (name === 'delrith') await shot('delrith-cry');
     await page.click('#board [data-do="stduel"]');
     ok(await screen() === 'pick', `${name}: the deck picker`);
     if (name === 'bandit') await shot('pick');
@@ -137,6 +139,7 @@ const site = require('http').createServer((req, res) => {
     if (opp === 'delrith') { ok(sc === 'stopped', 'the reward'); break; }
     ok(sc === 'map', `after ${opp}, the map`);
   }
+  ok(await page.evaluate(() => window.__arena.ui.sc.scene && window.__arena.ui.sc.scene.scene) === 'Draynor Manor cellar', 'after Delrith, still in the cellar');
   await shot('chapter-done');
   ok(/Chapter 1 complete/i.test(await text()), "chapter complete");
   await page.click('#board [data-do="stdone"]');
@@ -190,6 +193,7 @@ const site = require('http').createServer((req, res) => {
   await page.waitForFunction(() => window.__arena.ui.screen === 'result');
   await page.click('#board [data-do="stwon"]');
   ok(await screen() === 'scene' && /I'm going/.test(await text()), 'after the resumed duel the story goes on');
+  ok(await page.evaluate(() => window.__arena.ui.sc.scene && window.__arena.ui.sc.scene.scene) === 'Lumbridge Swamp', 'after a reload and a resumed duel, the scene is where the story is');
 
   // ----- an old profile (no story at all) loads, and the Story screen copes -----
   await page.evaluate(() => { const p = JSON.parse(localStorage.getItem('rstcg-profile-v1')); delete p.story; localStorage.setItem('rstcg-profile-v1', JSON.stringify(p)); });
