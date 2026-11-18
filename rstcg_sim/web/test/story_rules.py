@@ -29,6 +29,9 @@ def results():
     out["manor_damage"] = [g.compute_damage(0, 10, s)[0] for s in ("magic", "melee", "ranged")]
     g2 = base({"locked_location": "Moonlit Circle"})
     out["circle_damage"] = [g2.compute_damage(0, 10, s)[0] for s in ("magic", "melee", "ranged")]
+    for loc in ("Draynor Manor", "Moonlit Circle", "Wilderness"):   # a Punch, dealt for real
+        g3 = base({"locked_location": loc}); o = g3.players[1]; before = o.lp
+        g3.apply(0, ("punch",)); out[f"punch_{loc}"] = before - o.lp
     for spell in ("Claws of Guthix", "Hellfire", "Demon Fire", "Fire Bolt"):
         g = base()
         p, o = g.players
@@ -62,6 +65,10 @@ const base = (rules) => { const d = { 'Bronze Bar': 60 }; const g = new R.Game([
   out.manor_damage = ['magic', 'melee', 'ranged'].map((s) => g.compute_damage(0, 10, s)[0]);
   const g2 = base({ locked_location: 'Moonlit Circle' });
   out.circle_damage = ['magic', 'melee', 'ranged'].map((s) => g2.compute_damage(0, 10, s)[0]);
+  for (const loc of ['Draynor Manor', 'Moonlit Circle', 'Wilderness']) {
+    const g3 = base({ locked_location: loc }); const o = g3.players[1]; const before = o.lp;
+    await g3.apply(0, ['punch']); out[`punch_${loc}`] = before - o.lp;
+  }
   for (const spell of ['Claws of Guthix', 'Hellfire', 'Demon Fire', 'Fire Bolt']) {
     g = base(); const [p, o] = g.players;
     Object.assign(p.materials, { 'Blood Rune': 2, 'Fire Rune': 5, 'Chaos Rune': 2, 'Air Rune': 2 });

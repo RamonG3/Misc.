@@ -236,10 +236,11 @@ class Game:
         return extra
 
     def compute_damage(self, i, amount, style, ignore_armor=False, ignore_prayer=False, src=None,
-                       ignore_shield=False):
+                       ignore_shield=False, punch=False):
         """Return (damage to LP, damage soaked by shield) without changing anything.
         Pass src to include the attacker's buff prayer (deal() adds it itself)."""
         o = self.opp(i)
+        punch = punch or src == "punch"   # Story Mode's boss Locations don't change a Punch (Ramon, 2026-11-18)
         if src is not None:
             amount += self.attack_bonus(i, style, src)
         if self.location == "Wizards' Tower" and style == "magic":
@@ -248,9 +249,9 @@ class Game:
             amount += 2
         if self.location == "Mage Arena":
             amount += 2 if style == "magic" else -2 if style == "ranged" else 0
-        if self.location == "Draynor Manor":      # Story Mode: Delrith's boss fight
+        if self.location == "Draynor Manor" and not punch:      # Story Mode: Delrith's boss fight
             amount += 2 if style == "magic" else -2 if style == "melee" else 0
-        if self.location == "Moonlit Circle":     # Story Mode: Count Draynor's boss fight
+        if self.location == "Moonlit Circle" and not punch:     # Story Mode: Count Draynor's boss fight
             amount += 2 if style == "melee" else -2 if style == "magic" else 0
         if not ignore_armor and o.armor:
             for s, m in CARDS[o.armor].armor:
@@ -339,7 +340,7 @@ class Game:
             return 0
         o = self.opp(i)
         to_lp, soaked = self.compute_damage(i, amount, style, ignore_armor, ignore_prayer,
-                                            ignore_shield=ignore_shield)
+                                            ignore_shield=ignore_shield, punch=src == "punch")
         if shatter and o.shield and not o.shield.get("virtual") and not CARDS[o.shield["name"]].unshatter:
             soaked = o.shield["soak"] if soaked else soaked
         if o.shield and soaked:

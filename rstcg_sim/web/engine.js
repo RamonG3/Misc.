@@ -247,14 +247,15 @@
 
     // [damage to the deck, damage soaked by a shield], changing nothing.
     // Pass src to include the attacker's prayer bonus (deal adds it itself).
-    compute_damage(i, amount, style, ignore_armor = false, ignore_prayer = false, src = null, ignore_shield = false) {
+    compute_damage(i, amount, style, ignore_armor = false, ignore_prayer = false, src = null, ignore_shield = false, punch = false) {
       const o = this.opp(i);
+      punch = punch || src === 'punch';   // Story Mode's boss Locations don't change a Punch (Ramon, 2026-11-18)
       if (src !== null) amount += this.attack_bonus(i, style, src);
       if (this.location === "Wizards' Tower" && style === 'magic') amount += 2;
       if (this.location === 'Wilderness') amount += 2;
       if (this.location === 'Mage Arena') amount += style === 'magic' ? 2 : style === 'ranged' ? -2 : 0;
-      if (this.location === 'Draynor Manor') amount += style === 'magic' ? 2 : style === 'melee' ? -2 : 0;     // Story Mode: Delrith
-      if (this.location === 'Moonlit Circle') amount += style === 'melee' ? 2 : style === 'magic' ? -2 : 0;    // Story Mode: Count Draynor
+      if (this.location === 'Draynor Manor' && !punch) amount += style === 'magic' ? 2 : style === 'melee' ? -2 : 0;     // Story Mode: Delrith
+      if (this.location === 'Moonlit Circle' && !punch) amount += style === 'melee' ? 2 : style === 'magic' ? -2 : 0;    // Story Mode: Count Draynor
       if (!ignore_armor && o.armor) for (const [s, m] of CARDS[o.armor].armor) if (s === style) amount += m;
       if (o.longrange && style === 'melee') amount -= 2;
       if (o.light && style === 'melee') amount = Math.floor(amount / 2);
@@ -308,7 +309,7 @@
       if (amount > 0 && !opts.unreactable && (await this.offer_reaction(i, amount, style, src))) return 0;
       if (this.winner !== null) return 0;
       const o = this.opp(i);
-      let [to_lp, soaked] = this.compute_damage(i, amount, style, !!opts.ignore_armor, !!opts.ignore_prayer, null, !!opts.ignore_shield);
+      let [to_lp, soaked] = this.compute_damage(i, amount, style, !!opts.ignore_armor, !!opts.ignore_prayer, null, !!opts.ignore_shield, src === 'punch');
       let broke = null;
       if (opts.shatter && o.shield && !o.shield.virtual && !CARDS[o.shield.name].unshatter) soaked = soaked ? o.shield.soak : soaked;
       if (o.shield && soaked) {
