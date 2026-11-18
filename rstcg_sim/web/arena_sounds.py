@@ -1,8 +1,9 @@
-"""Pack the recorded spell sounds for the Arena: python web/arena_sounds.py  ->  web/arena_sounds.js
+"""Pack the recorded sounds for the Arena: python web/arena_sounds.py  ->  web/arena_sounds.js
 
-A spell that has a recording makes that sound when it is cast, in place of the synthesized one. The recordings
-are Ramon's files in art/sounds/ (kept out of the repo, like the art), each named after its spell: "Air Bolt.ogg"
-is what Air Bolt plays. ALIAS lists the few whose file goes by another name. A file with no card of its name is
+A spell that has a recording makes that sound when it is cast, in place of the synthesized one, and a rune that
+has one (its runecrafting sound) makes it when it is played. The recordings are Ramon's files in art/sounds/
+(kept out of the repo, like the art), each named after its card: "Air Bolt.ogg" is what Air Bolt plays. ALIAS
+lists the ones whose file goes by another name. A file with no card of its name is
 left alone and listed, so when a card of that name is added it picks its sound up with no change here.
 
 Not every browser plays Ogg (Safari on older Macs and iPhones doesn't), so each sound is converted once to a small
@@ -32,6 +33,8 @@ CARDS = json.load(open(os.path.join(HERE, "cards.json"), encoding="utf-8"))["car
 ALIAS = {
     "Superheat": "Superheat Item",            # the spell's full name in RuneScape (its icon file is named the same way)
     "Varrock Teleport": "Standard Teleport",  # every standard-spellbook teleport makes this sound
+    # runes: the sound of crafting them (Ramon, 2026-11-17); the combination runes have none and keep the thud
+    **{f"{r} Rune": f"Crafting_{r.lower()}_runes" for r in ("Air", "Water", "Earth", "Fire", "Chaos", "Death", "Blood")},
 }
 SOURCE_TYPES = (".ogg", ".mp3", ".wav", ".flac", ".m4a")
 # Mono (the game pans a sound itself): the plain average of left and right, so the level stays as recorded (left
@@ -97,14 +100,17 @@ def main():
 
     spells = sorted(n for n, c in CARDS.items() if c["kind"] == "spell")
     quiet = [n for n in spells if n not in data]
+    runes = sorted(n for n, c in CARDS.items() if c["kind"] == "material" and n.endswith(" Rune"))
     spare = sorted(os.path.basename(p) for k, p in have.items() if k not in used)
-    print(f"{len(data)} spell sounds, {len(js) // 1024} KB packed, from {SOUNDS}")
+    print(f"{len(data)} sounds ({len(data) - sum(n in data for n in runes)} spells, {sum(n in data for n in runes)} runes), {len(js) // 1024} KB packed, from {SOUNDS}")
     if not os.path.isdir(SOUNDS):
         print("  (no such folder: the game will use its synthesized spell sound for everything)")
     if data:
         print("  with a sound: " + ", ".join(sorted(data)))
     if quiet:
         print("  spells without one (they keep the synthesized sound): " + ", ".join(quiet))
+    if [n for n in runes if n not in data]:
+        print("  runes without one (they keep the card's thud): " + ", ".join(n for n in runes if n not in data))
     if spare:
         print(f"  {len(spare)} sounds with no card of that name: " + ", ".join(spare))
 

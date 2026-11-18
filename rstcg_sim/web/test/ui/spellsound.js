@@ -1,10 +1,13 @@
-// Recorded spell sounds: a spell that has a recording makes it when it is cast.
+// Recorded sounds: a spell that has a recording makes it when it is cast, and a rune that has one (its
+// runecrafting sound) makes it when it is played.
 // node web/test/ui/spellsound.js      ends "all passed" (about a minute); needs a build with the sounds packed
 //
 // Checks that every packed sound decodes and plays; that your cast and the bot's both make the spell's own sound
 // (and not the synthesized one on top); that a cast a Protect prayer turns away still sounds; that a spell with
 // no recording, a spell discarded in Varrock and Sound effects off stay as they were; that a resumed duel doesn't
-// cast its old spells again; and that reduced motion, which shows no flights, still plays a cast.
+// cast its old spells again; and that reduced motion, which shows no flights, still plays a cast. Runes: yours
+// and the bot's make their sound as they land (in place of the card's thud), a combination rune keeps the thud,
+// and reduced motion still plays it.
 const path = require('path');
 const fs = require('fs');
 const http = require('http');
@@ -100,7 +103,7 @@ const ok = (c, m) => { checks += 1; if (!c) { failures += 1; console.log('FAIL '
   // mistake; where it isn't, there is nothing to pack, and only the checks that need no recording are made.
   const folder = process.env.RSTCG_SOUNDS || path.join(__dirname, '..', '..', '..', 'art', 'sounds');
   if (!names.length && fs.existsSync(folder)) ok(false, `${folder} has sounds but this build has none packed (python web/arena_sounds.py, then build again)`);
-  console.log(names.length ? `${names.length} spell sounds packed: ${names.join(', ')}` : 'no spell sounds are packed in this build (no art/sounds folder here): checking only that spells keep their synthesized sound');
+  console.log(names.length ? `${names.length} sounds packed: ${names.join(', ')}` : 'no spell sounds are packed in this build (no art/sounds folder here): checking only that spells keep their synthesized sound');
   const cards = await page.evaluate(() => Object.keys(window.__arena.CARDS));
   ok(names.every((n) => cards.includes(n)), `a packed sound has no card: ${names.filter((n) => !cards.includes(n)).join(', ')}`);
   await page.evaluate(() => window.RSAudio.warm());
@@ -171,6 +174,18 @@ const ok = (c, m) => { checks += 1; if (!c) { failures += 1; console.log('FAIL '
     ok(!h.clips.length, `with Sound effects off no recording is played (heard ${JSON.stringify(h)})`);
     await page.evaluate(() => window.RSAudio.volumes({ sfx: 0.8 }));
   }
+  // ---------- runes: the runecrafting sound as the card lands, in place of its thud ----------
+  if (have('Air Rune')) {
+    h = await act(page, { hand: ['Air Rune'] }, ['play', 'Air Rune']);
+    ok(h.clips.join() === 'Air Rune' && !h.sfx.includes('card'), `you play an Air Rune: its crafting sound, not the thud (heard ${JSON.stringify(h)})`);
+    h = await act(page, { hand: ['Dust Rune'] }, ['play', 'Dust Rune']);
+    ok(!h.clips.length && h.sfx.includes('card'), `a combination rune has no recording and keeps the thud (heard ${JSON.stringify(h)})`);
+  }
+  if (have('Fire Rune')) {
+    await page.evaluate(() => { window.__bot.next = [['play', 'Fire Rune']]; });
+    h = await act(page, { botHand: ['Fire Rune'] }, ['pass']);
+    ok(h.clips.join() === 'Fire Rune', `the bot plays a Fire Rune: the same sound (heard ${JSON.stringify(h)})`);
+  }
   await page.context().close();
 
   // ---------- reduced motion: no flights, but a cast still sounds ----------
@@ -183,6 +198,10 @@ const ok = (c, m) => { checks += 1; if (!c) { failures += 1; console.log('FAIL '
     ok(h.clips.join() === 'Air Strike', `reduced motion still plays a cast (heard ${JSON.stringify(h)})`);
     h = await act(calm, { hand: ['Air Bolt'], location: 'Varrock' }, ['varrock', 'Air Bolt']);
     ok(!h.clips.length, `reduced motion: a discard is still not a cast (heard ${JSON.stringify(h)})`);
+    if (have('Water Rune')) {
+      h = await act(calm, { hand: ['Water Rune'] }, ['play', 'Water Rune']);
+      ok(h.clips.join() === 'Water Rune', `reduced motion still plays a rune's sound (heard ${JSON.stringify(h)})`);
+    }
     await calm.context().close();
   }
 
@@ -193,9 +212,11 @@ const ok = (c, m) => { checks += 1; if (!c) { failures += 1; console.log('FAIL '
     await real.waitForFunction(() => window.RSAudio.ready);
     await startDuel(real);
     // play runes, cast what can be cast, otherwise draw; stop after the first cast
+    // (counts spells cast, not every recording: the runes played on the way have sounds of their own)
+    const spellsCast = (pg) => pg.evaluate(() => { const C = window.__arena.CARDS; return window.RSAudio.clipLog.filter((c) => C[c.name].kind === 'spell').length; });
     const playOn = async (pg, casts) => {
       for (let k = 0; k < 80; k++) {
-        const n = (await heard(pg)).n;
+        const n = await spellsCast(pg);
         if (n >= casts) return n;
         if (await pg.evaluate(() => window.__arena.ui.screen) !== 'duel') return n;
         await pg.evaluate(() => {
@@ -207,7 +228,7 @@ const ok = (c, m) => { checks += 1; if (!c) { failures += 1; console.log('FAIL '
         if (await myTurn(pg) === 'over') break;
         await pg.waitForTimeout(250);
       }
-      return (await heard(pg)).n;
+      return await spellsCast(pg);
     };
     const n1 = await playOn(real, 1);
     ok(n1 >= 1, 'a duel played by its rules never got to cast a spell');

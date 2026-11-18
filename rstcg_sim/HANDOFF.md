@@ -13,35 +13,22 @@ This file describes where things stand. `CLAUDE.md` covers how the code fits tog
 - **Card art:** Ramon's Google Drive folder (the link is kept out of this public repo; ask Ramon).
   - Files are named by item; look in a `Detail` subfolder when there is one.
   - `art/art_map.json` maps each card to its Drive file ID; downloaded images are in `art/img/`.
-  - `rstcg_missing_art.csv` (one folder up, on Ramon's PC) lists the 62 cards still without art.
-- **Spell sounds:** Ramon's Drive folder RuneScape Kingdoms > Images > Spells > Spell Sounds (53 `.ogg` files, named by spell). On his PC they go in `art/sounds/`; see "Spell sounds" below.
+  - Every card has art since 2026-11-17; `rstcg_missing_art.csv` (one folder up, on Ramon's PC) is out of date. Pictures that aren't on Drive have `id: null` and their source in `path`.
+- **Spell sounds:** Ramon's Drive folder RuneScape Kingdoms > Images > Spells > Spell Sounds (53 `.ogg` files, named by spell), plus the seven `Crafting_<rune>_runes.ogg` he gave in chat on 2026-11-17. On his PC they go in `art/sounds/`; see "Spell sounds" below.
 - **Jagex's Fan Content Policy:** https://legal.jagex.com/docs/policies/fan-content-policy (version 1.4, 29 September 2026, when the notice was added). See "The fan-content notice" below.
 
-## Start here (for a new chat, 2026-11-17 evening): the goal is art for every card
+## Start here (for a new chat, after 2026-11-17)
 
-- **Everything below is built, pushed** to `RamonG3/Misc.` branch `claude/card-game-ai-opponents-e90esn` (`rstcg_sim/`), **live** (Netlify app with the bank; Supabase `duel` function version 6), **and copied to Ramon's PC** (`C:\Users\ramon\Downloads\rstcg_project\rstcg_sim`). `node web/test/ui/run_all.js` passed all 21 tests on 2026-11-17.
-- **Online, as of tonight:** sign-in is by emailed 6-digit code for anyone (sender runescapetcg.game@gmail.com; Google switched off); the server is the bank for everyone who has been online (`ONLINE_BRIEF.md`, phase 3b). Ramon's account is **Zukrathion**; sync worked on his PC and Pixel.
-- **The next chat's job (Ramon, 2026-11-17): add the missing art to every card.** 55 cards in Set 1 have no picture yet (Quest Point Cape is fine: capes keep theirs in `AS.cape`). Counted from `arena_assets.js`; `rstcg_missing_art.csv` (one folder up from `rstcg_sim` on the PC, listing 62) predates the art added since.
-  - Weapons: Ancient Mace, Barrelchest Anchor, Dark Bow (L), Dragon Dagger (L), Granite Maul (L), Magical Longsword, Saradomin Sword, Staff of the Dead (L); bows: Seercull, Shieldbow; staff: Staff of Light.
-  - Thrown and ammo: Bronze / Mithril / Rune Darts, Bronze / Mithril / Rune Knives, Bronze / Mithril / Rune Throwing Axe, Rune Arrows (its art is on Drive, not downloaded yet).
-  - Armour and shields: Anti-dragon Shield, Infinity Top, Mystic Robe Top, Void Knight Top.
-  - Spells: Dust, Lava, Mist, Mud, Smoke and Steam Flurry.
-  - Abilities and reactions: Crush, Slash, Stab, Longrange, Rapid, Parry, Ricochet.
-  - Quests: Cook's Assistant, Demon Slayer, Dragon Slayer, Ernest the Chicken, Goblin Diplomacy, Prince Ali Rescue, Romeo & Juliet, The Restless Ghost, Vampyre Slayer.
-  - People and places: Brother Jered, Wise Old Man (L), Duel Arena, Mage Arena.
-  - Food and materials: Karambwan, Shark, Enchanted Logs, Mithril Grapple.
-- **How art gets in** (see "Art pipeline" under "Small things done alongside" below, and "Card art" under Links):
-  - Pictures come from Ramon's Google Drive art folder (link kept out of the repo; ask Ramon), named by item, in a `Detail` subfolder when there is one (the Google Drive connector can search and download it). `art/art_map.json` maps each card to its Drive file id; downloaded pictures go in `art/img/` on the PC (never in the repo).
-  - Then `python3 web/arena_assets.py` on the PC (its device shell has python3 and PIL) rebuilds `web/arena_assets.js`; compare it with the old one entry by entry (only the new cards should change); bring it back and `python web/build_arena.py`, then `build_netlify.py`, then a zip for Ramon to deploy.
-  - Pictures copied to the PC through Claude gain a ~6 KB provenance tag: never judge an image by its size on disk (`is_pixel_icon` goes by pixels).
-  - Some cards may have no picture on Drive at all (abilities like Slash or Stab, the Flurry spells): ask Ramon whether to wait for art from him, or draw or pick something.
-- **Open items, after the art:**
+- **Everything below is built and pushed** to `RamonG3/Misc.` branch `claude/card-game-ai-opponents-e90esn` (`rstcg_sim/`), **and copied to Ramon's PC** (`C:\Users\ramon\Downloads\rstcg_project\rstcg_sim`). Live: the Netlify app as of the bank (the art and rune sounds below are in `web/dist/netlify` and the zip given to Ramon on 2026-11-17, deployed when he drags it in); Supabase `duel` function version 6 (nothing server-side changed since).
+- **Online:** sign-in is by emailed 6-digit code for anyone (sender runescapetcg.game@gmail.com; Google switched off); the server is the bank for everyone who has been online (`ONLINE_BRIEF.md`, phase 3b). Ramon's account is **Zukrathion**.
+- **Every card in Set 1 has art (2026-11-17).** See "Card art for every card" below. Runes now make their runecrafting sound when played (see "Spell sounds").
+- **Open items:**
   1. **The fan-content notice:** Ramon was told the Jagex policy (clauses 6.1.3 and 2.4) doesn't cover video games or the RuneScape trade marks. He hasn't said whether to keep the policy's wording or swap to a plain "fan-made, not endorsed by Jagex" line.
   2. **A CAPTCHA on sign-ups** (Supabase recommends Cloudflare Turnstile) before the link is shared widely. Ramon: "later".
   3. **Find a match** (phase 4).
   4. **The mobile flicker** is still there; Ramon wants to come back to it later, perhaps with a packaged Android app (APK).
   5. Smaller: sounds for the six Flurry spells (the Surge sounds are spare).
-- **Working with the PC:** the art and spell sounds live only in its `art/` folder. Its device shell has python3, PIL and ffmpeg, so `python3 web/arena_assets.py` and `python3 web/arena_sounds.py` run there. Only `rstcg_sim` has been connected so far; `art/` is inside it, the missing-art CSV one level up. The shell can't delete files without asking Ramon. Copy files to the PC only after the command that writes them has finished.
+- **Working with the PC:** the art and spell sounds live only in its `art/` folder. Its device shell has python3, PIL and ffmpeg, so `python3 web/arena_assets.py` and `python3 web/arena_sounds.py` run there. On 2026-11-17 Ramon connected the folder one level up (`rstcg_project`), so `rstcg_sim/art/` and the old missing-art CSV are both reachable. The shell can't delete files without asking Ramon. Copy files to the PC only after the command that writes them has finished.
 
 ## The Arena: what's done
 
@@ -172,11 +159,20 @@ Ramon chose: Google and emailed codes both; ask each time when a device with pro
   - The PC's `print/build_pnp.py` had lost the Enchanted Bar's art entry; it is back. After any art change, compare the new `arena_assets.js` with the old one entry by entry before trusting it (2026-11-16: only the three new entries differ).
 - **The crest no longer jumps** while the menu slides in on phones and laptops (its `scale` sat on the element the slide animates; it is on an inner one now).
 
+### Card art for every card (2026-11-17)
+- The 55 cards without art got it. Rune Arrows came from Ramon's Drive folder; 47 from the wikis (Ramon allowed `oldschool.runescape.wiki`, `runescape.wiki` and `dragonwilds.runescape.wiki` for this session; Dragonwilds had nothing better); Dragon Slayer is the Shadow of Elvarg painting Ramon gave in chat (`dragon_slayer_elvarg.jpg`, its black frame trimmed); the six Flurry spells have no art in any RuneScape game, so Claude made each from its two elements' Wave icons plus its combination rune (`*_flurry.png`; Ramon can veto).
+- Picks worth knowing: items are the OSRS detail pictures, except Staff of Light (RS3), Shieldbow (RS3's "Shieldbow", the old longbow) and Magical Longsword (RS3's Chaotic longsword: chaos rune in the recipe). Karambwan is the raw one (the cooked one is a white star that vanishes on the card). Abilities are RS3 ability icons: Crush = Assault, Slash = Sever, Stab = Bladed Dive, Longrange = Snipe, Rapid = Rapid Fire, Parry = Preparation, Ricochet = Ricochet. Quests and the two arenas are the wikis' quest/place pictures (`SCENE`), mostly RS3; Ernest the Chicken is OSRS. Brother Jered and the Wise Old Man are RS3 (`PORTRAIT`).
+- On the PC: the pictures are in `art/img` under the card's name in snake case (`ancient_mace.png`); `art/art_map.json` has each with `id: null` and `path` saying where it came from (`art/art_map_additions.json` is the batch as added); `print/build_pnp.py` gained the new quests and arenas in `SCENE` and the two NPCs in `PORTRAIT`. Kept for comparison (delete when happy): `web/arena_assets.before_art.js`, `web/arena_sounds.before_runes.js`, `art/art_map.before_art.json`, `print/build_pnp.before_art.py`.
+- Checked: the new `arena_assets.js` against the old one entry by entry: no old entry changed, 55 new (29 item, 13 px, 11 scene, 2 portrait). Two wiki PNGs (Magic logs, Mystic robe top) were RGB with a "black is see-through" key that `load()` drops (they came out on black boxes), so they were saved again as RGBA. **Watch for that in any new wiki picture.**
+- Only Quest Point Cape has no `art` entry, as before: capes use `AS.cape`.
+- Committing to the PC from the same staged path twice can silently keep the first copy: stage a new file name (or check the md5 on the PC) when sending a file again.
+
 ### Spell sounds (2026-11-16)
 Ramon: "if you successfully cast Air Bolt, it'll play the Air Bolt.ogg sound".
 
 - **What plays:** a spell with a recording makes it as it is cast, for either player, and whether or not it lands (a Protect prayer can still turn it away: the cast worked, the landing didn't). It takes the place of the synthesized spell sound; the hit keeps its own. A spell discarded (resting in Varrock, trading at the Grand Exchange) is not a cast. Reduced motion, which plays no flights, still plays a cast.
 - **Which:** a sound belongs to the card its file is named after. `ALIAS` in `web/arena_sounds.py` holds the two that differ: Superheat ("Superheat Item") and Varrock Teleport ("Standard Teleport", the sound every standard teleport makes; Claude's call, Ramon can veto). The six Flurry spells have no file and keep the synthesized sound. The folder's other files (Surge spells, curses, alchemy and so on) have no cards yet; a card added under one of those names picks its sound up by itself.
+- **Runes (2026-11-17, Ramon):** Air, Water, Earth, Fire, Chaos, Death and Blood Rune make their runecrafting sound (`Crafting_<rune>_runes.ogg`, `ALIAS` in `arena_sounds.py`) as the card lands on the table, yours or the bot's, in place of the card's thud, at 0.8 of the spells' volume (`RUNE_V`); reduced motion still plays it. The six combination runes have none and keep the thud. A rune coming back from the discard (Brother Jered, the Wise Old Man) isn't played, and keeps the thud. Measured before packing: the same loudness range as the spell recordings (-30 to -43 dB mean). `spellsound.js` checks yours, the bot's, a combination rune and reduced motion. 25 sounds packed (18 spells, 7 runes), about 500 KB.
 - **Pipeline:** `python web/arena_sounds.py` reads `art/sounds/*.ogg`, converts each sound that has a card to a small mono MP3 with ffmpeg (Safari on older Macs and iPhones doesn't play Ogg), keeps those in `art/sounds/game/`, and writes `web/arena_sounds.js` (`window.ARENA_SOUNDS`, 18 sounds, about 340 KB), which `build_arena.py` inlines like the art. The sounds and the generated file stay out of the repo (`.gitignore` has `art/` and `web/arena_sounds.js`); `recover_generated.py` gets the pack back out of a built page.
   - **Run it on Ramon's PC** (Claude's shell there has ffmpeg 4.4; plain Windows may not), then bring `web/arena_sounds.js` back, as with the art. The copies made there are the ones that ship: another ffmpeg makes the same sound as slightly different bytes.
   - The conversion leaves the level as recorded (a plain average of left and right, which are the same in these files), takes off the silence ahead of the sound (up to a fifth of a second), and writes no tags.
@@ -190,7 +186,6 @@ Ramon: "if you successfully cast Air Bolt, it'll play the Air Bolt.ogg sound".
 - Ramon has been told what else the policy says that bears on this project: clause 6.1.3 (video games and other software made with Jagex Property are not among the things it allows) and clause 2.4 (it doesn't cover Jagex's trade marks). What to do about that is his call; the policy gives IP@Jagex.com for questions. Claude isn't a lawyer.
 
 ### 6. Later
-- **Card art** for the 62 cards in `rstcg_missing_art.csv`. Rune Arrows art exists on Drive but isn't downloaded yet.
 - **Sounds for the six Flurry spells,** if Ramon wants them (the four Surge sounds are spare).
 - **Rebuild decks from the full tested pool,** to see what independent deckbuilding does to balance.
 - **Print-and-play:** `print/build_pnp.py` + `print/render.js` → PDFs. Done for the 3 starters.

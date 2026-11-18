@@ -1,6 +1,6 @@
 """Build the Arena client: python web/build_arena.py  ->  web/dist/arena.html
 
-One self-contained file, like dist/game.html: card data, art, fonts, spell sounds, the engine and the bot are all
+One self-contained file, like dist/game.html: card data, art, fonts, spell and rune sounds, the engine and the bot are all
 inlined. Run python web/arena_assets.py first when art or fonts change, and python web/arena_sounds.py when the
 spell sounds do (this script runs each if its output is missing).
 """
@@ -62,4 +62,4 @@ os.makedirs(os.path.join(HERE, "dist"), exist_ok=True)
 out = os.path.join(HERE, "dist", "arena.html")
 open(out, "w").write(src)
 sounds = json.loads(parts["/*__SOUNDS__*/"][len("window.ARENA_SOUNDS = "):-1])
-print(out, len(src) // 1024, "KB", "version", version_stamp(), "|", len(sounds), "spell sounds")
+print(out, len(src) // 1024, "KB", "version", version_stamp(), "|", len(sounds), "recorded sounds (spells and runes)")

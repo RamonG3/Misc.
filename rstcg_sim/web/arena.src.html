@@ -1327,6 +1327,7 @@ html, body { touch-action: manipulation; }
   const HOLD_YOU = { x: 430, y: 236, w: 225, h: 315 }, HOLD_BOT = { x: 848, y: 150, w: 225, h: 315 };
   const tempo = () => (calm() ? 0 : fast() ? 0.12 : 1);
   const SLOTS = ['weapon', 'shield', 'armor', 'ammo', 'prayer', 'quest'];
+  const RUNE_V = 0.8;                       // runecrafting sounds: a little under the spells', since runes come down often
   const STAYS = new Set(['weapon', 'thrown', 'bow', 'staff', 'shield', 'armor', 'arrows', 'buff', 'material', 'quest', 'location']);
   const STYLE_COL = { melee: '#ff9b85', ranged: '#9fd986', magic: '#9cc3e6', none: '#f3d27a' };
 
@@ -1425,7 +1426,8 @@ html, body { touch-action: manipulation; }
     anim.hint = anim.held = anim.reactFrom = anim.drop = null;
     if (ui.replaying || ui.intro || !before || !T) {
       // reduced motion plays no flights or blows, but a spell that was just cast still makes its own sound
-      if (!ui.replaying && !ui.intro && before && hint && hint.act === 'play' && CARDS[hint.name] && !STAYS.has(CARDS[hint.name].kind)) AU.clip(hint.name);
+      // (and so does a rune that was just played: its runecrafting sound)
+      if (!ui.replaying && !ui.intro && before && hint && hint.act === 'play' && CARDS[hint.name] && (!STAYS.has(CARDS[hint.name].kind) || CARDS[hint.name].kind === 'material')) AU.clip(hint.name, { v: RUNE_V });
       if (held) held.el.remove(); $('#reveal').innerHTML = ''; render(); return;
     }
     const R0 = capture();
@@ -1492,7 +1494,9 @@ html, body { touch-action: manipulation; }
     // ---- the card that was played ----
     // A spell with a recording of its own makes that sound as it is cast, whoever casts it and whether or not
     // it lands (a Protect prayer can still turn it away); castSound is then the caster, and the attack that
-    // follows doesn't add the synthesized spell sound on top.
+    // follows doesn't add the synthesized spell sound on top. A rune with a recording (its runecrafting sound)
+    // makes it as it lands on the table, in place of the card's thud; a rune coming back from the discard pile
+    // (Brother Jered, the Wise Old Man) isn't being played, and keeps the thud.
     let cast = null, castSound = null;
     const phase1 = [];
     const h = ctx.hint;
@@ -1507,7 +1511,9 @@ html, body { touch-action: manipulation; }
       if (destEl) {
         if (ctx.held) ctx.held.el.remove();
         if (isNew) hide(destEl);
-        phase1.push(flyCard({ name: h.name, from: src, to: stageXY(destEl), dur: D(460), rot0: src.rot || 0, onLand: () => { pop(destEl); sfx('card'); } }));
+        const runeSound = h.act === 'play' && CARDS[h.name] && CARDS[h.name].kind === 'material';
+        phase1.push(flyCard({ name: h.name, from: src, to: stageXY(destEl), dur: D(460), rot0: src.rot || 0,
+          onLand: () => { pop(destEl); if (!(runeSound && AU.clip(h.name, { v: RUNE_V, pan: i === you ? -0.2 : 0.2 }))) sfx('card'); } }));
       } else if (take(m.discIn, h.name)) {
         const hold = i === you ? HOLD_YOU : HOLD_BOT;
         cast = { i, name: h.name, rect: hold };
