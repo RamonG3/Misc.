@@ -1,5 +1,5 @@
 // Settings → Card text: Large makes the words on every card face bigger and bolder (for a TV across the room).
-// Every card's words must still fit its face (no text cut off, no name cut short) in both sizes, the setting must
+// Every card must say what it does, and its words must still fit its face (no text cut off, no name cut short) in both sizes, the setting must
 // stick after a reload, and Settings must still fit on a phone.
 // Run from anywhere: node web/test/ui/cardtext.js   (screenshots go to web/test/ui/shots/cardtext/)
 const path = require('path');
@@ -45,6 +45,15 @@ const PAGE = 'file://' + path.join(__dirname, '..', '..', 'dist', 'arena.html');
     ok(!bad.length, `${big ? 'Large' : 'Normal'} card text doesn't fit: ${bad.join(', ')}`);
   }
   await page.evaluate(() => document.documentElement.classList.remove('bigtext'));
+  // every card says what it does (2026-11-18: the boss Locations said nothing, so a Punch for 0 in the cellar was a mystery)
+  const blank = await page.evaluate(() => {
+    const A = window.__arena, h = document.createElement('div'), out = [];
+    document.body.appendChild(h);
+    for (const n of Object.keys(A.CARDS)) { if (/ Cape$/.test(n)) continue; h.innerHTML = A.cardFace(n); if (!h.querySelector('.cf-bd').textContent.trim()) out.push(n); }
+    h.remove();
+    return out;
+  });
+  ok(!blank.length, 'cards with no words on them: ' + blank.join(', '));
   // the setting
   await page.click('[data-do="settings"]');
   await page.click('[data-do="set"][data-v="cardtext:large"]');

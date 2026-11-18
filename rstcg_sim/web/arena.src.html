@@ -1032,7 +1032,11 @@ html, body { touch-action: manipulation; }
           'Mage Arena': 'Magic damage +2, Ranged damage −2, for both players.',
           'Duel Arena': 'No food, no prayers of any kind. Active prayers end when it arrives.',
           'Grand Exchange': 'Once a turn, free: discard a card from hand to draw a card. Either player.',
+          // Story Mode's boss Locations (2026-11-18: they had no text, which made a 0-damage Punch a mystery)
+          'Draynor Manor': 'Magic damage +2, Melee damage −2, for both players. Punches are unchanged.',
+          'Moonlit Circle': 'Melee damage +2, Magic damage −2, for both players. Punches are unchanged.',
         }[c.name] || '');
+        if (c.story === 'boss') t.push('Boss duels only. In play from the start, and it can’t be replaced.');
         break;
       case 'quest':
         type = `Quest · ${c.qp} QP`;
@@ -3021,6 +3025,8 @@ html, body { touch-action: manipulation; }
       case "Wizards' Tower": return b(ic('magic'), '+2');
       case 'Wilderness': return b(ic('melee', 18) + ic('ranged', 18) + ic('magic', 18), '+2');
       case 'Mage Arena': return b(ic('magic', 20), '+2') + `<div style="position:absolute;right:12px;bottom:8px;display:flex;align-items:center;gap:3px;padding:2px 8px;border-radius:20px;background:var(--parch);border:2px solid var(--gold)">${ic('ranged', 16)}<b style="color:var(--ink);font-family:var(--display)">−2</b></div>`;
+      case 'Draynor Manor': return b(ic('magic', 20), '+2') + `<div style="position:absolute;right:12px;bottom:8px;display:flex;align-items:center;gap:3px;padding:2px 8px;border-radius:20px;background:var(--parch);border:2px solid var(--gold)">${ic('melee', 16)}<b style="color:var(--ink);font-family:var(--display)">−2</b></div>`;
+      case 'Moonlit Circle': return b(ic('melee', 20), '+2') + `<div style="position:absolute;right:12px;bottom:8px;display:flex;align-items:center;gap:3px;padding:2px 8px;border-radius:20px;background:var(--parch);border:2px solid var(--gold)">${ic('magic', 16)}<b style="color:var(--ink);font-family:var(--display)">−2</b></div>`;
       case 'Lumbridge': return b('', 'Last card saved');
       case 'Varrock': return b('', 'Rest: heal 3');
       case 'Duel Arena': return b('', 'No food · no prayer');
