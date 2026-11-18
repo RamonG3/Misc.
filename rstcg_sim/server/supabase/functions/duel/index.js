@@ -26,7 +26,9 @@
 //   pack { ref: 'pack:<nonce>' } or { free: true }   -> { bank, cards: [{ name, rar }] }   200 GP (the tutorial's: free,
 //                                    once); the server picks the cards. The same ref again gives the same pack.
 //   replace { snapshot }          -> { bank }           "keep this device's progress": the same check as opening
-//   reset                         -> { bank }           back to the starter decks and 0 GP
+//   reset                         -> { bank }           back to the starter decks and 0 GP (Story Mode's rewards stay)
+//   story { keys: ['ch1:A'] }     -> { bank, done: [key] }  Story Mode: the card a road gives (packs.js STORY_REWARDS),
+//                                    as the device reports finishing it (believed, like bot duels), each key once ever
 // Online duels are paid by the database as the result is recorded (duel_append), and a deck taken online must
 // be one you own (challenge, join, rematch).
 //
@@ -186,7 +188,21 @@ async function openBank(uid, snapshot) {
   const v = how === 'starter' ? { gp: 0, coll: P.starter().coll, packs: 0 } : c;
   const bank = await rpc('bank_open', { p_user: uid, p_gp: v.gp, p_coll: v.coll, p_packs: v.packs,
     p_free: how !== 'starter' && !!from.tutorialPack, p_how: how });
+  if (how !== 'starter') await storyKept(uid, c.story);
   return doubt ? { bank, opened: how, doubt } : { bank, opened: how };
+}
+// Story rewards a device already holds when its progress becomes the bank: logged as given (cards already in),
+// so finishing that road again can't give a second copy.
+async function storyKept(uid, keys) {
+  for (const key of keys || []) await rpc('bank_apply', { p_user: uid, p_ref: `story:${key}`, p_kind: 'story-kept', p_gp: 0, p_cards: null, p_packs: 0, p_free: false });
+}
+// a collection with exactly the story's cards for these roads (a reset or a replace keeps them), the rest as it was
+async function withStory(uid, coll, keys) {
+  const out = { ...coll };
+  for (const card of Object.values(PK.STORY_REWARDS)) delete out[card];
+  const refs = new Set([...((await rpc('bank_story_refs', { p_user: uid })) || []), ...(keys || []).map((k) => `story:${k}`)]);
+  for (const ref of refs) { const card = PK.STORY_REWARDS[ref.slice('story:'.length)]; if (card) out[card] = (out[card] || 0) + 1; }
+  return out;
 }
 async function bankOrOops(uid) {
   const b = await rpc('bank_get', { p_user: uid });
@@ -314,10 +330,26 @@ const OPS = {
     const c = P.plausible(b.snapshot);
     if (!c.ok) throw new Oops('doubt', 'That progress doesn\'t add up, so it can\'t replace the account\'s.', 409);
     const free = !!(b.snapshot && b.snapshot.tutorialPack);
-    return { bank: await rpc('bank_set', { p_user: uid, p_ref: `replace:${Date.now()}`, p_kind: 'replace', p_gp: c.gp, p_coll: c.coll, p_packs: c.packs, p_free: free }) };
+    const bank = await rpc('bank_set', { p_user: uid, p_ref: `replace:${Date.now()}`, p_kind: 'replace', p_gp: c.gp, p_coll: await withStory(uid, c.coll, c.story), p_packs: c.packs, p_free: free });
+    await storyKept(uid, c.story);
+    return { bank };
   },
-  async reset(uid) {
-    return { bank: await rpc('bank_set', { p_user: uid, p_ref: `reset:${Date.now()}`, p_kind: 'reset', p_gp: 0, p_coll: P.starter().coll, p_packs: 0, p_free: false }) };
+  async reset(uid) {      // the story's rewards are kept: finishing a road again never gives its card twice
+    const coll = await withStory(uid, P.starter().coll, []);
+    return { bank: await rpc('bank_set', { p_user: uid, p_ref: `reset:${Date.now()}`, p_kind: 'reset', p_gp: 0, p_coll: coll, p_packs: 0, p_free: false }) };
+  },
+  async story(uid, b) {
+    const keys = Array.isArray(b.keys) ? b.keys.slice(0, 20) : [];
+    let bank = await bankOrOops(uid);
+    const done = [];
+    for (const key of keys) {
+      const card = typeof key === 'string' && Object.prototype.hasOwnProperty.call(PK.STORY_REWARDS, key) ? PK.STORY_REWARDS[key] : null;
+      if (!card) continue;
+      const r = await rpc('bank_apply', { p_user: uid, p_ref: `story:${key}`, p_kind: 'story', p_gp: 0, p_cards: { [card]: 1 }, p_packs: 0, p_free: false });
+      if (r.bank) bank = r.bank;
+      if (r.ok) done.push(key);
+    }
+    return { bank, done };
   },
 };
 

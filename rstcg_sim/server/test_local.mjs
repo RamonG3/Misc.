@@ -355,6 +355,27 @@ console.log(`rematches: offered, taken up, withdrawn, replaced, raced`);
   ok(r.body.bank.gp === 150 && r.body.bank.packs === 1 && r.body.bank.free === true, `replace: ${J(r.body)}`);
   r = await call(fay, { op: 'reset' });
   ok(r.body.bank.gp === 0 && r.body.bank.packs === 0 && J(r.body.bank.coll) === J(st.coll) && r.body.bank.free === false, 'reset');
+  // Story Mode: a road's card, once ever; unknown keys give nothing; a reset keeps it; a boss's card can't be taken online
+  r = await call(fay, { op: 'story', keys: ['ch1:A', 'ch9:Z', 'toString'] });
+  ok(r.status === 200 && J(r.body.done) === J(['ch1:A']) && r.body.bank.coll['Claws of Guthix'] === 1, `story reward: ${J(r.body)}`);
+  r = await call(fay, { op: 'story', keys: ['ch1:A'] });
+  ok(r.body.bank.coll['Claws of Guthix'] === 1, 'story reward asked for again: still one copy');
+  r = await call(fay, { op: 'reset' });
+  ok(r.body.bank.coll['Claws of Guthix'] === 1 && r.body.bank.gp === 0, `a reset keeps the story's cards: ${J(r.body.bank.coll['Claws of Guthix'])}`);
+  r = await call(fay, { op: 'reset' });
+  ok(r.body.bank.coll['Claws of Guthix'] === 1, 'two resets still one copy');
+  {   // a device that finished a road before going online: its card is kept when it opens the bank, and logged as given
+    const zed = uuid(); db.profiles.set(zed, { id: zed, name: 'Zed' });
+    const snap = { ...honest, coll: { ...honest.coll, 'Shield of Arrav': 1, 'Claws of Guthix': 3 }, story: { claimed: { 'ch1:B': 'Shield of Arrav' } } };
+    r = await call(zed, { op: 'bank', snapshot: snap });
+    ok(r.body.bank.coll['Shield of Arrav'] === 1 && !r.body.bank.coll['Claws of Guthix'], `opening keeps a story card the device was given, and no other: ${J(r.body)}`);
+    r = await call(zed, { op: 'story', keys: ['ch1:B'] });
+    ok(r.body.bank.coll['Shield of Arrav'] === 1, 'and finishing that road again gives no second copy');
+  }
+  const bossDeck = { ...G.PD.decks[0].cards };
+  { const k = Object.keys(bossDeck).find((n) => !PK.isBasic(n)); bossDeck[k] -= 1; if (!bossDeck[k]) delete bossDeck[k]; bossDeck.Bite = 1; }
+  await expectError(fay, { op: 'challenge', deck: bossDeck, cape: G.PD.decks[0].capes[0], version: VERSION }, 'deck', "a deck with a boss's card");
+  r = await call(fay, { op: 'reset' });
   // owning the deck: the starter collection holds the starter decks, but not a tournament deck
   const starterDeck = G.PD.decks[0];
   r = await call(fay, { op: 'challenge', deck: starterDeck.cards, cape: starterDeck.capes[0], version: VERSION });

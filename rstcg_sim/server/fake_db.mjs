@@ -124,6 +124,9 @@ export function makeDb({ now = () => Date.now(), uuid = () => crypto.randomUUID(
       log.set(p_ref, { kind: p_kind, gp: p_gp, cards: p_cards ? JSON.parse(J(p_cards)) : null, at: now() });
       return { ok: true, bank: bankRow(v), cards: p_cards ? JSON.parse(J(p_cards)) : null };
     },
+    bank_story_refs({ p_user }) {                           // public.bank_story_refs (Story Mode)
+      return [...logOf(p_user).entries()].filter(([ref, l]) => ['story', 'story-kept'].includes(l.kind) && ref.startsWith('story:')).map(([ref]) => ref).sort();
+    },
     bank_set({ p_user, p_ref, p_kind, p_gp, p_coll, p_packs, p_free }) {
       const v = db.bank.get(p_user);
       const row = { user_id: p_user, gp: p_gp, coll: JSON.parse(J(p_coll)), packs: p_packs, free_pack: !!p_free, rev: v ? v.rev + 1 : 1, created_at: v ? v.created_at : iso(), updated_at: iso() };

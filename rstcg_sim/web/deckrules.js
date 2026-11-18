@@ -5,7 +5,8 @@
  *                           //   -> { total, sixty, copies, legend, owns, known, over, legends, short, unknown, ok }
  *
  * Exactly 60 cards, at most 4 of a card (common materials excepted), at most 1 Legendary, only real cards
- * (no capes, nothing cut from the set), and, when `owned` is given, no more copies than you own.
+ * (no capes, nothing cut from the set, no Story Mode boss's own cards), and, when `owned` is given, no more copies
+ * than you own.
  */
 (function (root) {
   'use strict';
@@ -16,7 +17,7 @@
   function make(CARDS, set1) {
     const rarityOf = (n) => (set1[n] ? set1[n].rarity : 'C');
     const isBasic = (n) => !!CARDS[n] && CARDS[n].kind === 'material' && (!set1[n] || set1[n].rarity === 'C');   // any number
-    const real = (n) => !!CARDS[n] && CARDS[n].kind !== 'cape' && !/\(cut/.test(n);
+    const real = (n) => !!CARDS[n] && CARDS[n].kind !== 'cape' && !/\(cut/.test(n) && CARDS[n].story !== 'boss';
     function check(cards, owned) {
       const rows = Object.entries(cards || {});
       const total = rows.reduce((s, [, k]) => s + k, 0);

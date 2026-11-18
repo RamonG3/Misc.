@@ -54,6 +54,15 @@ r = await one(`select public.bank_get($1)`, [A]);
 ok(r.gp === 200 + 50 * 199, 'daily cap of 200 bot duels (one was paid before): ' + r.gp);
 r = await one(`select public.bank_set($1, 'reset:1', 'reset', 0, '{"Lobster":4}', 0, false)`, [A]);
 ok(r.gp === 0 && r.coll.Lobster === 4 && !r.coll.Excalibur && r.free === false, 'reset');
+// Story Mode: a road's card, once ever; the cards the story gave, for a reset to keep
+r = await one(`select public.bank_apply($1, 'story:ch1:A', 'story', 0, '{"Claws of Guthix":1}', 0, false)`, [A]);
+ok(r.ok && r.bank.coll['Claws of Guthix'] === 1, 'story reward given');
+r = await one(`select public.bank_apply($1, 'story:ch1:A', 'story', 0, '{"Claws of Guthix":1}', 0, false)`, [A]);
+ok(r.again && r.bank.coll['Claws of Guthix'] === 1, 'story reward given once');
+await one(`select public.bank_apply($1, 'story:ch1:B', 'story-kept', 0, null, 0, false)`, [A]);
+r = await one(`select public.bank_story_refs($1)`, [A]);
+ok(JSON.stringify(r) === '["story:ch1:A","story:ch1:B"]', 'the roads that gave a card: ' + JSON.stringify(r));
+ok(JSON.stringify(await one(`select public.bank_story_refs($1)`, [B])) === '[]', 'no roads: []');
 // online payout through duel_append
 await one(`select public.bank_open($1, 0, '{}', 0, false, 'starter')`, [B]);
 await db.exec(`reset role`);

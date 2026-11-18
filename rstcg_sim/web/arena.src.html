@@ -1086,7 +1086,7 @@ html, body { touch-action: manipulation; }
     }
     const chips = info.stat ? `<div class="chips">${info.stat.split(' · ').map((s) => `<span class="chip">${esc(s)}</span>`).join('')}</div>` : '';
     const s1 = SET1[name] || {};
-    const foot = `Set 1 · #${s1.num || '—'}${s1.rarity ? ' · ' + RARITY[s1.rarity] : ''}`;
+    const foot = c.story === 'reward' ? 'Story reward · Chapter 1' : c.story === 'boss' ? 'Story · boss only' : `Set 1 · #${s1.num || '—'}${s1.rarity ? ' · ' + RARITY[s1.rarity] : ''}`;
     return `<div class="cf" style="--frame:${frameOf(c)}"><div class="cf-in">
       <div class="cf-hd">${circle}<div class="cf-tt"><span class="cf-nm">${esc(name)}</span><span class="cf-sb">${esc(sub)}</span></div></div>
       ${artBlock(name)}
@@ -3981,11 +3981,19 @@ html, body { touch-action: manipulation; }
   function banked() { const a = account(), k = bankKept(); return !!(a && (k.bank || k.replace) && k.uid === a.uid); }
   function bankSnapshot() {
     const p = profile;
-    return { gp: p.gp, coll: p.coll, packs: p.packs, wins: p.wins, losses: p.losses, online: p.online || null, tutorialPack: !!p.tutorialPack };
+    return { gp: p.gp, coll: p.coll, packs: p.packs, wins: p.wins, losses: p.losses, online: p.online || null, tutorialPack: !!p.tutorialPack,
+      story: { claimed: { ...storyData().claimed } } };
   }
   // the bank's numbers onto this device: what the server has, plus the bot duels it hasn't heard about yet
-  // A story reward on a banked device: not built yet (STORY_BRIEF.md, part 4). Kept as owed until it is.
-  function bankStory(key, card) { const s = storyData(); if (!s.owed || typeof s.owed !== 'object') s.owed = {}; s.owed[key] = card; }
+  // A Story Mode reward on a banked device: kept for the server (rstcg-bank-v1's `story`) and shown at once, as
+  // a bot duel's GP is. The server gives each road's card once ever (the `story` request).
+  function bankStory(key) {
+    const k = bankKept();
+    if (!k.uid || !k.bank) return;
+    if (!(k.story || []).includes(key)) store.set(BANK, { ...k, story: [...(k.story || []), key] });
+    bankApply(true);
+    bankSync();
+  }
   function bankApply(quiet) {
     if (!banked()) return;
     const k = bankKept();
@@ -3993,6 +4001,7 @@ html, body { touch-action: manipulation; }
     const owed = (k.claims || []).reduce((s, c) => s + c.pay, 0);
     const was = JSON.stringify([profile.gp, profile.coll, profile.packs]);
     profile.gp = k.bank.gp + owed; profile.coll = { ...k.bank.coll }; profile.packs = k.bank.packs;
+    for (const key of k.story || []) { const c = RSTCGPacks.STORY_REWARDS[key]; if (c && !(k.bank.coll[c] > 0)) profile.coll[c] = 1; }   // a story reward not sent yet
     if (k.bank.free) profile.tutorialPack = true;
     store.set(PROFILE, profile);                 // not saveProfile(): the bank's numbers don't go in the cloud save
     if (!quiet && was !== JSON.stringify([profile.gp, profile.coll, profile.packs])
@@ -4035,6 +4044,12 @@ html, body { touch-action: manipulation; }
             const left = (now.claims || []).filter((c) => !gone.has(c.ref));
             store.set(BANK, { ...now, bank: r.bank, claims: left });
             if (left.length) bk.again = true;
+          } else if ((k.story || []).length) {
+            const sent = [...k.story];
+            const r = await ON.call('story', { keys: sent });
+            const now = bankKept();
+            if (now.uid !== a.uid) return;
+            store.set(BANK, { ...now, bank: r.bank, story: (now.story || []).filter((x) => !sent.includes(x)) });
           } else {
             const r = await ON.call('bank', {});
             const now = bankKept();
@@ -4056,7 +4071,7 @@ html, body { touch-action: manipulation; }
   function bankLook() {
     if (!account() || bk.busy || bk.timer) return;
     const k = bankKept();
-    if (k.uid !== account().uid || (k.claims || []).length || Date.now() - bk.looked > 15e3) bankSync();
+    if (k.uid !== account().uid || (k.claims || []).length || (k.story || []).length || Date.now() - bk.looked > 15e3) bankSync();
   }
   // "which progress do you keep?": the account's side is its bank (its cloud save no longer carries GP or cards)
   async function bankPeek() {
@@ -4543,7 +4558,7 @@ html, body { touch-action: manipulation; }
 
   // Into the collection. A banked device gets it from the bank (bankStory), like every other card.
   function storyGrant(card, key) {
-    if (banked()) { bankStory(key, card); return; }
+    if (banked()) { bankStory(key); return; }
     profile.coll[card] = (profile.coll[card] || 0) + 1;
   }
 
@@ -4944,10 +4959,10 @@ html, body { touch-action: manipulation; }
   // =====================================================================================
   const RAR = { C: { name: 'Common', col: '#c9c2b2' }, U: { name: 'Uncommon', col: '#5fb0e0' }, R: { name: 'Rare', col: '#b77cf0' }, L: { name: 'Legendary', col: '#ff9d2e' } };
   const rarityOf = DRULES.rarityOf;
-  const POOL = Object.keys(CARDS).filter((n) => SET1[n] && CARDS[n].kind !== 'cape' && !/\(cut/.test(n))
-    .sort((a, b) => (SET1[a].num || '').localeCompare(SET1[b].num || ''));          // every card you can own, in set order
+  const POOL = Object.keys(CARDS).filter((n) => (SET1[n] || CARDS[n].story === 'reward') && CARDS[n].kind !== 'cape' && !/\(cut/.test(n))
+    .sort((a, b) => ((SET1[a] || {}).num || 'zz').localeCompare((SET1[b] || {}).num || 'zz'));          // every card you can own, in set order (story rewards last)
   const PACK_POOL = { C: [], U: [], R: [], L: [] };
-  for (const n of POOL) if (!isBasic(n)) PACK_POOL[rarityOf(n)].push(n);
+  for (const n of POOL) if (!isBasic(n) && !CARDS[n].story) PACK_POOL[rarityOf(n)].push(n);
   const PACKS = window.RSTCGPacks.make(CARDS, SET1, DECKS.map((d) => ({ group: d.group, name: d.name, cards: d.cards, capes: d.capes })));
   const LEGEND_ODDS = window.RSTCGPacks.LEGEND_ODDS;
   const PACK_SLOTS = window.RSTCGPacks.SLOTS;   // 6 cards: 3 Common, 2 Uncommon, 1 Rare (sometimes Legendary): packs.js, as the server rolls them
@@ -6092,7 +6107,9 @@ html, body { touch-action: manipulation; }
           }).catch((e) => { ui.confirmReset = false; odToast(e && e.code === 'net' ? "Resetting goes through the game server, and it can't be reached. Nothing has changed." : (e && e.message) || 'Nothing has changed.'); render(); });
           return;
         }
-        Object.assign(profile, { gp: START_GP, wins: 0, losses: 0 }, starterState(), { packs: 0, lastPack: null, tutorial: null, tutorialPack: false, tips: {} }); saveProfile(); ui.confirmReset = false; ui.setup.youDeck = profile.decks[0].id; break;
+        Object.assign(profile, { gp: START_GP, wins: 0, losses: 0 }, starterState(), { packs: 0, lastPack: null, tutorial: null, tutorialPack: false, tips: {} });
+        for (const c of Object.values(storyData().claimed)) if (CARDS[c]) profile.coll[c] = (profile.coll[c] || 0) + 1;   // the story's rewards stay
+        saveProfile(); ui.confirmReset = false; ui.setup.youDeck = profile.decks[0].id; break;
       case 'duelmenu': ui.duelMenu = !ui.duelMenu; break;
       case 'tutorial': ui.modal = null; startTutorial(); return;
       case 'tutskip': profile.tutorial = profile.tutorial || 'skipped'; saveProfile(); ui.modal = null; break;
@@ -6454,7 +6471,8 @@ html, body { touch-action: manipulation; }
     // next move's animation starts from again, so it plays from the table as arranged
     resnap() { if (ui.g) { anim.shown = snap(ui.g); render(); } },
     // Story Mode: the runner, and (for tests) ending the duel on the table at once, won or lost
-    story: { STY, data: () => storyData(), hit: () => storyDuelLines(ui.g, [{ type: 'hit', by: ui.you, amount: 3 }], false), endDuel(won) { const g = ui.g; if (!g || g.winner !== null) return; stopDuel(); g.winner = won ? ui.you : 1 - ui.you; g.end_reason = 'damage'; finishDuel(g); } },
+    story: { STY, data: () => storyData(), hit: () => storyDuelLines(ui.g, [{ type: 'hit', by: ui.you, amount: 3 }], false),
+      give(key) { const card = RSTCGPacks.STORY_REWARDS[key], st = storyData(); if (!card || st.claimed[key]) return false; st.claimed[key] = card; storyGrant(card, key); saveProfile(); return true; }, endDuel(won) { const g = ui.g; if (!g || g.winner !== null) return; stopDuel(); g.winner = won ? ui.you : 1 - ui.you; g.end_reason = 'damage'; finishDuel(g); } },
     tour: { get place() { return MENU_BG; }, get places() { return tourPlaces(); }, get busy() { return TOUR.busy; }, get shown() { return TOUR.shown; }, get every() { return TOUR.every; }, set every(ms) { TOUR.every = ms; }, step: (to) => tourStep(to) }, deckRules, POOL, PACK_POOL, cardFace, mini, AS, ART, ICON, get CREST() { return CREST; }, get EMBLEM() { return EMBLEM; },
     // for tests: does the duel board, redrawn in place, read the same as a board drawn from scratch?
     // (attribute order aside). Returns true, or the first place they differ.

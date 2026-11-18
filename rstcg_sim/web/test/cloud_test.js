@@ -115,6 +115,16 @@ const tick = () => new Promise((r) => setImmediate(r));
     check('merge: never leaves a player with no deck', none.decks.length === 1);
     const lots = C.merge({}, { onlinePaid: Array.from({ length: 30 }, (_, i) => 'a' + i) }, { onlinePaid: Array.from({ length: 30 }, (_, i) => 'b' + i) });
     check('merge: the paid list stays short', lots.onlinePaid.length === 40 && lots.onlinePaid.includes('a29'));
+    // Story Mode: rewards and finished roads add up from both; where you are goes by the usual rule
+    const sb = { story: { main: { ch: 'ch1', node: 'swamp', i: 3 }, roads: { ch1: [] }, claimed: {} } };
+    const sl = clone(sb); sl.story.main.i = 9; sl.story.roads.ch1 = ['A']; sl.story.claimed['ch1:A'] = 'Claws of Guthix';
+    const sr = clone(sb); sr.story.roads.ch1 = ['B']; sr.story.claimed['ch1:B'] = 'Shield of Arrav'; sr.story.replay = { ch: 'ch1', node: 'b_road', i: 1 };
+    const sm = C.merge(sb, sl, jsonb(sr)).story;
+    check('merge: story rewards from both devices', sm.claimed['ch1:A'] && sm.claimed['ch1:B'], JSON.stringify(sm.claimed));
+    check('merge: finished roads from both devices', sm.roads.ch1.join() === 'A,B', JSON.stringify(sm.roads));
+    check('merge: where you are in the story is this device\'s when it moved here', sm.main.i === 9);
+    check('merge: a replay started there is kept', sm.replay && sm.replay.node === 'b_road');
+    check('merge: an old save with no story merges as it is', C.same(C.merge({ gp: 1 }, { gp: 1 }, { gp: 1 }), { gp: 1 }));
     const reset = C.merge(base, START(), jsonb(clone(base)));
     check('merge: a reset here resets the save', reset.gp === 0 && reset.wins === 0 && reset.losses === 0 && !reset.packs && !reset.online.wins && !reset.tutorial && !reset.lastPack &&
       !Object.keys(reset.tips).length && C.same(reset.coll, START().coll) && C.same(reset.decks, START().decks), JSON.stringify(reset).slice(0, 160));

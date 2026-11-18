@@ -67,6 +67,7 @@ const sum = (o) => Object.values(o || {}).reduce((s, k) => s + k, 0);
       const A = window.__arena, p = A.profile;
       p.wins = 5; p.losses = 3; p.gp = 5 * 100 + 3 * 50 - 200; p.packs = 1;
       for (const n of ['Rune Scimitar', 'Mithril Mace', 'Lobster', 'Air Wave', 'Water Strike', 'Fire Strike']) p.coll[n] = (p.coll[n] || 0) + 1;
+      p.story = { claimed: { 'ch1:B': 'Shield of Arrav' }, roads: { ch1: ['B'] } }; p.coll['Shield of Arrav'] = 1;   // Story Mode, road B, offline
       A.act('tipsreset');
     });
     const before = await pat.p();
@@ -129,12 +130,23 @@ const sum = (o) => Object.values(o || {}).reduce((s, k) => s + k, 0);
     await pat.settled();
     ok((await bankOf(uid)).gp === 150 && (await pat.p()).gp === 150, 'Pat: a bot duel reported and paid');
 
+    // Story Mode: the road B card she earned offline came up with her; road A's card now comes from the server, once
+    bank = await bankOf(uid);
+    ok(bank.coll['Shield of Arrav'] === 1, `Pat: the story card earned offline is in the bank: ${JSON.stringify(bank.coll['Shield of Arrav'])}`);
+    ok(await pat.A(() => window.__arena.story.give('ch1:A')), 'Pat: finishes road A');
+    ok((await pat.p()).coll['Claws of Guthix'] === 1, 'Pat: the reward shows at once');
+    await pat.until(() => { const b = window.__arena.bank; return !b.state.busy && !(b.kept().story || []).length; }, null, 'the story reward to reach the bank');
+    bank = await bankOf(uid);
+    ok(bank.coll['Claws of Guthix'] === 1 && (await pat.p()).coll['Claws of Guthix'] === 1, `Pat: the server gave the story card: ${JSON.stringify(bank.coll['Claws of Guthix'])}`);
+    ok(!(await pat.A(() => window.__arena.story.give('ch1:A'))), 'Pat: a road gives its card once');
+
     // reset goes through the server
     await pat.page.click('[data-do="settings"]');
     await pat.page.click('[data-do="reset"]'); await pat.page.click('[data-do="reset"]');
     await pat.until(() => window.__arena.profile.gp === 0 && window.__arena.profile.packs === 0, null, 'the reset');
     bank = await bankOf(uid);
     ok(bank.gp === 0 && bank.packs === 0 && !bank.free_pack && !bank.coll['Rune Scimitar'], `Pat: the reset reached the bank: ${JSON.stringify(bank).slice(0, 120)}`);
+    ok(bank.coll['Claws of Guthix'] === 1 && bank.coll['Shield of Arrav'] === 1 && (await pat.p()).coll['Shield of Arrav'] === 1, "Pat: a reset keeps the story's cards");
     await pat.shot('04_pat_reset');
 
     // ---------- Quinn: progress that doesn't add up starts from the starter decks ----------

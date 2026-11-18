@@ -96,6 +96,23 @@
     return out;
   }
 
+  // Story Mode: rewards given and roads finished only ever add up (from either device); where you are in the
+  // story (main) and a replay under way go by the usual rule: this device's if it moved, else the account's.
+  function story(B, L, R) {
+    const out = {};
+    const keys = new Set([...Object.keys(R), ...Object.keys(L)]);
+    for (const k of keys) {
+      if (k === 'claimed') out.claimed = { ...obj(R.claimed), ...obj(L.claimed) };
+      else if (k === 'roads') {
+        const r = obj(R.roads), l = obj(L.roads), roads = {};
+        for (const ch of new Set([...Object.keys(r), ...Object.keys(l)])) roads[ch] = [...new Set([...list(r[ch]), ...list(l[ch])])].sort();
+        out.roads = roads;
+      } else if (!same(L[k], B[k])) { if (L[k] !== undefined) out[k] = L[k]; }
+      else if (R[k] !== undefined) out[k] = R[k];
+    }
+    return out;
+  }
+
   function merge(base, local, remote) {
     const B = obj(base), L = obj(local), R = obj(remote);
     const out = {};
@@ -108,6 +125,7 @@
       else if (k === 'coll') out.coll = counts(obj(B.coll), obj(L.coll), obj(R.coll));
       else if (k === 'decks') out.decks = decks(list(B.decks), list(L.decks), list(R.decks));
       else if (k === 'tips') out.tips = flags(obj(B.tips), obj(L.tips), obj(R.tips));
+      else if (k === 'story') out.story = story(obj(B.story), obj(L.story), obj(R.story));
       else if (k === 'onlinePaid') out.onlinePaid = [...new Set([...list(R.onlinePaid), ...list(L.onlinePaid)])].slice(-PAID_KEPT);
       else if (!same(L[k], B[k])) { if (L[k] !== undefined) out[k] = L[k]; }           // changed here: ours
       else if (R[k] !== undefined) out[k] = R[k];                                      // otherwise theirs
