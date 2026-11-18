@@ -749,7 +749,8 @@ html, body { touch-action: manipulation; }
 .stbox.nar .sttext p { font-style: italic; color: var(--muted); }
 .stbox.opts { cursor: default; }
 .sthead { flex: none; width: 196px; height: 196px; border-radius: 12px; border: 2px solid rgba(201,165,75,.7); background: radial-gradient(circle at 50% 40%, #3a2c20, #120d0a); overflow: hidden; display: flex; align-items: center; justify-content: center; }
-.sthead img { width: 100%; height: 100%; object-fit: cover; }
+.sthead img { width: 92%; height: 92%; object-fit: contain; filter: drop-shadow(0 6px 10px rgba(0,0,0,.6)); }
+.sthead.right img { transform: scaleX(-1); }
 .sthead .pi { width: 92%; height: 92%; }
 .sthead.right .pi { transform: scaleX(-1); }
 .sth-i { width: 150px; height: 150px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: radial-gradient(circle at 40% 35%, color-mix(in srgb, var(--t) 70%, #fff), var(--t) 60%, #0c0806); border: 3px solid var(--gold); font-family: var(--display); font-size: 84px; font-weight: 700; color: #fff3d1; text-shadow: 0 3px 6px #000; }
@@ -823,6 +824,8 @@ html, body { touch-action: manipulation; }
 #sttaunt .sth-i { width: 92px; height: 92px; font-size: 50px; }
 #sttaunt .sttext p { font-size: 26px; }
 #sttaunt .stname { font-size: 24px; color: var(--bot-hi); }
+.mipair { display: flex; gap: 12px; width: 460px; }
+.mipair .mi { width: 224px; padding: 0 14px; gap: 10px; font-size: 21px; }
 </style>
 </head>
 <body>
@@ -3516,15 +3519,15 @@ html, body { touch-action: manipulation; }
       ${ICON.logo ? `<div class="logo-wrap"><img src="${ICON.logo}" alt="RuneScape"><div class="logo-sheen" style="-webkit-mask-image:url(${ICON.logo});mask-image:url(${ICON.logo});animation-delay:${life.sheenDelay}"></div></div>` : ''}
       <div style="position:absolute;left:340px;top:236px;display:flex;align-items:center;gap:14px"><span style="width:60px;height:1px;background:var(--gold)"></span>
         <span style="font-family:var(--display);font-weight:600;font-size:20px;letter-spacing:.36em;color:var(--cream)">TRADING CARD GAME</span><span style="width:60px;height:1px;background:var(--gold)"></span></div></div></div>
-      <nav aria-label="Main menu" style="position:absolute;left:${short ? 90 : 110}px;top:${short ? 228 : saved && live ? 250 : saved || live ? 290 : 310}px;${short ? 'display:grid;grid-template-columns:repeat(2,460px);align-items:end' : 'display:flex;flex-direction:column'};gap:${saved && live && !short ? 10 : 14}px">
+      <nav aria-label="Main menu" style="position:absolute;left:${short ? 90 : 110}px;top:${short ? 228 : saved && live ? 290 : saved || live ? 320 : 340}px;${short ? 'display:grid;grid-template-columns:repeat(2,460px);align-items:end' : 'display:flex;flex-direction:column'};gap:${saved && live && !short ? 10 : 14}px">
         ${resume}${play}
         <button type="button" class="mi" data-do="story">${ICN.story}Story${storyData().main ? `<span class="side">CH ${STY.chapter(storyData().main.ch).n}</span>` : '<span class="side free">NEW</span>'}</button>
         <button type="button" class="mi" data-do="online"${ON ? '' : ' disabled'}>${ICN.globe}Play Online${rec}</button>
         <button type="button" class="mi" data-do="decks">${ICN.decks}Decks<span class="side">${profile.decks.length}</span></button>
         <button type="button" class="mi" data-do="packs">${ICN.packs}Packs<span class="side">${PACK_COST} GP</span></button>
         <button type="button" class="mi" data-do="tutorial">${ICN.tut}Tutorial${profile.tutorialPack ? '' : '<span class="side free">FREE PACK</span>'}</button>
-        <button type="button" class="mi" data-do="how">${ICN.book}How to Play</button>
-        <button type="button" class="mi" data-do="settings">${ICN.gear}Settings</button>
+        <div class="mipair"><button type="button" class="mi" data-do="how">${ICN.book}How to Play</button>
+        <button type="button" class="mi" data-do="settings">${ICN.gear}Settings</button></div>
       </nav>
       <div class="mfoot" style="left:${short ? 90 : 110}px;bottom:${short ? 16 : 22}px">
         <div style="display:flex;align-items:center;justify-content:space-between;gap:24px;font-size:13px;font-weight:700;letter-spacing:.14em;color:var(--faint)">
@@ -4442,10 +4445,11 @@ html, body { touch-action: manipulation; }
   };
   function sceneBG(sc) {
     const look = SCENE_LOOK[sc && sc.scene] || {};
-    const src = (look.bd && AS.backdrop[look.bd]) || (look.art && ART[look.art] && ART[look.art].src) || AS.backdrop.Lumbridge || '';
+    const own = sc && (AS.scene || {})[sc.scene];          // the place's own painting (art/scenes), when it has one
+    const src = own || (look.bd && AS.backdrop[look.bd]) || (look.art && ART[look.art] && ART[look.art].src) || AS.backdrop.Lumbridge || '';
     const night = sc && (sc.night || ui.sc.night);
     const dim = night ? 0.32 : look.dim || 0.75;
-    return `<div class="stbg${night ? ' night' : ''}">${src ? `<img src="${src}" alt="" style="filter:brightness(${dim})${look.art ? ' blur(2px)' : ''}${night ? ' saturate(.5) hue-rotate(190deg)' : ''}">` : ''}
+    return `<div class="stbg${night ? ' night' : ''}">${src ? `<img src="${src}" alt="" style="filter:brightness(${own ? Math.min(1, dim + 0.2) : dim})${look.art && !own ? ' blur(2px)' : ''}${night ? ' saturate(.5) hue-rotate(190deg)' : ''}">` : ''}
       <div style="position:absolute;inset:0;background:${look.tint || 'transparent'}"></div>
       ${night ? '<div style="position:absolute;inset:0;background:radial-gradient(ellipse at 50% 20%,rgba(140,160,255,.18),rgba(6,8,20,.65) 70%)"></div>' : ''}
       <div style="position:absolute;inset:0;background:radial-gradient(ellipse at 50% 45%,rgba(0,0,0,0) 40%,rgba(0,0,0,.6) 100%)"></div></div>`;
@@ -4639,7 +4643,7 @@ html, body { touch-action: manipulation; }
       const o = STY.OPP[st.duel];
       box = `<div class="stbox left">${chathead(STY.SPEAKERS[o.speaker], 'left')}<div class="sttext"><b class="stname">${esc(o.name)}</b>
         <p>${o.boss ? 'A boss fight.' : 'A duel.'}${o.location ? ` ${esc(o.location)} is in play from the start, and can't be replaced.` : ''}</p></div>
-        <div class="stopts" data-stop><button type="button" class="btn-g" data-do="stduel" style="height:64px;font-size:24px">Choose your deck</button></div></div>`;
+        <div class="stopts lose" data-stop><button type="button" class="btn-g" data-do="stduel" style="height:68px;padding:0 30px;font-size:24px">Choose your deck</button></div></div>`;
     } else if (st.reward) {
       box = lineBox({ t: `${speakerOf(st.from) ? speakerOf(st.from).name : 'Someone'} holds something out to you.` }, 'streward');
     } else if (st.t !== undefined) box = lineBox(st, 'stnext');

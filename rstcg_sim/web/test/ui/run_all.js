@@ -26,6 +26,8 @@ const tests = [
   ['account calls, in node (accounts_test)', [path.join(__dirname, '..', 'accounts_test.js')]],
   ['accounts, several devices (accounts)', [T('accounts.js')]],
   ['the bank in the page (bank)', [T('bank.js')]],
+  ['Story Mode, in node (story_test)', [path.join(__dirname, '..', 'story_test.js')]],
+  ['Story Mode, both roads (story)', [T('story.js')]],
   ['the server: duel function and bank, in node (test_local)', [path.join(__dirname, '..', '..', '..', 'server', 'test_local.mjs')]],
   ['the database: migrations in a real Postgres (sql_test)', [path.join(__dirname, '..', '..', '..', 'server', 'sql_test.mjs')]],
 ];

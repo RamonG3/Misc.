@@ -52,11 +52,11 @@ const site = require('http').createServer((req, res) => {
       if (opts.length) {
         const labels = await Promise.all(opts.map((o) => o.innerText()));
         if (shots < 3 && labels.length === 4) { await shot(`choice-${shots}`); shots++; }
-        await opts[pick(labels)].click();
+        await page.click(`#board [data-do="stpick"][data-v="${pick(labels)}"]`);
         continue;
       }
       const next = await page.$('#board [data-do="stnext"], #board [data-do="streward"]');
-      if (next) { await next.click(); continue; }
+      if (next) { await page.click('#board [data-do="stnext"], #board [data-do="streward"]').catch(() => {}); continue; }
       return 'stopped';
     }
     return 'too long';
@@ -80,7 +80,7 @@ const site = require('http').createServer((req, res) => {
       ok(await page.$('#sttaunt'), `${name}: says something at the start`);
       await shot(`${name}-start`);
       await page.evaluate(() => window.__arena.story.hit());
-      await page.waitForTimeout(3500);
+      await page.waitForFunction(() => /felt that|wounded me/.test((document.querySelector('#sttaunt') || {}).innerText || ''), null, { timeout: 12000 }).catch(() => {});
       const said = await page.evaluate(() => (document.querySelector('#sttaunt') || {}).innerText || '');
       ok(/felt that|wounded me/.test(said), `${name}: reacts to the first hit (${said.slice(0, 60)})`);
       await shot(`${name}-hit`);

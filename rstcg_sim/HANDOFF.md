@@ -1,4 +1,4 @@
-# RuneScape TCG: handoff (2026-11-17)
+# RuneScape TCG: handoff (2026-11-18)
 
 This file describes where things stand. `CLAUDE.md` covers how the code fits together and the ground rules. `README.md` covers the balance history (Rounds 1–27).
 
@@ -17,9 +17,11 @@ This file describes where things stand. `CLAUDE.md` covers how the code fits tog
 - **Spell sounds:** Ramon's Drive folder RuneScape Kingdoms > Images > Spells > Spell Sounds (53 `.ogg` files, named by spell), plus the seven `Crafting_<rune>_runes.ogg` he gave in chat on 2026-11-17. On his PC they go in `art/sounds/`; see "Spell sounds" below.
 - **Jagex's Fan Content Policy:** https://legal.jagex.com/docs/policies/fan-content-policy (version 1.4, 29 September 2026, when the notice was added). See "The fan-content notice" below.
 
-## Start here (for a new chat, after 2026-11-17)
+## Start here (for a new chat, after 2026-11-18)
 
-- **Everything below is built and pushed** to `RamonG3/Misc.` branch `claude/card-game-ai-opponents-e90esn` (`rstcg_sim/`), **and copied to Ramon's PC** (`C:\Users\ramon\Downloads\rstcg_project\rstcg_sim`). Live: the Netlify app as of the bank (the art and rune sounds below are in `web/dist/netlify` and the zip given to Ramon on 2026-11-17, deployed when he drags it in); Supabase `duel` function version 6 (nothing server-side changed since).
+- **Story Mode chapter 1 is built (2026-11-18)** and pushed; see "Story Mode" below, `STORY_BRIEF.md`, `STORY_CH1_SCRIPT.md` (Project docs) and `STORY_OPPONENTS.md`. **The live app is behind the server:** the pushes changed the cards and engine, so the `duel` function (redeployed by the Action on 2026-11-18) has a new version stamp, and the Netlify app asks for a reload until the new `web/dist/netlify` is deployed. Ramon deploys it (drag the folder in).
+
+- **Everything below is built and pushed** to `RamonG3/Misc.` branch `claude/card-game-ai-opponents-e90esn` (`rstcg_sim/`), **and copied to Ramon's PC** (`C:\Users\ramon\Downloads\rstcg_project\rstcg_sim`). Live: the Netlify app as of the bank (the art and rune sounds below are in `web/dist/netlify` and the zip given to Ramon on 2026-11-17, deployed when he drags it in); Supabase `duel` function redeployed 2026-11-18 for Story Mode (see below).
 - **Online:** sign-in is by emailed 6-digit code for anyone (sender runescapetcg.game@gmail.com; Google switched off); the server is the bank for everyone who has been online (`ONLINE_BRIEF.md`, phase 3b). Ramon's account is **Zukrathion**.
 - **Every card in Set 1 has art (2026-11-17).** See "Card art for every card" below. Runes now make their runecrafting sound when played (see "Spell sounds").
 - **Open items:**
@@ -28,6 +30,7 @@ This file describes where things stand. `CLAUDE.md` covers how the code fits tog
   3. **Find a match** (phase 4).
   4. **The mobile flicker** is still there; Ramon wants to come back to it later, perhaps with a packaged Android app (APK).
   5. Smaller: sounds for the six Flurry spells (the Surge sounds are spare).
+  6. **Story Mode, waiting on Ramon:** his read of chapter 1 in play (script, art picks, difficulty); the reward cards' numbers (Claws of Guthix 14, Shield of Arrav soak 6); whether the bosses' Locations should punish the wrong style as hard as they do (`STORY_OPPONENTS.md`). Chapter 2 (Falador) is next when he has it.
 - **Working with the PC:** the art and spell sounds live only in its `art/` folder. Its device shell has python3, PIL and ffmpeg, so `python3 web/arena_assets.py` and `python3 web/arena_sounds.py` run there. On 2026-11-17 Ramon connected the folder one level up (`rstcg_project`), so `rstcg_sim/art/` and the old missing-art CSV are both reachable. The shell can't delete files without asking Ramon. Copy files to the PC only after the command that writes them has finished.
 
 ## The Arena: what's done
@@ -184,6 +187,23 @@ Ramon: "if you successfully cast Air Bolt, it'll play the Air Bolt.ogg sound".
 ### The fan-content notice (2026-11-16)
 - The foot of the main menu carries the notice Jagex's Fan Content Policy asks fan-made work to show, in the policy's own words (clause 8.1; `FAN_NOTICE` in `arena.src.html`). Ramon asked for it. Don't reword it; if the policy's wording changes, change it to match. `layouts.js` checks it is on screen, readable and clear of the buttons at every window shape.
 - Ramon has been told what else the policy says that bears on this project: clause 6.1.3 (video games and other software made with Jagex Property are not among the things it allows) and clause 2.4 (it doesn't cover Jagex's trade marks). What to do about that is his call; the policy gives IP@Jagex.com for questions. Claude isn't a lawyer.
+
+### 7. Story Mode: chapter 1 built (2026-11-18)
+Ramon's design, shaped in chat: `STORY_BRIEF.md` (Project doc: the plan and every decision), `STORY_CH1_SCRIPT.md` (Project doc: the script he reviewed, with his edits), `STORY_OPPONENTS.md` (repo: decks and tuning).
+
+- **What's in it.** A **Story** button on the main menu (How to Play and Settings now share a row, to make room) → the Story screen (**New Game / Continue / Replay Chapter**, the reward trophies, "Chapter 2: Falador · coming soon") → scenes with a RuneScape-style dialogue box (chathead left for NPCs, right for you, numbered options, an unvoiced narrator, `1`–`4` and Space work) → an original map of Misthalin (dots open as the story reaches them) → duels → the reward → "Chapter 1 complete".
+- **Chapter 1:** Hans → the Bandit → the silent stranger and the red flash → the fork. Road A: Highwayman → Draynor Village → Skeleton → Delrith in Draynor's cellar (Draynor Manor locked in play) → Claws of Guthix from the Wise Old Man. Road B: Goblin Band → Varrock library → Dark Wizard at the stone circle → Count Draynor (Moonlit Circle locked) → Shield of Arrav from Reldo. Both end heading to Falador (the game never says "both roads lead there": Ramon felt it cheapened the choice).
+- **Code.**
+  - `web/story.js` (`RSTCGStory`): the chapter as data (steps: lines, choices with tone/road/go, scene, flash, map, duel, reward, end) and a pure runner (`start`, `step`, `advance`, `enter`, `dotsOf`). A run is plain JSON pointing into the script by node id and index. `OPP`: each opponent's deck name, bot level, Location, lines, losing line. Inlined by `build_arena.py` (`/*__STORY__*/`).
+  - The Story section of `arena.src.html`: `storyHTML`, `sceneHTML`, `mapHTML` (the map is an SVG drawn here, `storyMapSVG`), `storyPump` (runs the steps that don't wait), `storyAct` (every `st*` action), the boss lines (`duelSay`, from `settle`'s events), chatheads (`chathead`: `AS.face`, else the hood or a medallion).
+  - **Story duels** are ordinary bot duels whose config has `story: { slot, opp, name, ch, location }`: saved and resumed the same way; they pay GP as bot duels do; `them()` names the opponent everywhere (and the locked Location's chips); the results screen says "Continue the story".
+- **Saves.** `profile.story = { main, replay, roads: { ch1: ['A'] }, claimed: { 'ch1:A': card } }`. Old profiles load without it. Replay Chapter runs in `replay` and never touches `main`. New Game and a Settings reset keep every card earned. `cloudsave.js` merges it (rewards and finished roads add up from every device; where you are goes by the usual rule).
+- **Rules changes (Ramon's go-ahead, both engines, parity checked):** `locked_location` (a Location in play from the start that nobody can replace or teleport over, owned by nobody); Draynor Manor (Magic +2, Melee −2) and Moonlit Circle (Melee +2, Magic −2); abilities with `heals` (Bite). The JS engine now plays `burns` (pierce / shatter) as the Python one always did. Checks: `python web/test/story_rules.py` (each mechanic, same position, both engines), `python web/test/parity_story.py 200` (42 matchups, mean |z| 0.76). The 30 old decks and every old card export unchanged.
+- **New cards** (`cards.py`, field `story`): rewards **Claws of Guthix**, **Shield of Arrav** (`story: 'reward'`: never in packs, collectable, legal everywhere); boss-only **Draynor Manor**, **Moonlit Circle**, **Demon Fire**, **Hellfire**, **Vampyric Claws**, **Bite** (`story: 'boss'`: `deckrules.js` refuses them in any player's deck, online too). Numbers and tuning: `STORY_OPPONENTS.md`.
+- **Rewards and the bank.** Not banked: the card goes straight into the collection. Banked: `bankStory` queues the road in `rstcg-bank-v1`'s new `story` list, shows the card at once, and `bankSync` sends it (`story { keys }`; the server gives each `story:<chapter>:<road>` once ever). `packs.js` has `STORY_REWARDS` and `plausible()` keeps a story card a profile's `story.claimed` vouches for, so opening or replacing a bank keeps it (logged `story-kept`); a reset keeps the story's cards (`bank_story_refs`, migration `20261118190000_story_rewards.sql`, applied 2026-11-18).
+- **Art** (all on the PC, as usual): chatheads are RS3 wiki chatheads in `art/faces/<speaker>.png` (the stranger is drawn: dark robes, ruby trim); four scenes in `art/scenes/` (Lumbridge Swamp, Draynor Village, Draynor Manor's interior, the dark wizards at the stone circle, cropped); card art in `art/img` with `art_map.json` entries; `arena_assets.py` packs `AS.face` and `AS.scene`. Other scenes reuse the backdrops and quest pictures, tinted (`SCENE_LOOK`). Kept for comparison on the PC: `*.before_story.*`.
+- **Tests:** `node web/test/story_test.js` (every road and option walked, 2,053 checks), `node web/test/ui/story.js` (both roads by clicking, losing and retrying, Replay, resume, an old save, no "Bot", the bosses' lines and locked Locations), `node web/test/story_tune.js` (the difficulty ladder), `python story_rewards.py` (the rewards' worth), story cases in `bank.js`, `cloud_test.js`, `test_local.mjs`, `sql_test.mjs`, and the story screens in `layouts.js`.
+- **A new chapter** is mostly data: its script in `story.js` (`CHAPTERS`, `NEXT`), opponents in `OPP` and `STORY_DECKS`, its rewards in `STORY_REWARDS` (packs.js) and `cards.py`, its art, and its map (the map is drawn for Misthalin; chapter 2's Falador needs Asgarnia drawn in).
 
 ### 6. Later
 - **Sounds for the six Flurry spells,** if Ramon wants them (the four Surge sounds are spare).

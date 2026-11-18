@@ -87,6 +87,23 @@ const fails = [];
     await A('menu'); await A('packs'); await page.waitForTimeout(400); await look('packs');
     await A('buypack'); await page.waitForTimeout(600); await A('revealall'); await page.waitForTimeout(1200); await look('pack-open');
     await A('packsum'); await page.waitForTimeout(400); await look('pack-summary');
+    // Story Mode: the Story screen, a line, the longest choice, the map, a duel waiting, a lost duel, a reward,
+    // the end of the chapter, and the deck picker for a boss
+    const walk = (test) => page.evaluate((test) => {   // move the story on until test(step) (a function body) is true
+      const a = window.__arena, S = a.story.STY, run = a.story.data().main;
+      const t = new Function('st', 'return ' + test);
+      for (let n = 0; n < 500 && !t(S.step(run)); n++) { const st = S.step(run); if (st.onMap) S.enter(run, S.dotsOf(run).find((d) => d.state === 'open').id); else S.advance(run, st.choose ? st.choose.findIndex((o) => !o.road || o.road === 'A') : undefined); }
+      a.ui.sc.lose = null; a.ui.sc.reward = null; a.ui.screen = run.node ? 'scene' : 'map'; a.render();
+    }, test);
+    await A('menu'); await A('story'); await page.waitForTimeout(400); await look('story');
+    await A('stnew'); await page.waitForTimeout(300); await look('scene');
+    await walk("st.key === 'stranger2'"); await look('scene-choice');
+    await walk('!!st.duel && st.duel === "highwayman"'); await look('scene-duel');
+    await A('stduel'); await page.waitForTimeout(300); await look('pick-story');
+    await A('stback'); await page.evaluate(() => { const a = window.__arena; a.ui.sc.lose = { opp: 'highwayman', line: a.story.STY.OPP.highwayman.lose }; a.render(); }); await look('scene-lose');
+    await A('stmap'); await page.waitForTimeout(300); await look('map');
+    await walk('!!st.reward'); await page.evaluate(() => { const a = window.__arena; a.ui.sc.reward = { card: 'Claws of Guthix', from: 'wom', fresh: true }; a.render(); }); await look('scene-reward');
+    await walk('!!st.finished'); await look('scene-done');
     // The account screen, with its states set by hand (accounts.js signs in for real, against a pretend server).
     // Each is the tallest or widest that state gets: both ways to sign in, a long address with a complaint, a
     // code with a complaint, and the two saves side by side with a note.

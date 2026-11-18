@@ -87,6 +87,24 @@ for loc, f in BACKDROP.items():
         im = load(p).convert("RGB")
         backdrop[loc] = webp(fit(im, 1280, 1280), 68)
 
+# ---------- Story Mode (STORY_BRIEF.md): the places scenes happen in, and who speaks ----------
+# art/scenes/<file>: a painting behind the dialogue box, by the scene's name in web/story.js.
+# art/faces/<speaker>.png: a chathead, by the speaker's face name in web/story.js (square, see-through).
+STORY_SCENE = {"Lumbridge Swamp": "scene_lumbridge_swamp.png", "Draynor Village": "scene_draynor_village.png",
+               "Draynor Manor": "scene_draynor_manor_hall.png", "The stone circle": "scene_stone_circle.png"}
+SCENES = os.path.join(ROOT, "art", "scenes")
+FACES = os.path.join(ROOT, "art", "faces")
+scene = {}
+for name, f in STORY_SCENE.items():
+    p = os.path.join(SCENES, f)
+    if os.path.exists(p):
+        scene[name] = webp(fit(load(p).convert("RGB"), 1280, 1280), 68)
+face = {}
+if os.path.isdir(FACES):
+    for f in sorted(os.listdir(FACES)):
+        if f.lower().endswith(".png"):
+            face[os.path.splitext(f)[0]] = webp(fit(load(os.path.join(FACES, f)), 256, 256), 85)
+
 # ---------- icons ----------
 icons = {}
 for k, f in {"melee": "Attack_detail.png", "ranged": "Ranged_detail.png", "magic": "Magic_detail.png"}.items():
@@ -102,7 +120,7 @@ if uris:
     head, data = uris[0].split(",", 1)
     icons["logo"] = webp(fit(load(io.BytesIO(base64.b64decode(data))), 600, 200))
 
-out = {"art": art, "cape": cape_pic, "backdrop": backdrop, "icons": icons,
+out = {"art": art, "cape": cape_pic, "backdrop": backdrop, "icons": icons, "scene": scene, "face": face,
        "set1": {n: {"num": v["num"], "rarity": v["rarity"]} for n, v in SET1.items()},
        "frame": P.FRAME, "matColor": P.MAT_COLOR}
 js = "window.ARENA_ASSETS = " + json.dumps(out, separators=(",", ":")) + ";"
@@ -123,4 +141,5 @@ css = "".join(
 open(os.path.join(HERE, "arena_fonts.css"), "w").write(css)
 
 print(f"{len(art)} card arts, {len(cape_pic)} capes, {len(backdrop)} backdrops, {len(icons)} icons, "
+      f"{len(scene)} story scenes, {len(face)} chatheads, "
       f"{len(js) // 1024} KB assets, {len(css) // 1024} KB fonts")
