@@ -17,21 +17,31 @@ This file describes where things stand. `CLAUDE.md` covers how the code fits tog
 - **Spell sounds:** Ramon's Drive folder RuneScape Kingdoms > Images > Spells > Spell Sounds (53 `.ogg` files, named by spell). On his PC they go in `art/sounds/`; see "Spell sounds" below.
 - **Jagex's Fan Content Policy:** https://legal.jagex.com/docs/policies/fan-content-policy (version 1.4, 29 September 2026, when the notice was added). See "The fan-content notice" below.
 
-## Start here (for a new chat, 2026-11-17)
+## Start here (for a new chat, 2026-11-17 evening): the goal is art for every card
 
-- **Everything below is built, pushed** to `RamonG3/Misc.` branch `claude/card-game-ai-opponents-e90esn` (`rstcg_sim/`), **and copied to Ramon's PC** (`C:\Users\ramon\Downloads\rstcg_project\rstcg_sim`). Latest work: accounts, the menu tour, Air Battlestaff and Lumbridge art, 18 recorded spell sounds, the Jagex fan-content notice.
-- **Tests:** `node web/test/ui/run_all.js` passed every test that reported on 2026-11-16; on 2026-11-17 `spellsound.js` (with the real sounds) and `accounts.js` passed again.
-- **Deployed:** that build is live on Netlify (Ramon dropped it in at 13:40 on 2026-11-17, Central time).
-- **Google sign-in works for real (2026-11-17):** Ramon signed in with Google on the Pixel's installed app and came back into the app; his Pixel progress is saved to his account. See "Accounts" below.
-- **The bank (phase 3b) is built (2026-11-17):** GP, cards and packs live on the server for everyone who has been online; see `ONLINE_BRIEF.md`, "Phase 3b". Ramon chose: bot duels are believed as the device reports them, and guests are banked too.
-- **Open items, in order:**
-  0. **The bank went live on 2026-11-17** (migration `20261118023024_bank.sql` applied through the connector and checked; the `duel` function deployed by the Action). The app with the bank must be on Netlify too: the new function refuses challenges from an app without one. Then: Ramon opens the app on the PC and the Pixel and checks his GP and cards are as they were (his bank opens from his cloud save).
-  1. **Accounts, second device:** sign in on the PC with the same Google account. Both sides have progress, so it should ask "which progress do you keep?" (the one not kept goes to `rstcg-backup-v1`). Then earn on one and check the other picks it up. Before friends can sign in, publish the consent screen (`ONLINE_BRIEF.md`, set-up step 3).
-  2. **The fan-content notice:** Ramon was told the Jagex policy (clauses 6.1.3 and 2.4) doesn't cover video games or the RuneScape trade marks. He hasn't said whether to keep the policy's wording or swap to a plain "fan-made, not endorsed by Jagex" line.
-  3. ~~Email codes~~: **done 2026-11-17.** Sign-in is by emailed code for everyone (sender runescapetcg.game@gmail.com); Google is switched off. Its profile picture is the Crest's medallion (`runescapetcg_logo.png`, made from the card back).
-  4. **Find a match** (phase 4).
-  5. Smaller: sounds for the six Flurry spells (the Surge sounds are spare), 62 cards still without art.
-- **Working with the PC:** the art and spell sounds live only in its `art/` folder. Its device shell has python3, PIL and ffmpeg, so `python3 web/arena_assets.py` and `python3 web/arena_sounds.py` run there. Copy files to it only after the command that writes them has finished.
+- **Everything below is built, pushed** to `RamonG3/Misc.` branch `claude/card-game-ai-opponents-e90esn` (`rstcg_sim/`), **live** (Netlify app with the bank; Supabase `duel` function version 6), **and copied to Ramon's PC** (`C:\Users\ramon\Downloads\rstcg_project\rstcg_sim`). `node web/test/ui/run_all.js` passed all 21 tests on 2026-11-17.
+- **Online, as of tonight:** sign-in is by emailed 6-digit code for anyone (sender runescapetcg.game@gmail.com; Google switched off); the server is the bank for everyone who has been online (`ONLINE_BRIEF.md`, phase 3b). Ramon's account is **Zukrathion**; sync worked on his PC and Pixel.
+- **The next chat's job (Ramon, 2026-11-17): add the missing art to every card.** 55 cards in Set 1 have no picture yet (Quest Point Cape is fine: capes keep theirs in `AS.cape`). Counted from `arena_assets.js`; `rstcg_missing_art.csv` (one folder up from `rstcg_sim` on the PC, listing 62) predates the art added since.
+  - Weapons: Ancient Mace, Barrelchest Anchor, Dark Bow (L), Dragon Dagger (L), Granite Maul (L), Magical Longsword, Saradomin Sword, Staff of the Dead (L); bows: Seercull, Shieldbow; staff: Staff of Light.
+  - Thrown and ammo: Bronze / Mithril / Rune Darts, Bronze / Mithril / Rune Knives, Bronze / Mithril / Rune Throwing Axe, Rune Arrows (its art is on Drive, not downloaded yet).
+  - Armour and shields: Anti-dragon Shield, Infinity Top, Mystic Robe Top, Void Knight Top.
+  - Spells: Dust, Lava, Mist, Mud, Smoke and Steam Flurry.
+  - Abilities and reactions: Crush, Slash, Stab, Longrange, Rapid, Parry, Ricochet.
+  - Quests: Cook's Assistant, Demon Slayer, Dragon Slayer, Ernest the Chicken, Goblin Diplomacy, Prince Ali Rescue, Romeo & Juliet, The Restless Ghost, Vampyre Slayer.
+  - People and places: Brother Jered, Wise Old Man (L), Duel Arena, Mage Arena.
+  - Food and materials: Karambwan, Shark, Enchanted Logs, Mithril Grapple.
+- **How art gets in** (see "Art pipeline" under "Small things done alongside" below, and "Card art" under Links):
+  - Pictures come from Ramon's Google Drive art folder (link kept out of the repo; ask Ramon), named by item, in a `Detail` subfolder when there is one (the Google Drive connector can search and download it). `art/art_map.json` maps each card to its Drive file id; downloaded pictures go in `art/img/` on the PC (never in the repo).
+  - Then `python3 web/arena_assets.py` on the PC (its device shell has python3 and PIL) rebuilds `web/arena_assets.js`; compare it with the old one entry by entry (only the new cards should change); bring it back and `python web/build_arena.py`, then `build_netlify.py`, then a zip for Ramon to deploy.
+  - Pictures copied to the PC through Claude gain a ~6 KB provenance tag: never judge an image by its size on disk (`is_pixel_icon` goes by pixels).
+  - Some cards may have no picture on Drive at all (abilities like Slash or Stab, the Flurry spells): ask Ramon whether to wait for art from him, or draw or pick something.
+- **Open items, after the art:**
+  1. **The fan-content notice:** Ramon was told the Jagex policy (clauses 6.1.3 and 2.4) doesn't cover video games or the RuneScape trade marks. He hasn't said whether to keep the policy's wording or swap to a plain "fan-made, not endorsed by Jagex" line.
+  2. **A CAPTCHA on sign-ups** (Supabase recommends Cloudflare Turnstile) before the link is shared widely. Ramon: "later".
+  3. **Find a match** (phase 4).
+  4. **The mobile flicker** is still there; Ramon wants to come back to it later, perhaps with a packaged Android app (APK).
+  5. Smaller: sounds for the six Flurry spells (the Surge sounds are spare).
+- **Working with the PC:** the art and spell sounds live only in its `art/` folder. Its device shell has python3, PIL and ffmpeg, so `python3 web/arena_assets.py` and `python3 web/arena_sounds.py` run there. Only `rstcg_sim` has been connected so far; `art/` is inside it, the missing-art CSV one level up. The shell can't delete files without asking Ramon. Copy files to the PC only after the command that writes them has finished.
 
 ## The Arena: what's done
 
