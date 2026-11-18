@@ -50,6 +50,7 @@ parts = {
     "/*__ONLINE__*/": read("online.js"),
     "/*__CLOUD__*/": read("cloudsave.js"),
     "/*__PACKS__*/": read("packs.js"),
+    "/*__STORY__*/": read("story.js"),
     "/*__VERSION__*/": "window.RSTCG_VERSION = %s;" % json.dumps(version_stamp()),
     "/*__ENGINESYNC__*/": engine_without_waiting(read("engine.js")),
     "/*__BOTLEVELS__*/": read("bot_levels.js"),
