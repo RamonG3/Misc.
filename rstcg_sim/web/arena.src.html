@@ -772,6 +772,7 @@ html, body { touch-action: manipulation; }
 .streward { position: absolute; left: 0; right: 0; margin: 0 auto; top: 50%; width: 760px; transform: translateY(-50%); display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 30px 40px;
   background: rgba(20,16,12,.95); border: 2px solid var(--gold); border-radius: 16px; box-shadow: 0 0 80px rgba(243,210,122,.25), 0 20px 60px #000; text-align: center; }
 .strcard { width: 225px; height: 315px; filter: drop-shadow(0 0 30px rgba(243,210,122,.55)); }
+.strcard .cfw { width: 225px; height: 315px; overflow: hidden; pointer-events: none; }
 .strcard .cfw > .cf { transform: scale(.6); transform-origin: 0 0; }
 .strph { width: 225px; height: 315px; border-radius: 12px; border: 2px dashed var(--gold); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; font-family: var(--display); font-size: 26px; color: var(--gold-hi); }
 .strph small { font-family: var(--body); font-size: 15px; color: var(--faint); }
@@ -815,6 +816,13 @@ html, body { touch-action: manipulation; }
 #stage.phone .stopt { font-size: 28px; min-height: 64px; }
 #stage.phone .sthead { width: 170px; height: 170px; }
 .calm .stbg img, .calm .stdot.open i, .calm .stmore, .calm .stbox { animation: none !important; }
+#sttaunt { position: absolute; left: 0; right: 0; margin: 0 auto; top: 300px; width: 940px; z-index: 30; display: flex; align-items: center; gap: 20px; padding: 14px 22px;
+  background: linear-gradient(180deg, rgba(36,28,20,.97), rgba(22,17,13,.97)); border: 2px solid var(--bot-hi); border-radius: 12px; box-shadow: 0 12px 40px rgba(0,0,0,.75); cursor: pointer; }
+#sttaunt.in { animation: stIn .22s ease-out both; }
+#sttaunt .sthead { width: 110px; height: 110px; }
+#sttaunt .sth-i { width: 92px; height: 92px; font-size: 50px; }
+#sttaunt .sttext p { font-size: 26px; }
+#sttaunt .stname { font-size: 24px; color: var(--bot-hi); }
 </style>
 </head>
 <body>
@@ -1503,6 +1511,7 @@ html, body { touch-action: manipulation; }
     const evs = g.events.slice(anim.ev);
     anim.ev = g.events.length;
     anim.shown = after;
+    storyDuelLines(g, evs, ui.replaying || !before);
     const hint = anim.hint, held = anim.held, reactFrom = anim.reactFrom, drop = anim.drop;
     anim.hint = anim.held = anim.reactFrom = anim.drop = null;
     if (ui.replaying || ui.intro || !before || !T) {
@@ -2118,7 +2127,8 @@ html, body { touch-action: manipulation; }
     agents[1 - you] = config.tutorial ? botAgent(tutBot())
       : botAgent(LV.makeBot(level, config.botSeed, level === 'hard' ? { pause: 12 } : undefined), level === 'hard');
     if (config.tutorial) decks[1 - you] = TUT_BOT;
-    const g = new R.Game(decks, agents, config.seed, Object.assign({ capes }, config.tutorial ? TUT_RULES : {}), names);
+    const g = new R.Game(decks, agents, config.seed, Object.assign({ capes }, config.tutorial ? TUT_RULES : {},
+      config.story && config.story.location ? { locked_location: config.story.location } : {}), names);
     wrapApply(g);
     ui.you = you;
     if (config.tutorial) tutStack(g, you);
@@ -2139,9 +2149,11 @@ html, body { touch-action: manipulation; }
     Object.assign(anim, { shown: snap(g), ev: g.events.length, hint: null, held: null, drop: null, reactFrom: null, playing: false, inApply: false });
     if (!ui.replaying) saveGame();
     const token = (ui.token = {});
+    sayStop();
     if (!ui.replaying) await playIntro();       // a resumed duel goes straight back to the board
     if (ui.token !== token) return;
     render();
+    { const o = config.story && STY.OPP[config.story.opp]; if (o && o.lines && o.lines.start && !ui.replaying) duelSay(o.lines.start); }
     while (g.winner === null && g.turn < 400) {
       if (ui.token !== token) return;
       const i = g.active;
@@ -3003,10 +3015,12 @@ html, body { touch-action: manipulation; }
         <span class="lbl" style="color:var(--faint)">No location</span></div></div>`;
     }
     const n = g.location, a = ART[n];
-    const yours = g.location_owner === ui.you;
-    const flag = yours
+    const yours = g.location_owner === ui.you, locked = g.location_owner === null;
+    const flag = locked
+      ? `<span style="position:absolute;left:50%;top:-9px;transform:translateX(-50%);z-index:2;padding:2px 10px;border-radius:0 0 6px 6px;background:#3e2c18;border:1.5px solid var(--gold);border-top:none;color:var(--gold-hi);font-size:11px;font-weight:700;letter-spacing:.14em;white-space:nowrap">${ICN.lock} LOCKED</span>`
+      : yours
       ? `<span style="position:absolute;left:50%;bottom:-9px;transform:translateX(-50%);z-index:2;padding:2px 10px;border-radius:6px 6px 0 0;background:var(--gold);color:#1a1410;font-size:11px;font-weight:700;letter-spacing:.14em">▼ YOU</span>`
-      : `<span style="position:absolute;left:50%;top:-9px;transform:translateX(-50%);z-index:2;padding:2px 10px;border-radius:0 0 6px 6px;background:var(--bot);border:1.5px solid var(--gold);border-top:none;color:#e3f0fa;font-size:11px;font-weight:700;letter-spacing:.14em">▲ BOT</span>`;
+      : `<span style="position:absolute;left:50%;top:-9px;transform:translateX(-50%);z-index:2;padding:2px 10px;border-radius:0 0 6px 6px;background:var(--bot);border:1.5px solid var(--gold);border-top:none;color:#e3f0fa;font-size:11px;font-weight:700;letter-spacing:.14em">▲ ${esc(them().TAG)}</span>`;
     let art = '<span style="font-size:44px;color:var(--gold);opacity:.3">✦</span>';
     if (a && a.mode === 'tall') art = `<img src="${a.src}" alt="" style="position:absolute;left:-20px;top:-20px;width:calc(100% + 40px);height:calc(100% + 40px);object-fit:cover;filter:blur(14px) brightness(.7)"><img src="${a.src}" alt="" style="position:relative;height:100%">`;
     else if (a) art = `<img src="${a.src}" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover">`;
@@ -3016,7 +3030,7 @@ html, body { touch-action: manipulation; }
         <div style="display:flex;align-items:center;gap:8px;padding:6px 10px;background:var(--ink)"><div class="ci" style="width:30px;height:30px;border-width:2px"><b style="font-size:14px">L</b></div>
           <div style="display:flex;flex-direction:column"><span style="font-family:var(--display);font-weight:700;font-size:16px;color:var(--gold-hi);line-height:1.1">${esc(n)}</span><span style="font-size:10px;letter-spacing:.1em;color:var(--cream)">LOCATION</span></div></div>
         <div style="position:relative;flex:1;background:#3b342d;border-top:1.5px solid var(--gold);overflow:hidden;display:flex;align-items:center;justify-content:center">${art}${locBadge(n)}
-          <div style="position:absolute;left:12px;bottom:10px;display:flex;gap:4px"><span class="who you" style="min-width:34px">YOU</span><span class="who bot" style="min-width:34px">BOT</span></div></div></div></div></div></div>`;
+          <div style="position:absolute;left:12px;bottom:10px;display:flex;gap:4px"><span class="who you" style="min-width:34px">YOU</span><span class="who bot" style="min-width:34px">${esc(them().TAG)}</span></div></div></div></div></div></div>`;
   }
   function backdropHTML(g) {
     if (!g || !g.location) return '';
@@ -4693,6 +4707,37 @@ html, body { touch-action: manipulation; }
         <div class="stmap" style="transform:scale(${k.toFixed(4)})">${storyMapSVG()}${towns}${dots}</div></div>`;
   }
 
+  // ---------- what a boss says during the duel ----------
+  // Display only: a box at the top of the duel that goes by itself (or with a click). It never touches the
+  // game, so saves and replays stay the same. "start" after the intro; "firstHit" the first time a hit of
+  // yours lands on them (a resumed duel remembers it was said by replaying quietly).
+  const say = { timer: 0, queue: [], said: {} };
+  function duelSay(lines) {
+    say.queue.push(...lines);
+    if (!say.timer) sayNext();
+  }
+  function sayNext() {
+    clearTimeout(say.timer); say.timer = 0;
+    let el = document.getElementById('sttaunt');
+    const line = say.queue.shift();
+    if (!line) { if (el) el.remove(); return; }
+    if (!el) { el = document.createElement('div'); el.id = 'sttaunt'; el.setAttribute('role', 'status'); el.setAttribute('aria-live', 'polite'); $('#stage').appendChild(el); el.addEventListener('click', sayNext); }
+    const sp = speakerOf(line.who);
+    el.innerHTML = `${chathead(sp, 'left')}<div class="sttext"><b class="stname">${esc(sp ? sp.name : '')}</b><p>${esc(line.t)}</p></div>`;
+    el.classList.remove('in'); void el.offsetWidth; el.classList.add('in');
+    say.timer = setTimeout(sayNext, Math.max(2800, 900 + line.t.length * 55));
+  }
+  function sayStop() { say.queue = []; say.said = {}; sayNext(); }
+  function storyDuelLines(g, evs, quiet) {
+    const sty = ui.config && ui.config.story;
+    const o = sty && STY.OPP[sty.opp];
+    if (!o || !o.lines || g !== ui.g) return;
+    if (!say.said.firstHit && evs.some((e) => e.type === 'hit' && e.by === ui.you && e.amount > 0)) {
+      say.said.firstHit = true;
+      if (!quiet && o.lines.firstHit) duelSay(o.lines.firstHit);
+    }
+  }
+
   // what each Story action does (from act)
   function storyAct(what, v) {
     const run = storyRun();
@@ -4736,6 +4781,7 @@ html, body { touch-action: manipulation; }
 
   // ---------- the duel is over: results and GP ----------
   function finishDuel(g, conceded = false) {
+    sayStop();
     if (ui.config && ui.config.tutorial) {           // no GP or record: a free pack instead
       const won = !conceded && g.winner === ui.you;
       if (won) profile.tutorial = 'done';
@@ -4879,7 +4925,8 @@ html, body { touch-action: manipulation; }
       <button type="button" class="opt" data-do="concede" style="border-color:rgba(255,155,133,.5)"><b style="color:var(--hurt)">Concede</b><small>Counts as a loss and pays no GP</small></button>
       <button type="button" class="opt cancel" data-do="duelmenu"><b>Keep playing</b></button></div>`;
   }
-  function stopDuel() {                       // the running game is left where it is: its agents never answer again
+  function stopDuel() {
+    sayStop();                       // the running game is left where it is: its agents never answer again
     odClose(ui.od);                           // (online, it goes on at the server)
     ui.token = {};
     ui.g = null; ui.pending = null; ui.selected = null; ui.menu = null; ui.why = null; ui.view = null;
@@ -6407,7 +6454,7 @@ html, body { touch-action: manipulation; }
     // next move's animation starts from again, so it plays from the table as arranged
     resnap() { if (ui.g) { anim.shown = snap(ui.g); render(); } },
     // Story Mode: the runner, and (for tests) ending the duel on the table at once, won or lost
-    story: { STY, data: () => storyData(), endDuel(won) { const g = ui.g; if (!g || g.winner !== null) return; stopDuel(); g.winner = won ? ui.you : 1 - ui.you; g.end_reason = 'damage'; finishDuel(g); } },
+    story: { STY, data: () => storyData(), hit: () => storyDuelLines(ui.g, [{ type: 'hit', by: ui.you, amount: 3 }], false), endDuel(won) { const g = ui.g; if (!g || g.winner !== null) return; stopDuel(); g.winner = won ? ui.you : 1 - ui.you; g.end_reason = 'damage'; finishDuel(g); } },
     tour: { get place() { return MENU_BG; }, get places() { return tourPlaces(); }, get busy() { return TOUR.busy; }, get shown() { return TOUR.shown; }, get every() { return TOUR.every; }, set every(ms) { TOUR.every = ms; }, step: (to) => tourStep(to) }, deckRules, POOL, PACK_POOL, cardFace, mini, AS, ART, ICON, get CREST() { return CREST; }, get EMBLEM() { return EMBLEM; },
     // for tests: does the duel board, redrawn in place, read the same as a board drawn from scratch?
     // (attribute order aside). Returns true, or the first place they differ.

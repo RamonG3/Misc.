@@ -54,6 +54,8 @@ DEFAULT_RULES = {
     # Round 16 fixes, found porting the engine to the browser game:
     "elite_fix": True,         # elite prayers last 3 of your turns counting the one you play it (was 4)
     "halve_fix": True,         # a Protect prayer halves the whole attack; buffs aren't added back after
+    # Story Mode (2026-11-18, Ramon): a Location in play from the start that nobody can replace (a boss fight)
+    "locked_location": None,
 }
 DEFAULT_RULES.update({"max_respawns": 0, "max_lp": 60})   # no Respawn; healing can't push a deck past 60
 
@@ -186,7 +188,7 @@ class Game:
         self.rules = {**DEFAULT_RULES, **(rules or {})}
         self.players = [Player(names[i], decks[i], self.rng, self.rules["deck_life"]) for i in (0, 1)]
         self.agents = agents
-        self.location = None
+        self.location = self.rules["locked_location"] or None   # nobody owns a locked one: it never goes to a discard
         self.location_owner = None
         self.turn = 0            # total turns taken; player 0 goes first
         self.active = 0
@@ -246,6 +248,10 @@ class Game:
             amount += 2
         if self.location == "Mage Arena":
             amount += 2 if style == "magic" else -2 if style == "ranged" else 0
+        if self.location == "Draynor Manor":      # Story Mode: Delrith's boss fight
+            amount += 2 if style == "magic" else -2 if style == "melee" else 0
+        if self.location == "Moonlit Circle":     # Story Mode: Count Draynor's boss fight
+            amount += 2 if style == "melee" else -2 if style == "magic" else 0
         if not ignore_armor and o.armor:
             for s, m in CARDS[o.armor].armor:
                 if s == style:
@@ -616,7 +622,7 @@ class Game:
         if k == "npc":
             return [("play", n, t) for t in set(p.discard) if self._recoverable(c, CARDS[t])]
         if k == "location":
-            return play if self.location != n else []
+            return play if self.location != n and not self.rules["locked_location"] else []
         if k == "buff":
             if self.location == "Duel Arena":
                 return []
@@ -931,6 +937,10 @@ class Game:
         elif k == "ability":
             w = p.weapon_card()
             self.deal(i, w.hit + c.damage, "melee", "ability", ignore_armor=c.ignores_armor)
+            if c.heals and self.winner is None:    # Story Mode: Count Draynor's Bites heal him, as Water spells do
+                gain = min(c.heals, self.rules["max_lp"] - p.lp)
+                p.lp += gain
+                self.stats[i]["healed"] += max(0, gain)
             for _ in range(c.durability or 1):     # Crush uses 2 durability
                 if p.weapon:
                     self.wear(i)
@@ -1042,7 +1052,7 @@ class Game:
     def _teleport(self, i, loc):
         """Play a location from your deck (Varrock Teleport). Nothing if it isn't there or is in play."""
         p = self.players[i]
-        if loc in p.deck and self.location != loc:
+        if loc in p.deck and self.location != loc and not self.rules["locked_location"]:
             p.deck.remove(loc)
             self.rng.shuffle(p.deck)
             self.stats[i]["teleports"] += 1

@@ -61,6 +61,8 @@ def main():
     for name, (leg, cut) in legend.items():
         decks.append({"name": f"{name} + {leg}", "group": "Legendary decks",
                       "cards": legend_variant(field[name], leg, cut)})
+    for name, d in cards.STORY_DECKS.items():     # Story Mode's opponents (never offered in the deck picker)
+        decks.append({"name": name, "group": "Story decks", "cards": d})
     fits = {   # capes each deck is built to reach; the bot picks one of these, blind
         **{k: [v] for k, v in cards.STARTER_CAPES.items()},     # Round 27: each starter suggests one cape
         "Lean Melee": ["Attack Cape", "Smithing Cape"],
@@ -73,6 +75,7 @@ def main():
         "Water Mage": ["Magic Cape", "Runecrafting Cape"], "Mist Mage": ["Magic Cape", "Runecrafting Cape"],
         "Dust Mage": ["Magic Cape", "Runecrafting Cape"], "Varrock Melee": ["Attack Cape", "Smithing Cape"],
         "Hammer Mace": ["Attack Cape", "Smithing Cape"],
+        **cards.STORY_CAPES,
     }
     for d in decks:
         d["cards"] = cards.modernize(d["cards"])        # Round 22: Cloth, Leather, Thessalia cut

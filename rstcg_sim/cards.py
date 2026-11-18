@@ -63,6 +63,7 @@ class Card:
     heals: int = 0            # spells: you heal this much on casting (Water)
     fetch: str = ""           # teleports: the location played from your deck
     unshatter: bool = False   # shields: Shatter doesn't break it (Anti-dragon Shield)
+    story: str = ""           # Story Mode: "reward" (only the story gives it; legal everywhere) or "boss" (only a boss has it)
 
 
 def _mat(name, family):
@@ -328,6 +329,22 @@ _ALL = [
     Card("Mage Arena", "location"),      # Magic damage +2, Ranged damage -2
     Card("Duel Arena", "location"),      # no food, no prayers of any kind; active buff prayers end
     Card("Grand Exchange", "location", free=True),  # Round 22: free to play. Once per turn, free: discard a card to draw one
+
+    # ---------- Story Mode, chapter 1 (2026-11-18, STORY_BRIEF.md). Numbers are first drafts, set by simulation ----------
+    # Rewards: only the story gives them (never in packs), and they're legal everywhere, online too.
+    Card("Claws of Guthix", "spell", "magic", req=(("Blood Rune", 1), ("Elemental Rune", 3)), damage=14,
+         burns="pierce", story="reward"),                 # the Wise Old Man's gift (road A): shields soak none of it
+    Card("Shield of Arrav", "shield", soak=6, free=True, unshatter=True, story="reward"),   # Reldo's gift (road B)
+    # Boss-only: no player can ever own these.
+    Card("Draynor Manor", "location", story="boss"),      # Delrith's fight, locked in play: Magic damage +2, Melee -2
+    Card("Moonlit Circle", "location", story="boss"),     # Count Draynor's fight, locked in play: Melee damage +2, Magic -2
+    Card("Demon Fire", "spell", "magic", req=(("Chaos Rune", 1), ("Fire Rune", 2)), damage=10,
+         burns="shatter", story="boss"),                  # Delrith: the shield that blocks it breaks
+    Card("Hellfire", "spell", "magic", req=(("Blood Rune", 1), ("Fire Rune", 3)), damage=18,
+         burns="pierce", story="boss"),                   # Delrith: shields soak none of it
+    Card("Vampyric Claws", "weapon", "melee", req=(("Mithril Bar", 1), ("Rune Bar", 2)), hit=9, durability=4,
+         wclass="claws", story="boss"),                   # Count Draynor
+    Card("Bite", "ability", "melee", allowed=("claws",), damage=4, heals=3, story="boss"),   # Count Draynor: heals him 3
 ]
 
 CARDS = {c.name: c for c in _ALL}
@@ -530,3 +547,55 @@ STARTER_DECKS_R26 = STARTER_DECKS      # the starters before Round 27, kept so o
 # starters27.py); head to head they sit within 4 points of each other, with or without their suggested capes.
 from starter_lists import NEW as _R27, CAPE as STARTER_CAPES      # noqa: E402
 STARTER_DECKS = {k: dict(v) for k, v in _R27.items()}
+
+# ---------- Story Mode, chapter 1: the opponents' decks (2026-11-18, STORY_OPPONENTS.md) ----------
+# Each enemy carries only what it would: the Highwayman and the goblins nothing above Bronze, the Skeleton and the
+# Dark Wizard up to tier 2 (Mithril, Blasts), the bosses tier 3 plus their boss-only cards. First drafts: the
+# simulator tunes them so a starter deck's chances fall from duel to duel (story_tune.py).
+STORY_DECKS = {
+    "Bandit": {   # Bronze melee, and not much of it
+        "Bronze Bar": 24, "Bronze Dagger": 4, "Bronze Scimitar": 3, "Bronze Mace": 2, "Slash": 3, "Stab": 2,
+        "Bronze Platebody": 2, "Wooden Shield": 4, "Shrimp": 4, "Lobster": 2, "Karambwan": 2, "Burst of Strength": 2,
+        "Cook's Assistant": 1, "Sheep Shearer": 1, "Romeo & Juliet": 1, "Vanaka": 1, "Doric": 1, "Lumbridge": 1,
+    },
+    "Highwayman": {   # tier 1 Ranged: a Shortbow or Bronze darts
+        "Normal Logs": 14, "Bronze Bar": 8, "Shortbow": 4, "Bronze Arrows": 4, "Bronze Darts": 4, "Bronze Knives": 3,
+        "Rapid": 3, "Longrange": 2, "Leather Body": 2, "Wooden Shield": 4, "Shrimp": 3, "Lobster": 2, "Sharp Eye": 2,
+        "Lowe": 1, "Ricochet": 2, "Protect from Melee": 1, "Tinderbox": 1,
+    },
+    "Goblin Band": {   # Bronze, melee and thrown: whatever they found
+        "Bronze Bar": 21, "Bronze Scimitar": 3, "Bronze Mace": 3, "Bronze Dagger": 2, "Bronze Throwing Axe": 3,
+        "Bronze Darts": 3, "Bronze Knives": 2, "Slash": 2, "Rapid": 2, "Bronze Platebody": 2, "Wooden Shield": 3,
+        "Kiteshield": 1, "Shrimp": 2, "Lobster": 3, "Karambwan": 2, "Burst of Strength": 2, "Goblin Diplomacy": 1,
+        "Doric": 1, "Vanaka": 1, "Parry": 1,
+    },
+    "Skeleton": {   # Mithril melee
+        "Bronze Bar": 10, "Mithril Bar": 13, "Mithril Scimitar": 4, "Mithril Sword": 3, "Mithril Mace": 2,
+        "Bronze Scimitar": 2, "Slash": 3, "Crush": 2, "Stab": 2, "Mithril Platebody": 2, "Kiteshield": 3,
+        "Wooden Shield": 1, "Protect from Melee": 2, "Protect from Magic": 1, "Burst of Strength": 3,
+        "Lobster": 2, "Vanaka": 1, "Doric": 1, "The Restless Ghost": 1, "Shrimp": 1, "Bronze Dagger": 1,
+    },
+    "Dark Wizard": {   # tier 2 Magic: Blasts above Bolts
+        "Air Rune": 7, "Fire Rune": 8, "Chaos Rune": 4, "Death Rune": 5, "Smoke Rune": 2,
+        "Air Strike": 2, "Fire Strike": 3, "Air Bolt": 2, "Fire Bolt": 3, "Air Blast": 4, "Fire Blast": 4,
+        "Smoke Flurry": 3, "Mystic Will": 1, "Augury": 1, "Wizard Robe": 1, "Mystic Robe Top": 2, "Kiteshield": 3,
+        "Lobster": 2, "Protect from Melee": 1, "Mirror Shield": 1, "Archmage Sedridor": 1,
+    },
+    "Delrith": {   # boss: fire magic, Demon Fire and Hellfire; Draynor Manor locked in play
+        "Fire Rune": 10, "Air Rune": 4, "Chaos Rune": 5, "Death Rune": 3, "Blood Rune": 4,
+        "Demon Fire": 4, "Hellfire": 4, "Fire Strike": 2, "Fire Bolt": 3, "Fire Blast": 3, "Fire Wave": 2,
+        "Augury": 1, "Mystic Will": 2, "Infinity Top": 1, "Mystic Robe Top": 1, "Kiteshield": 3,
+        "Protect from Melee": 2, "Mirror Shield": 2, "Shark": 2, "Lobster": 2,
+    },
+    "Count Draynor": {   # boss: Vampyric Claws and Bites; Moonlit Circle locked in play
+        "Bronze Bar": 7, "Mithril Bar": 11, "Rune Bar": 9,
+        "Vampyric Claws": 4, "Bite": 3, "Mithril Sword": 2, "Mithril Scimitar": 2, "Slash": 2, "Lobster": 1,
+        "Rune Platebody": 1, "Mithril Platebody": 1, "Kiteshield": 3, "Protect from Melee": 2, "Protect from Missiles": 1,
+        "Parry": 2, "Piety": 1, "Burst of Strength": 2, "Swordfish": 2, "Shark": 1, "Vanaka": 1, "Doric": 1, "Smite": 1,
+    },
+}
+STORY_CAPES = {"Bandit": ["Attack Cape"], "Highwayman": ["Ranged Cape"], "Goblin Band": ["Attack Cape", "Smithing Cape"],
+               "Skeleton": ["Attack Cape"], "Dark Wizard": ["Magic Cape"], "Delrith": ["Magic Cape"],
+               "Count Draynor": ["Attack Cape"]}
+STORY_LOCATIONS = {"Delrith": "Draynor Manor", "Count Draynor": "Moonlit Circle"}   # locked in play for these fights
+check_decks(STORY_DECKS)

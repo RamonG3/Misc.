@@ -72,8 +72,19 @@ const site = require('http').createServer((req, res) => {
     await page.waitForFunction(() => window.__arena.ui.g && !window.__arena.ui.intro, null, { timeout: 15000 });
     await page.waitForTimeout(1200);
     const board = await text();
-    ok(!/\bBot\b|BOT'S/.test(board), `${name}: no "Bot" on the board (${(board.match(/.{0,30}\bBot\b.{0,30}|.{0,20}BOT'S.{0,20}/) || [''])[0]})`);
+    ok(!/\bBot\b|\bBOT\b/.test(board), `${name}: no "Bot" on the board (${(board.match(/.{0,30}\bBot\b.{0,30}|.{0,20}BOT'S.{0,20}/) || [''])[0]})`);
     if (name === 'bandit') await shot('duel');
+    if (name === 'delrith' || name === 'draynor') {
+      const loc = await page.evaluate(() => window.__arena.ui.g.location);
+      ok(loc === (name === 'delrith' ? 'Draynor Manor' : 'Moonlit Circle'), `${name}: the Location is locked in play (${loc})`);
+      ok(await page.$('#sttaunt'), `${name}: says something at the start`);
+      await shot(`${name}-start`);
+      await page.evaluate(() => window.__arena.story.hit());
+      await page.waitForTimeout(3500);
+      const said = await page.evaluate(() => (document.querySelector('#sttaunt') || {}).innerText || '');
+      ok(/felt that|wounded me/.test(said), `${name}: reacts to the first hit (${said.slice(0, 60)})`);
+      await shot(`${name}-hit`);
+    }
     await page.evaluate((w) => window.__arena.story.endDuel(w), won);
     await page.waitForFunction(() => window.__arena.ui.screen === 'result');
     const res = await text();

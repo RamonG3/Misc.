@@ -158,6 +158,17 @@
    "spec_cost": 3,
    "spec_val": 5
   },
+  "Bite": {
+   "name": "Bite",
+   "kind": "ability",
+   "style": "melee",
+   "allowed": [
+    "claws"
+   ],
+   "damage": 4,
+   "heals": 3,
+   "story": "boss"
+  },
   "Black D'hide Body": {
    "name": "Black D'hide Body",
    "kind": "armor",
@@ -329,6 +340,24 @@
    "kind": "material",
    "mat": "rune"
   },
+  "Claws of Guthix": {
+   "name": "Claws of Guthix",
+   "kind": "spell",
+   "style": "magic",
+   "req": [
+    [
+     "Blood Rune",
+     1
+    ],
+    [
+     "Elemental Rune",
+     3
+    ]
+   ],
+   "damage": 14,
+   "burns": "pierce",
+   "story": "reward"
+  },
   "Cook's Assistant": {
    "name": "Cook's Assistant",
    "kind": "quest",
@@ -380,6 +409,24 @@
    "name": "Death Rune",
    "kind": "material",
    "mat": "rune"
+  },
+  "Demon Fire": {
+   "name": "Demon Fire",
+   "kind": "spell",
+   "style": "magic",
+   "req": [
+    [
+     "Chaos Rune",
+     1
+    ],
+    [
+     "Fire Rune",
+     2
+    ]
+   ],
+   "damage": 10,
+   "burns": "shatter",
+   "story": "boss"
   },
   "Demon Slayer": {
    "name": "Demon Slayer",
@@ -467,6 +514,11 @@
      null
     ]
    ]
+  },
+  "Draynor Manor": {
+   "name": "Draynor Manor",
+   "kind": "location",
+   "story": "boss"
   },
   "Duel Arena": {
    "name": "Duel Arena",
@@ -767,6 +819,24 @@
    "damage": 6,
    "destroys": "rune",
    "needs_melee_weapon": true
+  },
+  "Hellfire": {
+   "name": "Hellfire",
+   "kind": "spell",
+   "style": "magic",
+   "req": [
+    [
+     "Blood Rune",
+     1
+    ],
+    [
+     "Fire Rune",
+     3
+    ]
+   ],
+   "damage": 18,
+   "burns": "pierce",
+   "story": "boss"
   },
   "Horvik": {
    "name": "Horvik",
@@ -1143,6 +1213,11 @@
    "hit": 12,
    "durability": 2,
    "wclass": "axe"
+  },
+  "Moonlit Circle": {
+   "name": "Moonlit Circle",
+   "kind": "location",
+   "story": "boss"
   },
   "Mud Flurry": {
    "name": "Mud Flurry",
@@ -1561,6 +1636,14 @@
    ],
    "reward_val": 2
   },
+  "Shield of Arrav": {
+   "name": "Shield of Arrav",
+   "kind": "shield",
+   "soak": 6,
+   "free": true,
+   "unshatter": true,
+   "story": "reward"
+  },
   "Shieldbow": {
    "name": "Shieldbow",
    "kind": "bow",
@@ -1875,6 +1958,25 @@
     ]
    ],
    "reward_val": 10
+  },
+  "Vampyric Claws": {
+   "name": "Vampyric Claws",
+   "kind": "weapon",
+   "style": "melee",
+   "req": [
+    [
+     "Mithril Bar",
+     1
+    ],
+    [
+     "Rune Bar",
+     2
+    ]
+   ],
+   "hit": 9,
+   "durability": 4,
+   "wclass": "claws",
+   "story": "boss"
   },
   "Vanaka": {
    "name": "Vanaka",
@@ -2903,6 +3005,209 @@
    "capes": [
     "Magic Cape",
     "Runecrafting Cape"
+   ]
+  },
+  {
+   "name": "Bandit",
+   "group": "Story decks",
+   "cards": {
+    "Bronze Bar": 24,
+    "Bronze Dagger": 4,
+    "Bronze Scimitar": 3,
+    "Bronze Mace": 2,
+    "Slash": 3,
+    "Stab": 2,
+    "Bronze Platebody": 2,
+    "Wooden Shield": 4,
+    "Shrimp": 4,
+    "Lobster": 2,
+    "Karambwan": 2,
+    "Burst of Strength": 2,
+    "Cook's Assistant": 1,
+    "Sheep Shearer": 1,
+    "Romeo & Juliet": 1,
+    "Vanaka": 1,
+    "Doric": 1,
+    "Lumbridge": 1
+   },
+   "capes": [
+    "Attack Cape"
+   ]
+  },
+  {
+   "name": "Highwayman",
+   "group": "Story decks",
+   "cards": {
+    "Normal Logs": 14,
+    "Bronze Bar": 8,
+    "Shortbow": 4,
+    "Bronze Arrows": 4,
+    "Bronze Darts": 4,
+    "Bronze Knives": 3,
+    "Rapid": 3,
+    "Longrange": 2,
+    "Leather Body": 2,
+    "Wooden Shield": 4,
+    "Shrimp": 3,
+    "Lobster": 2,
+    "Sharp Eye": 2,
+    "Lowe": 1,
+    "Ricochet": 2,
+    "Protect from Melee": 1,
+    "Tinderbox": 1
+   },
+   "capes": [
+    "Ranged Cape"
+   ]
+  },
+  {
+   "name": "Goblin Band",
+   "group": "Story decks",
+   "cards": {
+    "Bronze Bar": 21,
+    "Bronze Scimitar": 3,
+    "Bronze Mace": 3,
+    "Bronze Dagger": 2,
+    "Bronze Throwing Axe": 3,
+    "Bronze Darts": 3,
+    "Bronze Knives": 2,
+    "Slash": 2,
+    "Rapid": 2,
+    "Bronze Platebody": 2,
+    "Wooden Shield": 3,
+    "Kiteshield": 1,
+    "Shrimp": 2,
+    "Lobster": 3,
+    "Karambwan": 2,
+    "Burst of Strength": 2,
+    "Goblin Diplomacy": 1,
+    "Doric": 1,
+    "Vanaka": 1,
+    "Parry": 1
+   },
+   "capes": [
+    "Attack Cape",
+    "Smithing Cape"
+   ]
+  },
+  {
+   "name": "Skeleton",
+   "group": "Story decks",
+   "cards": {
+    "Bronze Bar": 10,
+    "Mithril Bar": 13,
+    "Mithril Scimitar": 4,
+    "Mithril Sword": 3,
+    "Mithril Mace": 2,
+    "Bronze Scimitar": 2,
+    "Slash": 3,
+    "Crush": 2,
+    "Stab": 2,
+    "Mithril Platebody": 2,
+    "Kiteshield": 3,
+    "Wooden Shield": 1,
+    "Protect from Melee": 2,
+    "Protect from Magic": 1,
+    "Burst of Strength": 3,
+    "Lobster": 2,
+    "Vanaka": 1,
+    "Doric": 1,
+    "The Restless Ghost": 1,
+    "Shrimp": 1,
+    "Bronze Dagger": 1
+   },
+   "capes": [
+    "Attack Cape"
+   ]
+  },
+  {
+   "name": "Dark Wizard",
+   "group": "Story decks",
+   "cards": {
+    "Air Rune": 7,
+    "Fire Rune": 8,
+    "Chaos Rune": 4,
+    "Death Rune": 5,
+    "Smoke Rune": 2,
+    "Air Strike": 2,
+    "Fire Strike": 3,
+    "Air Bolt": 2,
+    "Fire Bolt": 3,
+    "Air Blast": 4,
+    "Fire Blast": 4,
+    "Smoke Flurry": 3,
+    "Mystic Will": 1,
+    "Augury": 1,
+    "Wizard Robe": 1,
+    "Mystic Robe Top": 2,
+    "Kiteshield": 3,
+    "Lobster": 2,
+    "Protect from Melee": 1,
+    "Mirror Shield": 1,
+    "Archmage Sedridor": 1
+   },
+   "capes": [
+    "Magic Cape"
+   ]
+  },
+  {
+   "name": "Delrith",
+   "group": "Story decks",
+   "cards": {
+    "Fire Rune": 10,
+    "Air Rune": 4,
+    "Chaos Rune": 5,
+    "Death Rune": 3,
+    "Blood Rune": 4,
+    "Demon Fire": 4,
+    "Hellfire": 4,
+    "Fire Strike": 2,
+    "Fire Bolt": 3,
+    "Fire Blast": 3,
+    "Fire Wave": 2,
+    "Augury": 1,
+    "Mystic Will": 2,
+    "Infinity Top": 1,
+    "Mystic Robe Top": 1,
+    "Kiteshield": 3,
+    "Protect from Melee": 2,
+    "Mirror Shield": 2,
+    "Shark": 2,
+    "Lobster": 2
+   },
+   "capes": [
+    "Magic Cape"
+   ]
+  },
+  {
+   "name": "Count Draynor",
+   "group": "Story decks",
+   "cards": {
+    "Bronze Bar": 7,
+    "Mithril Bar": 11,
+    "Rune Bar": 9,
+    "Vampyric Claws": 4,
+    "Bite": 3,
+    "Mithril Sword": 2,
+    "Mithril Scimitar": 2,
+    "Slash": 2,
+    "Lobster": 1,
+    "Rune Platebody": 1,
+    "Mithril Platebody": 1,
+    "Kiteshield": 3,
+    "Protect from Melee": 2,
+    "Protect from Missiles": 1,
+    "Parry": 2,
+    "Piety": 1,
+    "Burst of Strength": 2,
+    "Swordfish": 2,
+    "Shark": 1,
+    "Vanaka": 1,
+    "Doric": 1,
+    "Smite": 1
+   },
+   "capes": [
+    "Attack Cape"
    ]
   }
  ],

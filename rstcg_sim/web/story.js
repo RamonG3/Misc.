@@ -49,26 +49,26 @@
   // deck: the card list (cards.json names). level: the bot level. capes: the capes it may bring (one at random).
   // lose: what it says when you lose, before Retry. lines: what it says during the duel ("start", "firstHit").
   // location: a Location that starts in play and can't be replaced (STORY_BRIEF.md, rules change 1).
-  // Decks are placeholders until they are built and tuned (STORY_OPPONENTS.md); deck: a deck's name from
-  // cards.json stands in for now.
+  // deckName: the opponent's deck in cards.json ("Story decks", from STORY_DECKS in cards.py, where the
+  // simulator tunes them: STORY_OPPONENTS.md).
   const OPP = {
-    bandit: { name: 'Bandit', speaker: 'bandit', deckName: 'Melee', level: 'easy',
+    bandit: { name: 'Bandit', speaker: 'bandit', deckName: 'Bandit', level: 'normal',
       lose: { who: 'bandit', t: "Come back when you've grown a spine." } },
-    highwayman: { name: 'Highwayman', speaker: 'highwayman', deckName: 'Ranged', level: 'easy',
+    highwayman: { name: 'Highwayman', speaker: 'highwayman', deckName: 'Highwayman', level: 'easy',
       lose: { who: 'highwayman', t: 'A pleasure doing business.' } },
-    goblins: { name: 'Goblin Band', speaker: 'goblin', deckName: 'Melee', level: 'easy',
+    goblins: { name: 'Goblin Band', speaker: 'goblin', deckName: 'Goblin Band', level: 'normal',
       lose: { who: 'goblin', t: 'We win! We never win!' } },
-    skeleton: { name: 'Skeleton', speaker: 'skeleton', deckName: 'Melee', level: 'normal',
+    skeleton: { name: 'Skeleton', speaker: 'skeleton', deckName: 'Skeleton', level: 'normal',
       lose: { t: 'The skeleton clatters back into the shadows, waiting.' } },
-    wizard: { name: 'Dark Wizard', speaker: 'wizard', deckName: 'Air Mage', level: 'normal',
+    wizard: { name: 'Dark Wizard', speaker: 'wizard', deckName: 'Dark Wizard', level: 'hard',
       lose: { who: 'wizard', t: 'Run, little bookworm. Run while you can.' } },
-    delrith: { name: 'Delrith', speaker: 'delrith', deckName: 'Air Mage', level: 'hard', boss: true, location: 'Draynor Manor',
+    delrith: { name: 'Delrith', speaker: 'delrith', deckName: 'Delrith', level: 'hard', boss: true, location: 'Draynor Manor',
       lines: {
         start: [{ who: 'delrith', t: 'No Silverlight? Then you are already dead.' }],
         firstHit: [{ who: 'delrith', t: '...I felt that.' }, { who: 'delrith', t: 'Without Silverlight, nothing can harm me! ...Can it?' }],
       },
       lose: { who: 'delrith', t: 'Run along. Come back with a sword, if you can find one.' } },
-    draynor: { name: 'Count Draynor', speaker: 'draynor', deckName: 'Melee', level: 'hard', boss: true, location: 'Moonlit Circle',
+    draynor: { name: 'Count Draynor', speaker: 'draynor', deckName: 'Count Draynor', level: 'hard', boss: true, location: 'Moonlit Circle',
       lines: {
         start: [{ who: 'draynor', t: 'No stake? No garlic? Then you have no hope at all.' }],
         firstHit: [{ who: 'draynor', t: 'You... wounded me? That should not be possible.' }],

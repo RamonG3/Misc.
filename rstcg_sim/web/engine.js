@@ -21,7 +21,7 @@
     two_handed: false, free_swing_after_spell: false, wears: 0, draws: 0, reacts_to: '', converts_to: '',
     bonus: 0, effect: '', spec: '', spec_cost: 0, spec_val: 0, qp: 0, steps: [], reward_val: 0,
     duration: 0, families: 0, hits: 1, equip_swing: false, expend: [], fam_req: [],
-    heals: 0, fetch: '', unshatter: false,
+    heals: 0, fetch: '', unshatter: false, burns: '', story: '',
   };
 
   const CARDS = {};
@@ -41,6 +41,7 @@
     opening_hand: 6, hand_max: 7, actions: 2, punch_damage: 2, max_lp: 60,
     arrow_shots: 4, bow_shots: 4, reversal_fraction: 1.0, max_energy: 4,
     capes: null, cape_need: null, cape_turns: 3, free_quest_steps: 1, free_plays_max: 3,
+    locked_location: null,          // Story Mode: a Location in play from the start that nobody can replace
   };
   const FREE_SPECS = new Set(['sanctuary', 'light']);
   const ELEMENTAL = ['Air Rune', 'Water Rune', 'Earth Rune', 'Fire Rune'];
@@ -209,7 +210,7 @@
       names = names || ['P1', 'P2'];
       this.players = [0, 1].map((i) => new Player(names[i], decks[i], this.rng));
       this.agents = agents;
-      this.location = null;
+      this.location = this.rules.locked_location || null;   // nobody owns a locked one: it never goes to a discard
       this.location_owner = null;
       this.turn = 0;                   // total turns taken; player 0 goes first
       this.active = 0;
@@ -252,6 +253,8 @@
       if (this.location === "Wizards' Tower" && style === 'magic') amount += 2;
       if (this.location === 'Wilderness') amount += 2;
       if (this.location === 'Mage Arena') amount += style === 'magic' ? 2 : style === 'ranged' ? -2 : 0;
+      if (this.location === 'Draynor Manor') amount += style === 'magic' ? 2 : style === 'melee' ? -2 : 0;     // Story Mode: Delrith
+      if (this.location === 'Moonlit Circle') amount += style === 'melee' ? 2 : style === 'magic' ? -2 : 0;    // Story Mode: Count Draynor
       if (!ignore_armor && o.armor) for (const [s, m] of CARDS[o.armor].armor) if (s === style) amount += m;
       if (o.longrange && style === 'melee') amount -= 2;
       if (o.light && style === 'melee') amount = Math.floor(amount / 2);
@@ -305,7 +308,7 @@
       if (amount > 0 && !opts.unreactable && (await this.offer_reaction(i, amount, style, src))) return 0;
       if (this.winner !== null) return 0;
       const o = this.opp(i);
-      let [to_lp, soaked] = this.compute_damage(i, amount, style, !!opts.ignore_armor, !!opts.ignore_prayer);
+      let [to_lp, soaked] = this.compute_damage(i, amount, style, !!opts.ignore_armor, !!opts.ignore_prayer, null, !!opts.ignore_shield);
       let broke = null;
       if (opts.shatter && o.shield && !o.shield.virtual && !CARDS[o.shield.name].unshatter) soaked = soaked ? o.shield.soak : soaked;
       if (o.shield && soaked) {
@@ -521,7 +524,7 @@
         case 'prayer': case 'reversal': return [];      // reactions answer an attack
         case 'npc':
           return uniq(p.discard).filter((t) => recoverable(c, CARDS[t])).map((t) => ['play', n, t]);
-        case 'location': return this.location !== n ? play : [];
+        case 'location': return this.location !== n && !this.rules.locked_location ? play : [];
         case 'buff': return this.location !== 'Duel Arena' && p.meets(c.req) && p.buff !== n ? play : [];
         case 'quest':
           return !p.completed.includes(n) && (!p.quest || p.quest.name !== n) ? play : [];
@@ -741,7 +744,7 @@
       switch (k) {
         case 'material': inc(p.materials, name); inc(p.fresh, name); break;
         case 'spell': {
-          if (c.damage) await this.deal(i, c.damage, 'magic', 'spell');
+          if (c.damage) await this.deal(i, c.damage, 'magic', 'spell', { shatter: c.burns === 'shatter', ignore_shield: c.burns === 'pierce' });
           if (c.wears) this.wear_opponent(i, c.wears);
           if (c.heals && this.winner === null) {
             const before = p.lp;
@@ -785,6 +788,11 @@
         case 'ability': {
           const w = p.weapon_card();
           await this.deal(i, w.hit + c.damage, 'melee', 'ability', { ignore_armor: c.ignores_armor });
+          if (c.heals && this.winner === null) {       // Story Mode: Count Draynor's Bites heal him, as Water spells do
+            const before = p.lp;
+            p.set_lp(p.lp + Math.min(c.heals, this.rules.max_lp - p.lp));
+            if (p.lp > before) this.emit({ type: 'heal', who: i, amount: p.lp - before });
+          }
           for (let n = 0; n < (c.durability || 1); n++) if (p.weapon) this.wear(i);
           p.discard.push(name);
           break;
@@ -882,7 +890,7 @@
 
     async teleport(i, loc) {         // play a location from your deck; nothing if it's not there or in play
       const p = this.players[i];
-      if (p.deck.includes(loc) && this.location !== loc) {
+      if (p.deck.includes(loc) && this.location !== loc && !this.rules.locked_location) {
         removeOne(p.deck, loc);
         this.rng.shuffle(p.deck);
         this.stat(i, 'teleports');

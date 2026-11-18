@@ -11,7 +11,7 @@ const spec = JSON.parse(fs.readFileSync(process.argv[2], 'utf8')); const n = +pr
     for (let s = 1; s <= n; s++) {
       const seed = k * 10000 + s;
       const g = new R.Game([m.da || D[m.a], m.db || D[m.b]], [new HeuristicBot(seed * 2 + 1), new HeuristicBot(seed * 2 + 2)], seed,
-        m.capes ? { capes: m.capes } : null);
+        m.capes || m.rules ? Object.assign({}, m.capes ? { capes: m.capes } : {}, m.rules || {}) : null);
       await g.run();
       w += g.winner === 0; t += g.turn; c += g.end_reason === 'cape'; q += g.players[0].qp + g.players[1].qp;
     }
