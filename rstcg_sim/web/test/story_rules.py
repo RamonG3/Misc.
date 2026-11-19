@@ -95,5 +95,10 @@ if __name__ == "__main__":
         same = json.dumps(py[k]) == json.dumps(js[k])
         bad += not same
         print(f"{'ok  ' if same else 'DIFF'} {k:18s} py {py[k]}  js {js[k]}")
+    # a Punch is never changed by a Location, the Wilderness included (Ramon, 2026-11-18)
+    for loc in ("Draynor Manor", "Moonlit Circle", "Wilderness"):
+        k = f"punch_{loc}"
+        if py[k] != 2:
+            bad += 1; print(f"WRONG {k}: a Punch dealt {py[k]}, not 2")
     print("all passed" if not bad else f"{bad} DIFFERENT")
     sys.exit(1 if bad else 0)

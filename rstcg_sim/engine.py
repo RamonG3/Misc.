@@ -240,19 +240,22 @@ class Game:
         """Return (damage to LP, damage soaked by shield) without changing anything.
         Pass src to include the attacker's buff prayer (deal() adds it itself)."""
         o = self.opp(i)
-        punch = punch or src == "punch"   # Story Mode's boss Locations don't change a Punch (Ramon, 2026-11-18)
+        # A Punch is never changed by a Location, the Wilderness included: it's the last-ditch chip that every deck
+        # has, and a Location that helped it would hand Melee an edge everywhere (Ramon, 2026-11-18)
+        punch = punch or src == "punch"
         if src is not None:
             amount += self.attack_bonus(i, style, src)
-        if self.location == "Wizards' Tower" and style == "magic":
-            amount += 2
-        if self.location == "Wilderness":
-            amount += 2
-        if self.location == "Mage Arena":
-            amount += 2 if style == "magic" else -2 if style == "ranged" else 0
-        if self.location == "Draynor Manor" and not punch:      # Story Mode: Delrith's boss fight
-            amount += 2 if style == "magic" else -2 if style == "melee" else 0
-        if self.location == "Moonlit Circle" and not punch:     # Story Mode: Count Draynor's boss fight
-            amount += 2 if style == "melee" else -2 if style == "magic" else 0
+        if not punch:
+            if self.location == "Wizards' Tower" and style == "magic":
+                amount += 2
+            if self.location == "Wilderness":
+                amount += 2
+            if self.location == "Mage Arena":
+                amount += 2 if style == "magic" else -2 if style == "ranged" else 0
+            if self.location == "Draynor Manor":       # Story Mode: Delrith's boss fight
+                amount += 2 if style == "magic" else -2 if style == "melee" else 0
+            if self.location == "Moonlit Circle":      # Story Mode: Count Draynor's boss fight
+                amount += 2 if style == "melee" else -2 if style == "magic" else 0
         if not ignore_armor and o.armor:
             for s, m in CARDS[o.armor].armor:
                 if s == style:

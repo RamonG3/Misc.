@@ -249,13 +249,17 @@
     // Pass src to include the attacker's prayer bonus (deal adds it itself).
     compute_damage(i, amount, style, ignore_armor = false, ignore_prayer = false, src = null, ignore_shield = false, punch = false) {
       const o = this.opp(i);
-      punch = punch || src === 'punch';   // Story Mode's boss Locations don't change a Punch (Ramon, 2026-11-18)
+      // A Punch is never changed by a Location, the Wilderness included: it's the last-ditch chip that every deck
+      // has, and a Location that helped it would hand Melee an edge everywhere (Ramon, 2026-11-18)
+      punch = punch || src === 'punch';
       if (src !== null) amount += this.attack_bonus(i, style, src);
-      if (this.location === "Wizards' Tower" && style === 'magic') amount += 2;
-      if (this.location === 'Wilderness') amount += 2;
-      if (this.location === 'Mage Arena') amount += style === 'magic' ? 2 : style === 'ranged' ? -2 : 0;
-      if (this.location === 'Draynor Manor' && !punch) amount += style === 'magic' ? 2 : style === 'melee' ? -2 : 0;     // Story Mode: Delrith
-      if (this.location === 'Moonlit Circle' && !punch) amount += style === 'melee' ? 2 : style === 'magic' ? -2 : 0;    // Story Mode: Count Draynor
+      if (!punch) {
+        if (this.location === "Wizards' Tower" && style === 'magic') amount += 2;
+        if (this.location === 'Wilderness') amount += 2;
+        if (this.location === 'Mage Arena') amount += style === 'magic' ? 2 : style === 'ranged' ? -2 : 0;
+        if (this.location === 'Draynor Manor') amount += style === 'magic' ? 2 : style === 'melee' ? -2 : 0;     // Story Mode: Delrith
+        if (this.location === 'Moonlit Circle') amount += style === 'melee' ? 2 : style === 'magic' ? -2 : 0;    // Story Mode: Count Draynor
+      }
       if (!ignore_armor && o.armor) for (const [s, m] of CARDS[o.armor].armor) if (s === style) amount += m;
       if (o.longrange && style === 'melee') amount -= 2;
       if (o.light && style === 'melee') amount = Math.floor(amount / 2);

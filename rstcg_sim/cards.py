@@ -283,7 +283,7 @@ _ALL = [
 
     # Locations
     Card("Wizards' Tower", "location"),   # Magic damage +2; prayers need 1 extra Bone
-    Card("Wilderness", "location"),       # All damage +2
+    Card("Wilderness", "location"),       # All damage +2 (never a Punch: no Location changes a Punch)
 
     # ---------- Group 2 (Round 18): the cards the simulator hadn't seen ----------
     _mat("Water Rune", "rune"), _mat("Law Rune", "rune"),
