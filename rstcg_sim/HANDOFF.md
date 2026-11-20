@@ -1,4 +1,4 @@
-# RuneScape TCG: handoff (2026-11-18)
+# RuneScape TCG: handoff (2026-11-20)
 
 This file describes where things stand. `CLAUDE.md` covers how the code fits together and the ground rules. `README.md` covers the balance history (Rounds 1–27).
 
@@ -17,9 +17,16 @@ This file describes where things stand. `CLAUDE.md` covers how the code fits tog
 - **Spell sounds:** Ramon's Drive folder RuneScape Kingdoms > Images > Spells > Spell Sounds (53 `.ogg` files, named by spell), plus the seven `Crafting_<rune>_runes.ogg` he gave in chat on 2026-11-17. On his PC they go in `art/sounds/`; see "Spell sounds" below.
 - **Jagex's Fan Content Policy:** https://legal.jagex.com/docs/policies/fan-content-policy (version 1.4, 29 September 2026, when the notice was added). See "The fan-content notice" below.
 
-## Start here (for a new chat, after 2026-11-18)
+## Start here (for a new chat, after 2026-11-20)
 
-- **Story Mode chapter 1 is built (2026-11-18)** and pushed; see "Story Mode" below, `STORY_BRIEF.md`, `STORY_CH1_SCRIPT.md` (Project docs) and `STORY_OPPONENTS.md`. **The live app is behind the server:** the pushes changed the cards and engine, so the `duel` function (redeployed by the Action on 2026-11-18) has a new version stamp, and the Netlify app asks for a reload until the new `web/dist/netlify` is deployed. Ramon deploys it (drag the folder in).
+- **Next job: refine Story Mode and write chapter 2 (Falador).** Chapter 1 is built, polished and played through by Ramon ("works perfectly", 2026-11-20). Read "7. Story Mode" below, then `STORY_BRIEF.md` and `STORY_CH1_SCRIPT.md` (Project docs) and `STORY_OPPONENTS.md`. Shape chapter 2 with Ramon before building, as chapter 1 was: ask for his rough idea first.
+- **Where chapter 1 leaves the player:** road A ends with the Wise Old Man heading to Falador ("an associate there who knows more about this sort of thing"); road B with Reldo sending you there (old research about a ruby sword). Delrith rose from Draynor's coffin; Count Draynor rose at the stone circle; the silent stranger with the ruby sword is behind it. The player's tone at the stranger (`run.tone.stranger1/2`) and road (`profile.story.roads`) are saved and can be used later.
+- **What a chapter now has to offer (all from 2026-11-20):** places with Ramon's paintings (`art/scenes`, `AS.scene`, a scene step's `art`), a line's `bg` to change the painting mid-scene, a red `flash` with a cut under it, a slow change of place with the place's name, Ramon's recorded music per place (`PLACE_MUSIC`, `arena_music.py`; a scene step's `music`), boss rematches (`chapter.bosses`), boss-only cards and a locked Location.
+- **Things to deploy or check first:**
+  - The newest Netlify build given to Ramon is `runescapetcg-story-ch1-v10.zip` (2026-11-20). If the live app is older, he drags the new one in.
+  - **Ramon's PC wasn't reachable on 2026-11-20.** Everything from that day went to him as `rstcg_pc_update_2026-11-20c.zip` (code, the generated `arena_assets.js` and `arena_music.js`, and the new art), to unzip over `rstcg_project`, plus his four MP3s to put in `art/music/` himself. Before regenerating anything on the PC, check it has them (`art/scenes/scene_swamp_stranger_gone.png`, `art/faces/Stranger.png`, `art/music/Bazaar.mp3`, `web/arena_music.js`). If it doesn't, the repo and the zip are the truth; `python web/recover_generated.py` can pull the generated files out of the latest built page.
+- **Page size:** about 13 MB since the music (Bazaar, Forest Day, Swamp Land, Ambient Room, ~3½–4 min loops at 56 kbit/s). More tracks for chapter 2 add ~2 MB each; say so before adding many, or trim them shorter in `arena_music.py`.
+- **Story Mode open items (waiting on Ramon):** the reward cards' numbers (Claws of Guthix 14 damage, Shield of Arrav soak 6); whether the boss Locations punish the wrong style too hard (`STORY_OPPONENTS.md`); tracks for the places still on the synthesized songs (Draynor Village, Draynor Manor, the cellar, the stone circle, the Story screen and map).
 
 - **Everything below is built and pushed** to `RamonG3/Misc.` branch `claude/card-game-ai-opponents-e90esn` (`rstcg_sim/`), **and copied to Ramon's PC** (`C:\Users\ramon\Downloads\rstcg_project\rstcg_sim`). Live: the Netlify app as of the bank (the art and rune sounds below are in `web/dist/netlify` and the zip given to Ramon on 2026-11-17, deployed when he drags it in); Supabase `duel` function redeployed 2026-11-18 for Story Mode (see below).
 - **Online:** sign-in is by emailed 6-digit code for anyone (sender runescapetcg.game@gmail.com; Google switched off); the server is the bank for everyone who has been online (`ONLINE_BRIEF.md`, phase 3b). Ramon's account is **Zukrathion**.
@@ -30,7 +37,7 @@ This file describes where things stand. `CLAUDE.md` covers how the code fits tog
   3. **Find a match** (phase 4).
   4. **The mobile flicker** is still there; Ramon wants to come back to it later, perhaps with a packaged Android app (APK).
   5. Smaller: sounds for the six Flurry spells (the Surge sounds are spare).
-  6. **Story Mode, waiting on Ramon:** his read of chapter 1 in play (script, art picks, difficulty); the reward cards' numbers (Claws of Guthix 14, Shield of Arrav soak 6); whether the bosses' Locations should punish the wrong style as hard as they do (`STORY_OPPONENTS.md`). Chapter 2 (Falador) is next when he has it.
+  6. **Story Mode:** see "Start here" above.
 - **Working with the PC:** the art and spell sounds live only in its `art/` folder. Its device shell has python3, PIL and ffmpeg, so `python3 web/arena_assets.py` and `python3 web/arena_sounds.py` run there. On 2026-11-17 Ramon connected the folder one level up (`rstcg_project`), so `rstcg_sim/art/` and the old missing-art CSV are both reachable. The shell can't delete files without asking Ramon. Copy files to the PC only after the command that writes them has finished.
 
 ## The Arena: what's done
