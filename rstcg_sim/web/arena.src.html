@@ -105,6 +105,9 @@ html.bigtext .mc-nm { font-size: 13px; padding: 4px 5px 3px; letter-spacing: -.0
 .np-pic { position: relative; width: 74px; height: 74px; flex: none; border-radius: 50%; background: var(--parch); border: 3px solid var(--gold); display: flex; align-items: center; justify-content: center; }
 .np-pic > img:first-child { width: 46px; height: 46px; object-fit: contain; }
 .np-pic > svg.pi { width: 58px; height: 58px; margin-top: 2px; }
+.np-face { width: 100%; height: 100%; border-radius: 50%; overflow: hidden; }
+#stage .np-face .sthead { width: 100%; height: 100%; border: 0; border-radius: 50%; }
+#stage .np-face .sthead img { width: 112%; height: 112%; margin-top: 10%; }
 .np-nm { font-family: var(--display); font-weight: 700; font-size: 30px; color: var(--gold-hi); line-height: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .npc { display: inline-flex; align-items: center; gap: 5px; padding: 3px 10px; border-radius: 12px; background: rgba(0,0,0,.35); border: 1px solid rgba(201,165,75,.4); font-weight: 800; font-size: 17px; }
 .npc img { width: 18px; height: 18px; }
@@ -3027,7 +3030,7 @@ html, body { touch-action: manipulation; }
       const canBot = g.claimable(bot).includes(cape);
       if (canYou) cls = 'ready';
       else if (canBot) cls = 'danger';
-      body = `${row(you)}${row(bot)}<div style="display:flex;align-items:center;gap:8px;margin-top:auto;padding-top:8px;border-top:1px solid rgba(201,165,75,.2)">
+      body = `${row(bot)}${row(you)}<div style="display:flex;align-items:center;gap:8px;margin-top:auto;padding-top:8px;border-top:1px solid rgba(201,165,75,.2)">
         <span class="lbl" style="font-size:10px">Wear</span><span class="ctr"></span><span class="ctr"></span><span class="ctr"></span>
         <span style="margin-left:auto;font-size:11px;font-weight:700;letter-spacing:.12em;color:${canYou ? 'var(--gold-hi)' : canBot ? 'var(--hurt)' : 'var(--faint)'}">${canYou ? 'READY TO CLAIM' : canBot ? them().CAN : 'UNCLAIMED'}</span></div>`;
     } else {
@@ -3135,13 +3138,18 @@ html, body { touch-action: manipulation; }
   }
   // What the other side of the table is called: the bot's level name ("Guard"), or online the player's name.
   const oppName = () => them().name;
+  // In a story duel the other side's plate shows the opponent's own chathead (the hood only if there's no picture).
+  function oppFace() {
+    const st = ui.config && ui.config.story, o = st && STY.OPP[st.opp], sp = o && STY.SPEAKERS[o.speaker];
+    return sp && sp.face && (AS.face || {})[sp.face] ? `<div class="np-face">${chathead(sp, 'left')}</div>` : '';
+  }
   function nameplate(g, i) {
     const p = g.players[i];
     const you = i === ui.you;
     const cape = p.cape_name && AS.cape[p.cape_name] ? `<img src="${AS.cape[p.cape_name].src}" alt="Wearing ${esc(p.cape_name)}" style="position:absolute;right:-16px;bottom:-10px;height:42px">` : '';
     const chip = (inner) => `<span class="npc">${inner}</span>`;
     return `<div class="np" data-at="${i}:plate">
-      <div class="np-pic" style="box-shadow:0 0 0 3px ${you ? 'var(--gold)' : 'var(--bot)'},0 6px 14px rgba(0,0,0,.6);border-color:${you ? 'var(--gold-hi)' : 'var(--bot-hi)'}">${playerIcon(i, you)}${cape}</div>
+      <div class="np-pic" style="box-shadow:0 0 0 3px ${you ? 'var(--gold)' : 'var(--bot)'},0 6px 14px rgba(0,0,0,.6);border-color:${you ? 'var(--gold-hi)' : 'var(--bot-hi)'}">${(!you && oppFace()) || playerIcon(i, you)}${cape}</div>
       <div style="display:flex;flex-direction:column;gap:6px;min-width:0"><div class="np-nm">${you ? 'You' : esc(oppName())}</div>
       <div style="display:flex;gap:6px;align-items:center">${chip(`${ICON.quest ? `<img src="${ICON.quest}" alt="">` : ''}<span style="color:var(--gold-hi)">${p.qp} QP</span>`)}
       ${chip(`<svg width="14" height="16" viewBox="0 0 14 16" aria-hidden="true"><rect x="1" y="3" width="9" height="12" rx="1.5" fill="none" stroke="#cdbf9f" stroke-width="1.5"/><rect x="4" y="1" width="9" height="12" rx="1.5" fill="#2a2420" stroke="#cdbf9f" stroke-width="1.5"/></svg>${p.hand.length}${you ? '/' + g.rules.hand_max : ''}`)}</div></div></div>`;
