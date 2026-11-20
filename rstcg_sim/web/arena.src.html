@@ -3157,7 +3157,7 @@ html, body { touch-action: manipulation; }
     const chip = (inner) => `<span class="npc">${inner}</span>`;
     return `<div class="np" data-at="${i}:plate">
       <div class="np-pic" style="box-shadow:0 0 0 3px ${you ? 'var(--gold)' : 'var(--bot)'},0 6px 14px rgba(0,0,0,.6);border-color:${you ? 'var(--gold-hi)' : 'var(--bot-hi)'}">${(!you && oppFace()) || playerIcon(i, you)}${cape}</div>
-      <div style="display:flex;flex-direction:column;gap:6px;min-width:0"><div class="np-nm">${you ? 'You' : esc(oppName())}</div>
+      <div style="display:flex;flex-direction:column;gap:6px;min-width:0"><div class="np-nm"${!you && oppName().length > 12 ? ` style="font-size:${oppName().length > 15 ? 22 : 25}px"` : ''}>${you ? 'You' : esc(oppName())}</div>
       <div style="display:flex;gap:6px;align-items:center">${chip(`${ICON.quest ? `<img src="${ICON.quest}" alt="">` : ''}<span style="color:var(--gold-hi)">${p.qp} QP</span>`)}
       ${chip(`<svg width="14" height="16" viewBox="0 0 14 16" aria-hidden="true"><rect x="1" y="3" width="9" height="12" rx="1.5" fill="none" stroke="#cdbf9f" stroke-width="1.5"/><rect x="4" y="1" width="9" height="12" rx="1.5" fill="#2a2420" stroke="#cdbf9f" stroke-width="1.5"/></svg>${p.hand.length}${you ? '/' + g.rules.hand_max : ''}`)}</div></div></div>`;
   }
