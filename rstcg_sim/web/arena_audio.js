@@ -631,11 +631,57 @@ window.RSAudio = (() => {
     out(g, sfxBus, rev, pan);
   }
   function metal(t, f, d, v, pan = 0) { [[1, 1], [2.32, 0.5], [3.97, 0.35], [5.73, 0.2]].forEach(([r, a]) => tone(t, 'sine', f * r, f * r * 0.995, d / (1 + r * 0.25), v * a, pan, 0.3)); }
+  // The stranger's red flash (Story Mode; "Ember", Ramon's pick of four, 2026-11-20). A breath drawn in (0.4 s),
+  // then a deep boom falling from 110 to 32 Hz as he vanishes (0.45 s in: the page's FLASH_CUT), a high trembling
+  // shimmer and a slow-beating low hum ringing out in a long reverb. About 4 s; its own reverbs and compressor,
+  // through the effects bus. The candidates are in web/test/flare_candidates.js.
+  const flareRev = {};
+  function flareVerb(secs, decay) {
+    const k = `${secs}/${decay}`;
+    if (!flareRev[k] || flareRev[k].sampleRate !== ctx.sampleRate) {
+      const n = Math.floor(ctx.sampleRate * secs), b = ctx.createBuffer(2, n, ctx.sampleRate);
+      let r = 7;
+      for (let ch = 0; ch < 2; ch++) { const d = b.getChannelData(ch); for (let i = 0; i < n; i++) { r = (r * 16807) % 2147483647; d[i] = (r / 1073741823.5 - 1) * Math.pow(1 - i / n, decay); } }
+      flareRev[k] = b;
+    }
+    return flareRev[k];
+  }
+  const FLARE_GAIN = 0.5;
+  function flare(t0, v) {
+    const c = ctx;
+    const comp = c.createDynamicsCompressor(); comp.threshold.value = -10; comp.ratio.value = 6; comp.connect(sfxBus);
+    const out = c.createGain(); out.gain.value = FLARE_GAIN * v; out.connect(comp);
+    const verb = (secs, decay, wet) => { const cv = c.createConvolver(); cv.buffer = flareVerb(secs, decay); const g = c.createGain(); g.gain.value = wet; cv.connect(g); g.connect(out); return cv; };
+    const env = (g, pts) => { g.setValueAtTime(pts[0][1], t0 + pts[0][0]); for (const [dt, val, k] of pts.slice(1)) (k ? g.exponentialRampToValueAtTime(Math.max(val, 1e-4), t0 + dt) : g.linearRampToValueAtTime(val, t0 + dt)); };
+    const osc = (type, f, dest, from, to) => { const o = c.createOscillator(); o.type = type; o.frequency.value = f; const g = c.createGain(); g.gain.value = 0; o.connect(g); g.connect(dest); o.start(t0 + from); o.stop(t0 + to); return { o, g: g.gain, f: o.frequency }; };
+    const R = verb(4.5, 2.2, 0.55), R2 = verb(4, 2, 0.4);
+    // the breath: noise through a bandpass sweeping up into the hit
+    const n = c.createBufferSource(); n.buffer = noiseBuf; const bp = c.createBiquadFilter(); bp.type = 'bandpass'; bp.Q.value = 2.5;
+    const ng = c.createGain(); n.connect(bp); bp.connect(ng); ng.connect(out); ng.connect(R);
+    bp.frequency.setValueAtTime(300, t0); bp.frequency.exponentialRampToValueAtTime(5000, t0 + 0.42);
+    env(ng.gain, [[0, 0], [0.38, 0.35], [0.46, 0.0001, 1]]); n.start(t0); n.stop(t0 + 0.5);
+    // the boom
+    const b = osc('sine', 110, out, 0.4, 3); b.f.setValueAtTime(110, t0 + 0.42); b.f.exponentialRampToValueAtTime(32, t0 + 2.2); env(b.g, [[0.42, 0], [0.45, 0.95], [2.6, 0.0001, 1]]);
+    const b2 = osc('triangle', 55, out, 0.4, 3); b2.f.setValueAtTime(55, t0 + 0.42); b2.f.exponentialRampToValueAtTime(27, t0 + 2.4); env(b2.g, [[0.42, 0], [0.46, 0.5], [2.8, 0.0001, 1]]);
+    // the shimmer: detuned high sines, trembling, into the reverb
+    [880, 1318.5, 1760, 2637, 3520].forEach((f, k) => { for (const d of [-4, 4]) {
+      const s = osc('sine', f + d, R, 0.4, 3.6);
+      const lfo = c.createOscillator(); lfo.frequency.value = 5 + k; const lg = c.createGain(); lg.gain.value = 0.04; lfo.connect(lg); lg.connect(s.g); lfo.start(t0 + 0.4); lfo.stop(t0 + 3.6);
+      env(s.g, [[0.42, 0], [0.5, 0.09 / (k + 1)], [3.4, 0.0001, 1]]);
+    } });
+    // the hum: two low pairs a fraction apart, so they beat slowly
+    for (const f of [65.4, 65.9, 98, 97.3]) {
+      env(osc('triangle', f, R2, 0.4, 3.6).g, [[0.44, 0], [0.9, 0.18], [3.3, 0.0001, 1]]);
+      env(osc('triangle', f, out, 0.4, 3.6).g, [[0.44, 0], [0.9, 0.16], [3.3, 0.0001, 1]]);
+    }
+  }
+
   const sfx = (name, o = {}) => {
     if (!ctx || vol.sfx <= 0) return;
     const t = ctx.currentTime + 0.01, pan = o.pan || 0, v = o.v == null ? 1 : o.v;
     switch (name) {
       case 'click': tone(t, 'sine', 880, 620, 0.07, 0.18 * v, pan, 0.05); swish(t, 5000, 3000, 0.03, 0.05 * v, pan); break;
+      case 'flare': flare(t, v); break;
       case 'move': tone(t, 'sine', 1320, 1180, 0.04, 0.07 * v, pan, 0.02); break;
       case 'sweep': swish(t, 300, 2600, 0.42, 0.18 * v, o.dir ? -0.4 * o.dir : 0, 0.8); break;
       case 'lift': swish(t, 1800, 3200, 0.12, 0.12 * v, pan); break;

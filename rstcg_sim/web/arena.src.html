@@ -4602,7 +4602,7 @@ html, body { touch-action: manipulation; }
         }
         ui.sc.scene = st; ui.sc.night = !!st.night; STY.advance(run); continue;
       }
-      if (st.flash) { ui.sc.flash = Date.now(); STY.advance(run); if (!calm()) sfx('hit', { v: 0.8 }); continue; }
+      if (st.flash) { ui.sc.flash = Date.now(); STY.advance(run); sfx('flare'); continue; }   // its boom lands as the stranger vanishes (FLASH_CUT)
       if (st.map && !st.onMap) { STY.advance(run); storySave(); ui.screen = 'map'; return; }
       if (st.onMap) { ui.screen = 'map'; storySave(); return; }
       if (st.end) { STY.advance(run); continue; }

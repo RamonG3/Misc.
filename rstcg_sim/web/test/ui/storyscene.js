@@ -101,7 +101,9 @@ const ok = (c, m) => { checks += 1; if (!c) { failures += 1; console.log('FAIL '
   await shot('3-the-sword');
   // the flash: he's gone before anything can be seen again
   ok(await untilText(/The sword rises/), 'the sword rises');
+  await page.evaluate(() => { window.__fx = []; const was = RSAudio.sfx; RSAudio.sfx = (n, o) => { window.__fx.push(n); return was(n, o); }; });
   await page.click('#board [data-do="stnext"]');
+  ok((await page.evaluate(() => window.__fx)).includes('flare'), 'the flare sounds with the flash');
   const look = () => ui(() => { const bgs = [...document.querySelectorAll('#board .stbg')], f = document.querySelector('#board .stflash');
     return { n: bgs.length, newOp: +getComputedStyle(bgs[bgs.length - 1]).opacity, flash: f ? +getComputedStyle(f).opacity : 0, box: !!document.querySelector('#board .stbox'), art: window.__arena.ui.sc.scene.art }; });
   await page.waitForTimeout(250);

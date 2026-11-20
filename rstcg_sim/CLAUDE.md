@@ -156,6 +156,7 @@ python simulate.py 300                    # Python simulator, starter decks
   - Notes are scheduled 1 s ahead (`LOOKAHEAD`) so a busy page can't make the music drop notes, and touch screens ask for a bigger output buffer. `RSAudio.health()` (Settings → Sound check) reports glitches, dropped notes and the buffer. The busiest battle song costs about half a desktop core to synthesize, so keep new instruments cheap.
   - Two reverbs, one behind each bus, so an echo follows its own volume (one shared reverb into the master once kept the music's echo playing with the music off). Music turned off plays nothing at all (`apply()`).
   - Story Mode has its own tracks: `story` (Tales of Gielinor), `storydark` (Shadows over Draynor: the manor, the stone circle, night) and `boss` (The Ancient Dark, a combat song with an intense layer). `musicFor(key)` in the page picks the `AU.want` for each screen.
+  - `sfx('flare')`: the stranger's flash (Story Mode), synthesized with its own long reverbs; timed so its boom lands at the page's `FLASH_CUT`.
   - Recorded clips: `CLIP_GAIN` 2.6 plus a 5 dB low shelf (`CLIP_BODY`), since 2026-11-18; runes play at `RUNE_V` 0.45 so they stay where they were.
   - **A silent layer costs as much as a loud one.** Web Audio synthesizes a note at 1/10,000 volume exactly as hard as at full. The intense layer's notes are only played while it is on or fading out (`intenseUntil`, `catchUp`); do the same for any new layer that waits in silence.
 

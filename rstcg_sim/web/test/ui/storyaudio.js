@@ -52,6 +52,10 @@ const { chromium } = require('playwright');
   ok(avg > sp._hit.rms + 2, `spells (${avg.toFixed(1)} dB) clearly louder than a hit (${sp._hit.rms} dB)`);
   ok(Object.values(sp).every((v) => v.peak <= -1), 'no spell clip reaches full scale');
 
+  // the stranger's flare (Ember): its boom about as loud as a spell, well over a hit, never clipping
+  const fl = await page.evaluate(() => RSAudio.measure(() => RSAudio.sfx('flare'), 1.2));
+  ok(fl.rms > sp._hit.rms + 4 && fl.rms < -10 && fl.peak <= -1, 'the flare: ' + JSON.stringify(fl));
+
   // Story screens play the story's tracks
   await page.click('[data-do="story"]'); await page.waitForTimeout(600);
   ok(await playing() === 'Tales of Gielinor', 'the Story screen plays Tales of Gielinor: ' + await playing());
