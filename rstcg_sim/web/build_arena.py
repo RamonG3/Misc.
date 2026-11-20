@@ -43,6 +43,8 @@ parts = {
     "/*__ENGINE__*/": open(os.path.join(HERE, "engine.js")).read(),
     "/*__BOT__*/": open(os.path.join(HERE, "bot.js")).read(),
     "/*__SOUNDS__*/": read("arena_sounds.js"),
+    # the recorded music (arena_music.py, from art/music); a page built without it plays only the synthesized songs
+    "/*__MUSIC__*/": read("arena_music.js") if os.path.exists(os.path.join(HERE, "arena_music.js")) else "window.ARENA_MUSIC = {};",
     "/*__AUDIO__*/": open(os.path.join(HERE, "arena_audio.js")).read(),
     "/*__WIZ__*/": open(os.path.join(HERE, "deckwiz.js")).read(),
     "/*__DECKRULES__*/": read("deckrules.js"),

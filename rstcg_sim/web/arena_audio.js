@@ -4,7 +4,7 @@
 // recorded, not synthesized, is the casting sound of each spell that has one (see "Recorded sounds").
 //
 //   RSAudio.unlock()            start audio after the first click / key / pad press (browser rule)
-//   RSAudio.want('menu'|'duel'|'quiet')   what should be playing; idempotent, call as often as you like
+//   RSAudio.want('menu'|'duel'|'quiet'|'story'|'storydark'|'boss'|'track:<name>')   what should be playing; idempotent, call as often as you like
 //   RSAudio.intense(true)       battle music: bring in the intense layer (either deck at 10 or less)
 //   RSAudio.sting(name)         'victory' | 'defeat' | 'claim' | 'quest' | 'legendary'
 //   RSAudio.sfx(name, opts)     one-shot sound effects
@@ -531,13 +531,63 @@ window.RSAudio = (() => {
   }
   // Story Mode's own tracks: the dialogue (light, or dark for the manor and the circle) and the bosses' fight
   const STORY_SONG = { story: 'story', storydark: 'storydark', boss: 'boss' };
+
+  // --- Recorded music (2026-11-20): Ramon's tracks, window.ARENA_MUSIC (arena_music.py), for Story Mode's places.
+  // RSAudio.want('track:Bazaar'). Played by an <audio> element (decoded as it plays, so a four-minute track
+  // never sits in memory whole) through its own gain into the music bus, so the music volume and "off" apply.
+  // A track that isn't in this page falls back to the synthesized story song.
+  const MUSIC = (typeof window !== 'undefined' && window.ARENA_MUSIC) || {};
+  const TRACK_IN = { 'Ambient Room': { out: 0.8, gap: 2.5, fade: 4 } };   // the stranger: the music stops; silence; then this
+  let track = null;
+  const trackUrls = {};
+  function trackUrl(name) {
+    if (!trackUrls[name]) {
+      const src = MUSIC[name].src, bin = atob(src.slice(src.indexOf(',') + 1));
+      const u8 = new Uint8Array(bin.length);
+      for (let i = 0; i < bin.length; i++) u8[i] = bin.charCodeAt(i);
+      trackUrls[name] = URL.createObjectURL(new Blob([u8], { type: 'audio/mpeg' }));
+    }
+    return trackUrls[name];
+  }
+  function trackStop(secs = 2) {
+    if (!track) return;
+    const t = track; track = null;
+    clearTimeout(t.timer);
+    const now = ctx.currentTime, g = t.gain.gain;
+    g.cancelScheduledValues(now); g.setValueAtTime(g.value, now); g.linearRampToValueAtTime(0, now + secs);
+    setTimeout(() => { t.el.pause(); t.el.removeAttribute('src'); try { t.el.load(); t.node.disconnect(); } catch (e) { /* gone */ } }, secs * 1000 + 150);
+  }
+  function trackStart(name) {
+    const o = TRACK_IN[name] || { gap: 0.6, fade: 3 };
+    const el = new Audio();
+    el.loop = true; el.preload = 'auto'; el.src = trackUrl(name);
+    const node = ctx.createMediaElementSource(el), g = ctx.createGain();
+    node.connect(g); g.connect(musicBus);
+    const lvl = Math.pow(10, (MUSIC[name].gain || 0) / 20), now = ctx.currentTime, t0 = now + o.gap;
+    g.gain.setValueAtTime(0, now); g.gain.setValueAtTime(0, t0); g.gain.linearRampToValueAtTime(lvl, t0 + o.fade);
+    track = { name, el, node, gain: g, timer: setTimeout(() => { if (track && track.el === el) el.play().catch(() => {}); }, o.gap * 1000) };
+  }
+
   function apply() {                          // make what's playing match what's wanted
     if (!ctx) return;
     const now = ctx.currentTime;
     // music turned off: nothing is played at all (silent notes cost as much to make as loud ones)
-    if (wanted === 'quiet' || vol.music <= 0) { fadeOut(current, 1.5); current = null; return; }
-    if (STORY_SONG[wanted]) {
-      const song = SONGS[STORY_SONG[wanted]];
+    if (wanted === 'quiet' || vol.music <= 0) { fadeOut(current, 1.5); current = null; trackStop(1.5); return; }
+    let w = wanted;
+    if (w.startsWith('track:')) {
+      const name = w.slice(6);
+      if (MUSIC[name] && typeof Audio !== 'undefined') {
+        if (!track || track.name !== name) {
+          const out = (TRACK_IN[name] && TRACK_IN[name].out) || 2.5;
+          fadeOut(current, out); current = null; trackStop(out); trackStart(name);
+        }
+        return;
+      }
+      w = 'story';
+    }
+    if (track) trackStop(2.5);
+    if (STORY_SONG[w]) {
+      const song = SONGS[STORY_SONG[w]];
       if (!current || current.song !== song) { fadeOut(current, 2.5); current = player(song, now + 0.4, 3); }
       return;
     }
@@ -789,7 +839,9 @@ window.RSAudio = (() => {
       if (ps) out.glitches = num(ps.underrunEvents) !== null ? ps.underrunEvents : num(ps.fallbackFramesEvents);
       return out;
     },
-    get playing() { return current ? current.song.name : null; },
+    get playing() { return track ? track.name : current ? current.song.name : null; },
+    get tracks() { return Object.keys(MUSIC); },
+    trackInfo() { return track ? { name: track.name, time: track.el.currentTime, paused: track.el.paused, error: track.el.error ? track.el.error.code : null } : null; },
     get layers() { return current ? Object.fromEntries(Object.entries(current.layers).map(([k, g]) => [k, +g.gain.value.toFixed(3)])) : null; },
     songs: () => Object.fromEntries(Object.entries(SONGS).map(([k, s]) => [k, { name: s.name, kind: s.kind, seconds: +(s.length * 60 / s.bpm).toFixed(1), notes: s.events.length }])),
     analyse,

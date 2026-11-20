@@ -16,7 +16,9 @@
  *   { who, t }              a line: who is a speaker id (SPEAKERS), 'you', or absent for narration
  *   { choose: [opt], key }  the player picks one. opt: { t, then: [steps], tone, road, go }
  *                           tone: recorded as run.tone[key]; road: run.road; go: jump to that node afterwards
- *   { scene, night }        the backdrop changes (no stop)
+ *   { scene, night }        the place changes (no stop). Also: art (a painting other than the place's own),
+ *                           music (a track other than the place's own: the page's PLACE_MUSIC)
+ *   { who, t, bg }          a line that also changes the painting (the place stays the same)
  *   { flash: 'red' }        a flash of light (no stop)
  *   { map: dotId }          open that dot, close the one you came from, and go to the map
  *   { duel: oppId }         a duel; won: on to the next step; lost: the opponent's lose line, then retry or map
@@ -110,6 +112,7 @@
       { label: 'Falador', x: 240, y: 330, town: true, soon: true },
     ],
     rewards: { A: 'Claws of Guthix', B: 'Shield of Arrav' },
+    bosses: { A: 'delrith', B: 'draynor' },  // each road's boss: a rematch opens once you've finished that road
     nodes: {
       intro: [
         { scene: 'Lumbridge' },
@@ -137,8 +140,10 @@
         say('bandit', 'Have it your way.'),
         { duel: 'bandit' },
         say('bandit', "Alright, alright! I'm going! You'll regret this."),
-        { scene: 'The road to Lumbridge' },
-        nar('On the road back to Lumbridge, someone is standing in your way.'),
+        // The stranger (2026-11-20: Ramon's painting, and his music: the swamp's music stops, then Ambient Room).
+        // Still in the swamp, before Lumbridge. Steps were changed, never added or removed, so saves keep their place.
+        { scene: 'Lumbridge Swamp', art: 'Lumbridge Swamp stranger', music: 'Ambient Room' },
+        nar('As you turn to leave the swamp, someone is standing in your way.'),
         nar("A hooded figure in dark robes. You can't see a face."),
         say('stranger', '......'),
         { key: 'stranger1', choose: [
@@ -155,11 +160,11 @@
           opt("Is this a staring contest? Because I think I'm winning.", [], { tone: 'witty' }),
         ] },
         say('stranger', '......'),
-        nar('The figure draws a sword. Its blade is a deep, impossible red, as if it were cut from a single ruby.'),
+        { t: 'The figure draws a sword. Its blade is a deep, impossible red, as if it were cut from a single ruby.', bg: 'Lumbridge Swamp stranger close' },
         nar('The sword rises.'),
         { flash: 'red' },
-        { scene: 'The road to Lumbridge', empty: true },
-        nar('When your sight comes back, the road is empty.'),
+        { scene: 'Lumbridge Swamp', empty: true, music: 'Ambient Room' },
+        nar('When your sight comes back, the path is empty.'),
         you('...What was that?'),
         { scene: 'Lumbridge' },
         say('hans', 'Back already! And the bandit?'),
@@ -417,7 +422,10 @@
       if (!run.node) return null;
       const list = ch.nodes[run.node] || [];
       let sc = null;
-      for (let k = 0; k <= Math.min(run.i, list.length - 1); k++) if (list[k].scene) sc = list[k];
+      for (let k = 0; k <= Math.min(run.i, list.length - 1); k++) {
+        if (list[k].scene) sc = list[k];
+        else if (list[k].bg && sc) sc = Object.assign({}, sc, { art: list[k].bg });   // a line that changes the painting
+      }
       return sc;
     }
 

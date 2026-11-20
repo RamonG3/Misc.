@@ -2,6 +2,7 @@
 web/arena_assets.js
 web/arena_fonts.css
 web/arena_sounds.js
+web/arena_music.js
 # The art and the spell sounds themselves live in art/ on Ramon's PC, never here
 art/
 # Build output (it has the art inlined)

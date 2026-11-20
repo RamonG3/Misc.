@@ -30,6 +30,7 @@ const tests = [
   ['Story Mode, both roads (story)', [T('story.js')]],
   ['Story Mode music, music off, spell loudness (storyaudio)', [T('storyaudio.js')]],
   ['Large card text: every card still fits (cardtext)', [T('cardtext.js')]],
+  ['Story Mode: changes of place, the stranger, place music, boss rematches (storyscene)', [T('storyscene.js')]],
   ['the server: duel function and bank, in node (test_local)', [path.join(__dirname, '..', '..', '..', 'server', 'test_local.mjs')]],
   ['the database: migrations in a real Postgres (sql_test)', [path.join(__dirname, '..', '..', '..', 'server', 'sql_test.mjs')]],
 ];

@@ -43,7 +43,7 @@ for name, nxt in zip(names, pieces[1:]):
     out[name] = built[pos:j]
     _, pos = find(built, nxt, j)
 
-targets = {"FONTS": "arena_fonts.css", "ASSETS": "arena_assets.js", "SOUNDS": "arena_sounds.js"}
+targets = {"FONTS": "arena_fonts.css", "ASSETS": "arena_assets.js", "SOUNDS": "arena_sounds.js", "MUSIC": "arena_music.js"}
 for name, fn in targets.items():
     if name not in out:              # a page built before that part existed (spell sounds came in November 2026)
         print(f"web/{fn}: not in this page; left alone")

@@ -57,7 +57,7 @@ const { chromium } = require('playwright');
   ok(await playing() === 'Tales of Gielinor', 'the Story screen plays Tales of Gielinor: ' + await playing());
   await page.click('#board [data-do="stnew"]'); await page.waitForTimeout(500);
   ok(await page.evaluate(() => window.__arena.ui.screen) === 'scene', 'a scene');
-  ok(await playing() === 'Tales of Gielinor', 'the dialogue keeps it');
+  { const want = (await page.evaluate(() => RSAudio.tracks)).includes('Bazaar') ? 'Bazaar' : 'Tales of Gielinor'; ok(await playing() === want, `Lumbridge's dialogue: ${want} (${await playing()})`); }
   // the manor: the dark one
   await page.evaluate(() => { const u = window.__arena.ui; u.sc.scene = { scene: 'Draynor Manor cellar' }; window.__arena.render(); });
   await page.waitForTimeout(300);
@@ -69,6 +69,28 @@ const { chromium } = require('playwright');
   await page.evaluate(() => { RSAudio.intense(true); RSAudio.want('story'); });
   await page.waitForTimeout(300);
   ok(await playing() === 'Tales of Gielinor', 'and back to the story');
+
+  // Ramon's recorded tracks (when the page has them): they really play, through the music volume
+  const tracks = await page.evaluate(() => RSAudio.tracks);
+  if (tracks.includes('Bazaar')) {
+    await page.evaluate(() => RSAudio.want('track:Bazaar'));
+    await page.waitForTimeout(3000);
+    const ti = await page.evaluate(() => RSAudio.trackInfo());
+    ok(ti && ti.name === 'Bazaar' && !ti.paused && ti.time > 1 && ti.error === null, 'Bazaar plays: ' + JSON.stringify(ti));
+    await page.evaluate(() => RSAudio.volumes({ music: 0 }));
+    await page.waitForTimeout(2000);
+    ok(await page.evaluate(() => RSAudio.trackInfo()) === null && await playing() === null, 'music off stops a track too');
+    await page.evaluate(() => RSAudio.volumes({ music: 0.55 }));
+    await page.waitForTimeout(300);
+    ok(await playing() === 'Bazaar', 'and back on, it comes back');
+    await page.evaluate(() => RSAudio.want('story'));
+    await page.waitForTimeout(300);
+    ok(await playing() === 'Tales of Gielinor', 'a place without a track: the story song');
+  }
+  await page.evaluate(() => RSAudio.want('track:Not a real track'));
+  await page.waitForTimeout(300);
+  ok(await playing() === 'Tales of Gielinor', "a track the page doesn't have: the story song instead");
+  await page.evaluate(() => RSAudio.want('story'));
 
   // music off: nothing plays (so nothing echoes); back on: it comes back
   await page.evaluate(() => RSAudio.volumes({ music: 0 }));
