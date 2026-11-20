@@ -163,7 +163,7 @@
         { t: 'The figure draws a sword. Its blade is a deep, impossible red, as if it were cut from a single ruby.', bg: 'Lumbridge Swamp stranger close' },
         nar('The sword rises.'),
         { flash: 'red' },
-        { scene: 'Lumbridge Swamp', empty: true, music: 'Ambient Room' },
+        { scene: 'Lumbridge Swamp', art: 'Lumbridge Swamp stranger gone', empty: true, music: 'Ambient Room' },   // swapped under the flash
         nar('When your sight comes back, the path is empty.'),
         you('...What was that?'),
         { scene: 'Lumbridge' },

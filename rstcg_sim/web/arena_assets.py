@@ -99,7 +99,8 @@ STORY_SCENE = {"Lumbridge Swamp": "scene_lumbridge_swamp.png", "Draynor Village"
                "Draynor Manor cellar": "scene_draynor_manor_cellar.png", "The stone circle": "scene_stone_circle.png",
                # the stranger in Lumbridge Swamp (Ramon's paintings, 2026-11-20): only ever behind that one scene,
                # never the menu's backdrops (those are BACKDROP, above)
-               "Lumbridge Swamp stranger": "scene_swamp_stranger.png", "Lumbridge Swamp stranger close": "scene_swamp_stranger_close.png"}
+               "Lumbridge Swamp stranger": "scene_swamp_stranger.png", "Lumbridge Swamp stranger close": "scene_swamp_stranger_close.png",
+               "Lumbridge Swamp stranger gone": "scene_swamp_stranger_gone.png"}
 SCENES = os.path.join(ROOT, "art", "scenes")
 FACES = os.path.join(ROOT, "art", "faces")
 scene = {}

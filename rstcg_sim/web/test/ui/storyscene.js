@@ -99,6 +99,25 @@ const ok = (c, m) => { checks += 1; if (!c) { failures += 1; console.log('FAIL '
   ok(await ui(() => window.__arena.ui.sc.scene.art) === 'Lumbridge Swamp stranger close', 'the world blurs round him');
   ok(await hasBox(), 'the box stays for that');
   await shot('3-the-sword');
+  // the flash: he's gone before anything can be seen again
+  ok(await untilText(/The sword rises/), 'the sword rises');
+  await page.click('#board [data-do="stnext"]');
+  const look = () => ui(() => { const bgs = [...document.querySelectorAll('#board .stbg')], f = document.querySelector('#board .stflash');
+    return { n: bgs.length, newOp: +getComputedStyle(bgs[bgs.length - 1]).opacity, flash: f ? +getComputedStyle(f).opacity : 0, box: !!document.querySelector('#board .stbox'), art: window.__arena.ui.sc.scene.art }; });
+  await page.waitForTimeout(250);
+  let l = await look();
+  ok(l.art === 'Lumbridge Swamp stranger gone' && l.n === 2 && l.newOp === 0 && l.flash > 0.5 && !l.box, 'as the flash comes up, he is still there, under it: ' + JSON.stringify(l));
+  await page.waitForTimeout(450);
+  l = await look();
+  ok(l.newOp === 1 && l.flash > 0.95, 'he is gone while the flash covers everything: ' + JSON.stringify(l));
+  await page.waitForTimeout(700);
+  await shot('3b-coming-back-into-focus');
+  l = await look();
+  ok(!l.box, 'no box while your sight comes back');
+  await page.waitForTimeout(2000);
+  ok(/sight comes back/.test(await ui(() => (document.querySelector('#board .stbox') || {}).innerText || '')), 'then: the path is empty');
+  ok(await ui(() => document.querySelector('#board .stbg img').src) === await ui(() => window.ARENA_ASSETS.scene['Lumbridge Swamp stranger gone']), 'the same swamp, without him');
+  await shot('3c-he-is-gone');
   ok(await untilText(/What was that/), 'the flash, and he is gone');
   if (tracks.includes('Ambient Room')) ok(await playing() === 'Ambient Room', 'Ambient Room until Lumbridge');
   // into Lumbridge: a new place, so its name
