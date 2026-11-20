@@ -461,6 +461,8 @@ html, body { touch-action: manipulation; }
 .dbx-bad { position: absolute; left: 50%; top: 52px; transform: translateX(-50%) rotate(-6deg); padding: 3px 10px; border: 2px solid var(--hurt); border-radius: 4px; background: #1a1410; color: var(--hurt); font-family: var(--display); font-weight: 700; font-size: 14px; letter-spacing: .1em; }
 .ct { position: relative; width: 152px; height: 214px; padding: 8px; border-radius: 12px; background: #241c16; border: 1.5px solid rgba(201,165,75,.35); display: flex; flex-direction: column; align-items: center; gap: 6px; color: var(--cream); }
 .ct:hover { border-color: rgba(243,210,122,.7); }
+.ct:disabled { opacity: .4; filter: grayscale(1); cursor: not-allowed; }
+.ct-cond.ct-no { font-family: var(--body); font-size: 12px; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; }
 .ct[aria-pressed="true"] { border: 2.5px solid var(--gold-hi); background: #2e2419; box-shadow: 0 0 22px rgba(243,210,122,.45); }
 .ct-art { width: 100%; height: 100px; border-radius: 8px; background: #3b342d; display: flex; align-items: center; justify-content: center; overflow: hidden; }
 .ct-art img { height: 94px; object-fit: contain; }
@@ -812,14 +814,16 @@ html, body { touch-action: manipulation; }
 .strph small { font-family: var(--body); font-size: 15px; color: var(--faint); }
 .stflash { position: absolute; inset: 0; pointer-events: none; background: #ff2030; animation: stFlash 3s ease-out both; }
 .stflash.calm { animation: stFlashCalm 1.2s ease-out both; }
+.stflash.far { background: radial-gradient(ellipse 70% 55% at 50% 0%, #ff2030 0%, rgba(255,32,48,.55) 45%, rgba(255,32,48,0) 100%); }
 /* the flash covers the whole scene from 8% to 30% (240-900 ms): anything that changes under it (the stranger leaving, at
    FLASH_CUT) is never seen changing; then the place comes back, slowly sharpening (.stbg.cutin) */
 @keyframes stFlash { 0% { opacity: 0; background: #ff2030; } 8% { opacity: 1; background: #ff2030; } 20% { opacity: 1; background: #fff4f0; } 30% { opacity: 1; background: #ffd0c8; } 100% { opacity: 0; background: #ff2030; } }
 .stbg.cutin { animation: stCut 2.4s ease-out both; }
 @keyframes stCut { 0% { opacity: 0; filter: blur(18px) brightness(1.6); } 1% { opacity: 1; filter: blur(18px) brightness(1.6); } 100% { opacity: 1; filter: blur(0) brightness(1); } }
 @keyframes stFlashCalm { 0% { opacity: .45; } 100% { opacity: 0; } }
-.stchs { position: absolute; left: 110px; display: flex; gap: 30px; flex-wrap: wrap; }
-.stch { width: 560px; padding: 28px 32px; display: flex; flex-direction: column; gap: 10px; }
+.stchs { position: absolute; left: 110px; right: 40px; bottom: 20px; display: flex; gap: 30px; align-items: flex-start; overflow-x: auto; overflow-y: hidden; padding-bottom: 8px; }
+.stch { flex: none; width: 540px; padding: 28px 32px; display: flex; flex-direction: column; gap: 10px; }
+.stch.slim { width: 300px; }
 .stch.soon { opacity: .75; justify-content: center; align-items: flex-start; }
 .stbtns { display: flex; flex-direction: column; gap: 12px; margin-top: 10px; }
 .stbtns button small { display: block; font-family: var(--body); font-size: 13px; font-weight: 700; letter-spacing: .06em; color: var(--muted); }
@@ -3060,6 +3064,8 @@ html, body { touch-action: manipulation; }
       case 'Mage Arena': return b(ic('magic', 20), '+2') + `<div style="position:absolute;right:12px;bottom:8px;display:flex;align-items:center;gap:3px;padding:2px 8px;border-radius:20px;background:var(--parch);border:2px solid var(--gold)">${ic('ranged', 16)}<b style="color:var(--ink);font-family:var(--display)">−2</b></div>`;
       case 'Draynor Manor': return b(ic('magic', 20), '+2') + `<div style="position:absolute;right:12px;bottom:8px;display:flex;align-items:center;gap:3px;padding:2px 8px;border-radius:20px;background:var(--parch);border:2px solid var(--gold)">${ic('melee', 16)}<b style="color:var(--ink);font-family:var(--display)">−2</b></div>`;
       case 'Moonlit Circle': return b(ic('melee', 20), '+2') + `<div style="position:absolute;right:12px;bottom:8px;display:flex;align-items:center;gap:3px;padding:2px 8px;border-radius:20px;background:var(--parch);border:2px solid var(--gold)">${ic('magic', 16)}<b style="color:var(--ink);font-family:var(--display)">−2</b></div>`;
+      case 'Falador Tunnels': return b(ic('magic', 20), '+2') + `<div style="position:absolute;right:12px;bottom:8px;display:flex;align-items:center;gap:3px;padding:2px 8px;border-radius:20px;background:var(--parch);border:2px solid var(--gold)">${ic('ranged', 16)}<b style="color:var(--ink);font-family:var(--display)">−2</b></div>`;
+      case 'Hidden Prison': return b('', 'No prayer');
       case 'Lumbridge': return b('', 'Last card saved');
       case 'Varrock': return b('', 'Rest: heal 3');
       case 'Duel Arena': return b('', 'No food · no prayer');
@@ -3139,9 +3145,10 @@ html, body { touch-action: manipulation; }
   // What the other side of the table is called: the bot's level name ("Guard"), or online the player's name.
   const oppName = () => them().name;
   // In a story duel the other side's plate shows the opponent's own chathead (the hood only if there's no picture).
+  const storyFace = (oppId) => { const o = STY.OPP[oppId], sp = o && STY.SPEAKERS[o.speaker]; return sp && sp.face && (AS.face || {})[sp.face] ? sp : null; };
   function oppFace() {
-    const st = ui.config && ui.config.story, o = st && STY.OPP[st.opp], sp = o && STY.SPEAKERS[o.speaker];
-    return sp && sp.face && (AS.face || {})[sp.face] ? `<div class="np-face">${chathead(sp, 'left')}</div>` : '';
+    const st = ui.config && ui.config.story, sp = st && storyFace(st.opp);
+    return sp ? `<div class="np-face">${chathead(sp, 'left')}</div>` : '';
   }
   function nameplate(g, i) {
     const p = g.players[i];
@@ -4391,9 +4398,19 @@ html, body { touch-action: manipulation; }
     // capes
     const capeNames = Object.keys(CAPES);
     if (!capeNames.includes(s.youCape)) s.youCape = d.cape;
+    // a story fight whose locked Location makes a cape impossible to earn (no prayers in Melzar's Hidden Prison:
+    // no Prayer Cape) greys that cape out (Ramon, 2026-11-20)
+    const noPrayer = !!(story && NO_PRAYER_LOCS.includes(story.location));
+    const capeOff = (c) => noPrayer && CAPES[c].what === 'elite_prayer';
+    if (capeOff(s.youCape)) s.youCape = capeOff(d.cape) ? capeNames.find((c) => !capeOff(c)) : d.cape;
     const capeBtn = (c) => {
       const def = CAPES[c], pic = AS.cape[c];
       const [ic, word] = (CAPE_COND[def.what] || (() => ['', '']))();
+      if (capeOff(c)) {
+        return `<button type="button" class="ct" disabled aria-label="${esc(c)}: can't be earned in the ${esc(story.location)}" title="No prayers in the ${esc(story.location)}">
+        <div class="ct-art">${pic ? `<img class="${pic.mode === 'icon' ? 'icon' : ''}" src="${pic.src}" alt="">` : ''}</div>
+        <span class="ct-nm">${esc(c)}</span><span class="ct-cond ct-no">No prayers here</span></button>`;
+      }
       return `<button type="button" class="ct" data-do="pickcape" data-v="${esc(c)}" aria-pressed="${s.youCape === c}">${d.cape === c ? '<span class="ct-sug">SUGGESTED</span>' : ''}
         <div class="ct-art">${pic ? `<img class="${pic.mode === 'icon' ? 'icon' : ''}" src="${pic.src}" alt="">` : '<b style="font-size:44px;color:var(--gold);opacity:.35;font-weight:400">✦</b>'}</div>
         <span class="ct-nm">${esc(c)}</span><span class="ct-cond">${ic ? `<img src="${ic}" alt="">` : ''}${def.need}<small>${word}</small></span></button>`;
@@ -4403,7 +4420,7 @@ html, body { touch-action: manipulation; }
       ${AS.cape[s.youCape] ? `<img src="${AS.cape[s.youCape].src}" alt="" style="height:100px;max-width:80px;object-fit:contain">` : ''}
       <div style="display:flex;flex-direction:column;gap:6px"><span class="ttl" style="font-size:22px">${esc(s.youCape)}</span>
         <span style="font-size:17px">${esc((CAPE_HOW[cdef.what] || ((n) => `Reach ${n}`))(cdef.need))} to claim it, then wear it for ${R.RULES.cape_turns} of your turns to win.</span>
-        <span style="font-size:14px;color:var(--faint)">Both capes are revealed when the duel starts, and either of you can claim either one.</span></div></div>`;
+        <span style="font-size:14px;color:var(--faint)">${noPrayer ? `No prayers can be used in the ${esc(story.location)}, so the Prayer Cape can't be earned there.` : 'Both capes are revealed when the duel starts, and either of you can claim either one.'}</span></div></div>`;
     // you vs the bot
     const bd = s.botDeck === 'random' ? null : deckObj(s.botDeck);
     const bst = bd ? deckStyle(bd.name) : null;
@@ -4479,6 +4496,7 @@ html, body { touch-action: manipulation; }
   // main is the story you're playing; replay a chapter you're replaying, which never touches main.
   // =====================================================================================
   const STY = window.RSTCGStory.make();
+  const NO_PRAYER_LOCS = ['Duel Arena', 'Hidden Prison'];     // the engine's no_prayers()
   ui.sc = { scene: null, night: false, flash: 0, lose: null, confirmNew: false, reward: null };
   function storyData() {
     if (!profile.story || typeof profile.story !== 'object') profile.story = {};
@@ -4510,14 +4528,29 @@ html, body { touch-action: manipulation; }
     'Lumbridge Swamp stranger': { dim: 0.8 },
     'Lumbridge Swamp stranger close': { dim: 0.8 },
     'Lumbridge Swamp stranger gone': { dim: 0.8 },
+    // chapter 2: Ramon's Falador, castle and Edgeville paintings (art/scenes); the darker places borrow them (pic), tinted,
+    // until they have their own
+    Falador: { dim: 0.7 },
+    "The White Knights' Castle": { dim: 0.7 },
+    'The forest camp': { bd: 'Lumbridge', tint: 'rgba(22,34,16,.55)', dim: 0.55 },
+    "Sir Amik's hall": { pic: "The White Knights' Castle", tint: 'rgba(30,24,14,.5)', dim: 0.5 },
+    'The castle vaults': { pic: "The White Knights' Castle", tint: 'rgba(8,10,16,.72)', dim: 0.35 },
+    'The tunnels': { pic: "The White Knights' Castle", tint: 'rgba(10,12,8,.78)', dim: 0.3 },
+    "Dragith's chamber": { pic: "The White Knights' Castle", tint: 'rgba(24,6,30,.72)', dim: 0.32 },
+    'The road to Edgeville': { pic: 'Edgeville', tint: 'rgba(30,34,18,.4)', dim: 0.6 },
+    Edgeville: { dim: 0.7 },
+    'The abandoned house': { pic: 'Edgeville', tint: 'rgba(40,8,8,.62)', dim: 0.4 },
+    'The hidden prison': { pic: 'Edgeville', tint: 'rgba(6,8,10,.8)', dim: 0.3 },
   };
   // Ramon's recorded music for places (arena_music.py, 2026-11-20); a scene step's `music` overrides it. Places not
   // here play the synthesized story songs (Tales of Gielinor, or Shadows over Draynor somewhere dark).
   const PLACE_MUSIC = { Lumbridge: 'Bazaar', 'Varrock Palace library': 'Bazaar', 'Lumbridge Swamp': 'Swamp Land',
-    'The road to Draynor': 'Forest Day', 'The road to Varrock': 'Forest Day' };
+    'The road to Draynor': 'Forest Day', 'The road to Varrock': 'Forest Day',
+    Falador: 'Bazaar', "The White Knights' Castle": 'Bazaar', "Sir Amik's hall": 'Bazaar', Edgeville: 'Bazaar',
+    'The forest camp': 'Forest Day', 'The road to Edgeville': 'Forest Day' };
   // The music for each screen: Story Mode has its own (light, or dark for the manor and the stone circle), and
   // a boss gets its own fight.
-  const darkScene = (sc) => !!(sc && (sc.night || /Draynor Manor|stone circle/i.test(sc.scene || '')));
+  const darkScene = (sc) => !!(sc && (sc.night || /Draynor Manor|stone circle|vaults|tunnels|chamber|abandoned|prison/i.test(sc.scene || '')));
   function musicFor(key) {
     const storyTrack = () => (darkScene(ui.sc && ui.sc.scene) ? 'storydark' : 'story');
     if (key === 'duel') { const st = ui.config && ui.config.story, o = st && STY.OPP[st.opp]; return o && o.boss ? 'boss' : 'duel'; }
@@ -4536,7 +4569,7 @@ html, body { touch-action: manipulation; }
   function sceneBG(sc, o = {}) {
     const pic = sc && sc.art && (AS.scene || {})[sc.art];  // a painting the step names, in place of the place's own
     const look = (pic ? SCENE_LOOK[sc.art] : SCENE_LOOK[sc && sc.scene]) || {};
-    const own = pic || (sc && (AS.scene || {})[sc.scene]);  // the place's own painting (art/scenes), when it has one
+    const own = pic || (sc && (AS.scene || {})[sc.scene]) || (look.pic && (AS.scene || {})[look.pic]);  // the place's own painting (art/scenes), or one it borrows
     const src = own || (look.bd && AS.backdrop[look.bd]) || (look.art && ART[look.art] && ART[look.art].src) || AS.backdrop.Lumbridge || '';
     const night = o.night != null ? o.night : sc && (sc.night || ui.sc.night);
     const dim = night ? 0.32 : look.dim || 0.75;
@@ -4610,7 +4643,7 @@ html, body { touch-action: manipulation; }
         }
         ui.sc.scene = st; ui.sc.night = !!st.night; STY.advance(run); continue;
       }
-      if (st.flash) { ui.sc.flash = Date.now(); STY.advance(run); sfx('flare'); continue; }   // its boom lands as the stranger vanishes (FLASH_CUT)
+      if (st.flash) { ui.sc.flash = Date.now(); ui.sc.flashFar = !!st.far; STY.advance(run); sfx('flare', st.far ? { v: 0.5 } : undefined); continue; }   // its boom lands as the stranger vanishes (FLASH_CUT)
       if (st.map && !st.onMap) { STY.advance(run); storySave(); ui.screen = 'map'; return; }
       if (st.onMap) { ui.screen = 'map'; storySave(); return; }
       if (st.end) { STY.advance(run); continue; }
@@ -4628,8 +4661,16 @@ html, body { touch-action: manipulation; }
     ui.sc.scene = sc; ui.sc.night = !!(sc && sc.night);
     storyPump();
   }
+  // the roads the main story took, chapter by chapter ({ ch1: 'A' }): recorded as each chapter ends in the main
+  // story. A save from before chapter 2 has none: its finished chapter 1 run (or the only road it has done) stands in.
+  function storyPath() {
+    const s = storyData(), path = Object.assign({}, s.path || {});
+    if (s.main && s.main.done && s.main.road && !path[s.main.ch]) path[s.main.ch] = s.main.road;
+    for (const ch of STY.CHAPTERS) if (!path[ch.id] && (s.roads[ch.id] || []).length === 1) path[ch.id] = s.roads[ch.id][0];
+    return path;
+  }
   function storyNew(slot, chId) {
-    storyData()[slot] = STY.start(chId);
+    storyData()[slot] = STY.start(chId, storyPath());
     storySave();
     storyOpen(slot);
   }
@@ -4680,10 +4721,19 @@ html, body { touch-action: manipulation; }
     storySave();
     return true;
   }
+  // a finished main chapter, left without pressing "Back to Story" (an older save): count its road before moving on
+  function storyFinish0(s) {
+    const run = s.main;
+    if (!run || !run.done || !run.road) return;
+    const roads = s.roads[run.ch] || (s.roads[run.ch] = []);
+    if (!roads.includes(run.road)) roads.push(run.road);
+    s.path = Object.assign({}, s.path || {}, { [run.ch]: run.road });
+  }
   function storyFinish() {
     const run = storyRun(), s = storyData();
     const roads = s.roads[run.ch] || (s.roads[run.ch] = []);
     if (!roads.includes(run.road)) roads.push(run.road);
+    if (storySlot() === 'main') s.path = Object.assign({}, s.path || {}, { [run.ch]: run.road });
     if (storySlot() === 'replay') s.replay = null;
     storySave();
   }
@@ -4697,41 +4747,57 @@ html, body { touch-action: manipulation; }
   // ---------- the screens ----------
   function storyHTML() {
     const s = storyData(), main = s.main;
-    const ch = STY.CHAPTERS[0];
-    const roads = s.roads[ch.id] || [];
-    const prog = !main ? 'Not started' : main.done ? `Complete · ${main.road === 'A' ? 'by way of Draynor' : 'by way of Varrock'}` : 'In progress';
-    const trophies = Object.entries(ch.rewards).map(([r, card]) => {
-      const got = !!s.claimed[`${ch.id}:${r}`];
-      return `<span class="sttro${got ? ' got' : ''}" title="${esc(card)}">${got && ART[card] ? `<img class="${artClass(ART[card])}" src="${ART[card].src}" alt="">` : '<b>?</b>'}<small>${got ? esc(card) : r === 'A' ? 'Road to Draynor' : 'Road to Varrock'}</small></span>`;
-    }).join('');
-    const next = STY.NEXT[ch.id];
+    const roadName = (ch, r) => ((ch.roadText || {})[r] || `road ${r}`);
+    const cap = (t) => t.replace(/^the /, '').replace(/^./, (c) => c.toUpperCase());
+    const panel = (ch, k) => {
+      const roads = s.roads[ch.id] || [];
+      const prevCh = STY.CHAPTERS[k - 1];
+      const open = !prevCh || (s.roads[prevCh.id] || []).length > 0;
+      if (!open) {
+        return `<div class="panel stch soon"><span class="lbl">Chapter ${ch.n}</span><span class="ttl" style="font-size:44px;color:var(--faint)">${esc(ch.title)}</span>
+          <span style="font-size:18px;color:var(--muted)">Finish chapter ${prevCh.n} to open it.</span></div>`;
+      }
+      const here = main && main.ch === ch.id;
+      const prog = here ? (main.done ? `Complete · ${roadName(ch, main.road)}` : 'In progress') : roads.length ? 'Complete' : 'Not started';
+      const trophies = Object.entries(ch.rewards).map(([r, card]) => {
+        const got = !!s.claimed[`${ch.id}:${r}`];
+        return `<span class="sttro${got ? ' got' : ''}" title="${esc(card)}">${got && ART[card] ? `<img class="${artClass(ART[card])}" src="${ART[card].src}" alt="">` : '<b>?</b>'}<small>${got ? esc(card) : esc(cap(roadName(ch, r)))}</small></span>`;
+      }).join('');
+      // the main story's next chapter opens here once the one before is done
+      const startHere = main && main.done && STY.NEXT[main.ch] && STY.NEXT[main.ch].id === ch.id;
+      const first = k === 0;
+      const mainBtns = here && !main.done ? `<button type="button" class="btn-g" data-do="stcont" style="height:76px;font-size:26px">Continue</button>`
+        : startHere ? `<button type="button" class="btn-g" data-do="stchapter" data-v="${ch.id}" style="height:76px;font-size:26px">Continue<small style="font-size:13px;display:block">start chapter ${ch.n}</small></button>`
+        : first && !main ? `<button type="button" class="btn-g" data-do="stnew" style="height:76px;font-size:26px">New Game</button>` : '';
+      const newGame = first && main ? '<button type="button" class="btn-d" data-do="stnew" style="height:60px;font-size:20px">New Game</button>' : '';
+      return `<div class="panel stch">
+          <span class="lbl">Chapter ${ch.n}</span><span class="ttl" style="font-size:44px">${esc(ch.title)}</span>
+          <span style="font-size:18px;color:var(--muted)">${esc(prog)}</span>
+          <div style="display:flex;gap:14px;margin:6px 0 2px">${trophies}</div>
+          <div class="stbtns">${mainBtns}${newGame}
+            <button type="button" class="btn-d" data-do="streplay" data-v="${ch.id}" style="height:60px;font-size:20px" ${roads.length ? '' : 'disabled title="Finish the chapter first"'}>Replay Chapter${roads.length === 1 ? '<small>take the other road</small>' : ''}</button>
+          </div>
+          <div class="strms"><span class="lbl">Boss rematches</span><div>${Object.entries(ch.bosses || {}).map(([r, id]) => {
+            const o = STY.OPP[id], open2 = roads.includes(r), where = roadName(ch, r);
+            return `<button type="button" class="btn-d strm" data-do="strematch" data-v="${id}" ${open2 ? `aria-label="Fight ${esc(o.name)} again"` : `disabled aria-label="Finish ${esc(where)} to fight this boss again"`}>
+              ${open2 ? chathead(STY.SPEAKERS[o.speaker], 'left') : '<div class="sthead left"><b class="sth-q">?</b></div>'}<span>${open2 ? esc(o.name) : '???'}<small>${open2 ? 'Fight again · no reward' : `Finish ${esc(where)}`}</small></span></button>`;
+          }).join('')}</div></div></div>`;
+    };
+    const last = STY.CHAPTERS[STY.CHAPTERS.length - 1], next = STY.NEXT[last.id];
     const confirm = ui.sc.confirmNew ? `<div class="over" data-do="stnewno"><div class="panel modal" data-stop role="dialog" aria-modal="true" style="width:760px;align-items:center;text-align:center;gap:20px">
         <span class="ttl" style="font-size:36px">Start the story again?</span>
         <p style="font-size:21px;line-height:1.5;margin:0">You go back to Lumbridge, and the roads you took and what you said are forgotten. Every card you've earned stays in your collection.</p>
         <div style="display:flex;gap:16px;justify-content:center"><button type="button" class="btn-g" data-do="stnewyes" style="width:260px;height:70px;font-size:22px">Start again</button>
           <button type="button" class="btn-d" data-do="stnewno" style="width:200px;height:70px;font-size:20px">Keep my story</button></div></div></div>` : '';
-    return `<div class="table"></div>${sceneBG({ scene: 'Lumbridge' })}
+    return `<div class="table"></div>${sceneBG({ scene: main && main.ch === 'ch2' ? 'Falador' : 'Lumbridge' })}
       <div style="position:absolute;inset:0;background:linear-gradient(90deg,rgba(12,9,7,.92) 0%,rgba(12,9,7,.7) 45%,rgba(12,9,7,.2) 100%)"></div>
       <div style="position:absolute;left:60px;top:34px;right:60px;display:flex;align-items:center;gap:20px">
         <button type="button" class="btn-d" data-do="menu" style="width:52px;height:52px" aria-label="Back to menu">${ICN.back}</button>
         <span class="ttl" style="font-size:40px">Story</span><span class="lbl" style="margin-left:8px">a new adventurer in Gielinor</span>
         <span style="margin-left:auto">${gpChip(22)}</span></div>
       <div class="stchs" style="top:${SH() < 1000 ? 110 : 150}px">
-        <div class="panel stch">
-          <span class="lbl">Chapter ${ch.n}</span><span class="ttl" style="font-size:44px">${esc(ch.title)}</span>
-          <span style="font-size:18px;color:var(--muted)">${esc(prog)}</span>
-          <div style="display:flex;gap:14px;margin:6px 0 2px">${trophies}</div>
-          <div class="stbtns">
-            ${main ? `<button type="button" class="btn-g" data-do="stcont" style="height:76px;font-size:26px">Continue</button>` : `<button type="button" class="btn-g" data-do="stnew" style="height:76px;font-size:26px">New Game</button>`}
-            ${main ? '<button type="button" class="btn-d" data-do="stnew" style="height:60px;font-size:20px">New Game</button>' : ''}
-            <button type="button" class="btn-d" data-do="streplay" data-v="${ch.id}" style="height:60px;font-size:20px" ${roads.length ? '' : 'disabled title="Finish the chapter first"'}>Replay Chapter${roads.length === 1 ? '<small>take the other road</small>' : ''}</button>
-          </div>
-          <div class="strms"><span class="lbl">Boss rematches</span><div>${Object.entries(ch.bosses || {}).map(([r, id]) => {
-            const o = STY.OPP[id], open = roads.includes(r), where = r === 'A' ? 'road to Draynor' : 'road to Varrock';
-            return `<button type="button" class="btn-d strm" data-do="strematch" data-v="${id}" ${open ? `aria-label="Fight ${esc(o.name)} again"` : `disabled aria-label="Finish the ${where} to fight this boss again"`}>
-              ${open ? chathead(STY.SPEAKERS[o.speaker], 'left') : '<div class="sthead left"><b class="sth-q">?</b></div>'}<span>${open ? esc(o.name) : '???'}<small>${open ? 'Fight again · no reward' : `Finish the ${where}`}</small></span></button>`;
-          }).join('')}</div></div></div>
-        ${next ? `<div class="panel stch soon"><span class="lbl">Chapter ${next.n}</span><span class="ttl" style="font-size:44px;color:var(--faint)">${esc(next.title)}</span>
+        ${STY.CHAPTERS.map(panel).join('')}
+        ${next ? `<div class="panel stch soon slim"><span class="lbl">Chapter ${next.n}</span><span class="ttl" style="font-size:30px;line-height:1.15;white-space:normal;color:var(--faint)">${esc(next.title)}</span>
           <span class="stsoon">COMING SOON</span></div>` : ''}
       </div>${confirm}`;
   }
@@ -4768,8 +4834,8 @@ html, body { touch-action: manipulation; }
       const ch = STY.chapter(run.ch), next = STY.NEXT[run.ch];
       box = `<div class="streward" role="dialog" aria-label="Chapter complete">
         <span class="lbl" style="font-size:16px">Chapter ${ch.n} complete</span><span class="ttl" style="font-size:56px">${esc(ch.title)}</span>
-        <span style="font-size:20px;color:var(--cream)">${run.road === 'A' ? 'You took the road to Draynor.' : 'You took the road to Varrock.'}</span>
-        ${next && next.soon ? `<span class="stsoon" style="margin:8px 0">Chapter ${next.n}: ${esc(next.title)} · coming soon</span>` : ''}
+        <span style="font-size:20px;color:var(--cream)">You took ${esc((ch.roadText || {})[run.road] || 'your road')}.</span>
+        ${next && next.soon ? `<span class="stsoon" style="margin:8px 0">Chapter ${next.n}: ${esc(next.title)} · coming soon</span>` : next ? `<span class="stsoon" style="margin:8px 0">Chapter ${next.n}: ${esc(next.title)} is open</span>` : ''}
         <button type="button" class="btn-g" data-do="stdone" style="width:300px;height:70px;font-size:24px">Back to Story</button></div>`;
     } else if (st.choose) {
       const sp = speakerOf('you');
@@ -4783,10 +4849,10 @@ html, body { touch-action: manipulation; }
         ${o.location ? `<small class="stloc">${ICN.lock} ${esc(o.location)} is in play from the start, and can't be replaced.</small>` : ''}</div>
         <div class="stopts lose" data-stop><button type="button" class="btn-g" data-do="stduel" style="height:76px;padding:0 44px;font-size:30px">${o.boss ? 'Boss duel' : 'Duel'}</button></div></div>`;
     } else if (st.reward) {
-      box = lineBox({ t: `${speakerOf(st.from) ? speakerOf(st.from).name : 'Someone'} holds something out to you.` }, 'streward');
+      box = lineBox({ t: st.t || `${speakerOf(st.from) ? speakerOf(st.from).name : 'Someone'} holds something out to you.` }, 'streward');
     } else if (st.t !== undefined) box = lineBox(st, 'stnext');
     if (tr) box = tr.place ? `<div class="sttitle" style="animation-delay:${-(Date.now() - tr.at)}ms"><span>${esc(tr.place)}</span></div>` : '';
-    const flash = ui.sc.flash && Date.now() - ui.sc.flash < FLASH_MS ? `<div class="stflash${calm() ? ' calm' : ''}" style="animation-delay:${-(Date.now() - ui.sc.flash)}ms"></div>` : '';
+    const flash = ui.sc.flash && Date.now() - ui.sc.flash < FLASH_MS ? `<div class="stflash${calm() ? ' calm' : ''}${ui.sc.flashFar ? ' far' : ''}" style="animation-delay:${-(Date.now() - ui.sc.flash)}ms"></div>` : '';
     const ch = STY.chapter(run.ch);
     // a change of place (or nightfall) fades the new backdrop in over the old one, instead of cutting
     const bk = sc ? `${sc.scene}|${sc.art || ''}|${!!(sc.night || ui.sc.night)}` : '';
@@ -4806,7 +4872,71 @@ html, body { touch-action: manipulation; }
   }
 
   // ---------- the map: an original drawing of Misthalin (the dots are where things happen) ----------
-  function storyMapSVG() {
+  // ---------- chapter 2's map: an original drawing of Asgarnia (from Ramon's references, 2026-11-20) ----------
+  function asgarniaSVG() {
+    return `<svg viewBox="0 0 1600 1000" width="1600" height="1000" aria-hidden="true" class="stmapsvg">
+      <defs>
+        <radialGradient id="aparch" cx=".5" cy=".45" r=".75"><stop offset="0" stop-color="#ead9b0"/><stop offset=".7" stop-color="#d6bf8c"/><stop offset="1" stop-color="#a88a55"/></radialGradient>
+        <pattern id="awave" width="40" height="18" patternUnits="userSpaceOnUse"><path d="M2 12c6-6 12-6 18 0s12 6 18 0" fill="none" stroke="#5f7e86" stroke-width="1.2" opacity=".5"/></pattern>
+        <pattern id="atree" width="34" height="30" patternUnits="userSpaceOnUse"><path d="M10 22l7-14 7 14z" fill="#5f7342" opacity=".75"/><path d="M17 22v5" stroke="#4a3a24" stroke-width="1.5"/></pattern>
+        <pattern id="asnow" width="26" height="26" patternUnits="userSpaceOnUse"><path d="M6 8h4M8 6v4M18 18h4M20 16v4" stroke="#8fa3ad" stroke-width="1.2" opacity=".7"/></pattern>
+        <pattern id="adead" width="36" height="30" patternUnits="userSpaceOnUse"><path d="M10 24v-12M10 16l-5-4M10 14l5-5" stroke="#4a3a2a" stroke-width="1.5" fill="none" opacity=".6"/></pattern>
+        <filter id="arough"><feTurbulence type="fractalNoise" baseFrequency=".035" numOctaves="3" seed="11"/><feDisplacementMap in="SourceGraphic" scale="9"/></filter>
+      </defs>
+      <rect width="1600" height="1000" fill="#8fa9a8"/><rect width="1600" height="1000" fill="url(#awave)"/>
+      <g filter="url(#arough)">
+        <path d="M0 0H1600V1000H1090C1070 950 1030 915 985 925C930 940 900 1000 860 1000H430C410 945 370 900 320 880C250 852 230 790 210 730C190 660 150 620 80 600C40 590 0 585 0 560Z" fill="url(#aparch)" stroke="#6b5230" stroke-width="3"/>
+        <path d="M980 925C1000 880 1040 860 1060 900C1070 930 1060 960 1040 1000H1000C990 970 975 950 980 925Z" fill="#8fa9a8" stroke="#6b5230" stroke-width="2"/>
+        <path d="M1040 0H1600V185C1480 200 1400 170 1300 185C1200 200 1110 175 1040 160Z" fill="#6e5a48" opacity=".55"/>
+        <path d="M1040 0H1600V185C1480 200 1400 170 1300 185C1200 200 1110 175 1040 160Z" fill="url(#adead)"/>
+        <path d="M1040 160C1110 175 1200 200 1300 185C1400 170 1480 200 1600 185" fill="none" stroke="#3a2a1a" stroke-width="4" stroke-dasharray="14 8"/>
+        <path d="M820 230C860 190 950 200 990 250C1030 300 1010 380 950 410C890 430 830 400 810 350C795 310 800 260 820 230Z" fill="#eef1ee" stroke="#8a9aa3" stroke-width="2"/>
+        <path d="M820 230C860 190 950 200 990 250C1030 300 1010 380 950 410C890 430 830 400 810 350C795 310 800 260 820 230Z" fill="url(#asnow)"/>
+        <path d="M850 330l40-70 40 70M890 300l35-60 35 60M840 370l30-45 30 45" fill="none" stroke="#6f7f88" stroke-width="3" stroke-linejoin="round"/>
+        <path d="M80 120l40-60 40 60M140 110l45-70 45 70M200 150l35-50 35 50M60 200l30-45 30 45" fill="#c9b994" stroke="#7a5f3a" stroke-width="3" stroke-linejoin="round"/>
+        <path d="M300 520C330 490 380 495 400 525C420 560 395 600 355 605C315 610 285 580 290 550Z" fill="#8fa9a8" stroke="#5f7e86" stroke-width="2"/>
+        <path d="M400 700C450 660 560 670 600 720C630 770 600 820 530 830C460 840 400 810 385 770C375 740 380 715 400 700Z" fill="url(#atree)"/>
+        <path d="M600 190C650 160 760 170 790 220C810 260 770 300 700 305C640 310 590 280 585 240C582 215 588 200 600 190Z" fill="url(#atree)"/>
+        <path d="M1100 520C1160 480 1290 490 1330 550C1360 600 1320 650 1240 660C1160 670 1100 640 1085 600C1075 570 1080 540 1100 520Z" fill="url(#atree)"/>
+        <path d="M1180 260C1220 240 1300 250 1320 290C1330 320 1290 345 1240 345C1190 345 1160 320 1165 290Z" fill="url(#atree)"/>
+        <path d="M220 360C250 330 320 335 340 370C355 400 320 430 270 430C230 430 205 405 210 380Z" fill="url(#atree)"/>
+        <path d="M600 460H880Q900 460 900 480V640Q900 660 880 660H600Q580 660 580 640V480Q580 460 600 460Z" fill="#e6dccb" stroke="#7a6a52" stroke-width="5"/>
+        <circle cx="700" cy="575" r="62" fill="#9cb9bd" stroke="#5f7e86" stroke-width="2"/>
+        <circle cx="700" cy="575" r="42" fill="#d8ccb4" stroke="#6b5230" stroke-width="3"/>
+        <path d="M680 560h40v30h-40zM690 548h8v12h-8zM706 548h8v12h-8z" fill="#bfb39a" stroke="#4a361e" stroke-width="2"/>
+        <path d="M640 485h30v20h-30zM760 490h40v24h-40zM810 590h50v30h-50zM620 620h34v20h-34z" fill="#cfc2a6" stroke="#7a6a52" stroke-width="1.5"/>
+        <path d="M880 60h80v90h-80z" fill="#4a4038" stroke="#2a1f16" stroke-width="3"/><path d="M890 60v-10M910 60v-10M930 60v-10M950 60v-10" stroke="#2a1f16" stroke-width="4"/>
+      </g>
+      <g fill="none" stroke="#7a5a2a" stroke-width="4" stroke-dasharray="2 12" stroke-linecap="round" opacity=".85">
+        <path d="M740 460C730 380 710 330 760 270C800 220 870 180 915 150"/>
+        <path d="M900 540C980 520 1040 470 1090 430C1160 380 1240 330 1330 290C1370 275 1400 290 1430 320"/>
+        <path d="M740 660C750 740 760 800 760 870"/>
+        <path d="M760 870C850 880 930 880 1000 870"/>
+        <path d="M580 540C500 500 440 470 380 440C330 410 300 300 290 220"/>
+        <path d="M620 660C580 700 540 730 480 760"/>
+        <path d="M1430 320C1480 380 1520 520 1560 700C1575 760 1590 800 1600 820"/>
+        <path d="M1000 870C1120 860 1300 830 1600 830"/>
+      </g>
+      <g font-family="var(--display)" fill="#3e2c18" text-anchor="middle">
+        <text x="430" y="300" font-size="58" letter-spacing="14" opacity=".55" font-weight="700">ASGARNIA</text>
+        <text x="1440" y="640" font-size="34" letter-spacing="8" opacity=".5">MISTHALIN</text>
+        <text x="1320" y="90" font-size="30" letter-spacing="12" opacity=".7" fill="#e9dfc7">THE WILDERNESS</text>
+        <text x="1080" y="300" font-size="22" opacity=".75">Ice Mountain</text>
+        <text x="560" y="175" font-size="20" opacity=".7">Goblin Village</text>
+        <text x="905" y="440" font-size="16" opacity=".6" font-style="italic">Dwarven Mine</text>
+        <text x="150" y="260" font-size="20" opacity=".7">Burthorpe</text>
+        <text x="760" y="905" font-size="20" opacity=".75">Rimmington</text>
+        <text x="345" y="635" font-size="15" opacity=".65" font-style="italic" fill="#2d4a50">Lake</text>
+        <text x="300" y="925" font-size="18" opacity=".6" font-style="italic">Melzar's Maze</text>
+        <text x="200" y="790" font-size="24" letter-spacing="4" opacity=".6" font-style="italic" fill="#2d4a50" transform="rotate(-38 200 790)">the Western Sea</text>
+        <text x="1530" y="890" font-size="18" opacity=".7">Draynor →</text>
+      </g>
+      <g transform="translate(140 940)" opacity=".8"><circle r="36" fill="none" stroke="#6b5230" stroke-width="2"/><path d="M0-44L8 0 0 44-8 0z" fill="#6b5230"/><path d="M-44 0L0-6 44 0 0 6z" fill="#a88a55"/><text y="-50" text-anchor="middle" font-family="var(--display)" font-size="18" fill="#3e2c18">N</text></g>
+      <rect x="8" y="8" width="1584" height="984" fill="none" stroke="#4a361e" stroke-width="6" rx="6"/><rect x="20" y="20" width="1560" height="960" fill="none" stroke="#a88a55" stroke-width="2" rx="4"/>
+    </svg>`;
+  }
+  function storyMapSVG(ch) {
+    if (ch && ch.region === 'Asgarnia') return asgarniaSVG();
     return `<svg viewBox="0 0 1600 1000" width="1600" height="1000" aria-hidden="true" class="stmapsvg">
       <defs>
         <radialGradient id="mparch" cx=".5" cy=".45" r=".75"><stop offset="0" stop-color="#ead9b0"/><stop offset=".7" stop-color="#d6bf8c"/><stop offset="1" stop-color="#a88a55"/></radialGradient>
@@ -4865,14 +4995,14 @@ html, body { touch-action: manipulation; }
       return `<button type="button" class="stdot${open ? ' open' : ' done'}${d.boss ? ' boss' : ''}" data-do="${open ? 'stdot' : ''}" data-v="${d.id}" ${open ? '' : 'disabled'}
         style="left:${d.x}px;top:${d.y}px" aria-label="${esc(d.label)}${open ? '' : ', done'}"><i>${d.boss ? '☠' : open ? '!' : '✓'}</i><span>${esc(d.label)}</span></button>`;
     }).join('');
-    const towns = [...Object.values(ch.dots).filter((d) => d.town), ...ch.places].map((p) => `<div class="sttown${p.soon ? ' soon' : ''}" style="left:${p.x}px;top:${p.y}px"><i></i><span>${esc(p.label)}</span>${p.soon ? `<em>${run.done ? 'Chapter 2 · coming soon' : 'Coming soon'}</em>` : ''}</div>`).join('');
-    const msg = run.done ? 'Chapter complete. Falador awaits, in chapter 2.' : 'Choose where to go next.';
+    const towns = [...Object.values(ch.dots).filter((d) => d.town), ...ch.places].map((p) => `<div class="sttown${p.soon ? ' soon' : ''}" style="left:${p.x}px;top:${p.y}px"><i></i><span>${esc(p.label)}</span>${p.soon ? `<em>${run.done && STY.NEXT[ch.id] ? `Chapter ${STY.NEXT[ch.id].n} · coming soon` : 'Coming soon'}</em>` : ''}</div>`).join('');
+    const msg = run.done ? ch.doneMsg || 'Chapter complete.' : 'Choose where to go next.';
     return `<div class="table"></div>
       <div class="sttop"><button type="button" class="btn-d" data-do="story" style="width:52px;height:52px" aria-label="Back">${ICN.back}</button>
         <span class="ttl" style="font-size:34px">Chapter ${ch.n} · ${esc(ch.title)}</span><span class="lbl" style="margin-left:8px">${esc(msg)}</span>
         <span style="margin-left:auto">${gpChip(22)}</span></div>
       <div style="position:absolute;left:0;right:0;margin:0 auto;top:${top}px;width:${Math.floor(1600 * k)}px;height:${Math.floor(1000 * k)}px">
-        <div class="stmap" style="transform:scale(${k.toFixed(4)})">${storyMapSVG()}${towns}${dots}</div></div>`;
+        <div class="stmap" style="transform:scale(${k.toFixed(4)})">${storyMapSVG(ch)}${towns}${dots}</div></div>`;
   }
 
   // ---------- what a boss says during the duel ----------
@@ -4917,6 +5047,11 @@ html, body { touch-action: manipulation; }
       case 'stnewyes': ui.sc.confirmNew = false; storyNew('main', 'ch1'); return true;
       case 'stnewno': ui.sc.confirmNew = false; return true;
       case 'stcont': storyOpen('main'); return true;
+      case 'stchapter': {                         // the main story goes on into the next chapter
+        const s = storyData(), nx = s.main && s.main.done && STY.NEXT[s.main.ch];
+        if (!nx || nx.id !== v || !STY.chapter(v)) return true;
+        storyFinish0(s); storyNew('main', v); return true;
+      }
       case 'streplay': { const s = storyData(); if (s.replay && s.replay.ch === v && !s.replay.done) storyOpen('replay'); else storyNew('replay', v); return true; }
       case 'stnext': {
         if (!run) return true;
@@ -6634,7 +6769,7 @@ html, body { touch-action: manipulation; }
   stageFor(null);
 
   // test hook
-  window.__arena = { get ui() { return ui; }, render, act, CARDS, zoneFor, online: { sync: () => odSync(), get od() { return ui.od; }, ON, VERSION, idle: () => !anim.playing && !ui.intro && (!ui.od || !ui.od.jobs) }, get profile() { return profile; }, cloud: { get state() { return cloud; }, sync: () => cloudSync(), signedIn, account, progress: () => progressNow(), untouched }, bank: { get state() { return bk; }, kept: () => bankKept(), sync: (f) => bankSync(f), banked: () => banked(),
+  window.__arena = { get ui() { return ui; }, render, act, CARDS, storyFace, zoneFor, online: { sync: () => odSync(), get od() { return ui.od; }, ON, VERSION, idle: () => !anim.playing && !ui.intro && (!ui.od || !ui.od.jobs) }, get profile() { return profile; }, cloud: { get state() { return cloud; }, sync: () => cloudSync(), signedIn, account, progress: () => progressNow(), untouched }, bank: { get state() { return bk; }, kept: () => bankKept(), sync: (f) => bankSync(f), banked: () => banked(),
     earn: (seed, result, pay) => { profile.gp += pay; if (result === 'win') profile.wins += 1; else if (result === 'loss') profile.losses += 1; saveProfile(); bankClaim(seed, result, pay); } },
     // for tests that arrange the table by hand (a card put into a hand, a deck cut short): take the picture the
     // next move's animation starts from again, so it plays from the table as arranged

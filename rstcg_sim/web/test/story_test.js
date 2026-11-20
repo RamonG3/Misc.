@@ -10,9 +10,9 @@ let checks = 0;
 const ok = (c, m) => { assert(c, m); checks++; };
 
 // walk a chapter: pick(step, run) chooses an option; at the map, enter the first open dot
-function walk(chId, pick, { lose = null } = {}) {
-  const run = S.start(chId);
-  const seen = { duels: [], maps: [], rewards: [], scenes: [] };
+function walk(chId, pick, { lose = null, prev = null } = {}) {
+  const run = S.start(chId, prev);
+  const seen = { duels: [], maps: [], rewards: [], scenes: [], lines: [] };
   for (let guard = 0; guard < 2000; guard++) {
     const st = S.step(run);
     if (st.finished) return { run, seen };
@@ -29,6 +29,7 @@ function walk(chId, pick, { lose = null } = {}) {
     if (st.reward) seen.rewards.push(st.reward);
     if (st.scene) seen.scenes.push(st.scene);
     if (st.who) ok(st.who === 'you' || S.SPEAKERS[st.who], `speaker ${st.who}`);
+    if (st.t) seen.lines.push(st.t);
     S.advance(run);
   }
   throw new Error('the chapter never ended');
@@ -64,6 +65,28 @@ ok(first.run.tone.stranger1 === 'polite', 'first option is polite');
   const copy = JSON.parse(JSON.stringify(run));
   ok(JSON.stringify(S.step(copy)) === JSON.stringify(S.step(run)), 'a saved run is on the same step');
   ok(S.sceneOf(copy) && S.sceneOf(copy).scene, 'a saved run knows its scene');
+}
+
+// chapter 2: both roads, after either chapter 1 road
+for (const prev of ['A', 'B']) {
+  const a = walk('ch2', fork('A'), { prev: { ch1: prev } });
+  ok(a.run.done && a.run.road === 'A', 'ch2 road A ends as A');
+  ok(a.seen.duels.join() === 'cultist,zknight,corpse,dragith', 'ch2 road A duels: ' + a.seen.duels);
+  ok(a.seen.maps.join() === 'camp,a_vaults,a_tunnels,a_chamber', 'ch2 road A dots: ' + a.seen.maps);
+  ok(a.seen.rewards.join() === 'White Knight Armor', 'ch2 road A reward');
+  const delrith = a.seen.lines.some((t) => t.startsWith('Delrith climbed')), draynor = a.seen.lines.some((t) => t.startsWith('Count Draynor rose'));
+  ok(prev === 'A' ? delrith && !draynor : draynor && !delrith, `ch2 tells Sir Amik about chapter 1's road ${prev}`);
+  const b = walk('ch2', fork('B'), { prev: { ch1: prev } });
+  ok(b.run.road === 'B', 'ch2 road B ends as B');
+  ok(b.seen.duels.join() === 'cultist,scout,shadow,melzar', 'ch2 road B duels: ' + b.seen.duels);
+  ok(b.seen.maps.join() === 'camp,b_road,b_house,b_prison', 'ch2 road B dots: ' + b.seen.maps);
+  ok(b.seen.rewards.join() === 'Cabbage Armor', 'ch2 road B reward');
+  for (const k of [0, 1, 2]) ok(walk('ch2', (st) => (st.fork ? st.choose.findIndex((o) => o.road === prev) : Math.min(k, st.choose.length - 1)), { prev: { ch1: prev } }).run.road === prev, `ch2 option ${k}`);
+}
+{ // with no chapter 1 road known (an old save), neither line is said and nothing breaks
+  const a = walk('ch2', fork('A'));
+  ok(!a.seen.lines.some((t) => t.startsWith('Delrith climbed') || t.startsWith('Count Draynor rose')), 'no chapter 1 road: no line about it');
+  ok(S.start('ch2').dots.falador === 'done' && !S.start('ch2').dots.lumbridge, 'chapter 2 starts in Falador');
 }
 
 // the opponents' decks and Locations name real cards (placeholder decks name decks from cards.json)

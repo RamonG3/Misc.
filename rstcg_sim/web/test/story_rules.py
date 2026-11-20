@@ -47,6 +47,45 @@ def results():
     before, obefore = p.lp, o.lp
     g._apply_card(0, "Bite", None)
     out["bite"] = [p.lp - before, obefore - o.lp]
+    # chapter 2
+    g = base({"locked_location": "Falador Tunnels"})
+    out["tunnels_damage"] = [g.compute_damage(0, 10, s)[0] for s in ("magic", "melee", "ranged")]
+    for loc in (None, "Hidden Prison", "Duel Arena"):        # prayers and food at each
+        g = base({"locked_location": loc} if loc else None); p, o = g.players
+        p.hand = ["Piety", "Lobster", "Protect from Melee"]
+        for _ in range(20): p.discard.append(p.deck.pop())
+        p.materials.update({"Bronze Bar": 3})
+        acts = g.legal_actions(0)
+        out[f"prayer_{loc or 'none'}"] = [any(a[0] == "play" and a[1] == n for a in acts) for n in ("Piety", "Lobster")]
+        seen = []
+        class Rec(Pass):
+            def react(self, g, j, amount, style, src, opts): seen.append(sorted(opts)); return None
+        g.agents[0] = Rec()
+        g.offer_reaction(1, 10, "melee", "weapon")
+        out[f"protect_{loc or 'none'}"] = seen
+    for card, mats in (("Cabbage Mace", 2), ("Cabbage Seeds", 1), ("Cabbages!", 3)):
+        g = base(); p, o = g.players
+        g.turn = 2; p.hand = [card]
+        out[f"{card}_without"] = any(a[1] == card for a in g.legal_actions(0) if a[0] == "play")
+        p.materials.update({"Cabbage": mats})
+        out[f"{card}_with"] = any(a[1] == card for a in g.legal_actions(0) if a[0] == "play")
+    g = base(); p, o = g.players
+    p.materials.update({"Blood Rune": 1, "Death Rune": 4})
+    for _ in range(10): p.discard.append(p.deck.pop())
+    for spell in ("Necrotic Bolt", "Soul Siphon", "Cabbages!"):
+        p.materials.update({"Cabbage": 3})
+        before, obefore = p.lp, o.lp
+        g._apply_card(0, spell, None)
+        out[spell] = [p.lp - before, obefore - o.lp]
+    for armor in ("White Knight Armor", "Cabbage Armor"):
+        g = base(); p, o = g.players
+        o.armor = armor
+        out[armor] = [g.compute_damage(0, 10, s)[0] for s in ("magic", "melee", "ranged")]
+        p.armor = armor
+        out[armor + "_bonus"] = g.compute_damage(0, 10, "melee", src="weapon")[0]
+    g = base(); p, o = g.players
+    p.discard = ["Necrotic Bolt", "Bronze Bar", "Cabbage Mace"]; p.hand = ["Raise Dead"]
+    out["raise_dead"] = sorted(a[2] for a in g.legal_actions(0) if a[0] == "play" and a[1] == "Raise Dead")
     return out
 
 JS = r"""
@@ -81,6 +120,45 @@ const base = (rules) => { const d = { 'Bronze Bar': 60 }; const g = new R.Game([
   for (let k = 0; k < 10; k++) p.discard.push(p.deck.pop());
   const before = p.lp, ob = o.lp; await g.apply_card(0, 'Bite', null);
   out.bite = [p.lp - before, ob - o.lp];
+  { const g = base({ locked_location: 'Falador Tunnels' });
+    out.tunnels_damage = ['magic', 'melee', 'ranged'].map((s) => g.compute_damage(0, 10, s)[0]); }
+  for (const loc of [null, 'Hidden Prison', 'Duel Arena']) {
+    const g = base(loc ? { locked_location: loc } : null); const [p] = g.players;
+    p.hand = ['Piety', 'Lobster', 'Protect from Melee'];
+    for (let k = 0; k < 20; k++) p.discard.push(p.deck.pop());
+    Object.assign(p.materials, { 'Bronze Bar': 3 });
+    const acts = g.legal_actions(0);
+    out[`prayer_${loc || 'none'}`] = ['Piety', 'Lobster'].map((n) => acts.some((a) => a[0] === 'play' && a[1] === n));
+    const seen = [];
+    g.agents[0] = { ...Pass, react: async (g, j, amount, style, src, opts) => { seen.push([...opts].sort()); return null; } };
+    await g.offer_reaction(1, 10, 'melee', 'weapon');
+    out[`protect_${loc || 'none'}`] = seen;
+  }
+  for (const [card, mats] of [['Cabbage Mace', 2], ['Cabbage Seeds', 1], ['Cabbages!', 3]]) {
+    const g = base(); const [p] = g.players;
+    g.turn = 2; p.hand = [card];
+    out[`${card}_without`] = g.legal_actions(0).some((a) => a[0] === 'play' && a[1] === card);
+    Object.assign(p.materials, { Cabbage: mats });
+    out[`${card}_with`] = g.legal_actions(0).some((a) => a[0] === 'play' && a[1] === card);
+  }
+  { const g = base(); const [p, o] = g.players;
+    Object.assign(p.materials, { 'Blood Rune': 1, 'Death Rune': 4 });
+    for (let k = 0; k < 10; k++) p.discard.push(p.deck.pop());
+    for (const spell of ['Necrotic Bolt', 'Soul Siphon', 'Cabbages!']) {
+      Object.assign(p.materials, { Cabbage: 3 });
+      const b = p.lp, ob2 = o.lp; await g.apply_card(0, spell, null);
+      out[spell] = [p.lp - b, ob2 - o.lp];
+    } }
+  for (const armor of ['White Knight Armor', 'Cabbage Armor']) {
+    const g = base(); const [p, o] = g.players;
+    o.armor = armor;
+    out[armor] = ['magic', 'melee', 'ranged'].map((s) => g.compute_damage(0, 10, s)[0]);
+    p.armor = armor;
+    out[armor + '_bonus'] = g.compute_damage(0, 10, 'melee', false, false, 'weapon')[0];
+  }
+  { const g = base(); const [p] = g.players;
+    p.discard = ['Necrotic Bolt', 'Bronze Bar', 'Cabbage Mace']; p.hand = ['Raise Dead'];
+    out.raise_dead = g.legal_actions(0).filter((a) => a[0] === 'play' && a[1] === 'Raise Dead').map((a) => a[2]).sort(); }
   console.log(JSON.stringify(out));
 })();
 """

@@ -15,7 +15,8 @@ R.setData(JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'cards.json'), '
 const DECK = Object.fromEntries(R.DECKS.map((d) => [d.name, d]));
 const STARTERS = ['Melee', 'Ranged', 'Air Mage'];
 const LEVEL = { easy: (s) => new L.EasyBot(s), normal: (s) => new HeuristicBot(s), hard: (s) => new L.HardBot(s) };
-const TARGET = { bandit: [70, 75], highwayman: [60, 65], goblins: [60, 65], skeleton: [50, 55], wizard: [50, 55], delrith: [30, 35], draynor: [30, 35] };
+const TARGET = { bandit: [70, 75], highwayman: [60, 65], goblins: [60, 65], skeleton: [50, 55], wizard: [50, 55], delrith: [30, 35], draynor: [30, 35],
+  cultist: [70, 75], zknight: [60, 65], scout: [60, 65], corpse: [50, 55], shadow: [50, 55], dragith: [30, 35], melzar: [30, 35] };
 
 async function game(oppId, starter, seat, seed) {
   const o = ST.OPP[oppId], od = DECK[o.deckName], sd = DECK[starter];

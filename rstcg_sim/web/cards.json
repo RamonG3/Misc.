@@ -335,6 +335,81 @@
    "prayer": "melee",
    "bonus": 1
   },
+  "Cabbage": {
+   "name": "Cabbage",
+   "kind": "material",
+   "mat": "cabbage",
+   "story": "boss"
+  },
+  "Cabbage Armor": {
+   "name": "Cabbage Armor",
+   "kind": "armor",
+   "style": "ranged",
+   "armor": [
+    [
+     "melee",
+     -3
+    ],
+    [
+     "ranged",
+     -3
+    ],
+    [
+     "magic",
+     0
+    ]
+   ],
+   "fam_req": [
+    [
+     "log",
+     3
+    ]
+   ],
+   "story": "reward"
+  },
+  "Cabbage Mace": {
+   "name": "Cabbage Mace",
+   "kind": "weapon",
+   "style": "melee",
+   "req": [
+    [
+     "Cabbage",
+     2
+    ]
+   ],
+   "hit": 8,
+   "durability": 3,
+   "wclass": "mace",
+   "story": "boss"
+  },
+  "Cabbage Seeds": {
+   "name": "Cabbage Seeds",
+   "kind": "thrown",
+   "style": "ranged",
+   "req": [
+    [
+     "Cabbage",
+     1
+    ]
+   ],
+   "hit": 4,
+   "durability": 5,
+   "wclass": "dart",
+   "story": "boss"
+  },
+  "Cabbages!": {
+   "name": "Cabbages!",
+   "kind": "spell",
+   "style": "magic",
+   "req": [
+    [
+     "Cabbage",
+     3
+    ]
+   ],
+   "damage": 9,
+   "story": "boss"
+  },
   "Chaos Rune": {
    "name": "Chaos Rune",
    "kind": "material",
@@ -681,6 +756,11 @@
    "spec_cost": 2,
    "spec_val": 3
   },
+  "Falador Tunnels": {
+   "name": "Falador Tunnels",
+   "kind": "location",
+   "story": "boss"
+  },
   "Fire Blast": {
    "name": "Fire Blast",
    "kind": "spell",
@@ -836,6 +916,11 @@
    ],
    "damage": 18,
    "burns": "pierce",
+   "story": "boss"
+  },
+  "Hidden Prison": {
+   "name": "Hidden Prison",
+   "kind": "location",
    "story": "boss"
   },
   "Horvik": {
@@ -1278,6 +1363,19 @@
    "prayer": "magic",
    "bonus": 1
   },
+  "Necrotic Bolt": {
+   "name": "Necrotic Bolt",
+   "kind": "spell",
+   "style": "magic",
+   "req": [
+    [
+     "Death Rune",
+     2
+    ]
+   ],
+   "damage": 9,
+   "story": "boss"
+  },
   "Normal Logs": {
    "name": "Normal Logs",
    "kind": "material",
@@ -1337,6 +1435,16 @@
   "Quest Point Cape": {
    "name": "Quest Point Cape",
    "kind": "cape"
+  },
+  "Raise Dead": {
+   "name": "Raise Dead",
+   "kind": "npc",
+   "recovers": [
+    "spell",
+    "staff",
+    "weapon"
+   ],
+   "story": "boss"
   },
   "Rapid": {
    "name": "Rapid",
@@ -1732,6 +1840,24 @@
     "Fire Rune"
    ]
   },
+  "Soul Siphon": {
+   "name": "Soul Siphon",
+   "kind": "spell",
+   "style": "magic",
+   "req": [
+    [
+     "Blood Rune",
+     1
+    ],
+    [
+     "Death Rune",
+     2
+    ]
+   ],
+   "damage": 12,
+   "heals": 6,
+   "story": "boss"
+  },
   "Stab": {
    "name": "Stab",
    "kind": "ability",
@@ -2086,6 +2212,33 @@
    ],
    "damage": 16,
    "heals": 2
+  },
+  "White Knight Armor": {
+   "name": "White Knight Armor",
+   "kind": "armor",
+   "style": "melee",
+   "armor": [
+    [
+     "melee",
+     -2
+    ],
+    [
+     "ranged",
+     0
+    ],
+    [
+     "magic",
+     -2
+    ]
+   ],
+   "bonus": 2,
+   "fam_req": [
+    [
+     "bar",
+     2
+    ]
+   ],
+   "story": "reward"
   },
   "Wilderness": {
    "name": "Wilderness",
@@ -3208,6 +3361,210 @@
    },
    "capes": [
     "Attack Cape"
+   ]
+  },
+  {
+   "name": "Zamorak Cultist",
+   "group": "Story decks",
+   "cards": {
+    "Bronze Bar": 10,
+    "Air Rune": 8,
+    "Fire Rune": 7,
+    "Chaos Rune": 2,
+    "Bronze Scimitar": 3,
+    "Bronze Mace": 3,
+    "Bronze Dagger": 1,
+    "Slash": 3,
+    "Air Strike": 3,
+    "Fire Strike": 3,
+    "Fire Bolt": 3,
+    "Wizard Robe": 2,
+    "Kiteshield": 2,
+    "Wooden Shield": 1,
+    "Shrimp": 1,
+    "Lobster": 3,
+    "Burst of Strength": 2,
+    "Mystic Will": 1,
+    "Doric": 1,
+    "Archmage Sedridor": 1
+   },
+   "capes": [
+    "Magic Cape"
+   ]
+  },
+  {
+   "name": "Zombie Knight",
+   "group": "Story decks",
+   "cards": {
+    "Bronze Bar": 10,
+    "Mithril Bar": 13,
+    "Mithril Sword": 3,
+    "Mithril Mace": 3,
+    "Mithril Scimitar": 2,
+    "Crush": 3,
+    "Slash": 2,
+    "Mithril Platebody": 3,
+    "Bronze Platebody": 1,
+    "Kiteshield": 4,
+    "Wooden Shield": 2,
+    "Protect from Melee": 2,
+    "Protect from Missiles": 1,
+    "Burst of Strength": 2,
+    "Lobster": 3,
+    "Swordfish": 2,
+    "Doric": 1,
+    "Horvik": 2,
+    "The Restless Ghost": 1
+   },
+   "capes": [
+    "Defence Cape"
+   ]
+  },
+  {
+   "name": "Crawling Corpse",
+   "group": "Story decks",
+   "cards": {
+    "Bronze Bar": 6,
+    "Mithril Bar": 10,
+    "Fire Rune": 8,
+    "Chaos Rune": 3,
+    "Death Rune": 3,
+    "Mithril Mace": 3,
+    "Mithril Scimitar": 2,
+    "Bronze Mace": 1,
+    "Crush": 3,
+    "Fire Bolt": 3,
+    "Fire Blast": 3,
+    "Mithril Platebody": 1,
+    "Kiteshield": 3,
+    "Swordfish": 2,
+    "Lobster": 2,
+    "Burst of Strength": 1,
+    "Mystic Will": 1,
+    "Protect from Magic": 1,
+    "Vanaka": 1,
+    "Archmage Sedridor": 1,
+    "Doric": 1,
+    "Smite": 1
+   },
+   "capes": [
+    "Attack Cape"
+   ]
+  },
+  {
+   "name": "Kinshra Scout",
+   "group": "Story decks",
+   "cards": {
+    "Normal Logs": 8,
+    "Willow Logs": 6,
+    "Bronze Bar": 6,
+    "Mithril Bar": 6,
+    "Willow Shortbow": 3,
+    "Shortbow": 1,
+    "Mithril Arrows": 3,
+    "Bronze Arrows": 2,
+    "Mithril Sword": 3,
+    "Slash": 2,
+    "Rapid": 2,
+    "Longrange": 1,
+    "Green D'hide Body": 2,
+    "Kiteshield": 3,
+    "Lobster": 3,
+    "Swordfish": 1,
+    "Shrimp": 1,
+    "Sharp Eye": 2,
+    "Protect from Melee": 1,
+    "Lowe": 1,
+    "Vanaka": 1,
+    "Ricochet": 1,
+    "Parry": 1
+   },
+   "capes": [
+    "Ranged Cape"
+   ]
+  },
+  {
+   "name": "Shadow",
+   "group": "Story decks",
+   "cards": {
+    "Bronze Bar": 12,
+    "Mithril Bar": 10,
+    "Bronze Knives": 3,
+    "Mithril Knives": 3,
+    "Mithril Darts": 3,
+    "Bronze Darts": 2,
+    "Rapid": 4,
+    "Bronze Dagger": 2,
+    "Mithril Scimitar": 2,
+    "Slash": 3,
+    "Stab": 2,
+    "Wooden Shield": 3,
+    "Shrimp": 2,
+    "Lobster": 2,
+    "Sharp Eye": 2,
+    "Burst of Strength": 1,
+    "Vanaka": 2,
+    "Ricochet": 1,
+    "Parry": 1
+   },
+   "capes": [
+    "Ranged Cape"
+   ]
+  },
+  {
+   "name": "Dragith Nurn",
+   "group": "Story decks",
+   "cards": {
+    "Death Rune": 10,
+    "Blood Rune": 4,
+    "Chaos Rune": 4,
+    "Fire Rune": 6,
+    "Air Rune": 3,
+    "Necrotic Bolt": 4,
+    "Soul Siphon": 4,
+    "Raise Dead": 2,
+    "Fire Bolt": 3,
+    "Fire Blast": 2,
+    "Fire Wave": 2,
+    "Augury": 1,
+    "Mystic Will": 2,
+    "Infinity Top": 1,
+    "Mystic Robe Top": 1,
+    "Kiteshield": 3,
+    "Protect from Melee": 1,
+    "Protect from Magic": 2,
+    "Mirror Shield": 2,
+    "Shark": 2,
+    "Lobster": 1
+   },
+   "capes": [
+    "Magic Cape"
+   ]
+  },
+  {
+   "name": "Melzar the Mad",
+   "group": "Story decks",
+   "cards": {
+    "Cabbage": 24,
+    "Cabbage Mace": 4,
+    "Cabbage Seeds": 4,
+    "Cabbages!": 4,
+    "Crush": 2,
+    "Rapid": 2,
+    "Kiteshield": 3,
+    "Wooden Shield": 2,
+    "Lobster": 3,
+    "Swordfish": 2,
+    "Shrimp": 2,
+    "Karambwan": 2,
+    "Cook's Assistant": 1,
+    "Vanaka": 2,
+    "Mirror Shield": 1,
+    "Ricochet": 1,
+    "Parry": 1
+   },
+   "capes": [
+    "Magic Cape"
    ]
   }
  ],

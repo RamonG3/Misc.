@@ -345,6 +345,23 @@ _ALL = [
     Card("Vampyric Claws", "weapon", "melee", req=(("Mithril Bar", 1), ("Rune Bar", 2)), hit=9, durability=4,
          wclass="claws", story="boss"),                   # Count Draynor
     Card("Bite", "ability", "melee", allowed=("claws",), damage=4, heals=3, story="boss"),   # Count Draynor: heals him 3
+
+    # ---------- Story Mode, chapter 2 (2026-11-20, STORY_CH2_BRIEF.md). Numbers are first drafts, set by simulation ----------
+    # Rewards (Ramon's shapes): each guards two styles and leaves one bare.
+    Card("White Knight Armor", "armor", "melee", fam_req=(("bar", 2),), armor=(("melee", -2), ("ranged", 0), ("magic", -2)),
+         bonus=2, story="reward"),                       # road A, found in Dragith's chamber; +2 to your attacks like a platebody
+    Card("Cabbage Armor", "armor", "ranged", fam_req=(("log", 3),), armor=(("melee", -3), ("ranged", -3), ("magic", 0)),
+         story="reward"),                                 # road B, Melzar's gift
+    # Boss-only: Dragith Nurn (necromancy, a preview of Set 2) and Melzar the Mad (everything costs Cabbages)
+    Card("Falador Tunnels", "location", story="boss"),    # Dragith's fight, locked in play: Magic damage +2, Ranged -2
+    Card("Hidden Prison", "location", story="boss"),      # Melzar's fight, locked in play: no prayers of any kind (food is fine)
+    Card("Necrotic Bolt", "spell", "magic", req=(("Death Rune", 2),), damage=9, story="boss"),
+    Card("Soul Siphon", "spell", "magic", req=(("Blood Rune", 1), ("Death Rune", 2)), damage=12, heals=6, story="boss"),
+    Card("Raise Dead", "npc", recovers=("spell", "staff", "weapon"), story="boss"),   # brings his spells and staves back
+    Card("Cabbage", "material", mat="cabbage", story="boss"),   # Melzar's only material: no skill cape counts it
+    Card("Cabbage Mace", "weapon", "melee", req=(("Cabbage", 2),), hit=8, durability=3, wclass="mace", story="boss"),
+    Card("Cabbage Seeds", "thrown", "ranged", req=(("Cabbage", 1),), hit=4, durability=5, wclass="dart", story="boss"),
+    Card("Cabbages!", "spell", "magic", req=(("Cabbage", 3),), damage=9, story="boss"),
 ]
 
 CARDS = {c.name: c for c in _ALL}
@@ -593,9 +610,54 @@ STORY_DECKS = {
         "Rune Platebody": 1, "Mithril Platebody": 1, "Kiteshield": 3, "Protect from Melee": 2, "Protect from Missiles": 1,
         "Parry": 2, "Piety": 1, "Burst of Strength": 2, "Swordfish": 2, "Shark": 1, "Vanaka": 1, "Doric": 1, "Smite": 1,
     },
+    # ---------- chapter 2 (2026-11-20) ----------
+    "Zamorak Cultist": {   # duel 1: Magic and Melee, tier 1, gentle
+        "Bronze Bar": 10, "Air Rune": 8, "Fire Rune": 7, "Chaos Rune": 2,
+        "Bronze Scimitar": 3, "Bronze Mace": 3, "Bronze Dagger": 1, "Slash": 3, "Air Strike": 3, "Fire Strike": 3, "Fire Bolt": 3,
+        "Wizard Robe": 2, "Kiteshield": 2, "Wooden Shield": 1, "Shrimp": 1, "Lobster": 3, "Burst of Strength": 2, "Mystic Will": 1,
+        "Doric": 1, "Archmage Sedridor": 1,
+    },
+    "Zombie Knight": {   # road A duel 2: heavy Melee, armour and shields, slow and hard to finish
+        "Bronze Bar": 10, "Mithril Bar": 13,
+        "Mithril Sword": 3, "Mithril Mace": 3, "Mithril Scimitar": 2, "Crush": 3, "Slash": 2, "Mithril Platebody": 3,
+        "Bronze Platebody": 1, "Kiteshield": 4, "Wooden Shield": 2, "Protect from Melee": 2, "Protect from Missiles": 1,
+        "Burst of Strength": 2, "Lobster": 3, "Swordfish": 2, "Doric": 1, "Horvik": 2, "The Restless Ghost": 1,
+    },
+    "Crawling Corpse": {   # road A duel 3: Magic and Melee, slow to start, hits hard
+        "Bronze Bar": 6, "Mithril Bar": 10, "Fire Rune": 8, "Chaos Rune": 3, "Death Rune": 3,
+        "Mithril Mace": 3, "Mithril Scimitar": 2, "Bronze Mace": 1, "Crush": 3, "Fire Bolt": 3, "Fire Blast": 3,
+        "Mithril Platebody": 1, "Kiteshield": 3, "Swordfish": 2, "Lobster": 2, "Burst of Strength": 1, "Mystic Will": 1,
+        "Protect from Magic": 1, "Vanaka": 1, "Archmage Sedridor": 1, "Doric": 1, "Smite": 1,
+    },
+    "Kinshra Scout": {   # road B duel 2: bow and sword, a steady soldier
+        "Normal Logs": 8, "Willow Logs": 6, "Bronze Bar": 6, "Mithril Bar": 6,
+        "Willow Shortbow": 3, "Shortbow": 1, "Mithril Arrows": 3, "Bronze Arrows": 2, "Mithril Sword": 3, "Slash": 2,
+        "Rapid": 2, "Longrange": 1, "Green D'hide Body": 2, "Kiteshield": 3, "Lobster": 3, "Swordfish": 1, "Shrimp": 1,
+        "Sharp Eye": 2, "Protect from Melee": 1, "Lowe": 1, "Vanaka": 1, "Ricochet": 1, "Parry": 1,
+    },
+    "Shadow": {   # road B duel 3: knives and darts, fast and aggressive, Melee to finish
+        "Bronze Bar": 12, "Mithril Bar": 10,
+        "Bronze Knives": 3, "Mithril Knives": 3, "Mithril Darts": 3, "Bronze Darts": 2, "Rapid": 4, "Bronze Dagger": 2,
+        "Mithril Scimitar": 2, "Slash": 3, "Stab": 2, "Wooden Shield": 3, "Shrimp": 2, "Lobster": 2, "Sharp Eye": 2,
+        "Burst of Strength": 1, "Vanaka": 2, "Ricochet": 1, "Parry": 1,
+    },
+    "Dragith Nurn": {   # boss: necromancy Magic (Necrotic Bolt, Soul Siphon, Raise Dead); Falador Tunnels locked in play
+        "Death Rune": 10, "Blood Rune": 4, "Chaos Rune": 4, "Fire Rune": 6, "Air Rune": 3,
+        "Necrotic Bolt": 4, "Soul Siphon": 4, "Raise Dead": 2, "Fire Bolt": 3, "Fire Blast": 2, "Fire Wave": 2,
+        "Augury": 1, "Mystic Will": 2, "Infinity Top": 1, "Mystic Robe Top": 1, "Kiteshield": 3, "Protect from Melee": 1,
+        "Protect from Magic": 2, "Mirror Shield": 2, "Shark": 2, "Lobster": 1,
+    },
+    "Melzar the Mad": {   # boss: all three styles, all paid in Cabbages; Hidden Prison locked in play (no prayers)
+        "Cabbage": 24, "Cabbage Mace": 4, "Cabbage Seeds": 4, "Cabbages!": 4, "Crush": 2, "Rapid": 2,
+        "Kiteshield": 3, "Wooden Shield": 2, "Lobster": 3, "Swordfish": 2, "Shrimp": 2, "Karambwan": 2,
+        "Cook's Assistant": 1, "Vanaka": 2, "Mirror Shield": 1, "Ricochet": 1, "Parry": 1,
+    },
 }
 STORY_CAPES = {"Bandit": ["Attack Cape"], "Highwayman": ["Ranged Cape"], "Goblin Band": ["Attack Cape", "Smithing Cape"],
                "Skeleton": ["Attack Cape"], "Dark Wizard": ["Magic Cape"], "Delrith": ["Magic Cape"],
-               "Count Draynor": ["Attack Cape"]}
-STORY_LOCATIONS = {"Delrith": "Draynor Manor", "Count Draynor": "Moonlit Circle"}   # locked in play for these fights
+               "Count Draynor": ["Attack Cape"], "Zamorak Cultist": ["Magic Cape"], "Zombie Knight": ["Defence Cape"],
+               "Crawling Corpse": ["Attack Cape"], "Kinshra Scout": ["Ranged Cape"], "Shadow": ["Ranged Cape"],
+               "Dragith Nurn": ["Magic Cape"], "Melzar the Mad": ["Magic Cape"]}
+STORY_LOCATIONS = {"Delrith": "Draynor Manor", "Count Draynor": "Moonlit Circle",
+                   "Dragith Nurn": "Falador Tunnels", "Melzar the Mad": "Hidden Prison"}   # locked in play for these fights
 check_decks(STORY_DECKS)

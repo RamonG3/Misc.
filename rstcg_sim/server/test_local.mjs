@@ -360,6 +360,8 @@ console.log(`rematches: offered, taken up, withdrawn, replaced, raced`);
   ok(r.status === 200 && J(r.body.done) === J(['ch1:A']) && r.body.bank.coll['Claws of Guthix'] === 1, `story reward: ${J(r.body)}`);
   r = await call(fay, { op: 'story', keys: ['ch1:A'] });
   ok(r.body.bank.coll['Claws of Guthix'] === 1, 'story reward asked for again: still one copy');
+  r = await call(fay, { op: 'story', keys: ['ch2:A', 'ch2:B'] });
+  ok(r.status === 200 && r.body.bank.coll['White Knight Armor'] === 1 && r.body.bank.coll['Cabbage Armor'] === 1, `chapter 2's rewards: ${J(r.body.done)}`);
   r = await call(fay, { op: 'reset' });
   ok(r.body.bank.coll['Claws of Guthix'] === 1 && r.body.bank.gp === 0, `a reset keeps the story's cards: ${J(r.body.bank.coll['Claws of Guthix'])}`);
   r = await call(fay, { op: 'reset' });

@@ -45,6 +45,17 @@
     reldo: { name: 'Reldo', face: 'Reldo' },
     wizard: { name: 'Dark Wizard', face: 'Dark Wizard' },
     draynor: { name: 'Count Draynor', face: 'Count Draynor' },
+    // chapter 2
+    knight: { name: 'White Knight', face: 'White Knight' },
+    amik: { name: 'Sir Amik Varze', face: 'Sir Amik Varze' },
+    cultist: { name: 'Zamorak Cultist', face: 'Zamorak Cultist' },
+    zknight: { name: 'Zombie Knight', face: 'Zombie Knight' },
+    corpse: { name: 'Crawling Corpse', face: 'Crawling Corpse' },
+    dragith: { name: 'Dragith Nurn', face: 'Dragith Nurn' },
+    scout: { name: 'Kinshra Scout', face: 'Kinshra Scout' },
+    shadow: { name: '???', face: 'Shadow' },
+    melzarv: { name: '???', face: null },
+    melzar: { name: 'Melzar the Mad', face: 'Melzar the Mad' },
   };
 
   // ---------- the opponents ----------
@@ -84,6 +95,36 @@
         firstHit: [{ who: 'draynor', t: 'You... wounded me? That should not be possible.' }],
       },
       lose: { who: 'draynor', t: 'Run home, little one. I will find you later.' } },
+    // ---------- chapter 2 (STORY_CH2_SCRIPT.md) ----------
+    cultist: { name: 'Zamorak Cultist', speaker: 'cultist', deckName: 'Zamorak Cultist', level: 'hard',
+      cry: { who: 'cultist', t: 'Zamorak take you!' },
+      lose: { who: 'cultist', t: 'Tell the Knights to send someone tougher.' } },
+    zknight: { name: 'Zombie Knight', speaker: 'zknight', deckName: 'Zombie Knight', level: 'easy',
+      cry: { who: 'zknight', t: '...For... Falador...' },
+      lose: { t: 'The knight shambles back to its post, as if nothing happened.' } },
+    corpse: { name: 'Crawling Corpse', speaker: 'corpse', deckName: 'Crawling Corpse', level: 'hard',
+      cry: { who: 'corpse', t: 'The corpse lunges.', act: true },
+      lose: { t: 'The corpse drags itself back into the dark.' } },
+    dragith: { name: 'Dragith Nurn', speaker: 'dragith', deckName: 'Dragith Nurn', level: 'hard', boss: true, location: 'Falador Tunnels',
+      cry: { who: 'dragith', t: 'Rise, and serve!' },
+      lines: {
+        start: [{ who: 'dragith', t: 'Your bones will carry my books for a thousand years.' }],
+        firstHit: [{ who: 'dragith', t: 'Hm. You have more fight in you than most corpses.' }],
+      },
+      lose: { who: 'dragith', t: "Rest now. I'll call you when I need you." } },
+    scout: { name: 'Kinshra Scout', speaker: 'scout', deckName: 'Kinshra Scout', level: 'normal',
+      cry: { who: 'scout', t: "Then you'll be dead travellers. For the Kinshra!" },
+      lose: { who: 'scout', t: "Turn back. Next time, I won't miss." } },
+    shadow: { name: 'Shadow', speaker: 'shadow', deckName: 'Shadow', level: 'normal',
+      cry: { who: 'shadow', t: 'It draws another blade.', act: true },
+      lose: { t: 'The shadow sinks back into the corner, and waits.' } },
+    melzar: { name: 'Melzar the Mad', speaker: 'melzar', deckName: 'Melzar the Mad', level: 'hard', boss: true, location: 'Hidden Prison',
+      cry: { who: 'melzar', t: 'Out of my way! The cabbages are waiting!' },
+      lines: {
+        start: [{ who: 'melzar', t: "Swing it, throw it, cast it. It's all cabbage to me!" }],
+        firstHit: [{ who: 'melzar', t: 'Ow! That was my good arm. Or my good cabbage. One of them.' }],
+      },
+      lose: { who: 'melzar', t: 'Free! Free as a cabbage in a field!' } },
   };
 
   // ---------- chapter 1 (STORY_CH1_SCRIPT.md) ----------
@@ -96,6 +137,9 @@
     id: 'ch1', n: 1, title: 'A Flash of Red',
     region: 'Misthalin',
     start: 'intro',
+    home: 'lumbridge',
+    roadText: { A: 'the road to Draynor', B: 'the road to Varrock' },
+    doneMsg: 'Chapter complete. Falador awaits, in chapter 2.',
     // where things are on the map (its 1600 x 1000 picture)
     dots: {
       lumbridge: { label: 'Lumbridge', x: 1000, y: 640, node: null, town: true },
@@ -335,17 +379,278 @@
     },
   };
 
-  const CHAPTERS = [CH1];
-  const NEXT = { ch1: { n: 2, title: 'Falador', soon: true } };     // what the map teases once a chapter is done
+  // ---------- chapter 2 (STORY_CH2_SCRIPT.md, approved by Ramon 2026-11-20) ----------
+  // Starts in Falador whichever road chapter 1 took; one line (the old enemy you tell Sir Amik about) depends on
+  // it: a step with `when: { ch1: 'A' }` is played only if the main story's chapter 1 went that way (run.prev).
+  const CH2 = {
+    id: 'ch2', n: 2, title: 'Falador',
+    region: 'Asgarnia',
+    start: 'intro',
+    home: 'falador',
+    roadText: { A: "the White Knights' road", B: "the cultist's road" },
+    doneMsg: "Chapter complete. The Black Knights' Fortress lies to the north.",
+    dots: {
+      falador: { label: 'Falador', x: 760, y: 470, node: null, town: true },
+      camp: { label: 'The forest camp', x: 480, y: 760, node: 'camp' },
+      a_vaults: { label: 'The castle vaults', x: 700, y: 640, node: 'a_vaults', road: 'A' },
+      a_tunnels: { label: 'The tunnels', x: 590, y: 700, node: 'a_tunnels', road: 'A' },
+      a_chamber: { label: "Dragith's chamber", x: 660, y: 790, node: 'a_chamber', road: 'A', boss: true },
+      b_road: { label: 'The road to Edgeville', x: 1110, y: 420, node: 'b_road', road: 'B' },
+      b_house: { label: 'The house at the edge of town', x: 1300, y: 250, node: 'b_house', road: 'B' },
+      b_prison: { label: 'The hidden prison', x: 1420, y: 230, node: 'b_prison', road: 'B', boss: true },
+    },
+    places: [
+      { label: 'Edgeville', x: 1440, y: 330, town: true },
+      { label: 'Taverley', x: 380, y: 440, town: true },
+      { label: 'Port Sarim', x: 1010, y: 860, town: true },
+      { label: "Black Knights' Fortress", x: 920, y: 175, town: true, soon: true },
+    ],
+    rewards: { A: 'White Knight Armor', B: 'Cabbage Armor' },
+    bosses: { A: 'dragith', B: 'melzar' },
+    nodes: {
+      intro: [
+        { scene: 'Falador' },
+        nar('Falador. White walls, white towers, and a great many knights in very clean armour.'),
+        { scene: "The White Knights' Castle" },
+        you("I'm here to see Sir Amik Varze."),
+        say('knight', "Are you, now. Sir Amik doesn't see everyone who wanders up to the gate."),
+        { choose: [
+          opt("It's important. It's about a stranger with a ruby sword.", [say('knight', "Everyone's business is important. Everyone's stranger is strange.")]),
+          opt('A friend sent me. A friend of his, too.', [say('knight', 'Sir Amik has a great many friends. Most of them write ahead.')]),
+          opt("I'll wait.", [say('knight', "You'll be waiting a while.")]),
+        ] },
+        nar('The knight sighs.'),
+        say('knight', "Fine. If you want an audience, prove you're worth one."),
+        say('knight', "Our scouts have spotted Zamorakians camped in the forest outside the walls. Clear them out, and we'll talk."),
+        { choose: [
+          opt('Consider it done.', [say('knight', "We'll see.")]),
+          opt("Why haven't you cleared them out yourselves?", [say('knight', "We have. Twice. They keep coming back. You're the third attempt.")]),
+        ] },
+        { map: 'camp' },
+      ],
+      camp: [
+        { scene: 'The forest camp' },
+        nar('A ring of tents among the trees. A smouldering fire. Red banners.'),
+        say('cultist', 'The White Knights sent one adventurer? They must be getting desperate.'),
+        { choose: [opt('The Knights send their regards.'), opt('Pack up and leave, and nobody gets hurt.'), opt('Nice banners. Did you make them yourself?')] },
+        { duel: 'cultist' },
+        say('cultist', 'Enough! Enough. I yield.'),
+        say('cultist', "You fool. You and your Knights both. We're not the real threat to Falador."),
+        you('Then what is?'),
+        { flash: 'red', far: true },
+        nar("Far to the north, a flash of red light fills the sky. Then it's gone."),
+        you('...oh no.'),
+        say('cultist', "Whatever did that. That's the real threat."),
+        say('cultist', "You've seen it before. It's written all over your face."),
+        say('cultist', 'I know where to start looking. I could take you there.'),
+        say('cultist', "So, adventurer. What's it going to be?"),
+        { fork: true, choose: [
+          opt("You're coming with me to the White Knights.", [], { road: 'A', go: 'toA' }),
+          opt("Lead the way. But I'm watching you.", [], { road: 'B', go: 'toB' }),
+        ] },
+      ],
+
+      // ----- Road A: the White Knights -----
+      toA: [
+        say('cultist', "You can't be serious. Did you not see the sky?"),
+        you('I saw it. You can tell the Knights all about it.'),
+        say('cultist', "...Fine. I've no wish to lose to you twice in one day."),
+        { scene: "The White Knights' Castle" },
+        say('knight', 'Back already? And you brought a guest.'),
+        you("One Zamorakian, as asked. The camp's empty."),
+        say('knight', "Well done. Very well done. We'll take him from here."),
+        say('cultist', "You'll regret this. Both of you."),
+        say('knight', 'They always say that.'),
+        say('knight', 'Come. Sir Amik will see you now.'),
+        { scene: "Sir Amik's hall" },
+        say('amik', "So you're the one who cleared the forest. My knights speak well of you. That's rare. They don't speak well of each other."),
+        say('amik', 'What brings you to Falador?'),
+        you("There's a stranger. Hooded, dark robes, never says a word. They carry a sword that looks as if it's made of ruby."),
+        you("When they raise it, there's a flash of red light. And afterwards, something old comes back."),
+        Object.assign(you("Delrith climbed out of Count Draynor's coffin. He was destroyed years ago, in Varrock."), { when: { ch1: 'A' } }),
+        Object.assign(you('Count Draynor rose from the stone circle outside Varrock. He was staked years ago, in his own cellar.'), { when: { ch1: 'B' } }),
+        you('The wrong enemy, in the wrong place. And just now, there was another flash. North of here.'),
+        say('amik', 'Hmm.'),
+        say('amik', "I don't know who your stranger is, or why any of this is happening."),
+        say('amik', 'But I do know this. A few days ago, someone broke into the lower vaults of this castle.'),
+        say('amik', "That's where we keep what we take from the Zamorakians. Things too dangerous to use, and too dangerous to leave lying about."),
+        say('amik', 'In all the years the White Knights have guarded that vault, no one has ever got inside. Not once.'),
+        say('amik', 'And now, in the same week, your stranger appears, and the dead start walking again.'),
+        say('amik', "I don't believe in coincidences. Not that big."),
+        say('amik', 'We took an inventory. Only one thing was missing.'),
+        say('amik', 'A chest of black steel, sealed with a lock unlike any other. None of us could open it. Not even Sir Tiffy.'),
+        { choose: [
+          opt('What was in the chest?', [say('amik', 'We never found out. That was rather the point of the lock.')]),
+          opt("Who's Sir Tiffy?", [say('amik', 'A man who can open anything. Usually with a hammer.')]),
+        ] },
+        say('amik', 'Go down to the vaults. Look for anything my knights missed.'),
+        say('amik', 'And be careful. Whoever took that chest knew what we keep down there. They may not be the only ones looking for it.'),
+        { map: 'a_vaults' },
+      ],
+      a_vaults: [
+        { scene: 'The castle vaults' },
+        nar('The vaults beneath the castle. Cold, quiet, and darker than they should be.'),
+        nar('A knight in white armour stands in the corridor, with its back to you.'),
+        you('Hello? Sir Amik sent me down.'),
+        nar('It turns. Its face is grey. Its eyes are empty.'),
+        { duel: 'zknight' },
+        nar('The knight falls, and its armour clatters on the stone.'),
+        you('That was a White Knight. What happened to him?'),
+        nar('Inside the vault, shelves and cases line every wall: staffs, idols, red-stained daggers. Everything is thick with dust.'),
+        nar('Except one spot: a long, clean shape on the floor, where a chest once sat.'),
+        nar('Beside it, the dust is scraped and smeared, as if something had dragged itself to the chest instead of walking.'),
+        you('Something crawled in here.'),
+        nar('The marks lead back across the room, and stop at a blank stone wall.'),
+        { choose: [
+          opt('Knock on it.', [nar('It sounds hollow.')]),
+          opt('Push it.', [nar('It shifts.')]),
+        ] },
+        nar('The wall swings open like a door. Behind it, a tunnel slopes down into the dark.'),
+        you("A secret wall. Of course there's a secret wall."),
+        { map: 'a_tunnels' },
+      ],
+      a_tunnels: [
+        { scene: 'The tunnels' },
+        nar('The tunnel is narrow and damp. Ahead, something is scraping along the floor.'),
+        nar("It's half a body, pulling itself along by its arms."),
+        you('...That explains the marks.'),
+        { duel: 'corpse' },
+        nar('The corpse stops moving. This time, for good.'),
+        { map: 'a_chamber' },
+      ],
+      a_chamber: [
+        { scene: "Dragith's chamber" },
+        nar('The tunnel opens into a chamber lit by black candles. Bones are stacked against the walls.'),
+        say('voice', 'Where is it? Who would have taken it? Who COULD have taken it?'),
+        nar('A robed figure is bent over a chest of black steel. The lid is open. The chest is empty.'),
+        you('Dragith Nurn?'),
+        you('What are you doing in Falador? Your tomb is in Lumbridge. And you were destroyed.'),
+        say('dragith', 'Destroyed. Yes. And yet, here I am. Again.'),
+        say('dragith', 'You. Did you take it?'),
+        say('dragith', 'No. Look at you. A fool like you could never have taken the Blade of Memories.'),
+        you('The Blade of what?'),
+        say('dragith', "It doesn't matter. You'll make a fine servant. In the afterlife, everyone is useful."),
+        { duel: 'dragith' },
+        say('dragith', 'No... not like this... not again...'),
+        nar('Dragith crumbles, and the candles go out one by one.'),
+        you('The Blade of Memories.'),
+        nar("You look at the chest. Black steel, heavy and cold, with a spiked trim. You've seen this steel before, on the armour of the Kinshra: the Black Knights."),
+        nar('The lock has no keyhole you can see. Whoever opened it knew how.'),
+        you('Kinshra steel. And a lock only a Kinshra could open.'),
+        nar("Among Dragith's things, something white catches the candlelight: an old breastplate, its paint flaking, with the White Knights' crest still on it. Taken from the vault long before the chest."),
+        you('Someone should take this back to Sir Amik.'),
+        you('Someone will. Eventually.'),
+        { reward: 'White Knight Armor', t: 'You pick up the old breastplate.' },
+        you("The Black Knights' Fortress, then. North."),
+        { end: 'A' },
+      ],
+
+      // ----- Road B: follow the cultist -----
+      toB: [
+        say('cultist', 'A wise choice. The Knights would have locked us both up.'),
+        you('They would have locked you up.'),
+        say('cultist', 'Details.'),
+        you('Where are we going?'),
+        say('cultist', "Edgeville. There's talk of a stranger who moved into a house at the edge of town. Keeps to themselves. Never speaks."),
+        you('...Never speaks.'),
+        say('cultist', 'You know them.'),
+        you("We've met."),
+        { map: 'b_road' },
+      ],
+      b_road: [
+        { scene: 'The road to Edgeville' },
+        nar('A figure in black armour steps out of the trees, bow drawn.'),
+        say('scout', 'Halt. Nobody passes this way.'),
+        say('cultist', "We're only travellers—"),
+        { duel: 'scout' },
+        say('scout', 'Fall back! Fall back!'),
+        nar('The scout flees into the trees.'),
+        { choose: [opt('Did you lead me into a trap?'), opt('Friends of yours?')] },
+        say('cultist', "If I'd led you into a trap, would I have stood in front of the arrows?"),
+        say('cultist', "That scout would have killed us both. Being a Zamorakian didn't matter to him one bit."),
+        you("...That's a fair point."),
+        you("I'm still keeping an eye on you."),
+        say('cultist', "I'd think less of you if you didn't."),
+        { scene: 'Edgeville' },
+        nar('Edgeville. A bank, a handful of houses, and the Wilderness just beyond the ditch.'),
+        nar("You ask around. Most people don't want to talk about the stranger."),
+        nar('At last, an old woman points north, to a house at the very edge of town. "Nobody lives there," she says. "Somebody does anyway."'),
+        { map: 'b_house' },
+      ],
+      b_house: [
+        { scene: 'The abandoned house' },
+        nar('The house is empty. Dust on the table, cobwebs in the corners.'),
+        nar('And red paint, everywhere: on the walls, across the floor, in rings and lines and symbols.'),
+        say('cultist', 'A ritual. Some of these are ours. Zamorakian. This one. And this.'),
+        say('cultist', "But that's Saradominist. And those, there, are Guthixian. Nobody mixes them. Nobody would want to."),
+        say('cultist', 'Whoever did this was trying to—'),
+        nar('Something whistles through the air.'),
+        nar('The cultist looks down at the blade in his chest. Then he falls.'),
+        nar('In the corner, the shadows gather and stand up. Something with no face steps over his body.'),
+        say('shadow', '......'),
+        { duel: 'shadow' },
+        nar('The shadow comes apart like smoke, and seeps down between the floorboards.'),
+        you('Down there?'),
+        nar('The floorboards lift easily. Too easily, as if someone lifts them often.'),
+        nar('Under them is a stone trapdoor with an iron latch.'),
+        nar('You lift the latch. Stone stairs lead down into the dark. A voice drifts up from below.'),
+        say('melzarv', "Cabbage. Cabbage, cabbage. No, not that one. That one's lying."),
+        say('melzarv', "Roots and seeds, roots and seeds. The roots know. The seeds don't."),
+        { map: 'b_prison' },
+      ],
+      b_prison: [
+        { scene: 'The hidden prison' },
+        nar('At the bottom of the stairs is a small stone cell. A wizard in black robes sits in the corner, talking to the wall.'),
+        say('melzarv', "...and that's why you never trust a cabbage with a moustache."),
+        say('melzarv', 'You again!'),
+        say('melzarv', "By the seeds and roots, I've told you all I know of the Blade of Memories! Seek the dark ones if you want to know more. But me and my feet are done helping you!"),
+        nar('He turns around.'),
+        you('Melzar? Melzar the Mad?'),
+        you('Well. This whole thing has felt like a maze. I suppose that checks out.'),
+        say('melzar', "You're not him. You're not him at all."),
+        say('melzar', "And if you're not him... then the door is OPEN."),
+        { duel: 'melzar' },
+        say('melzar', 'Fine! Fine. Keep your door. It was a terrible door anyway.'),
+        nar('Melzar sits back down in his corner, and goes back to talking to the wall.'),
+        you('The Blade of Memories. And the dark ones.'),
+        { choose: [
+          opt('Who are the dark ones?', [say('melzar', "Black armour, black hearts, black castle. North. Cabbages won't grow there. Not even the brave ones.")]),
+          opt('Who locked you down here?', [say('melzar', 'Him. Him and his shiny red stick. He never says anything. Terrible conversationalist. Worse than the wall.')]),
+        ] },
+        you('The Kinshra. The Black Knights.'),
+        say('melzar', 'Here. Take this. It never suited me.'),
+        { reward: 'Cabbage Armor', from: 'melzar' },
+        say('melzar', "Mind you don't eat it."),
+        you("The Black Knights' Fortress, then."),
+        { end: 'B' },
+      ],
+    },
+  };
+
+  const CHAPTERS = [CH1, CH2];
+  // what follows each chapter: the next one, or a "coming soon" tease
+  const NEXT = { ch1: { id: 'ch2', n: 2, title: 'Falador' }, ch2: { n: 3, title: "The Black Knights' Fortress", soon: true } };
 
   function make() {
     const byId = Object.fromEntries(CHAPTERS.map((c) => [c.id, c]));
     const chOf = (run) => byId[run.ch];
 
-    function start(chId) {
+    // prev: the roads the main story took in earlier chapters ({ ch1: 'A' }), for steps with `when`
+    function start(chId, prev) {
       const ch = byId[chId];
       if (!ch) throw new Error(`no chapter ${chId}`);
-      return { ch: chId, node: ch.start, i: 0, r: null, dots: { lumbridge: 'done' }, at: null, tone: {}, road: null, done: false };
+      const run = { ch: chId, node: ch.start, i: 0, r: null, dots: { [ch.home || 'lumbridge']: 'done' }, at: null, tone: {}, road: null, done: false };
+      if (prev && Object.keys(prev).length) run.prev = Object.assign({}, prev);
+      skip(run);
+      return run;
+    }
+    // past any step that isn't for this run (a `when` that doesn't match what the earlier chapters did)
+    function skip(run) {
+      const ch = chOf(run);
+      if (!ch || !run.node || run.r) return;
+      const list = ch.nodes[run.node] || [];
+      const fits = (st) => !st.when || Object.entries(st.when).every(([k, v]) => (run.prev || {})[k] === v);
+      while (list[run.i] && !fits(list[run.i])) run.i += 1;
     }
 
     // the step a run is on, or null past the end of a node (a script fault: every node ends in a stop)
@@ -374,6 +679,7 @@
       const o = ch.nodes[run.node][run.r.at].choose[run.r.c];
       run.r = null;
       if (o.go) { run.node = o.go; run.i = 0; } else run.i += 1;
+      skip(run);
     }
 
     function advance(run, pick) {
@@ -402,12 +708,14 @@
       }
       if (run.r) { run.r.j += 1; if (run.r.j >= chOf(run).nodes[run.node][run.r.at].choose[run.r.c].then.length) endReply(run); }
       else run.i += 1;
+      skip(run);
     }
 
     function enter(run, dotId) {
       const d = chOf(run).dots[dotId];
       if (!d || run.dots[dotId] !== 'open' || !d.node) return false;
       run.node = d.node; run.i = 0; run.r = null; run.at = dotId;
+      skip(run);
       return true;
     }
 

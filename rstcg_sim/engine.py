@@ -218,6 +218,10 @@ class Game:
     def opp(self, i):
         return self.players[1 - i]
 
+    def no_prayers(self):
+        """The Duel Arena, and Melzar's Hidden Prison (Story Mode), allow no prayers of any kind."""
+        return self.location in ("Duel Arena", "Hidden Prison")
+
     def prayer_cost(self):
         if not self.rules["prayer_bones"]:
             return 0
@@ -256,6 +260,8 @@ class Game:
                 amount += 2 if style == "magic" else -2 if style == "melee" else 0
             if self.location == "Moonlit Circle":      # Story Mode: Count Draynor's boss fight
                 amount += 2 if style == "melee" else -2 if style == "magic" else 0
+            if self.location == "Falador Tunnels":     # Story Mode: Dragith Nurn's boss fight
+                amount += 2 if style == "magic" else -2 if style == "ranged" else 0
         if not ignore_armor and o.armor:
             for s, m in CARDS[o.armor].armor:
                 if s == style:
@@ -289,7 +295,7 @@ class Game:
         for name in set(d.hand):
             c = CARDS[name]
             if (c.kind == "prayer" and (c.prayer == style or self.rules.get("protect_any")) and src != "punch"
-                    and self.location != "Duel Arena"
+                    and not self.no_prayers()
                     and (not self.prayer_cost() or d.count("Bones") >= self.prayer_cost())):
                 opts.append(name)
             elif c.kind == "reversal" and c.reacts_to == style:
@@ -628,7 +634,7 @@ class Game:
         if k == "location":
             return play if self.location != n and not self.rules["locked_location"] else []
         if k == "buff":
-            if self.location == "Duel Arena":
+            if self.no_prayers():
                 return []
             return play if p.meets(c.req) and p.buff != n else []
         if k == "quest":     # starting a new quest abandons the one in progress

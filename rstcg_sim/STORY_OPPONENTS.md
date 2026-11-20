@@ -37,3 +37,38 @@ How often a starter deck (Guard) wins. The targets were Ramon's escalation: abou
 
 - **Claws of Guthix** (14 damage, ignores shields, needs a Blood Rune + 3 elemental runes): two in the Air Mage starter for two Air Blasts, against the starter and tournament field, 400 games a matchup: **−3.6 points** at 14 (−4.7 at 12, −6.4 at 10). It costs a Blood Rune the deck doesn't otherwise want, so it isn't too strong for a starter. A deck built for Blood Runes would get more out of it; worth testing when decks are rebuilt from the full pool.
 - **Shield of Arrav** (soak 6, free, Shatter can't break it) for the Wooden Shields: Melee **+1.5**, Ranged **+1.4**, Air Mage ±0. Trophy-sized.
+
+## Chapter 2 (2026-11-20)
+
+Decks in `STORY_DECKS` (cards.py), levels and lines in `OPP` (story.js). Same targets as chapter 1: about 70–75 / 60–65 / 50–55 / 30–35. Tuned with `node web/test/story_tune.js 40 <opponent>`.
+
+| Fight | Opponent | Bot level | Starter wins | Melee / Ranged / Air Mage |
+|---|---|---|---|---|
+| Duel 1 | Zamorak Cultist (Bronze melee, Strikes and Fire Bolts) | Champion | 77% | 56 / 83 / 94 |
+| Duel 2, road A | Zombie Knight (Mithril melee, armour, Kiteshields; Defence Cape) | Goblin | 62% | 62 / 49 / 75 |
+| Duel 3, road A | Crawling Corpse (Mithril maces, Fire Bolts and Blasts) | Champion | 53% | 47 / 62 / 52 |
+| Boss, road A | Dragith Nurn (Necrotic Bolt, Soul Siphon, Raise Dead; Falador Tunnels) | Champion | 37% | 31 / 14 / 65 |
+| Duel 2, road B | Kinshra Scout (Willow Shortbow, Mithril Sword) | Guard | 65% | 70 / 65 / 60 |
+| Duel 3, road B | Shadow (knives, darts, Rapid, scimitar) | Guard | 50% | 39 / 65 / 45 |
+| Boss, road B | Melzar the Mad (Cabbage Mace, Cabbage Seeds, Cabbages!; Hidden Prison) | Champion | 35% | 28 / 26 / 53 |
+
+(±2–4 points; 40–60 games per starter per seat.)
+
+- The Cultist needed Champion to come down from 88% at Guard: a gentle deck played well. The Zombie Knight is the reverse (49% at Guard, 62% at Goblin): a strong deck played loosely, which suits a zombie.
+- **Falador Tunnels (Magic +2, Ranged −2) is hard on Ranged** (14%), as Draynor Manor is on Melee; the Air Mage does well (65%). Ramon accepted chapter 1's Locations cutting this way.
+- **Melzar**: Cabbage Mace hit 8, Cabbages! 9 (from 7 and 8: he was a little easy at 39%).
+
+### The rewards (story_rewards.py ch2, 2026-11-20)
+
+Swapped into a starter for the armour it would replace, against the starter and tournament field, 150 games a matchup:
+
+| Version | Change |
+|---|---|
+| White Knight Armor, 3 bars (first draft) | −1.7 |
+| **White Knight Armor, 2 bars** (built) | −0.3 (−0.8 on a second run) |
+| Cabbage Armor, 3 logs, −2/−2 (first draft) | −2.5 |
+| Cabbage Armor, 2 logs | +0.2 |
+| Cabbage Armor, 1 log | +0.9 |
+| **Cabbage Armor, 3 logs, −3 Melee / −3 Ranged** (built, Ramon's pick) | +1.8 (+1.4 on a second run) |
+
+Trophy-sized, like the Shield of Arrav (+1.5).

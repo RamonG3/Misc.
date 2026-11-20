@@ -104,6 +104,11 @@ const fails = [];
     await A('stmap'); await page.waitForTimeout(300); await look('map');
     await walk('!!st.reward'); await page.evaluate(() => { const a = window.__arena; a.ui.sc.reward = { card: 'Claws of Guthix', from: 'wom', fresh: true }; a.render(); }); await look('scene-reward');
     await walk('!!st.finished'); await look('scene-done');
+    // chapter 2 (2026-11-20): the Story screen with two chapters, Asgarnia's map, the Prayer Cape greyed out for Melzar
+    await A('stdone'); await page.waitForTimeout(300); await look('story-2');
+    await A('stchapter', 'ch2'); await page.waitForTimeout(300);
+    await walk('!!st.onMap'); await look('map-2');
+    await page.evaluate(() => { const a = window.__arena; a.ui.stOpp = 'melzar'; a.ui.pickMode = 'story'; a.ui.screen = 'pick'; a.render(); }); await page.waitForTimeout(300); await look('pick-melzar');
     // The account screen, with its states set by hand (accounts.js signs in for real, against a pretend server).
     // Each is the tallest or widest that state gets: both ways to sign in, a long address with a complaint, a
     // code with a complaint, and the two saves side by side with a note.

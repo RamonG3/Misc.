@@ -1,6 +1,7 @@
 """Story Mode's reward cards (2026-11-18): how much each one adds to a deck that uses it.
 
     python story_rewards.py 300
+    python story_rewards.py 300 ch2      # chapter 2's two armours
 
 Claws of Guthix at 10, 12 and 14 damage: the Air Mage starter with 2 Claws and 2 Blood Runes in place of 2 Air
 Blasts and 2 Air Runes, against the other two starters and the tournament field, both seats, greedy bots.
@@ -56,8 +57,23 @@ def rate(deck, n, claws=None, pool=None):
     return 100 * sum(rs) / len(rs)
 
 
+def chapter2(n, pool):
+    """Chapter 2 (2026-11-20): White Knight Armor for the Melee starter's Bronze Platebodies; Cabbage Armor for the
+    Ranged starter's Leather Bodies (both pay 3 of a family: bars or logs)."""
+    for st, out, add in (("Melee", "Bronze Platebody", "White Knight Armor"), ("Ranged", "Leather Body", "Cabbage Armor"),
+                         ("Ranged", "Green D'hide Body", "Cabbage Armor")):
+        b = rate(D[st], n, pool=pool)
+        k = D[st][out]
+        r = rate(swap(D[st], {out: k}, {add: k}), n, pool=pool)
+        print(f"{st}: {b:.1f}% · with {k} {add} for {out}: {r:.1f}% ({r - b:+.1f})")
+
+
 def main():
     n = int(sys.argv[1]) if len(sys.argv) > 1 else 100
+    if "ch2" in sys.argv:
+        with Pool() as pool:
+            chapter2(n, pool)
+        return
     with Pool() as pool:
         base = rate(D["Air Mage"], n, pool=pool)
         print(f"Air Mage as it is: {base:.1f}% against the field")

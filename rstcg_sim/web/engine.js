@@ -233,6 +233,9 @@
     note(text, who = null) { this.log.push({ text, who, at: this.turn }); }
     emit(ev) { this.events.push(ev); }
 
+    // The Duel Arena, and Melzar's Hidden Prison (Story Mode), allow no prayers of any kind.
+    noPrayers() { return this.location === 'Duel Arena' || this.location === 'Hidden Prison'; }
+
     // ---------- damage ----------
     attack_bonus(i, style, src) {
       const p = this.players[i];
@@ -259,6 +262,7 @@
         if (this.location === 'Mage Arena') amount += style === 'magic' ? 2 : style === 'ranged' ? -2 : 0;
         if (this.location === 'Draynor Manor') amount += style === 'magic' ? 2 : style === 'melee' ? -2 : 0;     // Story Mode: Delrith
         if (this.location === 'Moonlit Circle') amount += style === 'melee' ? 2 : style === 'magic' ? -2 : 0;    // Story Mode: Count Draynor
+        if (this.location === 'Falador Tunnels') amount += style === 'magic' ? 2 : style === 'ranged' ? -2 : 0;   // Story Mode: Dragith Nurn
       }
       if (!ignore_armor && o.armor) for (const [s, m] of CARDS[o.armor].armor) if (s === style) amount += m;
       if (o.longrange && style === 'melee') amount -= 2;
@@ -282,7 +286,7 @@
       const opts = [];
       for (const name of uniq(d.hand)) {
         const c = CARDS[name];
-        if (c.kind === 'prayer' && c.prayer === style && src !== 'punch' && this.location !== 'Duel Arena') opts.push(name);
+        if (c.kind === 'prayer' && c.prayer === style && src !== 'punch' && !this.noPrayers()) opts.push(name);
         else if (c.kind === 'reversal' && c.reacts_to === style) opts.push(name);
       }
       if (!opts.length) return null;
@@ -530,7 +534,7 @@
         case 'npc':
           return uniq(p.discard).filter((t) => recoverable(c, CARDS[t])).map((t) => ['play', n, t]);
         case 'location': return this.location !== n && !this.rules.locked_location ? play : [];
-        case 'buff': return this.location !== 'Duel Arena' && p.meets(c.req) && p.buff !== n ? play : [];
+        case 'buff': return !this.noPrayers() && p.meets(c.req) && p.buff !== n ? play : [];
         case 'quest':
           return !p.completed.includes(n) && (!p.quest || p.quest.name !== n) ? play : [];
         default: return [];

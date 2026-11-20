@@ -52,7 +52,11 @@ art = {}
 for n in list(CARDS) + [c for c in P.CAPE_ART if c not in CARDS]:
     f = P.art_file(n)
     if not f or not os.path.exists(os.path.join(P.IMG, f)):
-        continue
+        # a picture named after the card (Story Mode chapter 2 on): art/img/<snake case name>.png
+        snake = re.sub(r"[^a-z0-9]+", "_", n.lower()).strip("_") + ".png"
+        if not os.path.exists(os.path.join(P.IMG, snake)):
+            continue
+        f = snake
     path = os.path.join(P.IMG, f)
     im = load(path)
     small = P.is_pixel_icon(n, f)                 # a tiny wiki icon (spells, prayers): told by its size in pixels
@@ -100,7 +104,10 @@ STORY_SCENE = {"Lumbridge Swamp": "scene_lumbridge_swamp.png", "Draynor Village"
                # the stranger in Lumbridge Swamp (Ramon's paintings, 2026-11-20): only ever behind that one scene,
                # never the menu's backdrops (those are BACKDROP, above)
                "Lumbridge Swamp stranger": "scene_swamp_stranger.png", "Lumbridge Swamp stranger close": "scene_swamp_stranger_close.png",
-               "Lumbridge Swamp stranger gone": "scene_swamp_stranger_gone.png"}
+               "Lumbridge Swamp stranger gone": "scene_swamp_stranger_gone.png",
+               # chapter 2 (Ramon's pictures, 2026-11-20); other chapter 2 places borrow these, tinted (SCENE_LOOK)
+               "Falador": "scene_falador.png", "The White Knights' Castle": "scene_falador_castle.png",
+               "Edgeville": "scene_edgeville.png"}
 SCENES = os.path.join(ROOT, "art", "scenes")
 FACES = os.path.join(ROOT, "art", "faces")
 scene = {}
