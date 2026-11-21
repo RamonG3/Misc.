@@ -1698,6 +1698,23 @@ html, body { touch-action: manipulation; }
       }
       for (const s of m.slotsIn) { const el = slotCard(i, s.key); if (el) { hide(el); recover[i].push({ name: s.name, el, from: deckR(i), fromDeck: true }); } }
     }
+    // ---- NPCs: a card back from the discard pile into the hand. Face up for both players (the discard pile is
+    // public); the other side's pauses mid-table so it can be read, then drops into their hand as a back. Without
+    // this it took a fresh hand slot as if drawn, and for the other side nothing could be seen (Ramon, 2026-11-20).
+    const backHand = [[], []];
+    for (const i of [0, 1]) {
+      for (const n of [...M[i].gotHand]) {
+        if (!M[i].discOut.includes(n)) continue;
+        // your hand shows names, so the card's own new slot; the other side's is all backs, so a new back if there
+        // is one (else the last back: their hand can stay the same size, the NPC out and the card in)
+        const k = i === you ? fresh[i].findIndex((f) => f.name === n) : fresh[i].length - 1;
+        let slot = k >= 0 ? fresh[i].splice(k, 1)[0] : i !== you && now[i].length ? Object.assign({}, now[i][now[i].length - 1], { el: null }) : null;
+        if (!slot) continue;
+        take(M[i].discOut, n);
+        if (slot.el) hide(slot.el);
+        backHand[i].push({ name: n, slot });
+      }
+    }
 
     // ---- draws: the deck to the hand, face up for you ----
     const draws = [];
@@ -1759,6 +1776,20 @@ html, body { touch-action: manipulation; }
             onStart: () => { if (o.fromDeck) pile[i].deck -= 1; else pile[i].disc -= 1; setPile(i); }, onLand: () => { pop(o.el); sfx('card', { v: 0.5 }); } }));
         }
         recover[i] = [];
+        for (const o of backHand[i]) {
+          const to = { x: o.slot.x, y: o.slot.y, w: o.slot.w, h: o.slot.h }, d0 = D(90 * k++);
+          const start = () => { pile[i].disc -= 1; setPile(i); sfx('reveal', { v: 0.6 }); };
+          if (i === you) fl.push(flyCard({ name: o.name, from: discR(i), to, dur: D(520), delay: d0, lift: 60, onStart: start, onLand: () => { if (o.slot.el) o.slot.el.style.visibility = ''; sfx('card', { v: 0.5 }); } }));
+          else {
+            fl.push(flyCard({ name: o.name, from: discR(i), to: HOLD_BOT, dur: D(460), delay: d0, lift: 40, keep: true, onStart: start }).then(async (el) => {
+              await sleep(D(900));
+              if (el) el.remove();
+              await flyCard({ name: o.name, from: HOLD_BOT, to, dur: D(380), fadeOut: true });
+              if (o.slot.el) o.slot.el.style.visibility = ''; sfx('card', { v: 0.4 });
+            }));
+          }
+        }
+        backHand[i] = [];
       }
       await Promise.all(fl);
     };

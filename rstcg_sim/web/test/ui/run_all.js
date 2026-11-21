@@ -29,6 +29,7 @@ const tests = [
   ['Story Mode, in node (story_test)', [path.join(__dirname, '..', 'story_test.js')]],
   ['Story Mode, both roads (story)', [T('story.js')]],
   ['Story Mode chapter 2, both roads, from an old save (story2)', [T('story2.js')]],
+  ['NPCs taking a card back from the discard pile are seen, both sides (recover)', [T('recover.js')]],
   ['Story Mode music, music off, spell loudness (storyaudio)', [T('storyaudio.js')]],
   ['Large card text: every card still fits (cardtext)', [T('cardtext.js')]],
   ['Story Mode: changes of place, the stranger, place music, boss rematches (storyscene)', [T('storyscene.js')]],
