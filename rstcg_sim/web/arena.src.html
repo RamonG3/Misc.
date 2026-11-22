@@ -1478,6 +1478,10 @@ html, body { touch-action: manipulation; }
   const SLOTS = ['weapon', 'shield', 'armor', 'ammo', 'prayer', 'quest'];
   const RUNE_V = 0.45;                      // runecrafting sounds: well under the spells', since runes come down often (the spells
                                             // were made twice as loud on 2026-11-18; this keeps the runes about where they were)
+  const PRAYER_V = 2.5;                     // prayer recordings (2026-11-22) are about 9 dB softer than the spells' as recorded;
+                                            // at 2.5 (+8 dB) they sit about 3 dB under a spell through the mixer (spellsound.js)
+  // the volume a card's recording plays at: runes and prayers have their own, spells play at 1
+  const clipV = (name) => { const k = CARDS[name] && CARDS[name].kind; return k === 'material' ? RUNE_V : k === 'buff' || k === 'prayer' ? PRAYER_V : 1; };
   const STAYS = new Set(['weapon', 'thrown', 'bow', 'staff', 'shield', 'armor', 'arrows', 'buff', 'material', 'quest', 'location']);
   const STYLE_COL = { melee: '#ff9b85', ranged: '#9fd986', magic: '#9cc3e6', none: '#f3d27a' };
 
@@ -1577,8 +1581,12 @@ html, body { touch-action: manipulation; }
     anim.hint = anim.held = anim.reactFrom = anim.drop = null;
     if (ui.replaying || ui.intro || !before || !T) {
       // reduced motion plays no flights or blows, but a spell that was just cast still makes its own sound
-      // (and so does a rune that was just played: its runecrafting sound)
-      if (!ui.replaying && !ui.intro && before && hint && hint.act === 'play' && CARDS[hint.name] && (!STAYS.has(CARDS[hint.name].kind) || CARDS[hint.name].kind === 'material')) AU.clip(hint.name, { v: RUNE_V });
+      // (and so does a rune that was just played, its runecrafting sound; a prayer going up; a Protect prayer blocking)
+      if (!ui.replaying && !ui.intro && before) {
+        const k = hint && hint.act === 'play' && CARDS[hint.name] && CARDS[hint.name].kind;
+        if (k && (!STAYS.has(k) || k === 'material' || k === 'buff')) AU.clip(hint.name, { v: clipV(hint.name) });
+        for (const e of evs) if (e.type === 'react' && CARDS[e.card] && CARDS[e.card].kind === 'prayer') AU.clip(e.card, { v: PRAYER_V });
+      }
       if (held) held.el.remove(); $('#reveal').innerHTML = ''; render(); return;
     }
     const R0 = capture();
@@ -1647,7 +1655,8 @@ html, body { touch-action: manipulation; }
     // it lands (a Protect prayer can still turn it away); castSound is then the caster, and the attack that
     // follows doesn't add the synthesized spell sound on top. A rune with a recording (its runecrafting sound)
     // makes it as it lands on the table, in place of the card's thud; a rune coming back from the discard pile
-    // (Brother Jered, the Wise Old Man) isn't being played, and keeps the thud.
+    // (Brother Jered, the Wise Old Man) isn't being played, and keeps the thud. A buff prayer with a recording makes
+    // it as it goes up, the same way; a Protect prayer makes its own as it blocks (react, below).
     let cast = null, castSound = null;
     const phase1 = [];
     const h = ctx.hint;
@@ -1662,9 +1671,9 @@ html, body { touch-action: manipulation; }
       if (destEl) {
         if (ctx.held) ctx.held.el.remove();
         if (isNew) hide(destEl);
-        const runeSound = h.act === 'play' && CARDS[h.name] && CARDS[h.name].kind === 'material';
+        const landSound = h.act === 'play' && CARDS[h.name] && (CARDS[h.name].kind === 'material' || CARDS[h.name].kind === 'buff');
         phase1.push(flyCard({ name: h.name, from: src, to: stageXY(destEl), dur: D(460), rot0: src.rot || 0,
-          onLand: () => { pop(destEl); if (!(runeSound && AU.clip(h.name, { v: RUNE_V, pan: i === you ? -0.2 : 0.2 }))) sfx('card'); } }));
+          onLand: () => { pop(destEl); if (!(landSound && AU.clip(h.name, { v: clipV(h.name), pan: i === you ? -0.2 : 0.2 }))) sfx('card'); } }));
       } else if (take(m.discIn, h.name)) {
         const hold = i === you ? HOLD_YOU : HOLD_BOT;
         cast = { i, name: h.name, rect: hold };
@@ -1888,7 +1897,8 @@ html, body { touch-action: manipulation; }
     async function react(e) {
       const c = CARDS[e.card];
       const r = deckR(e.who);
-      sfx(c.kind === 'prayer' ? 'block' : 'reverse', { pan: 0.6 });
+      // a Protect prayer with a recording makes it as it blocks, in place of the synthesized block (reversals keep theirs)
+      if (!(c.kind === 'prayer' && AU.clip(e.card, { v: PRAYER_V, pan: e.who === you ? -0.2 : 0.2 }))) sfx(c.kind === 'prayer' ? 'block' : 'reverse', { pan: 0.6 });
       ring(mid(r), c.kind === 'prayer' ? '#9cc3e6' : '#9fd986', 220, D(700));
       await stampAt(c.kind === 'prayer' ? 'BLOCKED' : 'REVERSED', r.x + r.w / 2 - 240, r.y + r.h / 2, c.kind === 'prayer' ? '#9cc3e6' : '#9fd986', 46, D(900));
     }

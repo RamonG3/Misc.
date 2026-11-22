@@ -65,10 +65,10 @@ node web/test/cloud_test.js 3000          # the cloud save: merge rules, and ran
 node web/test/accounts_test.js            # online.js's account calls against the pretend Supabase; "all passed"
 node web/test/ui/accounts.js              # accounts end to end: several browsers as PC, phone, tablet (~3 min); "all passed"
 node web/test/ui/menutour.js              # the main menu's tour of places (~2 min); "all passed"
-node web/test/ui/spellsound.js            # recorded spell sounds: every cast case (~1 min); "all passed"
+node web/test/ui/spellsound.js            # recorded spell, rune and prayer sounds: every case (~1 min); "all passed"
 node web/test/ui/bank.js                  # the bank in the page: opening, packs from the server, offline, reset (~1 min); "all passed"
 node server/sql_test.mjs                  # every migration in a real Postgres (PGlite), and the bank's database functions; "all passed"
-python web/arena_sounds.py                # pack art/sounds into web/arena_sounds.js (needs ffmpeg for a new sound; run it on the PC), then build
+python web/arena_sounds.py                # pack art/sounds (spells, runes, prayers) into web/arena_sounds.js (needs ffmpeg for a new sound; run it on the PC), then build
 python web/arena_music.py                 # pack art/music into web/arena_music.js (needs ffmpeg; ~8 MB), then build
 node server/fake_supabase.mjs 54321       # the stand-in for Supabase on its own (then window.RSTCG_ONLINE_SERVER = {url, key})
 python simulate.py 300                    # Python simulator, starter decks
@@ -153,12 +153,12 @@ python simulate.py 300                    # Python simulator, starter decks
   - Boss rematches: the Story screen's buttons (`strematch`), open once you've finished that boss's road (`chapter.bosses`). `config.story.rematch`: the duel never touches the run, gives no reward, and goes back to the Story screen.
 - **Large card text** (Settings → Card text, `settings.cardtext`, 2026-11-18, for playing on a TV): `html.bigtext` makes every card face's words bigger and bolder and its picture 50 px shorter. `cardtext.js` checks every card still fits; a new card with a long text or a name of 19+ letters (`.cf-nm.long`) is the thing to watch.
 - **The menu's tour:** `TOUR`, `tourStep()`. It changes the menu in place and never calls `render()`.
-- **Audio:** `arena_audio.js`. Everything is synthesised except the casting sound of each spell that has a recording and the runecrafting sound of the seven basic runes when played (`RSAudio.clip(name)`, from `window.ARENA_SOUNDS`). It has music layers, an "intense" layer that latches on once either deck is ≤10, and sfx by name: `sfx('tick')` etc.
+- **Audio:** `arena_audio.js`. Everything is synthesised except the casting sound of each spell that has a recording, the runecrafting sound of the seven basic runes when played, and each prayer's sound (a buff prayer as it goes up, a Protect prayer as it blocks) (`RSAudio.clip(name)`, from `window.ARENA_SOUNDS`). It has music layers, an "intense" layer that latches on once either deck is ≤10, and sfx by name: `sfx('tick')` etc.
   - Notes are scheduled 1 s ahead (`LOOKAHEAD`) so a busy page can't make the music drop notes, and touch screens ask for a bigger output buffer. `RSAudio.health()` (Settings → Sound check) reports glitches, dropped notes and the buffer. The busiest battle song costs about half a desktop core to synthesize, so keep new instruments cheap.
   - Two reverbs, one behind each bus, so an echo follows its own volume (one shared reverb into the master once kept the music's echo playing with the music off). Music turned off plays nothing at all (`apply()`).
   - Story Mode has its own tracks: `story` (Tales of Gielinor), `storydark` (Shadows over Draynor: the manor, the stone circle, night) and `boss` (The Ancient Dark, a combat song with an intense layer). `musicFor(key)` in the page picks the `AU.want` for each screen.
   - `sfx('flare')`: the stranger's flash (Story Mode), synthesized with its own long reverbs; timed so its boom lands at the page's `FLASH_CUT`.
-  - Recorded clips: `CLIP_GAIN` 2.6 plus a 5 dB low shelf (`CLIP_BODY`), since 2026-11-18; runes play at `RUNE_V` 0.45 so they stay where they were.
+  - Recorded clips: `CLIP_GAIN` 2.6 plus a 5 dB low shelf (`CLIP_BODY`), since 2026-11-18; runes play at `RUNE_V` 0.45 so they stay where they were, prayers at `PRAYER_V` 2.5 (they're recorded softer); `clipV(name)` in the page picks a card's volume.
   - **A silent layer costs as much as a loud one.** Web Audio synthesizes a note at 1/10,000 volume exactly as hard as at full. The intense layer's notes are only played while it is on or fading out (`intenseUntil`, `catchUp`); do the same for any new layer that waits in silence.
 
 ## Gotchas already paid for

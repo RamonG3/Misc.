@@ -7,7 +7,10 @@
 // no recording, a spell discarded in Varrock and Sound effects off stay as they were; that a resumed duel doesn't
 // cast its old spells again; and that reduced motion, which shows no flights, still plays a cast. Runes: yours
 // and the bot's make their sound as they land (in place of the card's thud), a combination rune keeps the thud,
-// and reduced motion still plays it.
+// and reduced motion still plays it. Prayers (2026-11-22): a buff prayer, yours or the bot's, makes its sound as it
+// goes up (in place of the thud); a Protect prayer, yours or the bot's, makes its own as it blocks (in place of the
+// synthesized block); a level-1 prayer plays the sound it borrows; reduced motion still plays both; and the
+// prayers sit a little under the spells at the volume the game plays them (PRAYER_V).
 const path = require('path');
 const fs = require('fs');
 const http = require('http');
@@ -64,7 +67,8 @@ const ok = (c, m) => { checks += 1; if (!c) { failures += 1; console.log('FAIL '
       await page.waitForFunction(() => { const a = window.__arena, u = a.ui; return u.screen !== 'duel' || (u.pending && a.online.idle()); }, null, { timeout: 90000 });
       const type = await page.evaluate(() => { const u = window.__arena.ui; return u.screen !== 'duel' ? 'over' : u.pending.type; });
       if (type === 'choose' || type === 'over') return type;
-      await page.evaluate(() => { const u = window.__arena.ui, p = u.pending; p.resolve(p.type === 'discard' ? u.g.players[u.you].hand[0] : null); });
+      // (a reaction is taken only when a check asks for one: window.__youReact names the card)
+      await page.evaluate(() => { const u = window.__arena.ui, p = u.pending; p.resolve(p.type === 'discard' ? u.g.players[u.you].hand[0] : p.type === 'react' && window.__youReact && p.opts.includes(window.__youReact) ? window.__youReact : null); });
       await page.waitForTimeout(250);
     }
     throw new Error('never got back to a choice');
@@ -126,6 +130,17 @@ const ok = (c, m) => { checks += 1; if (!c) { failures += 1; console.log('FAIL '
     const mean = names.reduce((s, n) => s + lv[n].rms, 0) / names.length;
     console.log(`loudness through the mixer: the recordings average ${mean.toFixed(1)} dB (from ${Math.min(...names.map((n) => lv[n].rms))} to ${Math.max(...names.map((n) => lv[n].rms))}); the synthesized spell sound ${lv.magic.rms} dB, a hit ${lv.hit.rms} dB`);
     ok((await page.evaluate(() => window.RSAudio.clipLog)).length === log.length, 'measuring a sound counted as playing it');
+    // the prayers at the volume the game plays them (PRAYER_V in arena.src.html, 2.5): a little under the spells
+    const kinds = await page.evaluate((ns) => Object.fromEntries(ns.map((n) => [n, window.__arena.CARDS[n].kind])), names);
+    const prayers = names.filter((n) => kinds[n] === 'buff' || kinds[n] === 'prayer'), spells = names.filter((n) => kinds[n] === 'spell');
+    if (prayers.length && spells.length) {
+      const pl = await page.evaluate(async (ps) => { const A = window.RSAudio, o = {}; for (const n of ps) o[n] = await A.measure(() => A.clip(n, { v: 2.5 })); return o; }, prayers);
+      const avg = (xs) => xs.reduce((a, b) => a + b, 0) / xs.length;
+      const pm = avg(prayers.map((n) => pl[n].rms)), sm = avg(spells.map((n) => lv[n].rms));
+      console.log(`prayers as played: ${pm.toFixed(1)} dB on average (${prayers.map((n) => `${n} ${pl[n].rms}`).join(', ')}); spells ${sm.toFixed(1)} dB`);
+      ok(pm < sm && pm > sm - 6, `the prayers should sit a little under the spells (prayers ${pm.toFixed(1)} dB, spells ${sm.toFixed(1)} dB)`);
+      ok(prayers.every((n) => pl[n].peak < -1), `a prayer peaks too high: ${prayers.filter((n) => pl[n].peak >= -1).map((n) => `${n} ${pl[n].peak}`).join(', ')}`);
+    }
   }
   ok(await page.evaluate(() => window.RSAudio.clip('Bronze Dagger')) === false && await page.evaluate(() => window.RSAudio.clip('Smoke Flurry')) === false, 'a card with no recording claimed to have one');
   const have = (n) => names.includes(n);
@@ -167,7 +182,8 @@ const ok = (c, m) => { checks += 1; if (!c) { failures += 1; console.log('FAIL '
     // a cast that Protect from Magic turns away still sounds: the cast worked, the landing didn't
     await page.evaluate(() => { window.__bot.react = 'Protect from Magic'; });
     h = await act(page, { hand: ['Air Strike'], mats: { 'Air Rune': 1 }, botHand: ['Protect from Magic'] }, ['play', 'Air Strike']);
-    ok(h.clips.join() === 'Air Strike' && h.sfx.includes('block') && !h.sfx.includes('hit'), `a blocked cast still sounds, then the block (heard ${JSON.stringify(h)})`);
+    if (have('Protect from Magic')) ok(h.clips.join() === 'Air Strike,Protect from Magic' && !h.sfx.includes('block') && !h.sfx.includes('hit'), `a blocked cast still sounds, then the bot's Protect prayer makes its own sound in place of the block (heard ${JSON.stringify(h)})`);
+    else ok(h.clips.join() === 'Air Strike' && h.sfx.includes('block') && !h.sfx.includes('hit'), `a blocked cast still sounds, then the block (heard ${JSON.stringify(h)})`);
     await page.evaluate(() => { window.__bot.react = null; });
     // Sound effects off: nothing is played, and nothing breaks
     await page.evaluate(() => window.RSAudio.volumes({ sfx: 0 }));
@@ -187,6 +203,26 @@ const ok = (c, m) => { checks += 1; if (!c) { failures += 1; console.log('FAIL '
     h = await act(page, { botHand: ['Fire Rune'] }, ['pass']);
     ok(h.clips.join() === 'Fire Rune', `the bot plays a Fire Rune: the same sound (heard ${JSON.stringify(h)})`);
   }
+  // ---------- prayers: a buff prayer as it goes up, a Protect prayer as it blocks ----------
+  if (have('Piety')) {
+    h = await act(page, { hand: ['Piety'] }, ['play', 'Piety']);
+    ok(h.clips.join() === 'Piety' && !h.sfx.includes('card'), `you pray Piety: its own sound, not the thud (heard ${JSON.stringify(h)})`);
+  }
+  if (have('Sharp Eye')) {
+    // a level-1 prayer plays the sound it borrows (Eagle Eye's), under its own name; here the bot prays it
+    await page.evaluate(() => { window.__bot.next = [['play', 'Sharp Eye']]; });
+    h = await act(page, { botHand: ['Sharp Eye'] }, ['pass']);
+    // (only the clip: the end of a turn sends other cards to the discard pile with a thud of their own, as in the rune case)
+    ok(h.clips.join() === 'Sharp Eye', `the bot prays Sharp Eye: its (borrowed) sound (heard ${JSON.stringify(h)})`);
+  }
+  if (have('Protect from Magic') && have('Air Bolt')) {
+    // the bot casts at you and your Protect from Magic blocks it: the cast's sound, then the prayer's
+    await page.evaluate(() => { window.__bot.next = [['play', 'Air Bolt']]; window.__youReact = 'Protect from Magic'; });
+    h = await act(page, { hand: ['Protect from Magic'], botHand: ['Air Bolt'], botMats: { 'Air Rune': 2, 'Chaos Rune': 1 } }, ['pass']);
+    await page.evaluate(() => { window.__youReact = null; });
+    ok(h.clips.join() === 'Air Bolt,Protect from Magic' && !h.sfx.includes('block') && !h.sfx.includes('hit'), `your Protect prayer blocks: its own sound in place of the block (heard ${JSON.stringify(h)})`);
+    await page.screenshot({ path: path.join(SHOTS, 'after_your_block.png') });
+  }
   await page.context().close();
 
   // ---------- reduced motion: no flights, but a cast still sounds ----------
@@ -202,6 +238,19 @@ const ok = (c, m) => { checks += 1; if (!c) { failures += 1; console.log('FAIL '
     if (have('Water Rune')) {
       h = await act(calm, { hand: ['Water Rune'] }, ['play', 'Water Rune']);
       ok(h.clips.join() === 'Water Rune', `reduced motion still plays a rune's sound (heard ${JSON.stringify(h)})`);
+    }
+    if (have('Rigour')) {
+      h = await act(calm, { hand: ['Rigour'] }, ['play', 'Rigour']);
+      ok(h.clips.join() === 'Rigour', `reduced motion still plays a prayer going up (heard ${JSON.stringify(h)})`);
+    }
+    if (have('Protect from Magic')) {
+      await calm.evaluate(() => {
+        const u = window.__arena.ui, bot = u.g.agents[1 - u.you];
+        bot.choose = async () => ['pass'];
+        bot.react = async (g, j, amount, style, src, opts) => (opts.includes('Protect from Magic') ? 'Protect from Magic' : null);
+      });
+      h = await act(calm, { hand: ['Air Strike'], mats: { 'Air Rune': 1 }, botHand: ['Protect from Magic'] }, ['play', 'Air Strike']);
+      ok(h.clips.join() === 'Air Strike,Protect from Magic', `reduced motion still plays a Protect prayer blocking (heard ${JSON.stringify(h)})`);
     }
     await calm.context().close();
   }

@@ -1,7 +1,8 @@
 """Pack the recorded sounds for the Arena: python web/arena_sounds.py  ->  web/arena_sounds.js
 
-A spell that has a recording makes that sound when it is cast, in place of the synthesized one, and a rune that
-has one (its runecrafting sound) makes it when it is played. The recordings are Ramon's files in art/sounds/
+A spell that has a recording makes that sound when it is cast, in place of the synthesized one, a rune that
+has one (its runecrafting sound) makes it when it is played, and a prayer makes its own when it goes up (a Protect
+prayer: when it blocks). The recordings are Ramon's files in art/sounds/
 (kept out of the repo, like the art), each named after its card: "Air Bolt.ogg" is what Air Bolt plays. ALIAS
 lists the ones whose file goes by another name. A file with no card of its name is
 left alone and listed, so when a card of that name is added it picks its sound up with no change here.
@@ -35,6 +36,12 @@ ALIAS = {
     "Varrock Teleport": "Standard Teleport",  # every standard-spellbook teleport makes this sound
     # runes: the sound of crafting them (Ramon, 2026-11-17); the combination runes have none and keep the thud
     **{f"{r} Rune": f"Crafting_{r.lower()}_runes" for r in ("Air", "Water", "Earth", "Fire", "Chaos", "Death", "Blood")},
+    # prayers (Ramon, 2026-11-22): a buff prayer makes its sound as it goes up, a Protect prayer as it blocks
+    "Protect from Missiles": "Protect from Ranged",   # the prayer's newer name in RuneScape
+    # the three level-1 prayers have no recording of their own and borrow their family's top prayer (Ramon's call)
+    "Burst of Strength": "Ultimate Strength",
+    "Mystic Will": "Mystic Might",
+    "Sharp Eye": "Eagle Eye",
 }
 SOURCE_TYPES = (".ogg", ".mp3", ".wav", ".flac", ".m4a")
 # Mono (the game pans a sound itself): the plain average of left and right, so the level stays as recorded (left
@@ -102,7 +109,9 @@ def main():
     quiet = [n for n in spells if n not in data]
     runes = sorted(n for n, c in CARDS.items() if c["kind"] == "material" and n.endswith(" Rune"))
     spare = sorted(os.path.basename(p) for k, p in have.items() if k not in used)
-    print(f"{len(data)} sounds ({len(data) - sum(n in data for n in runes)} spells, {sum(n in data for n in runes)} runes), {len(js) // 1024} KB packed, from {SOUNDS}")
+    prayers = sorted(n for n, c in CARDS.items() if c["kind"] in ("buff", "prayer") and (c.get("prayer") or c.get("effect")))
+    n_r, n_p = sum(n in data for n in runes), sum(n in data for n in prayers)
+    print(f"{len(data)} sounds ({len(data) - n_r - n_p} spells, {n_r} runes, {n_p} prayers), {len(js) // 1024} KB packed, from {SOUNDS}")
     if not os.path.isdir(SOUNDS):
         print("  (no such folder: the game will use its synthesized spell sound for everything)")
     if data:
@@ -111,6 +120,8 @@ def main():
         print("  spells without one (they keep the synthesized sound): " + ", ".join(quiet))
     if [n for n in runes if n not in data]:
         print("  runes without one (they keep the card's thud): " + ", ".join(n for n in runes if n not in data))
+    if [n for n in prayers if n not in data]:
+        print("  prayers without one (they keep the card's thud, or the block sound): " + ", ".join(n for n in prayers if n not in data))
     if spare:
         print(f"  {len(spare)} sounds with no card of that name: " + ", ".join(spare))
 

@@ -40,8 +40,14 @@ def main():
             continue
         data = encode(p, secs)
         out[name] = {"src": "data:audio/mpeg;base64," + base64.b64encode(data).decode(), "gain": gain}
+    target = os.path.join(HERE, "arena_music.js")
+    if not out and os.path.exists(target):
+        # no tracks found at all: keep the pack that's there rather than build a page with no music (a PC without
+        # art/music, or a cloud copy, would otherwise quietly lose Ramon's tracks)
+        print(f"no music found in {MUSIC}; {target} left as it is")
+        return 0
     js = "window.ARENA_MUSIC = " + json.dumps(out, separators=(",", ":")) + ";"
-    open(os.path.join(HERE, "arena_music.js"), "w").write(js)
+    open(target, "w").write(js)
     print(f"{len(out)} music tracks, {len(js) // 1024} KB" + (f" (missing from art/music: {', '.join(missing)})" if missing else ""))
 
 
