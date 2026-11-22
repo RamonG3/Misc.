@@ -6594,6 +6594,9 @@ html, body { touch-action: manipulation; }
       const r = el.getBoundingClientRect();
       if (r.width < 4 || r.height < 4) return false;
       const cs = getComputedStyle(el);
+      // a story line fades in, so its box (and its options) count while still faint: the ring would otherwise
+      // settle on the back arrow before the box could be seen (Ramon, 2026-11-22)
+      if (el.closest('.stbox')) return cs.visibility !== 'hidden' && cs.display !== 'none';
       return cs.visibility !== 'hidden' && cs.display !== 'none' && +cs.opacity > 0.05;
     });
     return els;
