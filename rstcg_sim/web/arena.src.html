@@ -6621,6 +6621,14 @@ html, body { touch-action: manipulation; }
   }
   function padDefault(c) {                    // where the ring goes when there's nothing to keep
     const pick = (sel) => c.find((el) => el.matches(sel));
+    // Story Mode: the dialogue box (or its options, the reward, the duel) before the back arrow, or A leaves the
+    // story (Ramon, 2026-11-22)
+    if (ui.screen === 'map' || shownScreen === 'map') { const d = pick('[data-do="stdot"]'); if (d) return d; }
+    if (ui.screen === 'scene' || shownScreen === 'scene') {
+      const st = pick('[data-do="stpick"]') || pick('[data-do="stnext"]') || pick('[data-do="streward"]') || pick('[data-do="stduel"]')
+        || pick('[data-do="stretry"]') || pick('[data-do="stdone"]') || pick('[data-do="stdot"]');
+      if (st) return st;
+    }
     return pick('.tut-next') || pick('.pop .opt:not(.cancel)') || pick('.hc.react') || pick('.hc.toss') || pick('.panel[data-zone="react"] [data-do]')
       || (ui.screen === 'duel' || shownScreen === 'duel' ? pick('.hc.ok') || pick('.endturn:not([disabled])') || pick('.hc') || pick('.logtab') : null)
       || pick('.btn-g:not([disabled])') || pick('.dbx[aria-pressed="true"]') || pick('.mi:not([disabled])') || c[0] || null;
@@ -6630,7 +6638,9 @@ html, body { touch-action: manipulation; }
     const c = padCands();
     // a new question (your turn, a reaction, a discard, a dialog or a chooser opening) starts the ring at its answer
     const scope = padScope();
-    const ctx = `${shownScreen}|${ui.pending ? ui.pending.type : '-'}|${ui.modal || ''}|${scope.className || scope.id}|${ui.selected}`;
+    // in a story scene each new line (and the end of a change of place) starts the ring over, at the dialogue box
+    const line = shownScreen === 'scene' ? (() => { const r = storyData()[storySlot()], sc = ui.sc || {}; return r ? `${r.node}:${r.i}:${r.r ? r.r.j : ''}:${sc.transit ? 't' : ''}` : ''; })() : '';
+    const ctx = `${shownScreen}|${ui.pending ? ui.pending.type : '-'}|${ui.modal || ''}|${scope.className || scope.id}|${ui.selected}|${line}`;
     if (ctx !== pad.ctx) { pad.ctx = ctx; pad.key = null; }
     const same = pad.key && c.find((el) => padKeyOf(el) === pad.key);
     padSet(same || padDefault(c), true);
