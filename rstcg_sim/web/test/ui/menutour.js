@@ -50,6 +50,9 @@ const ok = (c, m) => { checks += 1; if (!c) { failures += 1; console.log('FAIL '
   const page = await open('full');
   const places = await page.evaluate(() => window.__arena.tour.places);
   ok(places.length >= 5 && places.includes('Lumbridge'), `the places to tour: ${places.join(', ')}`);
+  // a new player has beaten no story boss, so no boss's backdrop tours yet, nor opens the menu (Ramon, 2026-11-23)
+  ok(await page.evaluate((ps) => !ps.some((p) => window.__arena.CARDS[p] && window.__arena.CARDS[p].story === 'boss')
+    && !(window.__arena.CARDS[window.__arena.tour.place] || {}).story, places), `no boss backdrop before its boss is beaten: ${places.join(', ')}`);
   ok(await page.evaluate(() => window.__arena.tour.every) === 20000, 'a place stays for 20 seconds');
   let s = await look(page);
   ok(s.layers === 1 && s.layerPlace === s.place && s.src && s.label === s.place.toUpperCase() && s.motes === 1 && s.dots > 10, `the menu opens on one place: ${JSON.stringify(s)}`);

@@ -3572,15 +3572,24 @@ html, body { touch-action: manipulation; }
   // layer fades in over the old), never by redrawing the menu, so a button being pressed or the controller's
   // focus isn't disturbed. Which place comes next is menu dressing, so Math.random is fine here.
   const TOUR = { every: 20000, fade: 2400, shown: 0, order: null, busy: false };
-  // Chapter 3's paintings never join the tour (Ramon, 2026-11-22): the Kinshra Hall is a backdrop only for the Lord's fight
-  const TOUR_SKIP = new Set(['The Kinshra Hall']);
-  const tourPlaces = () => Object.keys(AS.backdrop).filter((k) => !TOUR_SKIP.has(k));
+  // A story boss's backdrop (a story: 'boss' Location) joins the tour, and can be the first background of a visit, only
+  // once the road that ends with that boss is finished, main story or replay (Ramon, 2026-11-23: until then it spoils
+  // the fight). One not tied to any chapter's boss never joins.
+  function tourPlaces() {
+    const roads = (profile.story && profile.story.roads) || {}, open = new Set();   // read only: the menu writes nothing
+    for (const ch of STY.CHAPTERS) {
+      for (const [road, id] of Object.entries(ch.bosses || {})) {   // per boss: one road's end never shows the other's
+        if ((roads[ch.id] || []).includes(road) && STY.OPP[id] && STY.OPP[id].location) open.add(STY.OPP[id].location);
+      }
+    }
+    return Object.keys(AS.backdrop).filter((k) => !(CARDS[k] && CARDS[k].story === 'boss') || open.has(k));
+  }
   function tourNext() {
     const all = tourPlaces();
-    if (!TOUR.order || TOUR.order.length !== all.length) {
+    if (!TOUR.order || TOUR.order.length !== all.length || !TOUR.order.every((p) => all.includes(p))) {   // a place unlocked (or locked by a reset)
       const rest = all.filter((p) => p !== MENU_BG);
       for (let i = rest.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [rest[i], rest[j]] = [rest[j], rest[i]]; }
-      TOUR.order = [MENU_BG, ...rest];
+      TOUR.order = all.includes(MENU_BG) ? [MENU_BG, ...rest] : rest;
     }
     return TOUR.order[(TOUR.order.indexOf(MENU_BG) + 1) % TOUR.order.length] || null;
   }
@@ -3626,7 +3635,7 @@ html, body { touch-action: manipulation; }
   // of the main menu (Ramon, 2026-11-16). Don't reword it; if the policy's wording changes, change it to match.
   const FAN_NOTICE = "Created using intellectual property belonging to Jagex Limited under the terms of Jagex's Fan Content Policy. This content is not endorsed by or affiliated with Jagex.";
   function menuHTML() {
-    if (!MENU_BG) { const k = Object.keys(AS.backdrop); MENU_BG = k.length ? k[Math.floor(Math.random() * k.length)] : ''; }
+    if (!MENU_BG || !tourPlaces().includes(MENU_BG)) { const k = tourPlaces(); MENU_BG = k.length ? k[Math.floor(Math.random() * k.length)] : ''; }
     const saved = store.get(STORE);
     const life = menuLife();
     const short = SH() < 1000;                       // not enough height for one long column: two columns, smaller crest

@@ -3,7 +3,8 @@
 // with the lines that depend on chapter 2's road and the Peon's bluff; Lord Daquarius fights in the Kinshra Hall;
 // the questions, the reveal last; the rack gives one Kinshra weapon; the end of Act 1 (black, then its title, timed to
 // the music's cue); Replay Chapter plays road B and the rack offers only the two left; a third time the rack is
-// empty and passed by; one rematch button for the Lord; the Kinshra Hall stays out of the menu's tour; no "Bot".
+// empty and passed by; one rematch button for the Lord; the menu's tour gains a boss's backdrop only once that boss
+// is beaten; no "Bot".
 // node web/test/ui/story3.js [W H]   ends "all passed"; screenshots in web/test/ui/shots/story3/
 const path = require('path');
 const fs = require('fs');
@@ -142,6 +143,11 @@ const site = require('http').createServer((req, res) => {
   const quiet = (labels) => { const k = labels.findIndex((l) => /Quietly/.test(l)); if (k >= 0) return k; const r = labels.findIndex((l) => /new recruit/.test(l)); return r >= 0 ? r : 0; };
   const loud = (labels) => { const k = labels.findIndex((l) => /Loudly/.test(l)); return k >= 0 ? k : 0; };
 
+  // the menu's tour: a boss's backdrop only once that boss is beaten (Delrith, chapter 1 road A; Melzar, chapter 2 road B)
+  const BOSSBG = ['Draynor Manor', 'Moonlit Circle', 'Falador Tunnels', 'Hidden Prison', 'The Kinshra Hall'];
+  const bossTour = async () => (await page.evaluate(() => window.__arena.tour.places)).filter((p) => BOSSBG.includes(p)).sort().join();
+  ok(await bossTour() === 'Draynor Manor,Hidden Prison', `the tour has only the beaten bosses' backdrops: ${await bossTour()}`);
+
   // ----- the Story screen offers chapter 3 -----
   await A('story');
   const hub = await text();
@@ -227,8 +233,7 @@ const site = require('http').createServer((req, res) => {
   ok(/Bring him to justice/.test(said.join('\n')), 'straight on to "Bring him to justice"');
 
   // ----- the rest -----
-  const tour = await page.evaluate(() => window.__arena.tour.places);
-  ok(!tour.includes('The Kinshra Hall') && tour.includes('Lumbridge'), `the Kinshra Hall stays out of the menu's tour (${tour.join(', ')})`);
+  ok(await bossTour() === 'Draynor Manor,Hidden Prison,The Kinshra Hall', `the Lord beaten, his hall joins the tour: ${await bossTour()}`);
   const rules = await page.evaluate(() => {
     const deck = (extra) => Object.assign({ 'Bronze Bar': 56 }, extra);
     const r = (x) => window.__arena.deckRules(deck(x), false).known;
