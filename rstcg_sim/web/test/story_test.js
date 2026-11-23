@@ -12,7 +12,7 @@ const ok = (c, m) => { assert(c, m); checks++; };
 // walk a chapter: pick(step, run) chooses an option; at the map, enter the first open dot
 function walk(chId, pick, { lose = null, prev = null } = {}) {
   const run = S.start(chId, prev);
-  const seen = { duels: [], maps: [], rewards: [], scenes: [], lines: [] };
+  const seen = { duels: [], maps: [], rewards: [], scenes: [], lines: [], asked: [] };
   for (let guard = 0; guard < 2000; guard++) {
     const st = S.step(run);
     if (st.finished) return { run, seen };
@@ -24,9 +24,11 @@ function walk(chId, pick, { lose = null, prev = null } = {}) {
       ok(S.enter(run, open[0].id), 'enter the dot');
       continue;
     }
-    if (st.choose) { S.advance(run, pick(st, run)); continue; }
+    if (st.choose) { if (st.ask) seen.asked.push(st.choose.map((o) => o.t)); S.advance(run, pick(st, run)); continue; }
     if (st.duel) { ok(S.OPP[st.duel], `opponent ${st.duel}`); seen.duels.push(st.duel); }
     if (st.reward) seen.rewards.push(st.reward);
+    if (st.rack) seen.rewards.push(...st.rack);
+    if (st.actEnd) seen.actEnd = st.actEnd;
     if (st.scene) seen.scenes.push(st.scene);
     if (st.who) ok(st.who === 'you' || S.SPEAKERS[st.who], `speaker ${st.who}`);
     if (st.t) seen.lines.push(st.t);
@@ -89,12 +91,53 @@ for (const prev of ['A', 'B']) {
   ok(S.start('ch2').dots.falador === 'done' && !S.start('ch2').dots.lumbridge, 'chapter 2 starts in Falador');
 }
 
+// chapter 3 (2026-11-22): both roads, after either chapter 2 road; the question list; the rack; the end of Act 1
+for (const prev of ['A', 'B']) {
+  for (const road of ['A', 'B']) {
+    const w = walk('ch3', fork(road), { prev: { ch1: 'A', ch2: prev } });
+    ok(w.run.done && w.run.road === road, `ch3 road ${road} ends as ${road}`);
+    ok(w.seen.duels.join() === (road === 'A' ? 'bknight,peon,honour,daquarius' : 'bknight,pair,smith,daquarius'), `ch3 road ${road} duels: ${w.seen.duels}`);
+    ok(w.seen.maps.join() === (road === 'A' ? 'a_balcony,a_door,hall' : 'b_corridor,b_forge,hall'), `ch3 road ${road} dots: ${w.seen.maps}`);
+    ok(w.seen.rewards.join() === 'Kinshra Shortbow,Kinshra Sword,Kinshra Battlestaff', 'ch3: the rack');
+    ok(w.seen.actEnd === 1, 'ch3 ends Act 1');
+    const chest = w.seen.lines.some((t) => t.startsWith('I found the chest')), melzar = w.seen.lines.some((t) => t.startsWith('Melzar the Mad was locked'));
+    ok(prev === 'A' ? chest && !melzar : melzar && !chest, `ch3 tells Daquarius about chapter 2's road ${prev}`);
+    ok(w.seen.lines.includes('Not that much. I came in over the balcony.') === (road === 'A'), `the balcony line only on the quiet road (${road})`);
+    ok(w.seen.lines.includes('Lucan Mordrel.'), 'the name is said');
+    // the questions (the walker takes the last option each time): the reveal only once the rest are asked, then "That's all."
+    const q = w.seen.asked;
+    ok(q.length === 5 && q[0].length === 3 && !q[0].some((t) => t.includes('who took')), 'three questions first: ' + JSON.stringify(q[0]));
+    ok(q[3].join() === 'Then who took it from Falador?' && q[4].join() === "That's all.", 'the reveal last, then done');
+  }
+  // the peon's cloak: "you said" only after the bluff
+  for (const k of [0, 3]) {
+    const w = walk('ch3', (st, run) => (st.fork ? 0 : run.node === 'a_balcony' ? k : 0), { prev: { ch1: 'A', ch2: prev } });
+    const said = w.seen.lines.includes('Recruits get a Kinshra cloak, you said.'), plain = w.seen.lines.includes("That's a nice cloak. Kinshra crest and everything.");
+    ok(k === 3 ? said && !plain : plain && !said, `the cloak line fits option ${k}`);
+  }
+}
+{ // a question list, saved part way: the same questions are left
+  const run = S.start('ch3', { ch2: 'A' });
+  for (let g = 0; g < 500; g++) {
+    const st = S.step(run);
+    if (st.ask && (run.asked || []).length === 2) break;
+    if (st.onMap) S.enter(run, S.dotsOf(run).find((d) => d.state === 'open').id);
+    else if (st.choose) S.advance(run, 0); else S.advance(run);
+  }
+  const copy = JSON.parse(JSON.stringify(run));
+  ok(S.step(copy).choose.length === 1 && JSON.stringify(S.step(copy)) === JSON.stringify(S.step(run)), 'a saved question list carries on');
+  ok(S.start('ch3').dots.gate === 'done', 'chapter 3 starts at the gate');
+}
+ok(S.NEXT.ch2.id === 'ch3' && S.NEXT.ch3.soon && S.chapter('ch2').title === 'The White City' && S.chapter('ch3').title === 'The Black Fortress', 'chapter titles and what follows');
+
 // the opponents' decks and Locations name real cards (placeholder decks name decks from cards.json)
 const deckNames = new Set(CARDS.decks.map((d) => d.name));
 for (const [id, o] of Object.entries(S.OPP)) {
   if (o.deckName) ok(deckNames.has(o.deckName), `${id}: deck ${o.deckName}`);
   if (o.deck) for (const n of Object.keys(o.deck)) ok(!!CARDS.cards[n], `${id}: card ${n}`);
   ok(o.lose && o.lose.t, `${id}: a losing line`);
+  if (o.location) ok(CARDS.cards[o.location] && CARDS.cards[o.location].kind === 'location', `${id}: Location ${o.location}`);
 }
+for (const ch of S.CHAPTERS) for (const card of Object.values(ch.rewards || {})) ok(CARDS.cards[card] && CARDS.cards[card].story === 'reward', `${ch.id}: reward ${card}`);
 
 console.log(`${checks} checks · all passed`);

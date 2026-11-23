@@ -72,3 +72,34 @@ Swapped into a starter for the armour it would replace, against the starter and 
 | **Cabbage Armor, 3 logs, −3 Melee / −3 Ranged** (built, Ramon's pick) | +1.8 (+1.4 on a second run) |
 
 Trophy-sized, like the Shield of Arrav (+1.5).
+
+
+## Chapter 3 (2026-11-22)
+
+Decks in `STORY_DECKS` (cards.py), levels and lines in `OPP` (story.js). Targets (`STORY_CH3_BRIEF.md`): 70–75 / 60–65 / 50–55, the Blacksmith about 55–60, and Lord Daquarius about 25%, the hardest fight of Act 1. Tuned with `node web/test/story_tune.js 100 bknight,peon,pair,honour,smith,daquarius` (it now takes a list).
+
+| Fight | Opponent | Bot level | Starter wins | Melee / Ranged / Air Mage |
+|---|---|---|---|---|
+| Duel 1 | Black Knight (Bronze melee, two Mithril Swords) | Guard | 67% | 65 / 66 / 72 |
+| Duel 2, road A | Black Knight Peon (Piety, Smite, Redemption; Prayer Cape) | Guard | 61% | 45 / 59 / 79 |
+| Duel 3, road A | Kinshra Honour Guard (Mithril and Rune, Kinshra Sword, a Black Knight Shield and Platebody) | Guard | 51% | 42 / 49 / 62 |
+| Duel 2, road B | Berrick and Dorran (darts, knives, daggers, a full larder; Cooking Cape) | Guard | 63% | 65 / 49 / 75 |
+| Duel 3, road B | Kinshra Blacksmith (20 bars, maces, Smith's Hammers; Smithing Cape) | Guard | 61% | 54 / 53 / 76 |
+| Boss | Lord Daquarius (Rune and Kinshra steel, Unholy Wrath, Black Knight Platebody and Shield; the Kinshra Hall) | Champion | 33% | 31 / 36 / 32 |
+
+(100 games per starter per seat, ±2 points.)
+
+- **Every chapter 3 deck races for its cape,** and a claimed cape wins three turns later, so the first drafts were far too hard: the Blacksmith's 25 bars reached the Smithing Cape almost at once (26%), and seven elite prayers made the Peon's Prayer Cape nearly free (44%). Fewer bars, fewer elite prayers and the Guard level fixed both.
+- **Lord Daquarius: 33%, not 25%.** On the same seeds the earlier bosses are now 35–39% (Delrith 39, Count Draynor 35, Dragith 38, Melzar 35; Delrith and Draynor have drifted up about 5 points since chapter 1 was tuned, and not because of this chapter: the committed engine gives the same), so he is the hardest boss of Act 1, but by 2–6 points. Deck changes stopped helping at about 33%: more Unholy Wrath (+4 or +3 made no difference), more defence (worse), more weapons (worse). **He is all Melee:** his thrown knives (the "hybrid" Ramon asked for) made him 4–7 points easier, so they came out; say so to Ramon. Getting to 25% would need a boss card of his own that adds attacks, like Count Draynor's Bite.
+- **His kit (Claude's proposal, numbers set here):** Black Knight Platebody (Melee −3, Ranged −1, Magic −1, his attacks +3; 2 Black Bars), Black Knight Shield (soak 9, Shatter can't break it; 1 Black Bar), Unholy Wrath (+3 to every attack, heals 3 when one lands, 3 turns), the Kinshra Hall at **Ranged −2 and Magic −2** (the proposal said −1; −2 matches the other boss Locations), Black Bars only in his, the Honour Guard's and the Blacksmith's decks.
+- **Ramon's "hybrid" Lord** came out for difficulty; it's a two-line change back if he prefers the flavour.
+
+### The rewards (story_rewards.py ch3, 2026-11-22)
+
+Two copies swapped into a deck for its tier-2 equivalent, against the starter and tournament field:
+
+| Card | Built as | Gain |
+|---|---|---|
+| Kinshra Sword | hit 9, 4 swings, Bronze + 2 Mithril (Mithril Sword: hit 8, 3 swings) | +3.2 to +4.1 (Melee, for its Mithril Swords) |
+| Kinshra Shortbow | hit 7, Normal + 2 Willow (Willow Shortbow: hit 6, Normal + Willow) | +4.4 to +5.2 (Ranged, for 2 Willow Shortbows); at Normal + Willow it was +6.3 |
+| Kinshra Battlestaff | hit 5, 4 swings, 1 Fire Rune, counts as 2 Fire Runes (Staff of Fire: hit 2, 3 swings) | +2.4 in the Smoke Mage for 2 Fire Strikes (a Staff of Fire there: −2.1); level with an Iban's Staff |

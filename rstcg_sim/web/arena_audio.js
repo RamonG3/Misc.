@@ -4,9 +4,10 @@
 // recorded, not synthesized, is the casting sound of each spell that has one (see "Recorded sounds").
 //
 //   RSAudio.unlock()            start audio after the first click / key / pad press (browser rule)
-//   RSAudio.want('menu'|'duel'|'quiet'|'story'|'storydark'|'boss'|'track:<name>')   what should be playing; idempotent, call as often as you like
+//   RSAudio.want('menu'|'duel'|'quiet'|'story'|'storydark'|'boss'|'window'|'finale'|'track:<name>')   what should be playing; idempotent, call as often as you like
 //   RSAudio.intense(true)       battle music: bring in the intense layer (either deck at 10 or less)
 //   RSAudio.sting(name)         'victory' | 'defeat' | 'claim' | 'quest' | 'legendary'
+//   RSAudio.cue('finale')       seconds from the start of the end-of-act music to its last chord
 //   RSAudio.sfx(name, opts)     one-shot sound effects
 //   RSAudio.clip(name, opts)    a recorded sound, by card name; false if there is none (make the usual sound instead)
 //   RSAudio.volumes({ music, sfx })   0..1 each
@@ -288,7 +289,8 @@ window.RSAudio = (() => {
     };
     spec.write(api);
     ev.sort((a, b) => a.beat - b.beat);
-    return { name: spec.name, kind: spec.kind, bpm: spec.bpm, beats: spec.beats, bars: spec.bars, length: spec.beats * spec.bars, events: ev, mix: spec.mix || {}, loops: spec.loops || 2 };
+    return { name: spec.name, kind: spec.kind, bpm: spec.bpm, beats: spec.beats, bars: spec.bars, length: spec.beats * spec.bars, events: ev, mix: spec.mix || {}, loops: spec.loops || 2,
+      cue: spec.cue };   // cue: a beat the page times something to (the finale's last chord)
   }
 
   // ---------------------------------------------------------------------------------
@@ -417,6 +419,39 @@ window.RSAudio = (() => {
     s.drums('intense', 16, 4, 16, { snare: '....x.......x..x|....x.......x.xx', hat: 'x.x.x.x.x.x.x.x.' }, 0.66);
   } });
 
+  // Chapter 3's ending (Ramon, 2026-11-22: "a synthesized piece, so it can be timed to the beats").
+  // Beyond the Ditch (D minor, 60): the window over the Wilderness. Low strings, a far choir, a few bells; loops until
+  // the last line.
+  SONGS.window = S({ name: 'Beyond the Ditch', kind: 'story', bpm: 60, beats: 4, bars: 8, loops: 99, write(s) {
+    const prog = ['Dm', 'Dm', 'Bb', 'A', 'Dm', 'Gm', 'Bb', 'A'];
+    s.pad('base', 'strings', prog, 4, 2, 0.55);
+    s.pad('base', 'choir', prog, 4, 4, 0.22);
+    s.mel('base', 'bells', 'A4:3 r:1 | F4:2 E4:2 | D4:4 | C#4:3 r:1 | D4:2 F4:2 | G4:3 Bb4:1 | A4:4 | E4:4', 0, 0.5, 0, 0.2);
+    s.arp('base', 'harp', prog, 4, 2, [0, 2, 4, 2], 1, 0.38, -0.3);
+    s.bass('base', 'bass', prog, 4, 2, [[0, 3.8, 0]], 0.55);
+    s.timp('base', prog, 4, 2, [0], 0.3);
+  } });
+  // End of Act 1 (72): from "...from the Wilderness." it climbs Bb, C, A to its last chord, D minor, on beat 12 (10 s in),
+  // where the screen has just gone black (the page: FIN); the chord rings on under "End of Act 1". Plays once.
+  SONGS.finale = S({ name: 'End of Act 1', kind: 'sting', bpm: 72, beats: 4, bars: 5, cue: 12, write(s) {
+    s.mel('base', 'brass', 'D4:1 F4:1 A4:2', 0, 0.6);
+    s.mel('base', 'brass', 'G4:1 A4:1 C5:2', 4, 0.72);
+    s.mel('base', 'brass', 'C#5:1.5 E5:.5 A4:1 E5:1', 8, 0.86);
+    s.mel('base', 'brass', 'D5:7', 12, 1);
+    s.mel('base', 'brass', 'Bb3:1 D4:1 F4:2 | E4:1 F4:1 G4:2 | A4:1.5 C#5:.5 E4:1 C#5:1 | A4:7', 0, 0.55);
+    s.mel('base', 'strings', 'D5:1 F5:1 A5:2 | G5:1 A5:1 C6:2 | C#6:1.5 E6:.5 A5:1 E6:1 | D6:7', 0, 0.45);
+    s.pad('base', 'strings', ['Bb', 'C', 'A'], 4, 3, 0.7);
+    s.pad('base', 'choir', ['Bb', 'C', 'A'], 4, 4, 0.5);
+    for (const n of ['D3', 'F3', 'A3', 'D4']) s.mel('base', 'strings', `${n}:7`, 12, 0.8);
+    for (const n of ['D4', 'F4', 'A4']) s.mel('base', 'choir', `${n}:7`, 12, 0.62);
+    s.mel('base', 'bass', 'Bb1:4 C2:4 A1:4 D2:7', 0, 0.85);
+    s.mel('base', 'timp', 'Bb1:4 C2:2 C2:2 A1:1 A1:1 A1:.5 A1:.5 A1:.25 A1:.25 A1:.25 A1:.25 D2:8', 0, 0.9);
+    s.mel('base', 'harp', 'r:8 A3:.25 C#4:.25 E4:.25 A4:.25 C#5:.25 E5:.25 A5:.25 E5:.25 A3:.25 C#4:.25 E4:.25 A4:.25 C#5:.25 E5:.25 A5:.25 C#6:.25 D6:4', 0, 0.55);
+    s.mel('base', 'bells', 'r:12 D5:4 A5:4', 0, 0.45);
+    s.drums('base', 5, 4, 16, { kick: 'x...............|x.......x.......|x...x...x...x...|X...............|................',
+      snare: '................|................|x.x.x.x.xxxxxxxx|X...............|................' }, 0.7);
+  } });
+
   // --- Stingers
   SONGS.victory = S({ name: 'Victory', kind: 'sting', bpm: 110, beats: 4, bars: 3, write(s) {
     s.mel('base', 'brass', 'C4:.5 E4:.5 G4:.5 C5:1.5 r:.5 | G4:.5 C5:.5 E5:3 r:1', 0, 0.9);
@@ -530,7 +565,7 @@ window.RSAudio = (() => {
     }
   }
   // Story Mode's own tracks: the dialogue (light, or dark for the manor and the circle) and the bosses' fight
-  const STORY_SONG = { story: 'story', storydark: 'storydark', boss: 'boss' };
+  const STORY_SONG = { story: 'story', storydark: 'storydark', boss: 'boss', window: 'window', finale: 'finale' };
 
   // --- Recorded music (2026-11-20): Ramon's tracks, window.ARENA_MUSIC (arena_music.py), for Story Mode's places.
   // RSAudio.want('track:Bazaar'). Played by an <audio> element (decoded as it plays, so a four-minute track
@@ -588,7 +623,10 @@ window.RSAudio = (() => {
     if (track) trackStop(2.5);
     if (STORY_SONG[w]) {
       const song = SONGS[STORY_SONG[w]];
-      if (!current || current.song !== song) { fadeOut(current, 2.5); current = player(song, now + 0.4, 3); }
+      if (!current || current.song !== song) {
+        const once = song.kind === 'sting';        // the finale: in at once, over a quick fade of what was playing
+        fadeOut(current, once ? 1.2 : 2.5); current = player(song, now + (once ? 0.1 : 0.4), once ? 0.5 : 3);
+      }
       return;
     }
     if (wanted === 'menu' && (!current || current.song.kind !== 'idle')) { fadeOut(current, 1.5); current = player(SONGS[nextIdle()], now + 0.3, 2.5); }
@@ -889,6 +927,8 @@ window.RSAudio = (() => {
     get tracks() { return Object.keys(MUSIC); },
     trackInfo() { return track ? { name: track.name, time: track.el.currentTime, paused: track.el.paused, error: track.el.error ? track.el.error.code : null } : null; },
     get layers() { return current ? Object.fromEntries(Object.entries(current.layers).map(([k, g]) => [k, +g.gain.value.toFixed(3)])) : null; },
+    // seconds from a song's start to its cue (SONGS.finale's last chord): the page fades to black on it
+    cue(name) { const s = SONGS[name]; return s && s.cue != null ? +(s.cue * 60 / s.bpm + 0.15).toFixed(2) : null; },
     songs: () => Object.fromEntries(Object.entries(SONGS).map(([k, s]) => [k, { name: s.name, kind: s.kind, seconds: +(s.length * 60 / s.bpm).toFixed(1), notes: s.events.length }])),
     analyse,
   };

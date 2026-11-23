@@ -2,6 +2,7 @@
 
     python story_rewards.py 300
     python story_rewards.py 300 ch2      # chapter 2's two armours
+    python story_rewards.py 300 ch3      # chapter 3's three Kinshra weapons
 
 Claws of Guthix at 10, 12 and 14 damage: the Air Mage starter with 2 Claws and 2 Blood Runes in place of 2 Air
 Blasts and 2 Air Runes, against the other two starters and the tournament field, both seats, greedy bots.
@@ -68,11 +69,26 @@ def chapter2(n, pool):
         print(f"{st}: {b:.1f}% · with {k} {add} for {out}: {r:.1f}% ({r - b:+.1f})")
 
 
+def chapter3(n, pool):
+    """Chapter 3 (2026-11-22): the Kinshra weapons, each in place of its tier-2 equivalent: Kinshra Sword for the
+    Melee starter's Mithril Swords, Kinshra Shortbow for 2 of the Ranged starter's Willow Shortbows, Kinshra
+    Battlestaff for 2 of the Smoke Mage's Iban's Staffs (its fire deck: the staff counts as 2 Fire Runes)."""
+    for st, out, add, k in (("Melee", "Mithril Sword", "Kinshra Sword", 2), ("Ranged", "Willow Shortbow", "Kinshra Shortbow", 2),
+                            ("Smoke Mage", "Iban's Staff", "Kinshra Battlestaff", 2)):
+        b = rate(D[st], n, pool=pool)
+        r = rate(swap(D[st], {out: k}, {add: k}), n, pool=pool)
+        print(f"{st}: {b:.1f}% · with {k} {add} for {out}: {r:.1f}% ({r - b:+.1f})")
+
+
 def main():
     n = int(sys.argv[1]) if len(sys.argv) > 1 else 100
     if "ch2" in sys.argv:
         with Pool() as pool:
             chapter2(n, pool)
+        return
+    if "ch3" in sys.argv:
+        with Pool() as pool:
+            chapter3(n, pool)
         return
     with Pool() as pool:
         base = rate(D["Air Mage"], n, pool=pool)

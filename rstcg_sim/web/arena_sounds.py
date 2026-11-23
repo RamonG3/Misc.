@@ -42,6 +42,7 @@ ALIAS = {
     "Burst of Strength": "Ultimate Strength",
     "Mystic Will": "Mystic Might",
     "Sharp Eye": "Eagle Eye",
+    "Unholy Wrath": "Wrath",                          # chapter 3, Lord Daquarius's Zamorakian prayer (2026-11-22)
 }
 SOURCE_TYPES = (".ogg", ".mp3", ".wav", ".flac", ".m4a")
 # Mono (the game pans a sound itself): the plain average of left and right, so the level stays as recorded (left

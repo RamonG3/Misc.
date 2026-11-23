@@ -21,7 +21,9 @@
   const PACK_COST = 200;
   const PAY = { win: 100, loss: 50 };
   const SLACK_GP = 500;                 // draws pay 50 and aren't counted anywhere; and a little room besides
-  const STORY_REWARDS = { 'ch1:A': 'Claws of Guthix', 'ch1:B': 'Shield of Arrav', 'ch2:A': 'White Knight Armor', 'ch2:B': 'Cabbage Armor' };
+  // chapter 3 is keyed by the card, not the road: Lord Daquarius's rack gives one per win, either road (story.js rewardBy)
+  const STORY_REWARDS = { 'ch1:A': 'Claws of Guthix', 'ch1:B': 'Shield of Arrav', 'ch2:A': 'White Knight Armor', 'ch2:B': 'Cabbage Armor',
+    'ch3:bow': 'Kinshra Shortbow', 'ch3:sword': 'Kinshra Sword', 'ch3:staff': 'Kinshra Battlestaff' };
 
   function make(CARDS, set1, decks) {
     const rarityOf = (n) => (set1[n] ? set1[n].rarity : 'C');

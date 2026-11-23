@@ -169,6 +169,12 @@
    "heals": 3,
    "story": "boss"
   },
+  "Black Bar": {
+   "name": "Black Bar",
+   "kind": "material",
+   "mat": "bar",
+   "story": "boss"
+  },
   "Black D'hide Body": {
    "name": "Black D'hide Body",
    "kind": "armor",
@@ -193,6 +199,46 @@
      3
     ]
    ]
+  },
+  "Black Knight Platebody": {
+   "name": "Black Knight Platebody",
+   "kind": "armor",
+   "style": "melee",
+   "req": [
+    [
+     "Black Bar",
+     2
+    ]
+   ],
+   "armor": [
+    [
+     "melee",
+     -3
+    ],
+    [
+     "ranged",
+     -1
+    ],
+    [
+     "magic",
+     -1
+    ]
+   ],
+   "bonus": 3,
+   "story": "boss"
+  },
+  "Black Knight Shield": {
+   "name": "Black Knight Shield",
+   "kind": "shield",
+   "req": [
+    [
+     "Black Bar",
+     1
+    ]
+   ],
+   "soak": 9,
+   "unshatter": true,
+   "story": "boss"
   },
   "Blood Rune": {
    "name": "Blood Rune",
@@ -982,6 +1028,64 @@
    "kind": "food",
    "heal": 4,
    "stacks_with_food": true
+  },
+  "Kinshra Battlestaff": {
+   "name": "Kinshra Battlestaff",
+   "kind": "staff",
+   "style": "magic",
+   "req": [
+    [
+     "Fire Rune",
+     1
+    ]
+   ],
+   "hit": 5,
+   "durability": 4,
+   "wclass": "staff",
+   "counts_as": [
+    [
+     "Fire Rune",
+     2
+    ]
+   ],
+   "story": "reward"
+  },
+  "Kinshra Shortbow": {
+   "name": "Kinshra Shortbow",
+   "kind": "bow",
+   "style": "ranged",
+   "req": [
+    [
+     "Normal Logs",
+     1
+    ],
+    [
+     "Willow Logs",
+     2
+    ]
+   ],
+   "hit": 7,
+   "arrow_tier": 2,
+   "story": "reward"
+  },
+  "Kinshra Sword": {
+   "name": "Kinshra Sword",
+   "kind": "weapon",
+   "style": "melee",
+   "req": [
+    [
+     "Bronze Bar",
+     1
+    ],
+    [
+     "Mithril Bar",
+     2
+    ]
+   ],
+   "hit": 9,
+   "durability": 4,
+   "wclass": "sword",
+   "story": "reward"
   },
   "Kiteshield": {
    "name": "Kiteshield",
@@ -2037,6 +2141,11 @@
    "kind": "food",
    "heal": 8
   },
+  "The Kinshra Hall": {
+   "name": "The Kinshra Hall",
+   "kind": "location",
+   "story": "boss"
+  },
   "The Restless Ghost": {
    "name": "The Restless Ghost",
    "kind": "quest",
@@ -2063,6 +2172,16 @@
    "damage": 6,
    "destroys": "log",
    "item": true
+  },
+  "Unholy Wrath": {
+   "name": "Unholy Wrath",
+   "kind": "buff",
+   "prayer": "any",
+   "bonus": 3,
+   "effect": "wrath",
+   "reward_val": 3,
+   "duration": 3,
+   "story": "boss"
   },
   "Vampyre Slayer": {
    "name": "Vampyre Slayer",
@@ -3565,6 +3684,194 @@
    },
    "capes": [
     "Magic Cape"
+   ]
+  },
+  {
+   "name": "Black Knight",
+   "group": "Story decks",
+   "cards": {
+    "Bronze Bar": 19,
+    "Mithril Bar": 4,
+    "Bronze Scimitar": 3,
+    "Bronze Dagger": 3,
+    "Bronze Mace": 2,
+    "Mithril Sword": 2,
+    "Slash": 3,
+    "Stab": 2,
+    "Bronze Platebody": 2,
+    "Wooden Shield": 4,
+    "Shrimp": 4,
+    "Lobster": 2,
+    "Karambwan": 2,
+    "Burst of Strength": 2,
+    "Sheep Shearer": 1,
+    "Cook's Assistant": 1,
+    "Vanaka": 1,
+    "Doric": 1,
+    "Lumbridge": 1,
+    "Parry": 1
+   },
+   "capes": [
+    "Attack Cape"
+   ]
+  },
+  {
+   "name": "Black Knight Peon",
+   "group": "Story decks",
+   "cards": {
+    "Bronze Bar": 16,
+    "Mithril Bar": 6,
+    "Bronze Scimitar": 3,
+    "Bronze Mace": 2,
+    "Bronze Dagger": 2,
+    "Mithril Sword": 2,
+    "Slash": 3,
+    "Stab": 1,
+    "Piety": 2,
+    "Smite": 1,
+    "Redemption": 1,
+    "Burst of Strength": 3,
+    "Protect from Melee": 2,
+    "Protect from Missiles": 1,
+    "Protect from Magic": 1,
+    "Brother Jered": 1,
+    "Wooden Shield": 4,
+    "Shrimp": 3,
+    "Lobster": 3,
+    "Bronze Platebody": 1,
+    "Doric": 1,
+    "Sheep Shearer": 1
+   },
+   "capes": [
+    "Prayer Cape"
+   ]
+  },
+  {
+   "name": "Kinshra Honour Guard",
+   "group": "Story decks",
+   "cards": {
+    "Bronze Bar": 9,
+    "Mithril Bar": 11,
+    "Rune Bar": 3,
+    "Black Bar": 2,
+    "Kinshra Sword": 2,
+    "Mithril Sword": 2,
+    "Mithril Scimitar": 2,
+    "Rune Scimitar": 1,
+    "Mithril Mace": 1,
+    "Slash": 3,
+    "Crush": 2,
+    "Black Knight Shield": 1,
+    "Kiteshield": 2,
+    "Wooden Shield": 2,
+    "Black Knight Platebody": 1,
+    "Mithril Platebody": 1,
+    "Piety": 1,
+    "Burst of Strength": 2,
+    "Protect from Melee": 2,
+    "Parry": 1,
+    "Swordfish": 1,
+    "Lobster": 3,
+    "Shrimp": 2,
+    "Vanaka": 1,
+    "Doric": 1,
+    "Horvik": 1
+   },
+   "capes": [
+    "Attack Cape"
+   ]
+  },
+  {
+   "name": "Berrick and Dorran",
+   "group": "Story decks",
+   "cards": {
+    "Bronze Bar": 14,
+    "Mithril Bar": 8,
+    "Bronze Darts": 3,
+    "Mithril Darts": 2,
+    "Bronze Knives": 2,
+    "Mithril Knives": 1,
+    "Bronze Dagger": 3,
+    "Rapid": 3,
+    "Stab": 3,
+    "Shrimp": 3,
+    "Lobster": 3,
+    "Swordfish": 2,
+    "Karambwan": 2,
+    "Wooden Shield": 4,
+    "Sharp Eye": 2,
+    "Burst of Strength": 1,
+    "Cook's Assistant": 1,
+    "Vanaka": 1,
+    "Parry": 1,
+    "Sheep Shearer": 1
+   },
+   "capes": [
+    "Cooking Cape"
+   ]
+  },
+  {
+   "name": "Kinshra Blacksmith",
+   "group": "Story decks",
+   "cards": {
+    "Bronze Bar": 9,
+    "Mithril Bar": 8,
+    "Black Bar": 3,
+    "Bronze Mace": 3,
+    "Mithril Mace": 3,
+    "Bronze Scimitar": 2,
+    "Kinshra Sword": 1,
+    "Crush": 3,
+    "Slash": 2,
+    "Smith's Hammer": 2,
+    "Black Knight Platebody": 1,
+    "Black Knight Shield": 1,
+    "Wooden Shield": 3,
+    "Kiteshield": 1,
+    "Doric": 2,
+    "Doric's Quest": 1,
+    "Shrimp": 3,
+    "Lobster": 3,
+    "Swordfish": 1,
+    "Burst of Strength": 2,
+    "Protect from Melee": 1,
+    "Sheep Shearer": 1,
+    "Cook's Assistant": 1,
+    "Bronze Dagger": 2,
+    "Vanaka": 1
+   },
+   "capes": [
+    "Smithing Cape"
+   ]
+  },
+  {
+   "name": "Lord Daquarius",
+   "group": "Story decks",
+   "cards": {
+    "Black Bar": 3,
+    "Bronze Bar": 6,
+    "Mithril Bar": 10,
+    "Rune Bar": 8,
+    "Kinshra Sword": 4,
+    "Rune Scimitar": 4,
+    "Mithril Scimitar": 1,
+    "Slash": 4,
+    "Black Knight Platebody": 1,
+    "Black Knight Shield": 2,
+    "Kiteshield": 2,
+    "Unholy Wrath": 3,
+    "Piety": 1,
+    "Burst of Strength": 1,
+    "Protect from Melee": 2,
+    "Protect from Missiles": 1,
+    "Parry": 2,
+    "Swordfish": 2,
+    "Shark": 1,
+    "Vanaka": 1,
+    "Doric": 1
+   },
+   "capes": [
+    "Attack Cape"
    ]
   }
  ],

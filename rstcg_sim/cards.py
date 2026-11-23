@@ -362,6 +362,24 @@ _ALL = [
     Card("Cabbage Mace", "weapon", "melee", req=(("Cabbage", 2),), hit=8, durability=3, wclass="mace", story="boss"),
     Card("Cabbage Seeds", "thrown", "ranged", req=(("Cabbage", 1),), hit=4, durability=5, wclass="dart", story="boss"),
     Card("Cabbages!", "spell", "magic", req=(("Cabbage", 3),), damage=9, story="boss"),
+
+    # ---------- Story Mode, chapter 3 (2026-11-22, STORY_CH3_BRIEF.md). Numbers are first drafts, set by simulation ----------
+    # Rewards: Lord Daquarius's rack. The player takes one per win over him (each once, ever); he fights with them too.
+    # They cost ordinary materials: no player can own a Black Bar.
+    Card("Kinshra Sword", "weapon", "melee", req=(("Bronze Bar", 1), ("Mithril Bar", 2)), hit=9, durability=4,
+         wclass="sword", story="reward"),                     # Mithril Sword: hit 8, 3 swings
+    # (story_rewards.py ch3, 2026-11-22: each adds 3 to 5 points to a deck that uses it, like chapter 1's rewards)
+    Card("Kinshra Shortbow", "bow", "ranged", req=(("Normal Logs", 1), ("Willow Logs", 2)), hit=7, arrow_tier=2,
+         story="reward"),                                     # Willow Shortbow: hit 6 for a Normal and a Willow
+    Card("Kinshra Battlestaff", "staff", "magic", req=(("Fire Rune", 1),),
+         counts_as=(("Fire Rune", 2),), wclass="staff", hit=5, durability=4, story="reward"),   # a Zamorak staff; Staff of Fire: hit 2, 3 swings
+    # Boss-only: Lord Daquarius (and his honour guard and blacksmith, who carry his steel)
+    Card("Black Bar", "material", mat="bar", story="boss"),   # counts as a bar (the Smithing Cape, Superheat, Doric)
+    Card("Black Knight Platebody", "armor", "melee", req=(("Black Bar", 2),), armor=(("melee", -3), ("ranged", -1), ("magic", -1)),
+         bonus=3, story="boss"),
+    Card("Black Knight Shield", "shield", req=(("Black Bar", 1),), soak=9, unshatter=True, story="boss"),
+    Card("Unholy Wrath", "buff", effect="wrath", duration=3, prayer="any", bonus=3, reward_val=3, story="boss"),   # +3 to his attacks; heals 3 when one lands
+    Card("The Kinshra Hall", "location", story="boss"),   # Daquarius's fight, locked in play: Melee +2, Ranged -2, Magic -2
 ]
 
 CARDS = {c.name: c for c in _ALL}
@@ -652,12 +670,55 @@ STORY_DECKS = {
         "Kiteshield": 3, "Wooden Shield": 2, "Lobster": 3, "Swordfish": 2, "Shrimp": 2, "Karambwan": 2,
         "Cook's Assistant": 1, "Vanaka": 2, "Mirror Shield": 1, "Ricochet": 1, "Parry": 1,
     },
+    # ---------- chapter 3 (2026-11-22, STORY_CH3_BRIEF.md) ----------
+    "Black Knight": {   # duel 1: a gate guard's sword and shield, Bronze with a little Mithril
+        "Bronze Bar": 19, "Mithril Bar": 4,
+        "Bronze Scimitar": 3, "Bronze Dagger": 3, "Bronze Mace": 2, "Mithril Sword": 2, "Slash": 3, "Stab": 2,
+        "Bronze Platebody": 2, "Wooden Shield": 4, "Shrimp": 4, "Lobster": 2, "Karambwan": 2, "Burst of Strength": 2,
+        "Sheep Shearer": 1, "Cook's Assistant": 1, "Vanaka": 1, "Doric": 1, "Lumbridge": 1, "Parry": 1,
+    },
+    "Black Knight Peon": {   # road A duel 2: prayers, for the Prayer Cape (two elite prayers), and a sword
+        "Bronze Bar": 16, "Mithril Bar": 6,
+        "Bronze Scimitar": 3, "Bronze Mace": 2, "Bronze Dagger": 2, "Mithril Sword": 2, "Slash": 3, "Stab": 1,
+        "Piety": 2, "Smite": 1, "Redemption": 1, "Burst of Strength": 3, "Protect from Melee": 2, "Protect from Missiles": 1,
+        "Protect from Magic": 1, "Brother Jered": 1, "Wooden Shield": 4, "Shrimp": 3, "Lobster": 3, "Bronze Platebody": 1, "Doric": 1,
+        "Sheep Shearer": 1,
+    },
+    "Kinshra Honour Guard": {   # road A duel 3: the toughest knight before the Lord, with some of the Lord's own steel
+        "Bronze Bar": 9, "Mithril Bar": 11, "Rune Bar": 3, "Black Bar": 2,
+        "Kinshra Sword": 2, "Mithril Sword": 2, "Mithril Scimitar": 2, "Rune Scimitar": 1, "Mithril Mace": 1, "Slash": 3, "Crush": 2,
+        "Black Knight Shield": 1, "Kiteshield": 2, "Wooden Shield": 2, "Black Knight Platebody": 1, "Mithril Platebody": 1,
+        "Piety": 1, "Burst of Strength": 2, "Protect from Melee": 2, "Parry": 1, "Swordfish": 1, "Lobster": 3, "Shrimp": 2,
+        "Vanaka": 1, "Doric": 1, "Horvik": 1,
+    },
+    "Berrick and Dorran": {   # road B duel 2: darts and daggers, and a full larder for the Cooking Cape
+        "Bronze Bar": 14, "Mithril Bar": 8,
+        "Bronze Darts": 3, "Mithril Darts": 2, "Bronze Knives": 2, "Mithril Knives": 1, "Bronze Dagger": 3, "Rapid": 3, "Stab": 3,
+        "Shrimp": 3, "Lobster": 3, "Swordfish": 2, "Karambwan": 2, "Wooden Shield": 4, "Sharp Eye": 2, "Burst of Strength": 1,
+        "Cook's Assistant": 1, "Vanaka": 1, "Parry": 1, "Sheep Shearer": 1,
+    },
+    "Kinshra Blacksmith": {   # road B duel 3: bars for the Smithing Cape, hammers, and the Lord's steel he made himself
+        "Bronze Bar": 9, "Mithril Bar": 8, "Black Bar": 3,
+        "Bronze Mace": 3, "Mithril Mace": 3, "Bronze Scimitar": 2, "Kinshra Sword": 1, "Crush": 3, "Slash": 2, "Smith's Hammer": 2,
+        "Black Knight Platebody": 1, "Black Knight Shield": 1, "Wooden Shield": 3, "Kiteshield": 1, "Doric": 2, "Doric's Quest": 1,
+        "Shrimp": 3, "Lobster": 3, "Swordfish": 1, "Burst of Strength": 2, "Protect from Melee": 1, "Sheep Shearer": 1, "Cook's Assistant": 1,
+        "Bronze Dagger": 2, "Vanaka": 1,
+    },
+    "Lord Daquarius": {   # boss: Rune and Kinshra steel, all Melee (thrown knives made him 4-7 points easier); Black Knight armour, Unholy Wrath; the Kinshra Hall locked
+        "Black Bar": 3, "Bronze Bar": 6, "Mithril Bar": 10, "Rune Bar": 8,
+        "Kinshra Sword": 4, "Rune Scimitar": 4, "Mithril Scimitar": 1, "Slash": 4,
+        "Black Knight Platebody": 1, "Black Knight Shield": 2, "Kiteshield": 2, "Unholy Wrath": 3, "Piety": 1, "Burst of Strength": 1,
+        "Protect from Melee": 2, "Protect from Missiles": 1, "Parry": 2, "Swordfish": 2, "Shark": 1, "Vanaka": 1, "Doric": 1,
+    },
 }
 STORY_CAPES = {"Bandit": ["Attack Cape"], "Highwayman": ["Ranged Cape"], "Goblin Band": ["Attack Cape", "Smithing Cape"],
                "Skeleton": ["Attack Cape"], "Dark Wizard": ["Magic Cape"], "Delrith": ["Magic Cape"],
                "Count Draynor": ["Attack Cape"], "Zamorak Cultist": ["Magic Cape"], "Zombie Knight": ["Defence Cape"],
                "Crawling Corpse": ["Attack Cape"], "Kinshra Scout": ["Ranged Cape"], "Shadow": ["Ranged Cape"],
-               "Dragith Nurn": ["Magic Cape"], "Melzar the Mad": ["Magic Cape"]}
+               "Dragith Nurn": ["Magic Cape"], "Melzar the Mad": ["Magic Cape"],
+               "Black Knight": ["Attack Cape"], "Black Knight Peon": ["Prayer Cape"], "Kinshra Honour Guard": ["Attack Cape"],
+               "Berrick and Dorran": ["Cooking Cape"], "Kinshra Blacksmith": ["Smithing Cape"], "Lord Daquarius": ["Attack Cape"]}
 STORY_LOCATIONS = {"Delrith": "Draynor Manor", "Count Draynor": "Moonlit Circle",
-                   "Dragith Nurn": "Falador Tunnels", "Melzar the Mad": "Hidden Prison"}   # locked in play for these fights
+                   "Dragith Nurn": "Falador Tunnels", "Melzar the Mad": "Hidden Prison",
+                   "Lord Daquarius": "The Kinshra Hall"}   # locked in play for these fights
 check_decks(STORY_DECKS)

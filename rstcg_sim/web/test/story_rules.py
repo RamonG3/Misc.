@@ -1,7 +1,9 @@
 """Story Mode's new rules, the same hand-built positions in both engines (python web/test/story_rules.py):
 a locked Location can't be replaced or teleported over and nobody owns it; Draynor Manor and Moonlit Circle
 change damage; Claws of Guthix and Hellfire ignore shields; Demon Fire breaks the shield that blocks it;
-Bite heals its user. Prints each result from Python and from JS; they must match."""
+Bite heals its user. Chapter 3 (2026-11-22): the Kinshra Hall changes damage; Unholy Wrath heals 2 when an attack
+of its user's lands; Black Bars pay for the Black Knight cards and count as bars; the Black Knight Shield can't be
+broken by Shatter. Prints each result from Python and from JS; they must match."""
 import json, os, subprocess, sys
 H = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.join(H, '..', '..'))
@@ -86,6 +88,36 @@ def results():
     g = base(); p, o = g.players
     p.discard = ["Necrotic Bolt", "Bronze Bar", "Cabbage Mace"]; p.hand = ["Raise Dead"]
     out["raise_dead"] = sorted(a[2] for a in g.legal_actions(0) if a[0] == "play" and a[1] == "Raise Dead")
+    # chapter 3
+    g = base({"locked_location": "The Kinshra Hall"})
+    out["kinshra_hall_damage"] = [g.compute_damage(0, 10, s)[0] for s in ("magic", "melee", "ranged")]
+    g = base(); p, o = g.players
+    for _ in range(10): p.discard.append(p.deck.pop())
+    p.buff = "Unholy Wrath"; p.buff_left = 3
+    before, ob = p.lp, o.lp
+    g.deal(0, 6, "ranged", "weapon")
+    out["unholy_wrath"] = [p.lp - before, ob - o.lp]
+    o.shield = {"name": "Kiteshield", "soak": 20}
+    before = p.lp
+    g.deal(0, 6, "melee", "weapon")
+    out["unholy_wrath_soaked"] = p.lp - before
+    for card, bars in (("Black Knight Platebody", 2), ("Black Knight Shield", 1)):
+        g = base(); p, o = g.players
+        g.turn = 2; p.hand = [card]
+        out[f"{card}_without"] = any(a[1] == card for a in g.legal_actions(0) if a[0] == "play")
+        p.materials.update({"Black Bar": bars})
+        out[f"{card}_with"] = any(a[1] == card for a in g.legal_actions(0) if a[0] == "play")
+    g = base(); p, o = g.players
+    p.materials = {"Black Bar": 3, "Bronze Bar": 3}
+    from capes import progress
+    out["smithing_with_black_bars"] = progress(p, "Smithing Cape", g.rules["cape_need"])[0]
+    for sh in ("Black Knight Shield", "Kiteshield"):
+        g = base(); p, o = g.players
+        p.materials.update({"Fire Rune": 5, "Chaos Rune": 2, "Blood Rune": 2, "Air Rune": 2})
+        o.shield = {"name": sh, "soak": 20}
+        before = o.lp
+        g._apply_card(0, "Demon Fire", None)
+        out[f"shatter_vs_{sh}"] = [before - o.lp, o.shield["soak"] if o.shield else None]
     return out
 
 JS = r"""
@@ -159,6 +191,34 @@ const base = (rules) => { const d = { 'Bronze Bar': 60 }; const g = new R.Game([
   { const g = base(); const [p] = g.players;
     p.discard = ['Necrotic Bolt', 'Bronze Bar', 'Cabbage Mace']; p.hand = ['Raise Dead'];
     out.raise_dead = g.legal_actions(0).filter((a) => a[0] === 'play' && a[1] === 'Raise Dead').map((a) => a[2]).sort(); }
+  { const g = base({ locked_location: 'The Kinshra Hall' });
+    out.kinshra_hall_damage = ['magic', 'melee', 'ranged'].map((s) => g.compute_damage(0, 10, s)[0]); }
+  { const g = base(); const [p, o] = g.players;
+    for (let k = 0; k < 10; k++) p.discard.push(p.deck.pop());
+    p.buff = 'Unholy Wrath'; p.buff_left = 3;
+    let b = p.lp; const ob2 = o.lp;
+    await g.deal(0, 6, 'ranged', 'weapon');
+    out.unholy_wrath = [p.lp - b, ob2 - o.lp];
+    o.shield = { name: 'Kiteshield', soak: 20 };
+    b = p.lp; await g.deal(0, 6, 'melee', 'weapon');
+    out.unholy_wrath_soaked = p.lp - b; }
+  for (const [card, bars] of [['Black Knight Platebody', 2], ['Black Knight Shield', 1]]) {
+    const g = base(); const [p] = g.players;
+    g.turn = 2; p.hand = [card];
+    out[`${card}_without`] = g.legal_actions(0).some((a) => a[0] === 'play' && a[1] === card);
+    Object.assign(p.materials, { 'Black Bar': bars });
+    out[`${card}_with`] = g.legal_actions(0).some((a) => a[0] === 'play' && a[1] === card);
+  }
+  { const g = base(); const [p] = g.players;
+    p.materials = { 'Black Bar': 3, 'Bronze Bar': 3 };
+    out.smithing_with_black_bars = g.progress(p, 'Smithing Cape')[0]; }
+  for (const sh of ['Black Knight Shield', 'Kiteshield']) {
+    const g = base(); const [p, o] = g.players;
+    Object.assign(p.materials, { 'Fire Rune': 5, 'Chaos Rune': 2, 'Blood Rune': 2, 'Air Rune': 2 });
+    o.shield = { name: sh, soak: 20 };
+    const b = o.lp; await g.apply_card(0, 'Demon Fire', null);
+    out[`shatter_vs_${sh}`] = [b - o.lp, o.shield ? o.shield.soak : null];
+  }
   console.log(JSON.stringify(out));
 })();
 """

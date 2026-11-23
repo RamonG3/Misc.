@@ -29,6 +29,7 @@ const tests = [
   ['Story Mode, in node (story_test)', [path.join(__dirname, '..', 'story_test.js')]],
   ['Story Mode, both roads (story)', [T('story.js')]],
   ['Story Mode chapter 2, both roads, from an old save (story2)', [T('story2.js')]],
+  ['Story Mode chapter 3, both roads, the rack and the end of Act 1 (story3)', [T('story3.js')]],
   ['NPCs taking a card back from the discard pile are seen, both sides (recover)', [T('recover.js')]],
   ['Story Mode with a controller: A plays the story, never leaves it (storypad)', [T('storypad.js')]],
   ['Story Mode music, music off, spell loudness (storyaudio)', [T('storyaudio.js')]],

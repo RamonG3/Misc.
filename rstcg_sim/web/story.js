@@ -23,7 +23,15 @@
  *   { map: dotId }          open that dot, close the one you came from, and go to the map
  *   { duel: oppId }         a duel; won: on to the next step; lost: the opponent's lose line, then retry or map
  *   { reward: card, from }  a reward card is handed over
- *   { end: road }           the chapter is complete by that road
+ *   { rack: [card], from, t }  the player picks one of these reward cards (the page leaves out those already
+ *                           given, and passes this step by once there are none left)
+ *   { ask: [opt], done: opt }  a question list: each option drops off once asked; an option marked `last` waits
+ *                           until the rest are asked; once all are asked, only `done` is left, and it moves on
+ *   { actEnd: n, who, t }   the last line of an act: the page plays the act's ending over it, then "End of Act n"
+ *   { end: road }           the chapter is complete by that road (true: by the road the run is on)
+ *
+ *   when: { ch2: 'A' }      on any step: only if the main story took that road in that chapter. Also
+ *                           { road: 'A' } (this chapter's road) and { 'tone:key': value } (an earlier answer).
  *
  * No randomness and nothing from the page here: node tests it (web/test/story_test.js).
  */
@@ -56,6 +64,15 @@
     shadow: { name: '???', face: 'Shadow' },
     melzarv: { name: '???', face: null },
     melzar: { name: 'Melzar the Mad', face: 'Melzar the Mad' },
+    // chapter 3
+    bknight: { name: 'Black Knight', face: 'Black Knight' },
+    peon: { name: 'Black Knight Peon', face: 'Black Knight Peon' },
+    honour: { name: 'Kinshra Honour Guard', face: 'Kinshra Honour Guard' },
+    pair: { name: 'Berrick and Dorran', face: 'Berrick and Dorran' },
+    berrick: { name: 'Berrick', face: 'Berrick and Dorran' },
+    dorran: { name: 'Dorran', face: 'Berrick and Dorran' },
+    smith: { name: 'Kinshra Blacksmith', face: 'Kinshra Blacksmith' },
+    daquarius: { name: 'Lord Daquarius', face: 'Lord Daquarius' },
   };
 
   // ---------- the opponents ----------
@@ -125,6 +142,29 @@
         firstHit: [{ who: 'melzar', t: 'Ow! That was my good arm. Or my good cabbage. One of them.' }],
       },
       lose: { who: 'melzar', t: 'Free! Free as a cabbage in a field!' } },
+    // ---------- chapter 3 (STORY_CH3_SCRIPT.md) ----------
+    bknight: { name: 'Black Knight', speaker: 'bknight', deckName: 'Black Knight', level: 'normal',
+      cry: { who: 'bknight', t: 'For the Kinshra! And for the quarterly figures!' },
+      lose: { who: 'bknight', t: 'I\'ll put you down as "detained". Retroactively.' } },
+    peon: { name: 'Black Knight Peon', speaker: 'peon', deckName: 'Black Knight Peon', level: 'normal',
+      cry: { who: 'peon', t: 'Kinshra, give me strength!' },
+      lose: { who: 'peon', t: 'Back down the wall you go. The long way.' } },
+    honour: { name: 'Kinshra Honour Guard', speaker: 'honour', deckName: 'Kinshra Honour Guard', level: 'normal',
+      cry: { who: 'honour', t: 'For the Lord of the Kinshra!' },
+      lose: { who: 'honour', t: 'Take this one to the cells. Cloak and all.' } },
+    pair: { name: 'Berrick and Dorran', speaker: 'pair', deckName: 'Berrick and Dorran', level: 'normal',
+      cry: { who: 'pair', t: 'Together, then!' },
+      lose: { who: 'dorran', t: "Told you it'd be quicker with two." } },
+    smith: { name: 'Kinshra Blacksmith', speaker: 'smith', deckName: 'Kinshra Blacksmith', level: 'normal',
+      cry: { who: 'smith', t: 'Hit it! Hard as you like!' },
+      lose: { who: 'smith', t: 'Good. It holds.' } },
+    daquarius: { name: 'Lord Daquarius', speaker: 'daquarius', deckName: 'Lord Daquarius', level: 'hard', boss: true, location: 'The Kinshra Hall',
+      cry: { who: 'daquarius', t: 'And now you will die here, slowly, and in agony.' },
+      lines: {
+        start: [{ who: 'daquarius', t: "Kneel, and I'll make it quick." }],
+        firstHit: [{ who: 'daquarius', t: '...Who trained you?' }],
+      },
+      lose: { who: 'daquarius', t: 'Take it out of my hall.' } },
   };
 
   // ---------- chapter 1 (STORY_CH1_SCRIPT.md) ----------
@@ -383,7 +423,7 @@
   // Starts in Falador whichever road chapter 1 took; one line (the old enemy you tell Sir Amik about) depends on
   // it: a step with `when: { ch1: 'A' }` is played only if the main story's chapter 1 went that way (run.prev).
   const CH2 = {
-    id: 'ch2', n: 2, title: 'Falador',
+    id: 'ch2', n: 2, title: 'The White City',   // renamed from "Falador" (Ramon, 2026-11-22)
     region: 'Asgarnia',
     start: 'intro',
     home: 'falador',
@@ -403,7 +443,7 @@
       { label: 'Edgeville', x: 1440, y: 330, town: true },
       { label: 'Taverley', x: 380, y: 440, town: true },
       { label: 'Port Sarim', x: 1010, y: 860, town: true },
-      { label: "Black Knights' Fortress", x: 920, y: 175, town: true, soon: true },
+      { label: "Black Knights' Fortress", x: 920, y: 175, town: true },
     ],
     rewards: { A: 'White Knight Armor', B: 'Cabbage Armor' },
     bosses: { A: 'dragith', B: 'melzar' },
@@ -627,9 +667,254 @@
     },
   };
 
-  const CHAPTERS = [CH1, CH2];
+
+  // ---------- chapter 3 (STORY_CH3_SCRIPT.md): the Black Knights' Fortress, the end of Act 1 ----------
+  const CH3 = {
+    id: 'ch3', n: 3, title: 'The Black Fortress',
+    region: 'Kinshra',
+    act: 1,                               // the last chapter of Act 1
+    start: 'intro',
+    home: 'gate',
+    roadText: { A: 'the quiet way in', B: 'the loud way in' },
+    doneMsg: 'End of Act 1. Something is stirring in the Wilderness.',
+    dots: {
+      gate: { label: 'The fortress gate', x: 800, y: 905, node: null, town: true },
+      a_balcony: { label: 'The balcony', x: 300, y: 610, node: 'a_balcony', road: 'A' },
+      a_door: { label: "The Lord's door", x: 560, y: 330, node: 'a_door', road: 'A' },
+      b_corridor: { label: 'A corridor', x: 950, y: 560, node: 'b_corridor', road: 'B' },
+      b_forge: { label: 'The forge', x: 1230, y: 400, node: 'b_forge', road: 'B' },
+      hall: { label: "The Lord's hall", x: 800, y: 205, node: 'hall', boss: true },
+    },
+    places: [],
+    // Lord Daquarius's rack: one card per win over him, whichever road, each given once (keyed by the card, not
+    // the road: rewardText names each on the Story screen until it's been taken)
+    rewards: { bow: 'Kinshra Shortbow', sword: 'Kinshra Sword', staff: 'Kinshra Battlestaff' },
+    rewardBy: 'card',
+    rewardText: { bow: 'a bow', sword: 'a blade', staff: 'a staff' },
+    bosses: { A: 'daquarius', B: 'daquarius' },
+    nodes: {
+      intro: [
+        { scene: "The Black Knights' Fortress" },
+        nar('Black walls on a cliff above the water. One gate, shut. A great many arrow slits.'),
+        Object.assign(you("Kinshra steel, a Kinshra lock. If anyone knows who opened that chest, they're in there."), { when: { ch2: 'A' } }),
+        Object.assign(you('"Seek the dark ones." Well. They don\'t come much darker than this.'), { when: { ch2: 'B' } }),
+        you('Now, how do I get in?'),
+        { choose: [opt('Climb the wall?'), opt('Knock on the front door?'), opt('Wait for nightfall?')] },
+        say('bknight', 'Have you considered a disguise? An iron chainbody and a bronze helm. Nobody looks twice.'),
+        you("Hmm. That's actually not a bad idea. An iron chainbody, a bronze—"),
+        nar('...'),
+        you("...You're a Black Knight."),
+        say('bknight', 'I am.'),
+        you('So... are you going to let me go?'),
+        say('bknight', "I'm afraid not. We've already reached our mercy budget for this quarter."),
+        you('Ah. I understand. Shall we?'),
+        say('bknight', 'Yes. Thank you.'),
+        { duel: 'bknight' },
+        say('bknight', 'Well. This is awkward.'),
+        say('bknight', "My competence quota's already been met as well. How about you run along, and nobody has to know about this?"),
+        { choose: [
+          opt('Deal. I was never here.'),
+          opt("You're not going to raise the alarm?", [say('bknight', "And fill in an incident report? I'd rather lose again.")]),
+        ] },
+        nar('The knight wanders off, whistling.'),
+        you('Right. In, then. But how?'),
+        { fork: true, choose: [
+          opt('Quietly.', [], { road: 'A', go: 'toA' }),
+          opt('Loudly.', [], { road: 'B', go: 'toB' }),
+        ] },
+      ],
+
+      // ----- Road A: sneak in -----
+      toA: [
+        you("I'm not fighting my way through the front gate. There has to be another way in."),
+        nar("The fortress wall is old, and the mortar between the bricks has crumbled away. There's a foothold. And another."),
+        you("...That'll do."),
+        nar("You climb. It takes longer than you'd like, and you try not to look down at the water."),
+        nar('At last you pull yourself over a stone railing onto a narrow balcony. A door leads inside.'),
+        { map: 'a_balcony' },
+      ],
+      a_balcony: [
+        { scene: 'The balcony' },
+        nar('The door opens. A Black Knight steps out, holding a mug of something hot. He stops.'),
+        say('peon', '...'),
+        { key: 'peon', choose: [
+          opt("Don't panic. I'm only passing through.", [say('peon', 'Through the balcony?')], { tone: 'plain' }),
+          opt("One word, and you're going over that railing.", [say('peon', "I'm on my break. You've ruined my break.")], { tone: 'plain' }),
+          opt('Lovely view up here. Do you come here often?', [say('peon', "Every day. It's my balcony.")], { tone: 'plain' }),
+          opt("I'm the new recruit. They said to come in this way.", [
+            say('peon', 'Up the wall?'),
+            you("It's... a test. Of commitment."),
+            say('peon', 'Nice try. Recruits get a Kinshra cloak. With the crest. Yours is just... a cloak.'),
+          ], { tone: 'bluff' }),
+        ] },
+        nar('He puts down his mug.'),
+        { duel: 'peon' },
+        say('peon', "My tea's gone cold, too. Brilliant."),
+        nar('The Peon sits down heavily. His cloak has slipped off his shoulders.'),
+        Object.assign(you('Recruits get a Kinshra cloak, you said.'), { when: { 'tone:peon': 'bluff' } }),
+        Object.assign(you("That's a nice cloak. Kinshra crest and everything."), { when: { 'tone:peon': 'plain' } }),
+        nar('You take it.'),
+        Object.assign(you('Thanks for the tip.'), { when: { 'tone:peon': 'bluff' } }),
+        Object.assign(you("I'll bring it back. Probably."), { when: { 'tone:peon': 'plain' } }),
+        { scene: 'Inside the fortress' },
+        nar('Inside, the fortress is cold, dark and full of knights. None of them look twice. One nods to you. You nod back.'),
+        nar('A sergeant barks at you to stand up straight. You stand up straight. He moves on.'),
+        you('This is going suspiciously well.'),
+        { map: 'a_door' },
+      ],
+      a_door: [
+        { scene: "The Lord's door" },
+        nar("At the end of a long hall stands a tall black door, and in front of it a knight in heavier armour than the rest. He doesn't move."),
+        say('honour', 'Halt. Peons are not permitted beyond this door.'),
+        { choose: [
+          opt("I've a message for Lord Daquarius. It's urgent.", [say('honour', 'Then give it to your sergeant, who will give it to his captain, who will give it to me.')]),
+          opt("Step aside, or I'll move you myself.", [say('honour', 'Many have tried. Not one of them was a peon.')]),
+          opt("Does the Lord know his door's got a doorman?", [say('honour', 'The Lord chose me himself. The door, he inherited.')]),
+          opt("I'm not a peon. I'm... undercover. As a peon.", [
+            say('honour', 'That cloak belongs to Peon Harlow. His name is sewn into the collar.'),
+            nar('You check. It is.'),
+          ]),
+        ] },
+        say('honour', 'Enough.'),
+        { duel: 'honour' },
+        say('honour', 'You... are no peon.'),
+        nar('The great black door swings open.'),
+        { map: 'hall' },
+      ],
+
+      // ----- Road B: force your way in -----
+      toB: [
+        you('Sneaking is for thieves.'),
+        nar('You kick open the great door of the fortress and stride in, weapon drawn.'),
+        { scene: 'The entrance hall' },
+        you("BLACK KNIGHTS! I've come for your Lord! Which of you will face me?!"),
+        nar('Your voice echoes around the entrance hall.'),
+        nar('...hall.'),
+        nar('...all.'),
+        nar('The hall is empty.'),
+        you('...'),
+        you('Right.'),
+        nar('You walk on, a little less loudly.'),
+        { map: 'b_corridor' },
+      ],
+      b_corridor: [
+        { scene: 'A corridor' },
+        nar('Further in, two Black Knights are leaning against the wall, arguing.'),
+        say('berrick', "You spared the goblin. That's the whole mercy budget, gone, on one goblin."),
+        say('dorran', 'He had a family!'),
+        say('berrick', 'He had a spoon.'),
+        you('Excuse me—'),
+        say('dorran', 'Oh look, an intruder. Your turn.'),
+        say('berrick', 'My turn? I did the last one.'),
+        say('dorran', 'The last one was a chicken.'),
+        say('berrick', 'It was an armed chicken.'),
+        you("I'm right here—"),
+        say('dorran', 'Fine. Rock, parchment, shears.'),
+        say('berrick', 'Best of three.'),
+        you('Oi! How about I just fight both of you?!'),
+        nar('The two knights look at each other.'),
+        say('dorran', "...That's fair."),
+        say('berrick', "That's very fair. Quick one, then the mess hall?"),
+        say('dorran', "It's stew night."),
+        nar('They draw their weapons. Both of them. At once.'),
+        you("...I'm starting to think that was a mistake."),
+        { duel: 'pair' },
+        say('berrick', 'This is your fault.'),
+        say('dorran', 'My fault?!'),
+        nar("They're still arguing as you step past them."),
+        { map: 'b_forge' },
+      ],
+      b_forge: [
+        { scene: 'The forge' },
+        nar('A side door stands open. Heat pours out of it, and the ring of a hammer.'),
+        nar('Inside is a forge. A broad, soot-black knight is working at the anvil, surrounded by racks of black steel: blades, helms, a breastplate still glowing at the edges.'),
+        nar("He doesn't look up."),
+        say('smith', "If you're from the Lord, tell him it's ready when it's ready."),
+        { choose: [
+          opt("I'm not from the Lord. I'm on my way to see him.", [say('smith', 'Nobody sees the Lord in boots like those.')]),
+          opt('Put the hammer down, and nobody gets hurt.', [say('smith', "Put the hammer down? I've not put it down in eleven years.")]),
+          opt('Nice place. Bit warm.', [say('smith', "It's a forge.")]),
+          opt('The Lord sent me to collect his order.', [say('smith', "His order isn't finished. The Lord knows that. The Lord would never send someone to collect an unfinished order. The Lord knows better.")]),
+        ] },
+        nar('He looks up, at last. He looks at you for a long moment, then at the breastplate on his anvil.'),
+        say('smith', "Still. You'll do."),
+        you('For what?'),
+        say('smith', 'I need to know it holds.'),
+        { duel: 'smith' },
+        say('smith', 'Hm. Needs another fold.'),
+        nar("He turns back to the anvil and starts hammering again, as if you'd never come in."),
+        { map: 'hall' },
+      ],
+
+      // ----- Lord Daquarius (both roads) -----
+      hall: [
+        { scene: "The Lord's hall" },
+        nar("A long hall of black stone. Banners of the Kinshra. At the far end, a man in black armour stands at a table of maps. He doesn't turn around."),
+        say('daquarius', "Whoever you are, you've made a great deal of noise getting here."),
+        Object.assign(you('Not that much. I came in over the balcony.'), { when: { road: 'A' } }),
+        Object.assign(say('daquarius', 'Then my guards will be answering some questions.'), { when: { road: 'A' } }),
+        you('I want to know about the Blade of Memories.'),
+        Object.assign(you('I found the chest it was kept in, under Falador. Kinshra steel, with a Kinshra lock. One of yours took it.'), { when: { ch2: 'A' } }),
+        Object.assign(you('Melzar the Mad was locked in a cell under Edgeville and questioned about it. He told me to seek the dark ones. One of yours is behind this.'), { when: { ch2: 'B' } }),
+        nar('Daquarius turns.'),
+        nar('He says nothing. For a long moment, he says nothing at all.'),
+        nar('Something passes over his face, and is gone.'),
+        say('daquarius', "...You've come a long way."),
+        say('daquarius', 'A long way to threaten the Lord of the Kinshra in his own hall.'),
+        { duel: 'daquarius' },
+        say('daquarius', 'Enough. ...Enough.'),
+        nar("Daquarius lowers his sword. He's breathing hard. He looks at you as if he's seeing you for the first time."),
+        say('daquarius', 'You fight like a knight. Not like any knight of mine.'),
+        nar('But his eyes keep drifting from you to the window, and to something far away.'),
+        say('daquarius', "Ask, then. You've earned that much."),
+        { ask: [
+          opt('What is the Blade of Memories?', [
+            say('daquarius', 'An old sword. Older than the Kinshra. Red as a ruby, and it never dulls.'),
+            say('daquarius', 'Sulla found it in the Wilderness. He called it the key to every door Falador ever shut on us.'),
+            say('daquarius', 'What it does, I never learned. Only two men ever held it. One of them is dead.'),
+          ]),
+          opt('Who was Sulla?', [
+            say('daquarius', 'The Lord of the Kinshra before me. He took the title by murdering his own Lord, and led us into war against Falador.'),
+            say('daquarius', 'We laid siege to the city. We lost. A girl of seventeen took both his hands in a duel on the walls, and our war ended with them.'),
+            say('daquarius', 'He fled, and was killed years later in Port Sarim. His head went back to Varrock in a box. He is not coming back.'),
+          ]),
+          opt('Why did the Kinshra have the Blade?', [
+            say('daquarius', 'Sulla meant to use it. He carried it to the siege in a chest of our black steel, sealed with a lock only he and one other could open.'),
+            say('daquarius', 'The chest was lost when we were driven from the walls. The White Knights took it. We thought it gone for good.'),
+          ]),
+          opt('Then who took it from Falador?', [
+            say('daquarius', "You've been following someone. Tell me about them."),
+            you("Hooded. Dark robes. Never says a word. Carries a sword that looks as if it's made of ruby."),
+            nar('Daquarius closes his eyes.'),
+            say('daquarius', 'Sulla had a lieutenant. His right hand, back when Sulla had hands.'),
+            say('daquarius', 'The only other man who knew how to open that lock.'),
+            say('daquarius', 'He never came back from the siege. We counted him among the dead. We mourned him.'),
+            say('daquarius', 'Lucan Mordrel.'),
+            say('daquarius', "If he lived, he should have reported to me. He didn't. He hid. And then he went back for the Blade."),
+            say('daquarius', 'A deserter. A thief. Wearing our steel and our secrets.'),
+          ], { last: true }),
+        ], done: opt("That's all.") },
+        say('daquarius', "Then go. Find him. And when you do, you'll need more than what you came in with."),
+        { rack: ['Kinshra Shortbow', 'Kinshra Sword', 'Kinshra Battlestaff'], from: 'daquarius', t: 'Take one. The Kinshra do not forgive a deserter.' },
+        say('daquarius', "Bring him to justice, and we'll call it even. For the noise."),
+        // the end of Act 1: a last flash, the window, and the ending music (the page times it: arena_audio.js "finale")
+        { flash: 'red', far: true },
+        nar('A flash of red light, far off, through the tall window.'),
+        you('That flash—'),
+        say('daquarius', '—it came from the north...'),
+        nar('You cross to the window together.'),
+        { scene: 'The window', song: 'window' },
+        nar('Beyond the fortress, past the ditch and the ruins, the Wilderness stretches away under a dark sky.'),
+        Object.assign(you('...from the Wilderness.'), { actEnd: 1 }),
+        { end: true },
+      ],
+    },
+  };
+
+  const CHAPTERS = [CH1, CH2, CH3];
   // what follows each chapter: the next one, or a "coming soon" tease
-  const NEXT = { ch1: { id: 'ch2', n: 2, title: 'Falador' }, ch2: { n: 3, title: "The Black Knights' Fortress", soon: true } };
+  const NEXT = { ch1: { id: 'ch2', n: 2, title: 'The White City' }, ch2: { id: 'ch3', n: 3, title: 'The Black Fortress' },
+    ch3: { n: 4, title: 'Act 2', soon: true } };
 
   function make() {
     const byId = Object.fromEntries(CHAPTERS.map((c) => [c.id, c]));
@@ -649,9 +934,23 @@
       const ch = chOf(run);
       if (!ch || !run.node || run.r) return;
       const list = ch.nodes[run.node] || [];
-      const fits = (st) => !st.when || Object.entries(st.when).every(([k, v]) => (run.prev || {})[k] === v);
+      const fits = (st) => !st.when || Object.entries(st.when).every(([k, v]) => (k === 'road' ? run.road === v
+        : k.startsWith('tone:') ? run.tone[k.slice(5)] === v : (run.prev || {})[k] === v));
       while (list[run.i] && !fits(list[run.i])) run.i += 1;
     }
+
+    // a question list's options, as indexes into st.ask (-1: the `done` option): those not asked yet, those marked
+    // `last` only once the rest are asked, and `done` once every question is
+    function askOpts(run, st) {
+      const asked = run.asked || [];
+      const left = st.ask.map((o, k) => k).filter((k) => !asked.includes(k));
+      const first = left.filter((k) => !st.ask[k].last);
+      const show = first.length ? first : left;
+      return show.length ? show : [-1];
+    }
+    const askOpt = (st, k) => (k < 0 ? st.done : st.ask[k]);
+    // the option a reply belongs to
+    const optOf = (run, st) => (st.ask ? askOpt(st, run.r.c) : st.choose[run.r.c]);
 
     // the step a run is on, or null past the end of a node (a script fault: every node ends in a stop)
     function raw(run) {
@@ -661,7 +960,7 @@
       if (!list) return null;
       if (run.r) {
         const st = list[run.r.at];
-        const o = st && st.choose && st.choose[run.r.c];
+        const o = st && (st.choose || st.ask) && optOf(run, st);
         if (o && run.r.j < o.then.length) return o.then[run.r.j];
         return null;
       }
@@ -670,14 +969,20 @@
     function step(run) {
       if (run.done) return { finished: true, road: run.road };
       if (!run.node) return { onMap: true };
-      return raw(run) || { broken: true };
+      const st = raw(run);
+      if (st && st.ask && !run.r) return Object.assign({}, st, { choose: askOpts(run, st).map((k) => askOpt(st, k)) });
+      return st || { broken: true };
     }
 
     // leave a reply: on to the step after the choice, or the node the option jumps to
     function endReply(run) {
       const ch = chOf(run);
-      const o = ch.nodes[run.node][run.r.at].choose[run.r.c];
+      const st = ch.nodes[run.node][run.r.at];
+      const o = optOf(run, st);
+      const question = st.ask && run.r.c >= 0;
       run.r = null;
+      if (question) return;                         // back to the questions
+      if (st.ask) delete run.asked;
       if (o.go) { run.node = o.go; run.i = 0; } else run.i += 1;
       skip(run);
     }
@@ -686,12 +991,14 @@
       if (run.done || !run.node) return;
       const st = raw(run);
       if (!st) return;
-      if (st.choose && !run.r) {
-        const o = st.choose[pick];
+      if ((st.choose || st.ask) && !run.r) {
+        const c = st.ask ? askOpts(run, st)[pick] : pick;
+        const o = c === undefined ? null : st.ask ? askOpt(st, c) : st.choose[c];
         if (!o) throw new Error('pick an option');
         if (o.tone && st.key) run.tone[st.key] = o.tone;
         if (o.road) run.road = o.road;
-        run.r = { at: run.i, c: pick, j: 0 };
+        if (st.ask && c >= 0) run.asked = [...(run.asked || []), c];
+        run.r = { at: run.i, c, j: 0 };
         if (!o.then.length) endReply(run);
         return;
       }
@@ -703,10 +1010,10 @@
       }
       if (st.end) {
         if (run.at) run.dots[run.at] = 'done';
-        run.at = null; run.done = true; run.road = st.end;
+        run.at = null; run.done = true; if (st.end !== true) run.road = st.end;
         return;
       }
-      if (run.r) { run.r.j += 1; if (run.r.j >= chOf(run).nodes[run.node][run.r.at].choose[run.r.c].then.length) endReply(run); }
+      if (run.r) { run.r.j += 1; if (run.r.j >= optOf(run, chOf(run).nodes[run.node][run.r.at]).then.length) endReply(run); }
       else run.i += 1;
       skip(run);
     }

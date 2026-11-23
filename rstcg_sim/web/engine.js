@@ -263,6 +263,7 @@
         if (this.location === 'Draynor Manor') amount += style === 'magic' ? 2 : style === 'melee' ? -2 : 0;     // Story Mode: Delrith
         if (this.location === 'Moonlit Circle') amount += style === 'melee' ? 2 : style === 'magic' ? -2 : 0;    // Story Mode: Count Draynor
         if (this.location === 'Falador Tunnels') amount += style === 'magic' ? 2 : style === 'ranged' ? -2 : 0;   // Story Mode: Dragith Nurn
+        if (this.location === 'The Kinshra Hall') amount += style === 'melee' ? 2 : style === 'ranged' || style === 'magic' ? -2 : 0;   // Story Mode: Lord Daquarius
       }
       if (!ignore_armor && o.armor) for (const [s, m] of CARDS[o.armor].armor) if (s === style) amount += m;
       if (o.longrange && style === 'melee') amount -= 2;
@@ -351,6 +352,11 @@
         this.note(`Smite ends ${poss(o)} ${o.buff}`, i);
         o.discard.push(o.buff);
         o.buff = null;
+      }
+      if (to_lp && p.buff && CARDS[p.buff].effect === 'wrath' && this.winner === null) {   // Story Mode: Unholy Wrath
+        const before = p.lp;
+        p.set_lp(p.lp + Math.min(CARDS[p.buff].reward_val, this.rules.max_lp - p.lp));
+        if (p.lp > before) { this.emit({ type: 'heal', who: i, amount: p.lp - before }); this.note(`${Poss(p)} Unholy Wrath heals ${p.lp - before}`, i); }
       }
       if (to_lp && o.buff && CARDS[o.buff].effect === 'redemption' && o.lp <= 10) {
         o.set_lp(Math.min(this.rules.max_lp, o.lp + CARDS[o.buff].reward_val));
@@ -523,7 +529,7 @@
           if (c.families && new Set(Object.keys(p.materials).map((m) => CARDS[m].mat)).size < c.families) return [];
           if (c.fam_req.length && c.fam_req.some(([f, x]) => p.family_count(f) < x)) return [];   // Round 22 armor
           return p.meets(c.req) ? play : [];
-        case 'shield': return w && w.two_handed ? [] : play;
+        case 'shield': return (w && w.two_handed) || !p.meets(c.req) ? [] : play;   // 2026-11-22: the Black Knight Shield costs a Black Bar
         case 'food': {
           if (this.location === 'Duel Arena') return [];
           if (p.lp >= this.rules.max_lp || !p.discard.length) return [];

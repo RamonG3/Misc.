@@ -87,7 +87,9 @@ BACKDROP = {"Wilderness": "wilderness.png", "Varrock": "varrock.jpg", "Grand Exc
             # Story Mode's boss Locations (2026-11-18): Count Draynor's cellar, and the stone circle
             "Draynor Manor": "draynor_manor_cellar.png", "Moonlit Circle": "scene_stone_circle.png",
             # chapter 2 (Ramon's pictures, 2026-11-20): Dragith fights in his chamber, Melzar in his cell
-            "Falador Tunnels": "scene_dragith_chamber.jpg", "Hidden Prison": "scene_hidden_prison.jpg"}
+            "Falador Tunnels": "scene_dragith_chamber.jpg", "Hidden Prison": "scene_hidden_prison.jpg",
+            # chapter 3 (Ramon's painting, 2026-11-22): the Lord's hall. Never in the menu's tour (the page's TOUR_SKIP)
+            "The Kinshra Hall": "scene_kinshra_lords_hall.jpg"}
 backdrop = {}
 for loc, f in BACKDROP.items():
     p = os.path.join(P.IMG, f)
@@ -111,7 +113,13 @@ STORY_SCENE = {"Lumbridge Swamp": "scene_lumbridge_swamp.png", "Draynor Village"
                "Falador": "scene_falador.png", "The White Knights' Castle": "scene_falador_castle.png",
                "Edgeville": "scene_edgeville.png", "The tunnels": "scene_falador_tunnels.jpg",
                "Dragith's chamber": "scene_dragith_chamber.jpg", "The abandoned house": "scene_edgeville_house.jpg",
-               "The hidden prison": "scene_hidden_prison.jpg"}
+               "The hidden prison": "scene_hidden_prison.jpg",
+               # chapter 3 (Ramon's paintings, 2026-11-22): the Black Knights' Fortress
+               "The Black Knights' Fortress": "scene_kinshra_fortress.jpg", "The balcony": "scene_kinshra_balcony.jpg",
+               "Inside the fortress": "scene_kinshra_halls.jpg", "The Lord's door": "scene_kinshra_lords_door.jpg",
+               "The entrance hall": "scene_kinshra_entrance.jpg", "A corridor": "scene_kinshra_corridor.jpg",
+               "The forge": "scene_kinshra_forge.jpg", "The Lord's hall": "scene_kinshra_lords_hall.jpg",
+               "The window": "scene_kinshra_window.jpg"}
 SCENES = os.path.join(ROOT, "art", "scenes")
 FACES = os.path.join(ROOT, "art", "faces")
 scene = {}

@@ -262,6 +262,8 @@ class Game:
                 amount += 2 if style == "melee" else -2 if style == "magic" else 0
             if self.location == "Falador Tunnels":     # Story Mode: Dragith Nurn's boss fight
                 amount += 2 if style == "magic" else -2 if style == "ranged" else 0
+            if self.location == "The Kinshra Hall":    # Story Mode: Lord Daquarius's boss fight
+                amount += 2 if style == "melee" else -2 if style in ("ranged", "magic") else 0
         if not ignore_armor and o.armor:
             for s, m in CARDS[o.armor].armor:
                 if s == style:
@@ -382,6 +384,10 @@ class Game:
             o.discard.append(o.buff)       # Smite: damage ends the opponent's prayer
             o.buff = None
             self.stats[i]["smited"] += 1
+        if to_lp and p.buff and CARDS[p.buff].effect == "wrath" and self.winner is None:   # Story Mode: Unholy Wrath
+            gain = min(CARDS[p.buff].reward_val, self.rules["max_lp"] - p.lp)
+            p.lp += gain
+            self.stats[i]["healed"] += max(0, gain)
         if to_lp and o.buff and CARDS[o.buff].effect == "redemption" and o.lp <= 10:
             o.lp = min(self.rules["max_lp"], o.lp + CARDS[o.buff].reward_val)
             self.log.append(f"{o.name}'s Redemption heals {CARDS[o.buff].reward_val}")
@@ -619,7 +625,7 @@ class Game:
                     and (p.meets(CARDS[t].req, real=CARDS[t].kind == "staff"))]
         if k == "shield":
             w = p.weapon_card()
-            return [] if w and w.two_handed else play
+            return [] if w and w.two_handed or not p.meets(c.req) else play   # 2026-11-22: the Black Knight Shield costs a Black Bar
         if k == "food":
             if self.location == "Duel Arena":
                 return []

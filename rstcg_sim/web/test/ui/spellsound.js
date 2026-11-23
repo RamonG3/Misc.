@@ -231,6 +231,8 @@ const ok = (c, m) => { checks += 1; if (!c) { failures += 1; console.log('FAIL '
     await calm.mouse.click(1500, 600);
     await calm.waitForFunction(() => window.RSAudio.ready);
     await startDuel(calm);
+    // the bot only passes here too: left to play, it once put up a prayer (which has a sound) while a check listened
+    await calm.evaluate(() => { const u = window.__arena.ui, bot = u.g.agents[1 - u.you]; bot.choose = async () => ['pass']; bot.react = async () => null; });
     h = await act(calm, { hand: ['Air Strike'], mats: { 'Air Rune': 1 } }, ['play', 'Air Strike']);
     ok(h.clips.join() === 'Air Strike', `reduced motion still plays a cast (heard ${JSON.stringify(h)})`);
     h = await act(calm, { hand: ['Air Bolt'], location: 'Varrock' }, ['varrock', 'Air Bolt']);

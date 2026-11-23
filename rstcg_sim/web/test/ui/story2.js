@@ -117,7 +117,7 @@ const site = require('http').createServer((req, res) => {
   // ----- the Story screen offers chapter 2 -----
   await A('story');
   ok(await screen() === 'story', 'the Story screen');
-  ok(/Falador/.test(await text()) && await page.$('#board [data-do="stchapter"][data-v="ch2"]'), 'chapter 2 is open, with Continue');
+  ok(/The White City/.test(await text()) && await page.$('#board [data-do="stchapter"][data-v="ch2"]'), 'chapter 2 (The White City) is open, with Continue');
   await shot('hub');
   await page.click('#board [data-do="stchapter"][data-v="ch2"]');
   ok(await screen() === 'scene', 'Continue opens chapter 2');
