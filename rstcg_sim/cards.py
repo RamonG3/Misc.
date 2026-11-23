@@ -684,12 +684,12 @@ STORY_DECKS = {
         "Protect from Magic": 1, "Brother Jered": 1, "Wooden Shield": 4, "Shrimp": 3, "Lobster": 3, "Bronze Platebody": 1, "Doric": 1,
         "Sheep Shearer": 1,
     },
-    "Kinshra Honour Guard": {   # road A duel 3: the toughest knight before the Lord, with some of the Lord's own steel
-        "Bronze Bar": 9, "Mithril Bar": 11, "Rune Bar": 3, "Black Bar": 2,
-        "Kinshra Sword": 2, "Mithril Sword": 2, "Mithril Scimitar": 2, "Rune Scimitar": 1, "Mithril Mace": 1, "Slash": 3, "Crush": 2,
-        "Black Knight Shield": 1, "Kiteshield": 2, "Wooden Shield": 2, "Black Knight Platebody": 1, "Mithril Platebody": 1,
-        "Piety": 1, "Burst of Strength": 2, "Protect from Melee": 2, "Parry": 1, "Swordfish": 1, "Lobster": 3, "Shrimp": 2,
-        "Vanaka": 1, "Doric": 1, "Horvik": 1,
+    "Kinshra Honour Guard": {   # road A duel 3: the Lord's doorman, a tank: shields (two Black Knight Shields) for the Defence Cape (Ramon, 2026-11-23)
+        "Bronze Bar": 13, "Mithril Bar": 10, "Black Bar": 3,
+        "Kinshra Sword": 1, "Mithril Sword": 2, "Bronze Scimitar": 2, "Mithril Mace": 1, "Bronze Mace": 2, "Slash": 2, "Crush": 1,
+        "Black Knight Shield": 2, "Kiteshield": 3, "Wooden Shield": 3, "Black Knight Platebody": 1, "Bronze Platebody": 1,
+        "Protect from Melee": 1, "Protect from Missiles": 1, "Burst of Strength": 1, "Parry": 1, "Lobster": 2, "Shrimp": 3,
+        "Horvik": 2, "Doric": 1, "Cook's Assistant": 1,
     },
     "Berrick and Dorran": {   # road B duel 2: darts and daggers, and a full larder for the Cooking Cape
         "Bronze Bar": 14, "Mithril Bar": 8,
@@ -716,7 +716,7 @@ STORY_CAPES = {"Bandit": ["Attack Cape"], "Highwayman": ["Ranged Cape"], "Goblin
                "Count Draynor": ["Attack Cape"], "Zamorak Cultist": ["Magic Cape"], "Zombie Knight": ["Defence Cape"],
                "Crawling Corpse": ["Attack Cape"], "Kinshra Scout": ["Ranged Cape"], "Shadow": ["Ranged Cape"],
                "Dragith Nurn": ["Magic Cape"], "Melzar the Mad": ["Magic Cape"],
-               "Black Knight": ["Attack Cape"], "Black Knight Peon": ["Prayer Cape"], "Kinshra Honour Guard": ["Attack Cape"],
+               "Black Knight": ["Attack Cape"], "Black Knight Peon": ["Prayer Cape"], "Kinshra Honour Guard": ["Defence Cape"],
                "Berrick and Dorran": ["Cooking Cape"], "Kinshra Blacksmith": ["Smithing Cape"], "Lord Daquarius": ["Attack Cape"]}
 STORY_LOCATIONS = {"Delrith": "Draynor Manor", "Count Draynor": "Moonlit Circle",
                    "Dragith Nurn": "Falador Tunnels", "Melzar the Mad": "Hidden Prison",

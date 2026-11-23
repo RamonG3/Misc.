@@ -82,12 +82,12 @@ Decks in `STORY_DECKS` (cards.py), levels and lines in `OPP` (story.js). Targets
 |---|---|---|---|---|
 | Duel 1 | Black Knight (Bronze melee, two Mithril Swords) | Guard | 67% | 65 / 66 / 72 |
 | Duel 2, road A | Black Knight Peon (Piety, Smite, Redemption; Prayer Cape) | Guard | 61% | 45 / 59 / 79 |
-| Duel 3, road A | Kinshra Honour Guard (Mithril and Rune, Kinshra Sword, a Black Knight Shield and Platebody) | Guard | 51% | 42 / 49 / 62 |
+| Duel 3, road A | Kinshra Honour Guard (a tank for the Defence Cape: eight shields, two of them Black Knight Shields; light steel) | Guard | 52% | 42 / 54 / 62 |
 | Duel 2, road B | Berrick and Dorran (darts, knives, daggers, a full larder; Cooking Cape) | Guard | 63% | 65 / 49 / 75 |
 | Duel 3, road B | Kinshra Blacksmith (20 bars, maces, Smith's Hammers; Smithing Cape) | Guard | 61% | 54 / 53 / 76 |
 | Boss | Lord Daquarius (Rune and Kinshra steel, Unholy Wrath, Black Knight Platebody and Shield; the Kinshra Hall) | Champion | 33% | 31 / 36 / 32 |
 
-(100 games per starter per seat, ±2 points.)
+(100 games per starter per seat, ±2 points.) **2026-11-23 (Ramon):** the Honour Guard guards a door, so he's a tank with the Defence Cape (12 damage blocked by shields) instead of the Attack Cape. With his old steel and all those shields he was a wall (39%, Melee 26%), so his weapons got lighter (Bronze and Mithril, one Kinshra Sword, no Rune).
 
 - **Every chapter 3 deck races for its cape,** and a claimed cape wins three turns later, so the first drafts were far too hard: the Blacksmith's 25 bars reached the Smithing Cape almost at once (26%), and seven elite prayers made the Peon's Prayer Cape nearly free (44%). Fewer bars, fewer elite prayers and the Guard level fixed both.
 - **Lord Daquarius: 33%, not 25%.** On the same seeds the earlier bosses are now 35–39% (Delrith 39, Count Draynor 35, Dragith 38, Melzar 35; Delrith and Draynor have drifted up about 5 points since chapter 1 was tuned, and not because of this chapter: the committed engine gives the same), so he is the hardest boss of Act 1, but by 2–6 points. Deck changes stopped helping at about 33%: more Unholy Wrath (+4 or +3 made no difference), more defence (worse), more weapons (worse). **He is all Melee:** his thrown knives (the "hybrid" Ramon asked for) made him 4–7 points easier, so they came out; say so to Ramon. Getting to 25% would need a boss card of his own that adds attacks, like Count Draynor's Bite.

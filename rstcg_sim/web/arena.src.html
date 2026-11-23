@@ -1170,7 +1170,9 @@ html, body { touch-action: manipulation; }
     }
     const chips = info.stat ? `<div class="chips">${info.stat.split(' · ').map((s) => `<span class="chip">${esc(s)}</span>`).join('')}</div>` : '';
     const s1 = SET1[name] || {};
-    const foot = c.story === 'reward' ? 'Story reward · Chapter 1' : c.story === 'boss' ? 'Story · boss only' : `Set 1 · #${s1.num || '—'}${s1.rarity ? ' · ' + RARITY[s1.rarity] : ''}`;
+    // a reward names the chapter that gives it (it said "Chapter 1" for every reward until 2026-11-23)
+    const rewardCh = c.story === 'reward' && (window.RSTCGStory.CHAPTERS || []).find((ch) => Object.values(ch.rewards || {}).includes(name));
+    const foot = c.story === 'reward' ? `Story reward${rewardCh ? ` · Chapter ${rewardCh.n}` : ''}` : c.story === 'boss' ? 'Story · boss only' : `Set 1 · #${s1.num || '—'}${s1.rarity ? ' · ' + RARITY[s1.rarity] : ''}`;
     return `<div class="cf" style="--frame:${frameOf(c)}"><div class="cf-in">
       <div class="cf-hd">${circle}<div class="cf-tt"><span class="cf-nm${name.length >= 19 ? ' long' : ''}">${esc(name)}</span><span class="cf-sb">${esc(sub)}</span></div></div>
       ${artBlock(name)}
