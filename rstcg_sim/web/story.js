@@ -25,8 +25,10 @@
  *   { reward: card, from }  a reward card is handed over
  *   { rack: [card], from, t }  the player picks one of these reward cards (the page leaves out those already
  *                           given, and passes this step by once there are none left)
- *   { ask: [opt], done: opt }  a question list: each option drops off once asked; an option marked `last` waits
- *                           until the rest are asked; once all are asked, only `done` is left, and it moves on
+ *   { ask: [opt], done: opt }  a question list: each option drops off once asked; an option with `after: [k]` waits
+ *                           until one of those questions (indexes into ask) has been asked; one marked `last` waits
+ *                           until the rest are asked; once all are asked, only `done` is left, and it moves on.
+ *                           Never reorder a released list: a run saves the questions asked by index.
  *   { actEnd: n, who, t }   the last line of an act: the page plays the act's ending over it, then "End of Act n"
  *   { end: road }           the chapter is complete by that road (true: by the road the run is on)
  *
@@ -877,7 +879,7 @@
             say('daquarius', 'The Lord of the Kinshra before me. He took the title by murdering his own Lord, and led us into war against Falador.'),
             say('daquarius', 'We laid siege to the city. We lost. A girl of seventeen took both his hands in a duel on the walls, and our war ended with them.'),
             say('daquarius', 'He fled, and was killed years later in Port Sarim. His head went back to Varrock in a box. He is not coming back.'),
-          ]),
+          ], { after: [0, 2] }),   // only once he's said the name: his answers to 0 and 2 both do (Ramon, 2026-11-23)
           opt('Why did the Kinshra have the Blade?', [
             say('daquarius', 'Sulla meant to use it. He carried it to the siege in a chest of our black steel, sealed with a lock only he and one other could open.'),
             say('daquarius', 'The chest was lost when we were driven from the walls. The White Knights took it. We thought it gone for good.'),
@@ -939,13 +941,15 @@
       while (list[run.i] && !fits(list[run.i])) run.i += 1;
     }
 
-    // a question list's options, as indexes into st.ask (-1: the `done` option): those not asked yet, those marked
-    // `last` only once the rest are asked, and `done` once every question is
+    // a question list's options, as indexes into st.ask (-1: the `done` option): those not asked yet (one with `after`
+    // only once one of those has been asked), those marked `last` only once the rest are asked, and `done` once every
+    // question is
     function askOpts(run, st) {
       const asked = run.asked || [];
       const left = st.ask.map((o, k) => k).filter((k) => !asked.includes(k));
-      const first = left.filter((k) => !st.ask[k].last);
-      const show = first.length ? first : left;
+      const rest = left.filter((k) => !st.ask[k].last);
+      const open = rest.filter((k) => !st.ask[k].after || st.ask[k].after.some((a) => asked.includes(a)));
+      const show = rest.length ? (open.length ? open : rest) : left;
       return show.length ? show : [-1];
     }
     const askOpt = (st, k) => (k < 0 ? st.done : st.ask[k]);

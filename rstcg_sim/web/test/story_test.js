@@ -106,7 +106,8 @@ for (const prev of ['A', 'B']) {
     ok(w.seen.lines.includes('Lucan Mordrel.'), 'the name is said');
     // the questions (the walker takes the last option each time): the reveal only once the rest are asked, then "That's all."
     const q = w.seen.asked;
-    ok(q.length === 5 && q[0].length === 3 && !q[0].some((t) => t.includes('who took')), 'three questions first: ' + JSON.stringify(q[0]));
+    ok(q.length === 5 && q[0].join() === 'What is the Blade of Memories?,Why did the Kinshra have the Blade?', 'two questions first (not Sulla, not the reveal): ' + JSON.stringify(q[0]));
+    ok(q[1].includes('Who was Sulla?'), 'Sulla once the name has come up: ' + JSON.stringify(q[1]));
     ok(q[3].join() === 'Then who took it from Falador?' && q[4].join() === "That's all.", 'the reveal last, then done');
   }
   // the peon's cloak: "you said" only after the bluff
@@ -127,6 +128,32 @@ for (const prev of ['A', 'B']) {
   const copy = JSON.parse(JSON.stringify(run));
   ok(S.step(copy).choose.length === 1 && JSON.stringify(S.step(copy)) === JSON.stringify(S.step(run)), 'a saved question list carries on');
   ok(S.start('ch3').dots.gate === 'done', 'chapter 3 starts at the gate');
+}
+{ // every order of questions (Ramon, 2026-11-23): "Who was Sulla?" never before an answer that names him
+  const QS = S.CHAPTERS.find((c) => c.id === 'ch3').nodes.hall.find((st) => st.ask);
+  const names = ['What is the Blade of Memories?', 'Why did the Kinshra have the Blade?'];
+  let orders = 0, bad = 0;
+  const go = (run) => {
+    const st = S.step(run);
+    if (!st.ask || run.r) { orders += 1; return; }
+    const ts = st.choose.map((o) => o.t);
+    if (ts.includes('Who was Sulla?') && !names.some((n) => (run.asked || []).map((k) => QS.ask[k].t).includes(n))) bad += 1;
+    for (let k = 0; k < ts.length; k++) {
+      const c = JSON.parse(JSON.stringify(run));
+      S.advance(c, k);
+      while (c.r) S.advance(c);
+      go(c);
+    }
+  };
+  const run = S.start('ch3', { ch2: 'A' });
+  for (let g = 0; g < 500 && !S.step(run).ask; g++) {
+    const st = S.step(run);
+    if (st.onMap) S.enter(run, S.dotsOf(run).find((d) => d.state === 'open').id);
+    else if (st.choose) S.advance(run, 0); else S.advance(run);
+  }
+  go(run);
+  ok(orders === 4 && !bad, `every order of questions (${orders}) names Sulla before asking who he was (${bad} wrong)`);
+  ok(QS.ask.every((o) => !o.after || o.after.every((k) => QS.ask[k] && /Sulla/.test(QS.ask[k].then.map((l) => l.t).join(' ')))), 'the answers Sulla waits for both name him');
 }
 ok(S.NEXT.ch2.id === 'ch3' && S.NEXT.ch3.soon && S.chapter('ch2').title === 'The White City' && S.chapter('ch3').title === 'The Black Fortress', 'chapter titles and what follows');
 

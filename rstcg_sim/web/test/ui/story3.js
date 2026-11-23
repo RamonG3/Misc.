@@ -76,7 +76,7 @@ const site = require('http').createServer((req, res) => {
       const opts = await page.$$('#board [data-do="stpick"]');
       if (opts.length) {
         const labels = await Promise.all(opts.map((o) => o.innerText()));
-        if (labels.some((l) => /Blade of Memories\?|Who was Sulla|Why did the Kinshra|who took it|That's all/.test(l))) asked.push(labels.map((l) => l.replace(/^\d+\s*/, '')));
+        if (labels.some((l) => /Blade of Memories\?|Who was Sulla|Why did the Kinshra|who took it|That's all/.test(l))) asked.push(labels.map((l) => l.replace(/^\d+\s*/, ''))); if (asked.length === 1) await shot('questions');
         await page.click(`#board [data-do="stpick"][data-v="${pick(labels)}"]`);
         continue;
       }
@@ -173,7 +173,8 @@ const site = require('http').createServer((req, res) => {
   ok(/Seek the dark ones/.test(all) && /Melzar the Mad was locked/.test(all) && !/I found the chest/.test(all), "chapter 2's road B is remembered");
   ok(/Recruits get a Kinshra cloak, you said/.test(all), 'the bluff is remembered when the cloak is taken');
   ok(/I came in over the balcony/.test(all), 'the balcony line on the quiet road');
-  ok(asked.length === 5 && asked[0].length === 3 && /who took it/.test(asked[3].join()) && /That's all/.test(asked[4].join()), `the questions, the reveal last: ${JSON.stringify(asked)}`);
+  ok(asked.length === 5 && asked[0].length === 2 && !/Sulla/.test(asked[0].join()) && /Sulla/.test(asked[1].join()) && /who took it/.test(asked[3].join()) && /That's all/.test(asked[4].join()),
+    `the questions: Sulla once his name has come up, the reveal last: ${JSON.stringify(asked)}`);
   const got1 = await rack(['Kinshra Shortbow', 'Kinshra Sword', 'Kinshra Battlestaff'], 'A');
   ok(await play(first) === 'finale', 'on to the end of Act 1');
   await finale('A');
