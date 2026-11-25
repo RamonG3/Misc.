@@ -82,6 +82,11 @@ def round11_field():
     lm = dict(f["Lean Mage"])                 # better builds from existing cards
     lm["Augury"] = lm.pop("Mystic Will")
     f["Lean Mage"] = add(lm, {"Iban's Staff": 1}, DEF)
+    mgr = dict(f["Mage/Ranged+"])             # 2026-11-25: the Air Battlestaff became a staff (it would knock out the
+    del mgr["Air Battlestaff"]                # deck's own bow), so its 3 slots went to a 4th Willow Shortbow, a Mirror
+    for k in ("Willow Shortbow", "Mirror Shield", "Ricochet"):   # Shield and a Ricochet (best of 30 lists tried)
+        mgr[k] += 1
+    f["Mage/Ranged+"] = mgr
     tr = dict(f["Thrown Ranged"])
     tr["Rigour"] = tr.pop("Sharp Eye")
     f["Thrown Ranged"] = tr

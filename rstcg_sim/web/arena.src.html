@@ -1028,7 +1028,7 @@ html, body { touch-action: manipulation; }
         if (c.spec) t.push(specText(c) + '.');
         break;
       case 'bow':
-        type = c.style === 'magic' ? 'Battlestaff · bow' : c.bash_hit ? 'Bow · hybrid' : 'Bow';
+        type = c.bash_hit ? 'Bow · hybrid' : 'Bow';
         stat = `Hit ${c.hit} · ${TIER[c.arrow_tier]} arrows`;
         t.push('Comes with 4 Bronze shots. Never breaks.');
         if (c.bash_hit) t.push(`Bash ${c.bash_hit} Melee (dur ${c.durability}). Soak ${c.soak}, two-handed.`);

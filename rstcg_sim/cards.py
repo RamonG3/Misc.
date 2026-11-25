@@ -132,8 +132,8 @@ _ALL = [
          hit=7, durability=3, wclass="longsword", styles=("melee", "magic"), free_swing_after_spell=True),
     Card("Shieldbow", "bow", "ranged", req=(("Willow Logs", 1), ("Mithril Bar", 1)),
          hit=5, arrow_tier=2, bash_hit=6, durability=3, soak=6, two_handed=True),
-    Card("Air Battlestaff", "bow", "magic", req=(("Willow Logs", 1), ("Air Rune", 1)),
-         hit=5, arrow_tier=2, counts_as=(("Air Rune", 2),)),
+    Card("Air Battlestaff", "staff", "magic", req=(("Air Rune", 2),),   # 2026-11-25 (Ramon): a staff, not a bow
+         counts_as=(("Air Rune", 2),), wclass="staff", hit=4, durability=3),   # (was a bow: Willow Logs + Air Rune, hit 5, arrows)
 
     # Armor (modifier = change to damage you take)
     Card("Wizard Robe", "armor", "magic", fam_req=(("rune", 1),), armor=(("melee", -2), ("ranged", -1), ("magic", -1))),   # Round 22 armor

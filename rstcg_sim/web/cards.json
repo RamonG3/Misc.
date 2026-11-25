@@ -2,20 +2,17 @@
  "cards": {
   "Air Battlestaff": {
    "name": "Air Battlestaff",
-   "kind": "bow",
+   "kind": "staff",
    "style": "magic",
    "req": [
     [
-     "Willow Logs",
-     1
-    ],
-    [
      "Air Rune",
-     1
+     2
     ]
    ],
-   "hit": 5,
-   "arrow_tier": 2,
+   "hit": 4,
+   "durability": 3,
+   "wclass": "staff",
    "counts_as": [
     [
      "Air Rune",
@@ -2693,7 +2690,7 @@
     "Air Strike": 4,
     "Air Bolt": 4,
     "Rune Pouch": 2,
-    "Willow Shortbow": 3,
+    "Willow Shortbow": 4,
     "Bronze Arrows": 2,
     "Mithril Arrows": 4,
     "Rapid": 2,
@@ -2701,9 +2698,8 @@
     "Archmage Sedridor": 1,
     "Lowe": 1,
     "Wizards' Tower": 1,
-    "Air Battlestaff": 3,
-    "Mirror Shield": 2,
-    "Ricochet": 2,
+    "Mirror Shield": 3,
+    "Ricochet": 3,
     "Sharp Eye": 2,
     "Enchanted Logs": 4,
     "Void Knight Top": 2

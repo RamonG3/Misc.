@@ -340,3 +340,25 @@ unchanged: same fingerprint). Each starter carries a little of everything its st
 - Mage lost to Melee until it ran Iban's Staff 2 / Staff of Air 1 and Mirror Shield over Parry.
 - Parity (web/test/parity27.py, 87 matchups x 200): mean |z| 0.73; the one z 3.2 outlier was 0.5 at 2000 games.
 - Quest text: Sheep Shearer step reads "Have 2 materials in play"; the Respawn line was removed from the docs.
+
+## Round 28: the Air Battlestaff becomes a staff — `r28.py`
+
+Ramon (2026-11-25): the Air Battlestaff was a bow (Willow Logs + Air Rune, hit 5, Mithril-grade arrows, counts as 2
+Air Runes), so like every bow it came with 4 Bronze shots. He wants a staff that counts as 2 Air Runes, with a better
+swing than Staff of Air. Now: **staff, 2 Air Runes, swing 4 Magic, durability 3, counts as 2 Air Runes**. A Melee
+swing was tried too: it gets none of a Mage deck's Magic boosts, so it needs 5 to match Staff of Air.
+
+As a staff it would knock Mage/Ranged+'s own bow out of the weapon slot, so it left that deck: its 3 slots went to a
+4th Willow Shortbow, a 3rd Mirror Shield and a 3rd Ricochet (`hybrid_cards.round11_field`; best of 30 lists tried).
+`python r28.py 300`, greedy, against the Arena's starter + tournament field:
+
+| | Win rate |
+|---|---|
+| Air Mage as it is / with 3 Staff of Air / with 3 Battlestaff (swing 4 Magic) | 47.4 / 45.3 / 47.4 |
+| Air Mage with 3 Battlestaff, swing 3 Magic / 4 Melee / 5 Melee | 44.1 / 40.7 / 43.3 |
+| Mage/Ranged+: old list with the bow / old list with the staff / new list | 42.9 / 35.0 / 41.9 |
+
+- No rule changed (staves already count as runes, `real=True` for their own cost), so both engines take it from
+  `cards.json`. Checked in the JS engine: Air Mage with 3 Battlestaves 48.5% (Python 48.3%).
+- Seen while checking: Mage/Ranged+ scores about 2 points lower in the JS engine than in Python, before this change
+  (old: 42.1 vs 44.3, 600 games per opponent per seat) and after it (39.5 vs 41.0). Not chased yet.
