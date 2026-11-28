@@ -454,7 +454,7 @@ html, body { touch-action: manipulation; }
 .dbx-art { height: 124px; flex: none; background: #3b342d; display: flex; align-items: center; justify-content: center; border-bottom: 2px solid var(--gold); overflow: hidden; }
 .dbx-art img { max-width: 118px; max-height: 108px; object-fit: contain; filter: drop-shadow(0 4px 6px rgba(0,0,0,.6)); }
 .dbx-art img.px { width: 84px; height: 84px; image-rendering: pixelated; }
-.dbx-art img.scene { max-width: none; max-height: none; width: 100%; height: 100%; object-fit: cover; filter: none; }
+.dbx-art img.scene { position: static; max-width: none; max-height: none; width: 100%; height: 100%; object-fit: cover; filter: none; }   /* static: .scene is also the duel table's class */
 .dbx-nm { padding: 8px 10px 0; font-family: var(--display); font-weight: 700; font-size: 15px; line-height: 1.1; color: var(--gold-hi); }
 .dbx-row { margin-top: auto; padding: 0 10px 9px; display: flex; align-items: center; gap: 6px; font-weight: 800; font-size: 14px; color: var(--cream); }
 .dbx-row img.st { width: 20px; height: 20px; object-fit: contain; }
@@ -475,6 +475,16 @@ html, body { touch-action: manipulation; }
 .ct-cond img { width: 20px; height: 20px; object-fit: contain; }
 .ct-cond small { font-family: var(--body); font-size: 11px; font-weight: 800; letter-spacing: .08em; color: var(--muted); text-transform: uppercase; }
 .ct.lv { width: 146px; height: 152px; padding: 7px; gap: 4px; }
+/* more than ten capes (the Necromancy Cape made eleven): six to a row, so they still fit in two */
+.ct.ct6 { width: 125px; padding: 7px; }
+.ct.ct6 .ct-nm { font-size: 13px; }
+.ct.ct6 .ct-cond { padding: 3px 7px; gap: 3px; font-size: 17px; }
+.ct.ct6 .ct-cond small { font-size: 10px; letter-spacing: .04em; }
+/* a short screen (a phone held sideways): shorter cape tiles, so two rows clear the panel along the bottom */
+#stage.short .ct:not(.lv) { height: 152px; gap: 4px; }
+#stage.short .ct:not(.lv) .ct-art { height: 72px; }
+#stage.short .ct:not(.lv) .ct-art img { height: 64px; }
+#stage.short .ct:not(.lv) .ct-art img.icon { height: 48px; }
 .ct.lv .ct-art { height: 74px; }
 .ct.lv .ct-art img { height: 64px; }
 .ct.lv .ct-cond { padding: 2px 12px; }
@@ -1530,9 +1540,11 @@ html, body { touch-action: manipulation; }
   const SUMMON_V = 0.12;                    // Conjuration.ogg, every summon's sound (Ramon, 2026-11-27): about 18 dB louder than the
                                             // spells as recorded, so it plays well down: -22 dB through the mixer, 3 under the spells
                                             // (-19), beside the prayers (-21.6); spellsound.js checks it
+  const NECRO_V = 0.35;                     // the four Necrotic spells' recordings (Ramon's, 2026-11-27) are about 5 dB louder than
+                                            // the Magic spells': at 0.35 they average -18.2 dB through the mixer, the spells -18.0
   // the volume a card's recording plays at: runes, prayers and summons have their own, spells play at 1
   const isSummon = (name) => !!CARDS[name] && (CARDS[name].wclass === 'summon' || CARDS[name].kind === 'conduit');
-  const clipV = (name) => { const k = CARDS[name] && CARDS[name].kind; return isSummon(name) ? SUMMON_V : k === 'material' ? RUNE_V : k === 'buff' || k === 'prayer' ? PRAYER_V : 1; };
+  const clipV = (name) => { const c = CARDS[name], k = c && c.kind; return isSummon(name) ? SUMMON_V : k === 'spell' && c.style === 'necrotic' ? NECRO_V : k === 'material' ? RUNE_V : k === 'buff' || k === 'prayer' ? PRAYER_V : 1; };
   const STAYS = new Set(['weapon', 'thrown', 'bow', 'staff', 'shield', 'armor', 'arrows', 'buff', 'material', 'quest', 'location']);
   const STYLE_COL = { melee: '#ff9b85', ranged: '#9fd986', magic: '#9cc3e6', necrotic: '#c9a6f0', none: '#f3d27a' };
 
@@ -1635,7 +1647,7 @@ html, body { touch-action: manipulation; }
       // (and so does a rune that was just played, its runecrafting sound; a prayer going up; a Protect prayer blocking)
       if (!ui.replaying && !ui.intro && before) {
         const k = hint && hint.act === 'play' && CARDS[hint.name] && CARDS[hint.name].kind;
-        if (k && (!STAYS.has(k) || k === 'material' || k === 'buff' || isSummon(hint.name))) AU.clip(hint.name, { v: clipV(hint.name) });
+        if (k && (!STAYS.has(k) || k === 'material' || k === 'buff' || k === 'shield' || isSummon(hint.name))) AU.clip(hint.name, { v: clipV(hint.name) });
         for (const e of evs) if (e.type === 'react' && CARDS[e.card] && CARDS[e.card].kind === 'prayer') AU.clip(e.card, { v: PRAYER_V });
       }
       if (held) held.el.remove(); $('#reveal').innerHTML = ''; render(); return;
@@ -1722,7 +1734,8 @@ html, body { touch-action: manipulation; }
       if (destEl) {
         if (ctx.held) ctx.held.el.remove();
         if (isNew) hide(destEl);
-        const landSound = h.act === 'play' && CARDS[h.name] && (CARDS[h.name].kind === 'material' || CARDS[h.name].kind === 'buff' || isSummon(h.name));
+        // a card that stays makes its recording as it lands: runes, buff prayers, summons, and a shield that has one (Bone Shield)
+        const landSound = h.act === 'play' && CARDS[h.name] && (['material', 'buff', 'shield'].includes(CARDS[h.name].kind) || isSummon(h.name));
         phase1.push(flyCard({ name: h.name, from: src, to: stageXY(destEl), dur: D(460), rot0: src.rot || 0,
           onLand: () => { pop(destEl); if (!(landSound && AU.clip(h.name, { v: clipV(h.name), pan: i === you ? -0.2 : 0.2 }))) sfx('card'); } }));
       } else if (take(m.discIn, h.name)) {
@@ -4520,15 +4533,16 @@ html, body { touch-action: manipulation; }
     const noPrayer = !!(story && NO_PRAYER_LOCS.includes(story.location));
     const capeOff = (c) => noPrayer && CAPES[c].what === 'elite_prayer';
     if (capeOff(s.youCape)) s.youCape = capeOff(d.cape) ? capeNames.find((c) => !capeOff(c)) : d.cape;
+    const six = capeNames.length > 10 ? ' ct6' : '';
     const capeBtn = (c) => {
       const def = CAPES[c], pic = AS.cape[c];
       const [ic, word] = (CAPE_COND[def.what] || (() => ['', '']))();
       if (capeOff(c)) {
-        return `<button type="button" class="ct" disabled aria-label="${esc(c)}: can't be earned in the ${esc(story.location)}" title="No prayers in the ${esc(story.location)}">
+        return `<button type="button" class="ct${six}" disabled aria-label="${esc(c)}: can't be earned in the ${esc(story.location)}" title="No prayers in the ${esc(story.location)}">
         <div class="ct-art">${pic ? `<img class="${pic.mode === 'icon' ? 'icon' : ''}" src="${pic.src}" alt="">` : ''}</div>
         <span class="ct-nm">${esc(c)}</span><span class="ct-cond ct-no">No prayers here</span></button>`;
       }
-      return `<button type="button" class="ct" data-do="pickcape" data-v="${esc(c)}" aria-pressed="${s.youCape === c}">${d.cape === c ? '<span class="ct-sug">SUGGESTED</span>' : ''}
+      return `<button type="button" class="ct${six}" data-do="pickcape" data-v="${esc(c)}" aria-pressed="${s.youCape === c}">${d.cape === c ? '<span class="ct-sug">SUGGESTED</span>' : ''}
         <div class="ct-art">${pic ? `<img class="${pic.mode === 'icon' ? 'icon' : ''}" src="${pic.src}" alt="">` : '<b style="font-size:44px;color:var(--gold);opacity:.35;font-weight:400">✦</b>'}</div>
         <span class="ct-nm">${esc(c)}</span><span class="ct-cond">${ic ? `<img src="${ic}" alt="">` : ''}${def.need}<small>${word}</small></span></button>`;
     };
@@ -4600,7 +4614,7 @@ html, body { touch-action: manipulation; }
         <section style="flex:0 0 800px;display:flex;flex-direction:column;gap:12px" aria-label="Your cape">
           <div style="height:30px;display:flex;align-items:center;gap:12px"><span class="cn">2</span><span class="ttl" style="font-size:24px">Your cape</span>
             <span style="display:inline-flex;align-items:center;gap:6px;margin-left:10px;padding:3px 10px;border-radius:12px;background:#1a1410;border:1px solid rgba(201,165,75,.4);font-size:12px;font-weight:800;letter-spacing:.12em;color:var(--muted)">${ICN.lock}${online ? 'HIDDEN UNTIL THE DUEL' : story ? `HIDDEN FROM ${esc(story.name.toUpperCase())}` : 'HIDDEN FROM BOT'}</span></div>
-          <div style="display:grid;grid-template-columns:repeat(5,152px);gap:16px 10px;margin-top:8px;flex:none">${capeNames.map(capeBtn).join('')}</div>
+          <div style="display:grid;grid-template-columns:repeat(${six ? '6,125px' : '5,152px'});gap:16px 10px;margin-top:8px;flex:none">${capeNames.map(capeBtn).join('')}</div>
           <div style="flex:1;min-height:0"></div>${capeInfo}</section></div>
       ${vs}`;
   }
@@ -5608,7 +5622,7 @@ html, body { touch-action: manipulation; }
     const st = deckStyle(dk.cards), art = deckArt(dk), r = deckRules(dk.cards), sel = opts.sel, cape = AS.cape[dk.cape];
     const h = opts.h || 390, artH = opts.artH || 250;
     return `<button type="button" class="dbx dbx-l" data-do="${opts.act || 'deck'}" data-v="${esc(dk.id)}" aria-pressed="${!!sel}" style="--frame:${FRAME[st] || FRAME.neutral};height:${h}px;width:100%">
-      <div class="dbx-art" style="height:${artH}px">${art ? `<img class="${artClass(art)}" src="${art.src}" alt="" style="max-width:86%;max-height:88%">` : ''}</div>
+      <div class="dbx-art" style="height:${artH}px">${art ? `<img class="${artClass(art)}" src="${art.src}" alt=""${artClass(art) === 'scene' ? '' : ' style="max-width:86%;max-height:88%"'}>` : ''}</div>
       <span class="dbx-nm" style="font-size:22px;padding:12px 16px 0">${esc(dk.name)}</span>
       <div class="dbx-row" style="padding:0 16px 14px;font-size:16px">${ICON[st] ? `<img class="st" src="${ICON[st]}" alt="${S[st] || ''}" style="width:24px;height:24px">` : ''}<span style="${r.ok ? '' : 'color:var(--hurt)'}">${r.total}${r.sixty ? '' : '/60'}</span>
         ${dk.starter ? '<span style="margin-left:6px;font-size:11px;font-weight:800;letter-spacing:.14em;color:var(--faint)">STARTER</span>' : ''}${cape ? `<img class="cp" src="${cape.src}" alt="Suggested: ${esc(dk.cape)}" style="height:30px">` : ''}</div>

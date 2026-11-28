@@ -1,7 +1,7 @@
 """Pack the recorded sounds for the Arena: python web/arena_sounds.py  ->  web/arena_sounds.js
 
 A spell that has a recording makes that sound when it is cast, in place of the synthesized one, a rune that
-has one (its runecrafting sound) makes it when it is played, and a prayer makes its own when it goes up (a Protect
+has one (its runecrafting sound) makes it when it is played, as does a shield with one (Bone Shield), and a prayer makes its own when it goes up (a Protect
 prayer: when it blocks). The recordings are Ramon's files in art/sounds/
 (kept out of the repo, like the art), each named after its card: "Air Bolt.ogg" is what Air Bolt plays. ALIAS
 lists the ones whose file goes by another name. A file with no card of its name is
@@ -45,6 +45,9 @@ ALIAS = {
     "Unholy Wrath": "Wrath",                          # chapter 3, Lord Daquarius's Zamorakian prayer (2026-11-22)
     # Necromancy (Ramon, 2026-11-27): one summoning sound for every summon, and for the Skull Lantern raising one
     **{n: "Conjuration" for n in ("Putrid Zombie", "Skeleton Warrior", "Vengeful Ghost", "Phantom Guardian", "Skull Lantern")},
+    # the four necrotic runes share one crafting sound, and Bone Shield plays RS3's Greater Bone Shield as it lands (Ramon)
+    **{f"{r} Rune": "Crafting_necrotic_runes" for r in ("Spirit", "Bone", "Flesh", "Miasma")},
+    "Bone Shield": "Greater_Bone_Shield",
 }
 SOURCE_TYPES = (".ogg", ".mp3", ".wav", ".flac", ".m4a")
 # Mono (the game pans a sound itself): the plain average of left and right, so the level stays as recorded (left

@@ -129,8 +129,8 @@ const ok = (c, m) => { checks += 1; if (!c) { failures += 1; console.log('FAIL '
   // none of them far too quiet or too loud next to the rest of the game (measured through the mixer, unheard;
   // the spells were made louder on 2026-11-18, so the ceiling went up from -16 dB to -12)
   if (names.length) {
-    // a summon's sound is measured at the volume the game plays it (SUMMON_V): Conjuration.ogg is recorded far louder
-    const lv = await page.evaluate(async () => { const A = window.RSAudio, C = window.__arena.CARDS, o = {}; for (const n of A.clips) o[n] = await A.measure(() => A.clip(n, C[n].wclass === 'summon' || C[n].kind === 'conduit' ? { v: window.__arena.clipV(n) } : undefined)); o.magic = await A.measure(() => A.sfx('magic')); o.hit = await A.measure(() => A.sfx('hit', { style: 'magic' })); return o; });
+    // a summon's sound, and a Necrotic spell's, is measured at the volume the game plays it (SUMMON_V, NECRO_V): both are recorded louder
+    const lv = await page.evaluate(async () => { const A = window.RSAudio, C = window.__arena.CARDS, o = {}; for (const n of A.clips) o[n] = await A.measure(() => A.clip(n, C[n].wclass === 'summon' || C[n].kind === 'conduit' || C[n].style === 'necrotic' ? { v: window.__arena.clipV(n) } : undefined)); o.magic = await A.measure(() => A.sfx('magic')); o.hit = await A.measure(() => A.sfx('hit', { style: 'magic' })); return o; });
     const off = names.filter((n) => !(lv[n].rms > -40 && lv[n].rms < -12 && lv[n].peak < -1));
     ok(!off.length, `these sounds are far too quiet or too loud: ${off.map((n) => `${n} (${lv[n].rms} dB, peak ${lv[n].peak})`).join(', ')}`);
     const mean = names.reduce((s, n) => s + lv[n].rms, 0) / names.length;
@@ -153,6 +153,14 @@ const ok = (c, m) => { checks += 1; if (!c) { failures += 1; console.log('FAIL '
       const sm = spells.reduce((a, n) => a + lv[n].rms, 0) / spells.length, su = summons.reduce((a, n) => a + lv[n].rms, 0) / summons.length;
       console.log(`summons as played: ${su.toFixed(1)} dB on average (${summons.map((n) => `${n} ${lv[n].rms}`).join(', ')}); spells ${sm.toFixed(1)} dB`);
       ok(su < sm && su > sm - 6, `the summons should sit a little under the spells (summons ${su.toFixed(1)} dB, spells ${sm.toFixed(1)} dB)`);
+    }
+    // the Necrotic spells (NECRO_V, Ramon's recordings): about as loud as the other spells, on average
+    const necro = await page.evaluate((ns) => ns.filter((n) => window.__arena.CARDS[n].style === 'necrotic'), spells);
+    const plain = spells.filter((n) => !necro.includes(n));
+    if (necro.length && plain.length) {
+      const pm = plain.reduce((a, n) => a + lv[n].rms, 0) / plain.length, nm = necro.reduce((a, n) => a + lv[n].rms, 0) / necro.length;
+      console.log(`Necrotic spells as played: ${nm.toFixed(1)} dB on average (${necro.map((n) => `${n} ${lv[n].rms}`).join(', ')}); the other spells ${pm.toFixed(1)} dB`);
+      ok(Math.abs(nm - pm) < 3, `the Necrotic spells should be about as loud as the other spells (${nm.toFixed(1)} dB against ${pm.toFixed(1)} dB)`);
     }
   }
   ok(await page.evaluate(() => window.RSAudio.clip('Bronze Dagger')) === false && await page.evaluate(() => window.RSAudio.clip('Smoke Flurry')) === false, 'a card with no recording claimed to have one');
