@@ -13,6 +13,7 @@
  *                                           kept. Deleted on one side: gone, unless the other changed it since.
  *       tips                                seen on either device, minus any cleared here
  *       onlinePaid                          both lists (so an online duel pays once per account)
+ *       gifts                               both lists (a starter deck added later is given once per player)
  *       anything else                       ours if it changed here, otherwise theirs
  *
  *   await RSTCGCloud.sync(dev)              one visit to the server for a signed-in device:
@@ -127,6 +128,7 @@
       else if (k === 'tips') out.tips = flags(obj(B.tips), obj(L.tips), obj(R.tips));
       else if (k === 'story') out.story = story(obj(B.story), obj(L.story), obj(R.story));
       else if (k === 'onlinePaid') out.onlinePaid = [...new Set([...list(R.onlinePaid), ...list(L.onlinePaid)])].slice(-PAID_KEPT);
+      else if (k === 'gifts') out.gifts = [...new Set([...list(R.gifts), ...list(L.gifts)])];
       else if (!same(L[k], B[k])) { if (L[k] !== undefined) out[k] = L[k]; }           // changed here: ours
       else if (R[k] !== undefined) out[k] = R[k];                                      // otherwise theirs
     }

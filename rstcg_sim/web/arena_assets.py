@@ -89,7 +89,9 @@ BACKDROP = {"Wilderness": "wilderness.png", "Varrock": "varrock.jpg", "Grand Exc
             # chapter 2 (Ramon's pictures, 2026-11-20): Dragith fights in his chamber, Melzar in his cell
             "Falador Tunnels": "scene_dragith_chamber.jpg", "Hidden Prison": "scene_hidden_prison.jpg",
             # chapter 3 (Ramon's painting, 2026-11-22): the Lord's hall. Never in the menu's tour (the page's TOUR_SKIP)
-            "The Kinshra Hall": "scene_kinshra_lords_hall.jpg"}
+            "The Kinshra Hall": "scene_kinshra_lords_hall.jpg",
+            # Necromancy (Ramon's painting, 2026-11-27): the duel's backdrop while it's in play, and a stop on the menu's tour
+            "City of Um": "city_of_um.png"}
 backdrop = {}
 for loc, f in BACKDROP.items():
     p = os.path.join(P.IMG, f)
@@ -137,6 +139,8 @@ if os.path.isdir(FACES):
 icons = {}
 for k, f in {"melee": "Attack_detail.png", "ranged": "Ranged_detail.png", "magic": "Magic_detail.png"}.items():
     icons[k] = webp(fit(trim(load(os.path.join(P.IMG, f))), 96, 96))
+if os.path.exists(os.path.join(P.IMG, "Necromancy_detail.png")):     # RS3's Necromancy icon; without it the page draws a skull sigil
+    icons["necrotic"] = webp(fit(trim(load(os.path.join(P.IMG, "Necromancy_detail.png"))), 96, 96))
 for k, f in {"punch": "punch.png", "quest": "quest.png", "gp50": "gp_50_scattered.png", "gp100": "gp_100_stacked.png"}.items():
     p = os.path.join(OWN, f)
     if os.path.exists(p):

@@ -1,5 +1,42 @@
 {
  "cards": {
+  "Accelerated Decay": {
+   "name": "Accelerated Decay",
+   "kind": "buff",
+   "style": "necrotic",
+   "prayer": "necrotic",
+   "bonus": 4,
+   "duration": 3
+  },
+  "Adept Deathwarden Robe": {
+   "name": "Adept Deathwarden Robe",
+   "kind": "armor",
+   "style": "necrotic",
+   "req": [
+    [
+     "Spirit Rune",
+     2
+    ]
+   ],
+   "armor": [
+    [
+     "melee",
+     -1
+    ],
+    [
+     "ranged",
+     -1
+    ],
+    [
+     "magic",
+     -1
+    ],
+    [
+     "necrotic",
+     -3
+    ]
+   ]
+  },
   "Air Battlestaff": {
    "name": "Air Battlestaff",
    "kind": "staff",
@@ -188,6 +225,10 @@
     [
      "magic",
      -4
+    ],
+    [
+     "necrotic",
+     -1
     ]
    ],
    "fam_req": [
@@ -219,6 +260,10 @@
     [
      "magic",
      -1
+    ],
+    [
+     "necrotic",
+     -1
     ]
    ],
    "bonus": 3,
@@ -241,6 +286,28 @@
    "name": "Blood Rune",
    "kind": "material",
    "mat": "rune"
+  },
+  "Bone Rune": {
+   "name": "Bone Rune",
+   "kind": "material",
+   "mat": "rune"
+  },
+  "Bone Shield": {
+   "name": "Bone Shield",
+   "kind": "shield",
+   "style": "necrotic",
+   "req": [
+    [
+     "Bone Rune",
+     1
+    ],
+    [
+     "Spirit Rune",
+     1
+    ]
+   ],
+   "soak": 7,
+   "free": true
   },
   "Bronze Arrows": {
    "name": "Bronze Arrows",
@@ -330,6 +397,10 @@
     ],
     [
      "magic",
+     -1
+    ],
+    [
+     "necrotic",
      -1
     ]
    ],
@@ -458,6 +529,11 @@
    "kind": "material",
    "mat": "rune"
   },
+  "City of Um": {
+   "name": "City of Um",
+   "kind": "location",
+   "style": "necrotic"
+  },
   "Claws of Guthix": {
    "name": "Claws of Guthix",
    "kind": "spell",
@@ -527,6 +603,58 @@
    "name": "Death Rune",
    "kind": "material",
    "mat": "rune"
+  },
+  "Death Skulls": {
+   "name": "Death Skulls",
+   "kind": "spell",
+   "style": "necrotic",
+   "req": [
+    [
+     "Miasma Rune",
+     1
+    ],
+    [
+     "Spirit Rune",
+     4
+    ]
+   ],
+   "damage": 16
+  },
+  "Deathwarden Robe": {
+   "name": "Deathwarden Robe",
+   "kind": "armor",
+   "style": "necrotic",
+   "req": [
+    [
+     "Spirit Rune",
+     1
+    ]
+   ],
+   "armor": [
+    [
+     "melee",
+     -1
+    ],
+    [
+     "ranged",
+     -1
+    ],
+    [
+     "magic",
+     -1
+    ],
+    [
+     "necrotic",
+     -2
+    ]
+   ]
+  },
+  "Decay": {
+   "name": "Decay",
+   "kind": "buff",
+   "style": "necrotic",
+   "prayer": "necrotic",
+   "bonus": 1
   },
   "Demon Fire": {
    "name": "Demon Fire",
@@ -737,6 +865,11 @@
    "damage": 16,
    "wears": 1
   },
+  "Ectoplasm": {
+   "name": "Ectoplasm",
+   "kind": "material",
+   "mat": "ectoplasm"
+  },
   "Enchanted Bar": {
    "name": "Enchanted Bar",
    "kind": "material",
@@ -804,6 +937,22 @@
    "kind": "location",
    "story": "boss"
   },
+  "Finger of Death": {
+   "name": "Finger of Death",
+   "kind": "spell",
+   "style": "necrotic",
+   "req": [
+    [
+     "Bone Rune",
+     1
+    ],
+    [
+     "Spirit Rune",
+     2
+    ]
+   ],
+   "damage": 9
+  },
   "Fire Blast": {
    "name": "Fire Blast",
    "kind": "spell",
@@ -869,6 +1018,11 @@
    ],
    "damage": 19
   },
+  "Flesh Rune": {
+   "name": "Flesh Rune",
+   "kind": "material",
+   "mat": "rune"
+  },
   "Goblin Diplomacy": {
    "name": "Goblin Diplomacy",
    "kind": "quest",
@@ -926,6 +1080,10 @@
     [
      "magic",
      -3
+    ],
+    [
+     "necrotic",
+     -1
     ]
    ],
    "fam_req": [
@@ -1010,6 +1168,10 @@
     ],
     [
      "magic",
+     -1
+    ],
+    [
+     "necrotic",
      -1
     ]
    ],
@@ -1131,6 +1293,10 @@
     [
      "magic",
      -2
+    ],
+    [
+     "necrotic",
+     -1
     ]
    ],
    "fam_req": [
@@ -1207,6 +1373,70 @@
     "magic"
    ],
    "free_swing_after_spell": true
+  },
+  "Master Deathdealer Robe": {
+   "name": "Master Deathdealer Robe",
+   "kind": "armor",
+   "style": "necrotic",
+   "req": [
+    [
+     "Spirit Rune",
+     3
+    ]
+   ],
+   "armor": [
+    [
+     "melee",
+     -1
+    ],
+    [
+     "ranged",
+     -1
+    ],
+    [
+     "magic",
+     -1
+    ],
+    [
+     "necrotic",
+     -2
+    ]
+   ],
+   "bonus": 2
+  },
+  "Master Deathwarden Robe": {
+   "name": "Master Deathwarden Robe",
+   "kind": "armor",
+   "style": "necrotic",
+   "req": [
+    [
+     "Spirit Rune",
+     3
+    ]
+   ],
+   "armor": [
+    [
+     "melee",
+     -1
+    ],
+    [
+     "ranged",
+     -1
+    ],
+    [
+     "magic",
+     -1
+    ],
+    [
+     "necrotic",
+     -4
+    ]
+   ]
+  },
+  "Miasma Rune": {
+   "name": "Miasma Rune",
+   "kind": "material",
+   "mat": "rune"
   },
   "Mirror Shield": {
    "name": "Mirror Shield",
@@ -1342,6 +1572,10 @@
     [
      "magic",
      -1
+    ],
+    [
+     "necrotic",
+     -1
     ]
    ],
    "bonus": 2
@@ -1448,6 +1682,10 @@
     [
      "magic",
      -1
+    ],
+    [
+     "necrotic",
+     -1
     ]
    ],
    "fam_req": [
@@ -1463,6 +1701,11 @@
    "style": "magic",
    "prayer": "magic",
    "bonus": 1
+  },
+  "Necromancy Ritual": {
+   "name": "Necromancy Ritual",
+   "kind": "ritual",
+   "style": "necrotic"
   },
   "Necrotic Bolt": {
    "name": "Necrotic Bolt",
@@ -1488,6 +1731,29 @@
    "style": "melee",
    "reacts_to": "ranged",
    "converts_to": "melee"
+  },
+  "Phantom Guardian": {
+   "name": "Phantom Guardian",
+   "kind": "weapon",
+   "style": "melee",
+   "req": [
+    [
+     "Ectoplasm",
+     1
+    ],
+    [
+     "Mithril Bar",
+     2
+    ]
+   ],
+   "hit": 7,
+   "durability": 3,
+   "wclass": "summon",
+   "soak": 6,
+   "styles": [
+    "melee"
+   ],
+   "two_handed": true
   },
   "Piety": {
    "name": "Piety",
@@ -1533,6 +1799,32 @@
    "kind": "prayer",
    "prayer": "ranged"
   },
+  "Protect from Necromancy": {
+   "name": "Protect from Necromancy",
+   "kind": "prayer",
+   "style": "necrotic",
+   "prayer": "necrotic"
+  },
+  "Putrid Zombie": {
+   "name": "Putrid Zombie",
+   "kind": "thrown",
+   "style": "ranged",
+   "req": [
+    [
+     "Ectoplasm",
+     1
+    ]
+   ],
+   "hit": 8,
+   "durability": 2,
+   "wclass": "summon",
+   "fam_req": [
+    [
+     "log",
+     1
+    ]
+   ]
+  },
   "Quest Point Cape": {
    "name": "Quest Point Cape",
    "kind": "cape"
@@ -1551,6 +1843,19 @@
    "name": "Rapid",
    "kind": "rapid",
    "style": "ranged"
+  },
+  "Rasial's Greed": {
+   "name": "Rasial's Greed",
+   "kind": "destroy",
+   "style": "necrotic",
+   "req": [
+    [
+     "Spirit Rune",
+     2
+    ]
+   ],
+   "damage": 6,
+   "destroys": "ectoplasm"
   },
   "Redemption": {
    "name": "Redemption",
@@ -1573,6 +1878,37 @@
    "prayer": "ranged",
    "bonus": 3,
    "duration": 3
+  },
+  "Robes of the First Necromancer": {
+   "name": "Robes of the First Necromancer",
+   "kind": "armor",
+   "style": "necrotic",
+   "req": [
+    [
+     "Ectoplasm",
+     1
+    ]
+   ],
+   "armor": [
+    [
+     "melee",
+     -2
+    ],
+    [
+     "ranged",
+     -2
+    ],
+    [
+     "magic",
+     -2
+    ],
+    [
+     "necrotic",
+     -4
+    ]
+   ],
+   "legendary": true,
+   "summon_bonus": 2
   },
   "Romeo & Juliet": {
    "name": "Romeo & Juliet",
@@ -1726,6 +2062,10 @@
     ],
     [
      "magic",
+     -1
+    ],
+    [
+     "necrotic",
      -1
     ]
    ],
@@ -1892,6 +2232,35 @@
    "kind": "food",
    "heal": 3
   },
+  "Skeleton Warrior": {
+   "name": "Skeleton Warrior",
+   "kind": "weapon",
+   "style": "melee",
+   "req": [
+    [
+     "Ectoplasm",
+     1
+    ]
+   ],
+   "hit": 7,
+   "durability": 3,
+   "wclass": "summon",
+   "styles": [
+    "melee"
+   ],
+   "fam_req": [
+    [
+     "bar",
+     1
+    ]
+   ]
+  },
+  "Skull Lantern": {
+   "name": "Skull Lantern",
+   "kind": "conduit",
+   "style": "necrotic",
+   "item": true
+  },
   "Slash": {
    "name": "Slash",
    "kind": "ability",
@@ -1958,6 +2327,27 @@
    "damage": 12,
    "heals": 6,
    "story": "boss"
+  },
+  "Spectral Scythe": {
+   "name": "Spectral Scythe",
+   "kind": "spell",
+   "style": "necrotic",
+   "req": [
+    [
+     "Flesh Rune",
+     1
+    ],
+    [
+     "Spirit Rune",
+     3
+    ]
+   ],
+   "damage": 12
+  },
+  "Spirit Rune": {
+   "name": "Spirit Rune",
+   "kind": "material",
+   "mat": "rune"
   },
   "Stab": {
    "name": "Stab",
@@ -2170,6 +2560,18 @@
    "destroys": "log",
    "item": true
   },
+  "Touch of Death": {
+   "name": "Touch of Death",
+   "kind": "spell",
+   "style": "necrotic",
+   "req": [
+    [
+     "Spirit Rune",
+     1
+    ]
+   ],
+   "damage": 6
+  },
   "Unholy Wrath": {
    "name": "Unholy Wrath",
    "kind": "buff",
@@ -2240,6 +2642,28 @@
    "item": true,
    "fetch": "Varrock"
   },
+  "Vengeful Ghost": {
+   "name": "Vengeful Ghost",
+   "kind": "weapon",
+   "style": "magic",
+   "req": [
+    [
+     "Ectoplasm",
+     1
+    ],
+    [
+     "Death Rune",
+     1
+    ]
+   ],
+   "hit": 6,
+   "durability": 3,
+   "wclass": "summon",
+   "styles": [
+    "magic"
+   ],
+   "heals": 2
+  },
   "Void Knight Top": {
    "name": "Void Knight Top",
    "kind": "armor",
@@ -2254,6 +2678,10 @@
     ],
     [
      "magic",
+     -1
+    ],
+    [
+     "necrotic",
      -1
     ]
    ],
@@ -2406,6 +2834,10 @@
     [
      "magic",
      -1
+    ],
+    [
+     "necrotic",
+     -1
     ]
    ],
    "fam_req": [
@@ -2547,6 +2979,35 @@
    },
    "capes": [
     "Magic Cape"
+   ]
+  },
+  {
+   "name": "Necromancy",
+   "group": "Starter decks",
+   "cards": {
+    "Spirit Rune": 13,
+    "Bone Rune": 5,
+    "Flesh Rune": 3,
+    "Touch of Death": 4,
+    "Finger of Death": 4,
+    "Spectral Scythe": 4,
+    "Rasial's Greed": 3,
+    "Rune Pouch": 3,
+    "Deathwarden Robe": 2,
+    "Bone Shield": 3,
+    "Wooden Shield": 2,
+    "Kiteshield": 2,
+    "Shrimp": 1,
+    "Lobster": 2,
+    "Decay": 2,
+    "Accelerated Decay": 2,
+    "Mirror Shield": 1,
+    "Protect from Melee": 1,
+    "Archmage Sedridor": 2,
+    "City of Um": 1
+   },
+   "capes": [
+    "Necromancy Cape"
    ]
   },
   {
@@ -2800,6 +3261,116 @@
    "capes": [
     "Smithing Cape",
     "Attack Cape"
+   ]
+  },
+  {
+   "name": "Lean Necrotic",
+   "group": "Tournament decks",
+   "cards": {
+    "Spirit Rune": 14,
+    "Bone Rune": 5,
+    "Flesh Rune": 3,
+    "Touch of Death": 4,
+    "Finger of Death": 4,
+    "Spectral Scythe": 4,
+    "Rasial's Greed": 3,
+    "Rune Pouch": 4,
+    "Master Deathdealer Robe": 2,
+    "Bone Shield": 3,
+    "Kiteshield": 3,
+    "Wooden Shield": 2,
+    "Archmage Sedridor": 2,
+    "City of Um": 2,
+    "Accelerated Decay": 3,
+    "Mirror Shield": 2
+   },
+   "capes": [
+    "Necromancy Cape",
+    "Prayer Cape"
+   ]
+  },
+  {
+   "name": "Skeleton Melee",
+   "group": "Tournament decks",
+   "cards": {
+    "Bronze Bar": 8,
+    "Mithril Bar": 13,
+    "Ectoplasm": 4,
+    "Bronze Scimitar": 2,
+    "Mithril Sword": 3,
+    "Mithril Scimitar": 4,
+    "Skeleton Warrior": 3,
+    "Skull Lantern": 1,
+    "Slash": 4,
+    "Stab": 2,
+    "Bronze Platebody": 2,
+    "Kiteshield": 3,
+    "Wooden Shield": 2,
+    "Lobster": 1,
+    "Doric": 1,
+    "Vanaka": 1,
+    "Parry": 3,
+    "Burst of Strength": 3
+   },
+   "capes": [
+    "Necromancy Cape",
+    "Attack Cape"
+   ]
+  },
+  {
+   "name": "Zombie Ranged",
+   "group": "Tournament decks",
+   "cards": {
+    "Normal Logs": 8,
+    "Willow Logs": 13,
+    "Ectoplasm": 4,
+    "Magic Shortbow": 3,
+    "Seercull": 2,
+    "Bronze Arrows": 2,
+    "Mithril Arrows": 4,
+    "Putrid Zombie": 3,
+    "Skull Lantern": 1,
+    "Rapid": 4,
+    "Longrange": 2,
+    "Leather Body": 2,
+    "Kiteshield": 3,
+    "Wooden Shield": 2,
+    "Lowe": 1,
+    "Ricochet": 3,
+    "Sharp Eye": 3
+   },
+   "capes": [
+    "Necromancy Cape",
+    "Ranged Cape"
+   ]
+  },
+  {
+   "name": "Ghost Mage",
+   "group": "Tournament decks",
+   "cards": {
+    "Air Rune": 13,
+    "Chaos Rune": 5,
+    "Death Rune": 3,
+    "Ectoplasm": 3,
+    "Air Strike": 2,
+    "Air Bolt": 4,
+    "Air Blast": 3,
+    "Staff of Light": 2,
+    "Iban's Staff": 3,
+    "Vengeful Ghost": 2,
+    "Skull Lantern": 1,
+    "Rune Pouch": 3,
+    "Wizard Robe": 2,
+    "Kiteshield": 3,
+    "Wooden Shield": 2,
+    "Archmage Sedridor": 2,
+    "Wizards' Tower": 2,
+    "Mirror Shield": 3,
+    "Augury": 2
+   },
+   "capes": [
+    "Magic Cape",
+    "Necromancy Cape"
    ]
   },
   {
@@ -3919,6 +4490,11 @@
    "kind": "state",
    "what": "rune",
    "need": 7
+  },
+  "Necromancy Cape": {
+   "kind": "event",
+   "what": "necro_hit",
+   "need": 3
   }
  }
 }

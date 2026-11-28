@@ -177,7 +177,7 @@ const rnd = () => crypto.getRandomValues(new Uint32Array(1))[0] / 2 ** 32;
 const MAX_CLAIMS = 50;
 async function openBank(uid, snapshot) {
   const had = await rpc('bank_get', { p_user: uid });
-  if (had) return { bank: had };
+  if (had) return { bank: await gifts(uid, had, []) };
   const saved = await rpc('bank_progress', { p_user: uid });     // an account's cloud save is believed as it is
   const from = saved || (snapshot && typeof snapshot === 'object' ? snapshot : null);
   const c = from ? P.plausible(from) : null;
@@ -189,7 +189,21 @@ async function openBank(uid, snapshot) {
   const bank = await rpc('bank_open', { p_user: uid, p_gp: v.gp, p_coll: v.coll, p_packs: v.packs,
     p_free: how !== 'starter' && !!from.tutorialPack, p_how: how });
   if (how !== 'starter') await storyKept(uid, c.story);
-  return doubt ? { bank, opened: how, doubt } : { bank, opened: how };
+  // the starter decks hold every gift already; progress that says it had one (its `gifts`) holds that one
+  const had2 = how === 'starter' ? PK.GIFTS : Array.isArray(from.gifts) ? from.gifts : [];
+  const b2 = await gifts(uid, bank, had2);
+  return doubt ? { bank: b2, opened: how, doubt } : { bank: b2, opened: how };
+}
+// A starter deck added after the bank opened (packs.js GIFTS; Necromancy, 2026-11-27): its cards, given once (gift:<deck>).
+// `kept`: ones this bank's collection holds already, logged as given so they never come twice.
+async function gifts(uid, bank, kept) {
+  for (const name of PK.GIFTS) {
+    const has = kept.includes(name);
+    const r = await rpc('bank_apply', { p_user: uid, p_ref: `gift:${name}`, p_kind: has ? 'gift-kept' : 'gift', p_gp: 0,
+      p_cards: has ? null : P.gift(name), p_packs: 0, p_free: false });
+    if (r && r.bank) bank = r.bank;
+  }
+  return bank;
 }
 // Story rewards a device already holds when its progress becomes the bank: logged as given (cards already in),
 // so finishing that road again can't give a second copy.
@@ -336,7 +350,8 @@ const OPS = {
   },
   async reset(uid) {      // the story's rewards are kept: finishing a road again never gives its card twice
     const coll = await withStory(uid, P.starter().coll, []);
-    return { bank: await rpc('bank_set', { p_user: uid, p_ref: `reset:${Date.now()}`, p_kind: 'reset', p_gp: 0, p_coll: coll, p_packs: 0, p_free: false }) };
+    const bank = await rpc('bank_set', { p_user: uid, p_ref: `reset:${Date.now()}`, p_kind: 'reset', p_gp: 0, p_coll: coll, p_packs: 0, p_free: false });
+    return { bank: await gifts(uid, bank, PK.GIFTS) };          // the starter decks hold every gift
   },
   async story(uid, b) {
     const keys = Array.isArray(b.keys) ? b.keys.slice(0, 20) : [];

@@ -23,7 +23,7 @@
     const tally = {};
     for (const [name, n] of Object.entries(decklist)) {
       const c = CARDS[name];
-      if (['melee', 'ranged', 'magic'].includes(c.style) && c.kind !== 'armor') tally[c.style] = (tally[c.style] || 0) + n;
+      if (['melee', 'ranged', 'magic', 'necrotic'].includes(c.style) && c.kind !== 'armor') tally[c.style] = (tally[c.style] || 0) + n;
     }
     let best = null;
     for (const [s, n] of Object.entries(tally)) if (best === null || n > tally[best]) best = s;
@@ -91,11 +91,16 @@
     incoming(g, i) {                    // rough damage the opponent threatens next turn, and its style
       const o = g.opp(i);
       const w = o.weapon_card();
+      if (w && w.kind === 'weapon' && w.wclass === 'summon') {     // a summon fights in its own style
+        const st = w.styles.length ? w.styles[0] : 'melee';
+        return [w.hit + (st === 'melee' ? 2 : 0), st];
+      }
       if (w && w.kind === 'weapon') return [w.hit + 2, 'melee'];
       if (w && w.kind === 'thrown') return [w.hit, 'ranged'];
       if (w && w.kind === 'bow' && o.ammo) return [w.hit + o.ammo.bonus, 'ranged'];
       const style = this.style[1 - i];
       if (style === 'magic' && o.family_count('rune') >= 1) return [o.count('Chaos Rune') ? 10 : 6, 'magic'];
+      if (style === 'necrotic' && o.family_count('rune') >= 1) return [8, 'necrotic'];
       return [0, style];
     }
 
@@ -120,10 +125,12 @@
       const p = g.players[i];
       const w = p.weapon_card();
       if (a[0] === 'punch') return [['melee_hit', 1]];
+      if ((a[0] === 'swing' || a[0] === 'free_swing') && w && w.wclass === 'summon') return [[a[1] + '_hit', w.hits], ['necro_hit', w.hits]];
       if (a[0] === 'swing' || a[0] === 'free_swing') return [[a[1] + '_hit', w ? w.hits : 1]];
       if (a[0] === 'spec') return w ? [[(w.styles.length ? w.styles[0] : w.style) + '_hit', 1]] : [];
       if (a[0] !== 'play') return [];
       const c = CARDS[a[1]];
+      if (c.style === 'necrotic' && (c.kind === 'spell' || c.kind === 'destroy') && c.damage) return [['necrotic_hit', 1], ['necro_hit', 1]];   // the Necromancy Cape
       if (c.kind === 'spell' && c.damage) return [['magic_hit', 1]];
       if (c.kind === 'food') return [['food', 1]];
       if (c.kind === 'buff' && c.duration) return [['elite_prayer', 1]];
@@ -192,7 +199,7 @@
         return v + 4.0 * this.unlocks(g, i, name);
       }
       if (k === 'spell') {
-        let v = c.damage ? this.hit_value(g, i, c.damage, 'magic') : 0.0;
+        let v = c.damage ? this.hit_value(g, i, c.damage, c.style === 'necrotic' ? 'necrotic' : 'magic') : 0.0;
         v += 2.0 * c.draws;
         if (c.heals) v += Math.min(c.heals, g.rules.max_lp - p.lp) * this.urgency(p);
         if (c.fetch) v += this.fetch_value(g, i, c.fetch);
@@ -203,6 +210,7 @@
         }
         return v;
       }
+      if ((k === 'weapon' || k === 'thrown') && c.wclass === 'summon') return this.summon_score(g, i, c);
       if (k === 'weapon' || k === 'thrown') {
         let spec = c.spec ? 2.5 : 0.0;
         spec += c.hit * c.durability * (c.hits - 1) * FUTURE;
@@ -264,15 +272,28 @@
           const theirs = this.need[1 - i][target] || 0;
           v = o.count(target, true) <= theirs ? 5.0 : 1.0;
         }
-        if (c.damage) v += this.hit_value(g, i, c.damage, ['melee', 'ranged', 'magic'].includes(c.style) ? c.style : 'none');
+        if (c.damage) v += this.hit_value(g, i, c.damage, ['melee', 'ranged', 'magic', 'necrotic'].includes(c.style) ? c.style : 'none');
         return v;
+      }
+      if (k === 'conduit') return this.summon_score(g, i, CARDS[target]) + 2.0;   // a summon back from the discard, without spending a card
+      if (k === 'ritual') {
+        if (CARDS[target].kind === 'material') {      // an Ectoplasm into play
+          return 2.0 + 4.0 * this.unlocks(g, i, target) + (p.count(target) < (need[target] || 0) ? 2.0 : 0.0);
+        }
+        const t = CARDS[target];                      // a summon into your hand
+        let v = 2.0 + (!p.weapon && !p.hand.some((n) => CARDS[n].wclass === 'summon') ? 2.0 : 0.0);
+        return v + (p.meets(t.req) && t.fam_req.every(([f, x]) => p.family_count(f) >= x) ? 1.0 : 0.0);
       }
       if (k === 'pouch') {
         const v = 2.0 + 4.0 * this.unlocks(g, i, target);
         return v + (p.count(target) < (need[target] || 0) ? 2.0 : 0.0);
       }
       if (k === 'armor') {
-        const fit = -armorMod(c, threat_style) * 0.75 + (c.bonus || 0) * 1.6 * 0.7 * 3;   // bonus: Void, Round 22 platebodies
+        let fit = -armorMod(c, threat_style) * 0.75 + (c.bonus || 0) * 1.6 * 0.7 * 3;   // bonus: Void, Round 22 platebodies
+        if (c.summon_bonus) {         // Robes of the First Necromancer: +2 on the share of attacks summons make
+          const summons = Object.entries(p.decklist).reduce((t, [m, x]) => t + (CARDS[m].wclass === 'summon' ? x : 0), 0);
+          fit += c.summon_bonus * 1.6 * 0.7 * 3 * Math.min(1.0, summons / 6);
+        }
         if (!p.armor) return 3.0 + fit;
         const cur = armorMod(CARDS[p.armor], threat_style);
         return (cur - armorMod(c, threat_style)) * 0.75 - 0.5;
@@ -343,13 +364,21 @@
       if (name === 'Lumbridge') return 2.0 + 0.08 * (o.lp - p.lp);
       if (name === 'Varrock') return 1.0 + (p.lp < o.lp ? 1.0 : 0.0);
       if (name === 'Grand Exchange') return 2.5;
+      if (name === 'City of Um') {      // Necrotic +2, summons +1 durability: for whoever has them
+        const worth = (j) => {
+          const q = g.players[j];
+          const nec = this.style[j] === 'necrotic' ? 3.0 : this.styles[j].has('necrotic') ? 1.0 : 0.0;
+          return nec + 0.12 * Object.entries(q.decklist).reduce((t, [m, x]) => t + (CARDS[m].wclass === 'summon' ? x : 0), 0);
+        };
+        return worth(i) - worth(1 - i);
+      }
       return 0.0;
     }
 
     attacks_per_turn(g, i, style) {
       if (style === 'any') return 1.6;   // Smite (Round 22): every attack
       if (!this.styles[i].has(style)) return 0.0;
-      const n = ['melee', 'ranged', 'magic'].filter((s) => this.styles[i].has(s)).length;
+      const n = ['melee', 'ranged', 'magic', 'necrotic'].filter((s) => this.styles[i].has(s)).length;
       return 1.6 / n;
     }
 
@@ -431,6 +460,10 @@
       const left = c.steps.length - p.quest.step;
       let v = this.quest_worth(g, i, c) / left;
       const [kind] = c.steps[p.quest.step];
+      if (target !== null && target !== undefined && kind !== 'discard' && kind !== 'spend') {   // Demon Slayer: the strongest weapon, as before
+        const ws = g.silverlight_choices(p);
+        if (ws.includes(target)) v -= 1.0 * ws.indexOf(target);
+      }
       if (kind === 'discard') v -= 0.6 * this.keep_value(g, i, target);
       else if (kind === 'spend') v -= p.count(target, true) <= (this.need[i][target] || 0) ? 3.0 : 0.6;
       return v;
@@ -474,6 +507,17 @@
       return best && (lethal || bestV >= 7) ? best : null;
     }
 
+    // A summon going into the Weapon slot (from your hand, or from the discard by the Skull Lantern).
+    summon_score(g, i, c) {
+      const p = g.players[i];
+      const dur = c.durability + (g.location === 'City of Um' ? 1 : 0);
+      const hit = c.hit + (p.armor ? CARDS[p.armor].summon_bonus : 0);
+      let v = hit * dur * FUTURE + 1.0 - this.current_weapon_value(p);
+      if (c.heals) v += c.heals * dur * Math.max(0.4, this.urgency(p));
+      if (c.soak) v += c.soak * 0.4 - (p.shield && !p.shield.virtual ? p.shield.soak * 0.3 : 0.0);
+      return v;
+    }
+
     current_weapon_value(p) {
       const w = p.weapon_card();
       if (!w) return 0.0;
@@ -493,6 +537,8 @@
         case 'spell': case 'weapon': case 'thrown': case 'bow': case 'arrows': return 5.0;
         case 'quest': return p.completed.includes(c.name) || p.quest ? 0.2 : 3.0;
         case 'buff': return 3.5;
+        case 'conduit': case 'ritual': return 3.5;
+        case 'destroy': return c.style === 'necrotic' ? 4.0 : 3.0;
         default: return 3.0;
       }
     }

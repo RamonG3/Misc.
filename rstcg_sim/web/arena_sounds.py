@@ -43,6 +43,8 @@ ALIAS = {
     "Mystic Will": "Mystic Might",
     "Sharp Eye": "Eagle Eye",
     "Unholy Wrath": "Wrath",                          # chapter 3, Lord Daquarius's Zamorakian prayer (2026-11-22)
+    # Necromancy (Ramon, 2026-11-27): one summoning sound for every summon, and for the Skull Lantern raising one
+    **{n: "Conjuration" for n in ("Putrid Zombie", "Skeleton Warrior", "Vengeful Ghost", "Phantom Guardian", "Skull Lantern")},
 }
 SOURCE_TYPES = (".ogg", ".mp3", ".wav", ".flac", ".m4a")
 # Mono (the game pans a sound itself): the plain average of left and right, so the level stays as recorded (left

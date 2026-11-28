@@ -18,6 +18,7 @@ CAPES = {
     "Smithing Cape":      ("state", "bar",          6),    # Round 23: was 5   # bars in play
     "Woodcutting Cape":   ("state", "log",          7),    # Round 23: was 6   # logs in play
     "Runecrafting Cape":  ("state", "rune",         7),    # Round 23: was 6   # runes in play
+    "Necromancy Cape":    ("event", "necro_hit",    3),    # 2026-11-27: hits by your summons or your Necrotic attacks
 }
 
 

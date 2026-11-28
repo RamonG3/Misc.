@@ -11,13 +11,13 @@ class Card:
     name: str
     kind: str                 # material, spell, weapon, thrown, staff, bow, arrows, ability, reversal,
                               # rapid, longrange, destroy, pouch, armor, shield, food,
-                              # prayer, npc, location
-    style: str = "neutral"    # melee, ranged, magic, neutral
+                              # prayer, npc, location, conduit, ritual
+    style: str = "neutral"    # melee, ranged, magic, necrotic, neutral
     req: tuple = ()           # ((material name, count), ...) that must be in play
     mat: str = ""             # material family: rune, bar, log, cloth, leather, bones
     hit: int = 0              # weapons and bows: damage per hit or shot
     durability: int = 0       # melee weapons
-    wclass: str = ""          # dagger, sword, scimitar, mace, staff
+    wclass: str = ""          # dagger, sword, scimitar, mace, staff; "summon": a Necromancy summon
     allowed: tuple = ()       # abilities: weapon classes they work with
     arrow_tier: int = 0       # bows: best arrow tier; arrows: their tier
     arrow_bonus: int = 0      # arrows: damage added per shot
@@ -60,10 +60,11 @@ class Card:
     fam_req: tuple = ()       # ((family, count), ...) of any tier in play ("3 bars in play")
     burns: str = ""           # Round 20 experiment, spells: "shatter" (a shield that blocks it is destroyed) or "pierce" (shields soak none of it)
     destroy_n: int = 1        # Round 25 experiment, destroy cards: materials destroyed per play
-    heals: int = 0            # spells: you heal this much on casting (Water)
+    heals: int = 0            # spells: you heal this much on casting (Water); weapons: on every swing (Vengeful Ghost)
     fetch: str = ""           # teleports: the location played from your deck
     unshatter: bool = False   # shields: Shatter doesn't break it (Anti-dragon Shield)
     story: str = ""           # Story Mode: "reward" (only the story gives it; legal everywhere) or "boss" (only a boss has it)
+    summon_bonus: int = 0     # armour: added to each swing or throw your summon makes (Robes of the First Necromancer)
 
 
 def _mat(name, family):
@@ -136,10 +137,10 @@ _ALL = [
          counts_as=(("Air Rune", 2),), wclass="staff", hit=4, durability=3),   # (was a bow: Willow Logs + Air Rune, hit 5, arrows)
 
     # Armor (modifier = change to damage you take)
-    Card("Wizard Robe", "armor", "magic", fam_req=(("rune", 1),), armor=(("melee", -2), ("ranged", -1), ("magic", -1))),   # Round 22 armor
-    Card("Bronze Platebody", "armor", "melee", req=(("Bronze Bar", 2),), armor=(("melee", -1), ("ranged", -2), ("magic", -1)), bonus=2),   # Round 22 armor (+2 to your attacks)
-    Card("Leather Body", "armor", "ranged", fam_req=(("log", 1),), armor=(("melee", -1), ("ranged", -1), ("magic", -2))),   # Round 22 armor
-    Card("Green D'hide Body", "armor", "ranged", fam_req=(("log", 2),), armor=(("melee", -1), ("ranged", -1), ("magic", -3))),   # Round 22 armor
+    Card("Wizard Robe", "armor", "magic", fam_req=(("rune", 1),), armor=(("melee", -2), ("ranged", -1), ("magic", -1), ("necrotic", -1))),   # Round 22 armor
+    Card("Bronze Platebody", "armor", "melee", req=(("Bronze Bar", 2),), armor=(("melee", -1), ("ranged", -2), ("magic", -1), ("necrotic", -1)), bonus=2),   # Round 22 armor (+2 to your attacks)
+    Card("Leather Body", "armor", "ranged", fam_req=(("log", 1),), armor=(("melee", -1), ("ranged", -1), ("magic", -2), ("necrotic", -1))),   # Round 22 armor
+    Card("Green D'hide Body", "armor", "ranged", fam_req=(("log", 2),), armor=(("melee", -1), ("ranged", -1), ("magic", -3), ("necrotic", -1))),   # Round 22 armor
 
     # Shields
     Card("Wooden Shield", "shield", soak=5, free=True),
@@ -237,11 +238,11 @@ _ALL = [
     Card("Rune Darts", "thrown", "ranged", req=(("Mithril Bar", 1), ("Rune Bar", 2)), hit=8, durability=5, wclass="dart"),
     Card("Rune Knives", "thrown", "ranged", req=(("Mithril Bar", 1), ("Rune Bar", 2)), hit=10, durability=4, wclass="knife"),
     Card("Rune Throwing Axe", "thrown", "ranged", req=(("Mithril Bar", 1), ("Rune Bar", 2)), hit=17, durability=2, wclass="axe"),
-    Card("Mithril Platebody", "armor", "melee", req=(("Bronze Bar", 1), ("Mithril Bar", 2)), armor=(("melee", -1), ("ranged", -3), ("magic", -1)), bonus=2),   # Round 22 armor (+2 to your attacks)
-    Card("Rune Platebody", "armor", "melee", req=(("Mithril Bar", 1), ("Rune Bar", 2)), armor=(("melee", -1), ("ranged", -4), ("magic", -1)), bonus=2),   # Round 22 armor (+2 to your attacks)
-    Card("Mystic Robe Top", "armor", "magic", fam_req=(("rune", 2),), armor=(("melee", -3), ("ranged", -1), ("magic", -1))),   # Round 22 armor
-    Card("Infinity Top", "armor", "magic", fam_req=(("rune", 3),), armor=(("melee", -4), ("ranged", -1), ("magic", -1))),   # Round 22 armor
-    Card("Black D'hide Body", "armor", "ranged", fam_req=(("log", 3),), armor=(("melee", -1), ("ranged", -1), ("magic", -4))),   # Round 22 armor
+    Card("Mithril Platebody", "armor", "melee", req=(("Bronze Bar", 1), ("Mithril Bar", 2)), armor=(("melee", -1), ("ranged", -3), ("magic", -1), ("necrotic", -1)), bonus=2),   # Round 22 armor (+2 to your attacks)
+    Card("Rune Platebody", "armor", "melee", req=(("Mithril Bar", 1), ("Rune Bar", 2)), armor=(("melee", -1), ("ranged", -4), ("magic", -1), ("necrotic", -1)), bonus=2),   # Round 22 armor (+2 to your attacks)
+    Card("Mystic Robe Top", "armor", "magic", fam_req=(("rune", 2),), armor=(("melee", -3), ("ranged", -1), ("magic", -1), ("necrotic", -1))),   # Round 22 armor
+    Card("Infinity Top", "armor", "magic", fam_req=(("rune", 3),), armor=(("melee", -4), ("ranged", -1), ("magic", -1), ("necrotic", -1))),   # Round 22 armor
+    Card("Black D'hide Body", "armor", "ranged", fam_req=(("log", 3),), armor=(("melee", -1), ("ranged", -1), ("magic", -4), ("necrotic", -1))),   # Round 22 armor
     Card("Fire Blast", "spell", "magic", req=(("Death Rune", 1), ("Fire Rune", 3)), damage=15),   # Round 22: was 4 Fire
     Card("Air Wave", "spell", "magic", req=(("Blood Rune", 1), ("Air Rune", 4)), damage=17),
     Card("Fire Wave", "spell", "magic", req=(("Blood Rune", 1), ("Fire Rune", 4)), damage=19),   # Round 22: was 5 Fire
@@ -268,7 +269,7 @@ _ALL = [
     # Void Knight Top: needs materials from two different families in play. All damage you take -1,
     # your attacks +1, no weakness. (A "Switch" card that equipped an off-style weapon for free was
     # tried and cut: hybrid decks were almost never able to play it.)
-    Card("Void Knight Top", "armor", families=2, armor=(("melee", -1), ("ranged", -1), ("magic", -1)), bonus=1),
+    Card("Void Knight Top", "armor", families=2, armor=(("melee", -1), ("ranged", -1), ("magic", -1), ("necrotic", -1)), bonus=1),
 
     # Resource destruction items
     Card("Tinderbox", "destroy", destroys="log", item=True, damage=6),   # Round 22: no Cloth requirement; Round 25: +6 damage
@@ -375,11 +376,45 @@ _ALL = [
          counts_as=(("Fire Rune", 2),), wclass="staff", hit=5, durability=4, story="reward"),   # a Zamorak staff; Staff of Fire: hit 2, 3 swings
     # Boss-only: Lord Daquarius (and his honour guard and blacksmith, who carry his steel)
     Card("Black Bar", "material", mat="bar", story="boss"),   # counts as a bar (the Smithing Cape, Superheat, Doric)
-    Card("Black Knight Platebody", "armor", "melee", req=(("Black Bar", 2),), armor=(("melee", -3), ("ranged", -1), ("magic", -1)),
+    Card("Black Knight Platebody", "armor", "melee", req=(("Black Bar", 2),), armor=(("melee", -3), ("ranged", -1), ("magic", -1), ("necrotic", -1)),
          bonus=3, story="boss"),
     Card("Black Knight Shield", "shield", req=(("Black Bar", 1),), soak=9, unshatter=True, story="boss"),
     Card("Unholy Wrath", "buff", effect="wrath", duration=3, prayer="any", bonus=3, reward_val=3, story="boss"),   # +3 to his attacks; heals 3 when one lands
     Card("The Kinshra Hall", "location", story="boss"),   # Daquarius's fight, locked in play: Melee +2, Ranged -2, Magic -2
+    # Necromancy (2026-11-27; NECROMANCY_DESIGN.md, simulation rounds 1, 2a and 2b). Purple border: style "necrotic".
+    _mat("Ectoplasm", "ectoplasm"),
+    _mat("Spirit Rune", "rune"), _mat("Bone Rune", "rune"), _mat("Flesh Rune", "rune"), _mat("Miasma Rune", "rune"),
+    # Summons take the Weapon slot, need 1 Ectoplasm plus their style's material, deal their style's damage
+    Card("Putrid Zombie", "thrown", "ranged", req=(("Ectoplasm", 1),), fam_req=(("log", 1),), hit=8, durability=2,
+         wclass="summon"),
+    Card("Skeleton Warrior", "weapon", "melee", req=(("Ectoplasm", 1),), fam_req=(("bar", 1),), hit=7, durability=3,
+         wclass="summon", styles=("melee",)),
+    Card("Vengeful Ghost", "weapon", "magic", req=(("Ectoplasm", 1), ("Death Rune", 1)), hit=6, durability=3, heals=2,
+         wclass="summon", styles=("magic",)),
+    Card("Phantom Guardian", "weapon", "melee", req=(("Ectoplasm", 1), ("Mithril Bar", 2)), hit=7, durability=3,
+         soak=6, two_handed=True, wclass="summon", styles=("melee",)),
+    Card("Skull Lantern", "conduit", "necrotic", item=True),        # a summon from your discard into your Weapon slot
+    Card("Necromancy Ritual", "ritual", "necrotic"),                 # from your deck: an Ectoplasm into play, or a summon to hand
+    Card("Touch of Death", "spell", "necrotic", req=(("Spirit Rune", 1),), damage=6),
+    Card("Finger of Death", "spell", "necrotic", req=(("Bone Rune", 1), ("Spirit Rune", 2)), damage=9),
+    Card("Spectral Scythe", "spell", "necrotic", req=(("Flesh Rune", 1), ("Spirit Rune", 3)), damage=12),
+    Card("Death Skulls", "spell", "necrotic", req=(("Miasma Rune", 1), ("Spirit Rune", 4)), damage=16),
+    Card("Rasial's Greed", "destroy", "necrotic", req=(("Spirit Rune", 2),), destroys="ectoplasm", damage=6),
+    Card("Bone Shield", "shield", "necrotic", req=(("Bone Rune", 1), ("Spirit Rune", 1)), soak=7, free=True),
+    Card("Decay", "buff", "necrotic", prayer="necrotic", bonus=1),
+    Card("Accelerated Decay", "buff", "necrotic", prayer="necrotic", bonus=4, duration=3),
+    Card("Protect from Necromancy", "prayer", "necrotic", prayer="necrotic"),
+    Card("City of Um", "location", "necrotic"),       # Necrotic damage +2; summons come into play with +1 durability
+    Card("Deathwarden Robe", "armor", "necrotic", req=(("Spirit Rune", 1),),
+         armor=(("melee", -1), ("ranged", -1), ("magic", -1), ("necrotic", -2))),
+    Card("Adept Deathwarden Robe", "armor", "necrotic", req=(("Spirit Rune", 2),),
+         armor=(("melee", -1), ("ranged", -1), ("magic", -1), ("necrotic", -3))),
+    Card("Master Deathwarden Robe", "armor", "necrotic", req=(("Spirit Rune", 3),),
+         armor=(("melee", -1), ("ranged", -1), ("magic", -1), ("necrotic", -4))),
+    Card("Master Deathdealer Robe", "armor", "necrotic", req=(("Spirit Rune", 3),), bonus=2,
+         armor=(("melee", -1), ("ranged", -1), ("magic", -1), ("necrotic", -2))),
+    Card("Robes of the First Necromancer", "armor", "necrotic", req=(("Ectoplasm", 1),), legendary=True, summon_bonus=2,
+         armor=(("melee", -2), ("ranged", -2), ("magic", -2), ("necrotic", -4))),
 ]
 
 CARDS = {c.name: c for c in _ALL}
@@ -587,6 +622,38 @@ STARTER_DECKS = {k: dict(v) for k, v in _R27.items()}
 # Each enemy carries only what it would: the Highwayman and the goblins nothing above Bronze, the Skeleton and the
 # Dark Wizard up to tier 2 (Mithril, Blasts), the bosses tier 3 plus their boss-only cards. First drafts: the
 # simulator tunes them so a starter deck's chances fall from duel to duel (story_tune.py).
+# Necromancy's decks for the bots and the deck picker (2026-11-27, NECROMANCY_DESIGN.md round 2b): the Lean decks
+# with a summon splash, and a lean Necrotic spell deck. In the "Tournament decks" group (export_cards.py).
+NECRO_DECKS = {
+    "Lean Necrotic": {
+        "Spirit Rune": 14, "Bone Rune": 5, "Flesh Rune": 3,
+        "Touch of Death": 4, "Finger of Death": 4, "Spectral Scythe": 4, "Rasial's Greed": 3,
+        "Rune Pouch": 4, "Master Deathdealer Robe": 2, "Bone Shield": 3, "Kiteshield": 3, "Wooden Shield": 2,
+        "Archmage Sedridor": 2, "City of Um": 2, "Accelerated Decay": 3, "Mirror Shield": 2,
+    },
+    "Skeleton Melee": {
+        "Bronze Bar": 8, "Mithril Bar": 13, "Ectoplasm": 4,
+        "Bronze Scimitar": 2, "Mithril Sword": 3, "Mithril Scimitar": 4, "Skeleton Warrior": 3, "Skull Lantern": 1,
+        "Slash": 4, "Stab": 2, "Bronze Platebody": 2, "Kiteshield": 3, "Wooden Shield": 2, "Lobster": 1,
+        "Doric": 1, "Vanaka": 1, "Parry": 3, "Burst of Strength": 3,
+    },
+    "Zombie Ranged": {
+        "Normal Logs": 8, "Willow Logs": 13, "Ectoplasm": 4,
+        "Magic Shortbow": 3, "Seercull": 2, "Bronze Arrows": 2, "Mithril Arrows": 4, "Putrid Zombie": 3, "Skull Lantern": 1,
+        "Rapid": 4, "Longrange": 2, "Leather Body": 2, "Kiteshield": 3, "Wooden Shield": 2,
+        "Lowe": 1, "Ricochet": 3, "Sharp Eye": 3,
+    },
+    "Ghost Mage": {
+        "Air Rune": 13, "Chaos Rune": 5, "Death Rune": 3, "Ectoplasm": 3,
+        "Air Strike": 2, "Air Bolt": 4, "Air Blast": 3, "Staff of Light": 2, "Iban's Staff": 3,
+        "Vengeful Ghost": 2, "Skull Lantern": 1, "Rune Pouch": 3,
+        "Wizard Robe": 2, "Kiteshield": 3, "Wooden Shield": 2, "Archmage Sedridor": 2, "Wizards' Tower": 2,
+        "Mirror Shield": 3, "Augury": 2,
+    },
+}
+NECRO_CAPES = {"Lean Necrotic": ["Necromancy Cape", "Prayer Cape"], "Skeleton Melee": ["Necromancy Cape", "Attack Cape"],
+               "Zombie Ranged": ["Necromancy Cape", "Ranged Cape"], "Ghost Mage": ["Magic Cape", "Necromancy Cape"]}
+
 STORY_DECKS = {
     "Bandit": {   # Bronze melee, and not much of it
         "Bronze Bar": 24, "Bronze Dagger": 4, "Bronze Scimitar": 3, "Bronze Mace": 2, "Slash": 3, "Stab": 2,

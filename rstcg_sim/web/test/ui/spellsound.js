@@ -10,7 +10,8 @@
 // and reduced motion still plays it. Prayers (2026-11-22): a buff prayer, yours or the bot's, makes its sound as it
 // goes up (in place of the thud); a Protect prayer, yours or the bot's, makes its own as it blocks (in place of the
 // synthesized block); a level-1 prayer plays the sound it borrows; reduced motion still plays both; and the
-// prayers sit a little under the spells at the volume the game plays them (PRAYER_V).
+// prayers sit a little under the spells at the volume the game plays them (PRAYER_V). Summons (Necromancy, 2026-11-27):
+// Conjuration.ogg, at the volume the game plays it (SUMMON_V, read from the page), sits a little under the spells too.
 const path = require('path');
 const fs = require('fs');
 const http = require('http');
@@ -111,20 +112,25 @@ const ok = (c, m) => { checks += 1; if (!c) { failures += 1; console.log('FAIL '
   const cards = await page.evaluate(() => Object.keys(window.__arena.CARDS));
   ok(names.every((n) => cards.includes(n)), `a packed sound has no card: ${names.filter((n) => !cards.includes(n)).join(', ')}`);
   await page.evaluate(() => window.RSAudio.warm());
-  for (const n of names) {
-    await page.evaluate((n) => window.RSAudio.clip(n, { v: 0.2 }), n);
-    await page.waitForTimeout(40);
+  const played = {};
+  let log = [];
+  for (let k = 0; k < names.length; k += 20) {           // in twenties: the clip log keeps only the last 40 (44 sounds since Necromancy)
+    for (const n of names.slice(k, k + 20)) {
+      await page.evaluate((n) => window.RSAudio.clip(n, { v: 0.2 }), n);
+      await page.waitForTimeout(40);
+    }
+    await page.waitForTimeout(300);
+    log = await page.evaluate(() => window.RSAudio.clipLog);
+    for (const c of log) played[c.name] = c.secs;
   }
-  await page.waitForTimeout(300);
-  const log = await page.evaluate(() => window.RSAudio.clipLog);
-  const played = Object.fromEntries(log.map((c) => [c.name, c.secs]));
   const bad = names.filter((n) => !(played[n] > 0.15 && played[n] < 8));
   ok(!bad.length, `these sounds didn't decode, or are an odd length: ${bad.map((n) => `${n} (${played[n]})`).join(', ')}`);
   if (names.length) console.log('lengths, seconds: ' + names.map((n) => `${n} ${played[n]}`).join(', '));
   // none of them far too quiet or too loud next to the rest of the game (measured through the mixer, unheard;
   // the spells were made louder on 2026-11-18, so the ceiling went up from -16 dB to -12)
   if (names.length) {
-    const lv = await page.evaluate(async () => { const A = window.RSAudio, o = {}; for (const n of A.clips) o[n] = await A.measure(() => A.clip(n)); o.magic = await A.measure(() => A.sfx('magic')); o.hit = await A.measure(() => A.sfx('hit', { style: 'magic' })); return o; });
+    // a summon's sound is measured at the volume the game plays it (SUMMON_V): Conjuration.ogg is recorded far louder
+    const lv = await page.evaluate(async () => { const A = window.RSAudio, C = window.__arena.CARDS, o = {}; for (const n of A.clips) o[n] = await A.measure(() => A.clip(n, C[n].wclass === 'summon' || C[n].kind === 'conduit' ? { v: window.__arena.clipV(n) } : undefined)); o.magic = await A.measure(() => A.sfx('magic')); o.hit = await A.measure(() => A.sfx('hit', { style: 'magic' })); return o; });
     const off = names.filter((n) => !(lv[n].rms > -40 && lv[n].rms < -12 && lv[n].peak < -1));
     ok(!off.length, `these sounds are far too quiet or too loud: ${off.map((n) => `${n} (${lv[n].rms} dB, peak ${lv[n].peak})`).join(', ')}`);
     const mean = names.reduce((s, n) => s + lv[n].rms, 0) / names.length;
@@ -140,6 +146,13 @@ const ok = (c, m) => { checks += 1; if (!c) { failures += 1; console.log('FAIL '
       console.log(`prayers as played: ${pm.toFixed(1)} dB on average (${prayers.map((n) => `${n} ${pl[n].rms}`).join(', ')}); spells ${sm.toFixed(1)} dB`);
       ok(pm < sm && pm > sm - 6, `the prayers should sit a little under the spells (prayers ${pm.toFixed(1)} dB, spells ${sm.toFixed(1)} dB)`);
       ok(prayers.every((n) => pl[n].peak < -1), `a prayer peaks too high: ${prayers.filter((n) => pl[n].peak >= -1).map((n) => `${n} ${pl[n].peak}`).join(', ')}`);
+    }
+    // the summons (Necromancy): one recording, Conjuration.ogg, at SUMMON_V, a little under the spells like the prayers
+    const summons = await page.evaluate((ns) => ns.filter((n) => window.__arena.CARDS[n].wclass === 'summon' || window.__arena.CARDS[n].kind === 'conduit'), names);
+    if (summons.length && spells.length) {
+      const sm = spells.reduce((a, n) => a + lv[n].rms, 0) / spells.length, su = summons.reduce((a, n) => a + lv[n].rms, 0) / summons.length;
+      console.log(`summons as played: ${su.toFixed(1)} dB on average (${summons.map((n) => `${n} ${lv[n].rms}`).join(', ')}); spells ${sm.toFixed(1)} dB`);
+      ok(su < sm && su > sm - 6, `the summons should sit a little under the spells (summons ${su.toFixed(1)} dB, spells ${sm.toFixed(1)} dB)`);
     }
   }
   ok(await page.evaluate(() => window.RSAudio.clip('Bronze Dagger')) === false && await page.evaluate(() => window.RSAudio.clip('Smoke Flurry')) === false, 'a card with no recording claimed to have one');

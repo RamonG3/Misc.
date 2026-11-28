@@ -65,6 +65,12 @@ LIFE_POINTS = {"deck_life": False, "max_respawns": 1, "max_lp": 50, "start_lp": 
 FREE_SPECS = {"sanctuary", "light"}
 ELEMENTAL = ("Air Rune", "Water Rune", "Earth Rune", "Fire Rune")
 NO_BUFF_SRC = {"punch", "reversal", "quest"}
+SUMMON_SRC = {"weapon", "thrown", "ability"}   # Necromancy: the sources a summon's swing or throw can have
+
+
+def summon_attack(p, src):
+    """Is this attack a summon's swing or throw? (the Necromancy Cape's count, the First Necromancer's bonus)"""
+    return src in SUMMON_SRC and p.weapon is not None and CARDS[p.weapon["name"]].wclass == "summon"
 
 DAMAGE_KINDS = {"spell", "weapon", "thrown", "bow", "arrows", "ability", "rapid", "longrange"}
 
@@ -233,6 +239,8 @@ class Game:
         extra = 0
         if p.armor and CARDS[p.armor].bonus and src not in NO_BUFF_SRC:     # Void: your attacks +1
             extra = CARDS[p.armor].bonus
+        if p.armor and CARDS[p.armor].summon_bonus and summon_attack(p, src):   # Robes of the First Necromancer
+            extra += CARDS[p.armor].summon_bonus
         if p.buff and src not in NO_BUFF_SRC:
             c = CARDS[p.buff]
             if c.prayer == style or c.prayer == "any":     # "any": Round 22 experiment (Smite)
@@ -251,6 +259,8 @@ class Game:
             amount += self.attack_bonus(i, style, src)
         if not punch:
             if self.location == "Wizards' Tower" and style == "magic":
+                amount += 2
+            if self.location == "City of Um" and style == "necrotic":
                 amount += 2
             if self.location == "Wilderness":
                 amount += 2
@@ -345,6 +355,7 @@ class Game:
         if self.winner is not None:
             return 0
         bonus = 0 if no_bonus else self.attack_bonus(i, style, src)
+        by_summon = summon_attack(self.players[i], src)
         amount += bonus
         self.stats[i]["buff_bonus"] += bonus
         if amount > 0 and not unreactable and self.offer_reaction(i, amount, style, src):
@@ -371,6 +382,8 @@ class Game:
         self.stats[i]["dmg_" + src] += to_lp
         if to_lp > 0:
             self.players[i].cape_prog[style + "_hit"] += 1
+            if by_summon or style == "necrotic":      # the Necromancy Cape
+                self.players[i].cape_prog["necro_hit"] += 1
         self.stats[1 - i]["soaked"] += soaked
         o.cape_prog["soak"] += soaked
         if (to_lp or soaked) and self.first_damage_turn[i] is None:
@@ -490,6 +503,10 @@ class Game:
                 self.deal(i, w.hit, style, "weapon", shatter=w.legendary)
             if p.weapon:
                 self.wear(i)
+            if w.heals and self.winner is None:    # the Vengeful Ghost heals with every swing
+                gain = min(w.heals, self.rules["max_lp"] - p.lp)
+                p.lp += gain
+                self.stats[i]["healed"] += max(0, gain)
 
     def shoot(self, i, mod=0, src="bow", ignore_armor=False, unreactable=False):
         p = self.players[i]
@@ -609,6 +626,12 @@ class Game:
             return acts
         if k == "pouch":
             return [("play", n, t) for t in set(p.deck) if CARDS[t].mat == "rune"]
+        if k == "conduit":     # a summon from your discard pile, if you could play it from your hand
+            return [("play", n, t) for t in set(p.discard)
+                    if CARDS[t].wclass == "summon" and self._card_actions(i, CARDS[t], no_damage)]
+        if k == "ritual":      # an Ectoplasm or a summon from your deck
+            return [("play", n, t) for t in set(p.deck)
+                    if CARDS[t].mat == "ectoplasm" or CARDS[t].wclass == "summon"]
         if k == "armor":
             if c.families and len({CARDS[m].mat for m in p.materials}) < c.families:
                 return []
@@ -715,7 +738,21 @@ class Game:
               "weapon": lambda: p.weapon is not None,
               "armor": lambda: p.armor is not None,
               "shield": lambda: p.shield is not None}[kind]()
+        if ok and self._last_step(p) and CARDS[p.quest["name"]].effect == "silverlight":
+            ws = self.silverlight_choices(p)
+            if ws:                     # Demon Slayer: choose the weapon (the strongest first; by name, never deck order)
+                return [("quest", w) for w in ws]
         return [("quest", None)] if ok else []
+
+    @staticmethod
+    def _last_step(p):
+        return p.quest["step"] == len(CARDS[p.quest["name"]].steps) - 1
+
+    @staticmethod
+    def silverlight_choices(p):
+        """Demon Slayer's reward: the weapons in your deck, summons left out, each named once."""
+        ws = {n for n in p.deck if CARDS[n].kind in ("weapon", "thrown", "bow", "staff") and CARDS[n].wclass != "summon"}
+        return sorted(ws, key=lambda n: (-CARDS[n].hit * max(1, CARDS[n].durability), n))
 
     def do_quest_step(self, i, target):
         p = self.players[i]
@@ -726,6 +763,7 @@ class Game:
             p.discard.append(target)
         elif kind == "spend":
             self._lose_material(p, target)
+        choice = target if kind not in ("discard", "spend") else None     # Demon Slayer's chosen weapon
         p.quest["step"] += 1
         self.stats[i]["quest_steps"] += 1
         if p.quest["step"] >= len(c.steps):
@@ -735,7 +773,7 @@ class Game:
             p.qp += c.qp
             self.stats[i]["quests_done"] += 1
             self.log.append(f"{p.name} completes {c.name} ({p.qp} QP)")
-            self.quest_reward(i, c)
+            self.quest_reward(i, c, choice)
 
     def _fetch(self, p, fam, n):
         for _ in range(n):
@@ -749,7 +787,7 @@ class Game:
             p.materials[m] += 1
         self.rng.shuffle(p.deck)
 
-    def quest_reward(self, i, c):
+    def quest_reward(self, i, c, choice=None):
         p, o = self.players[i], self.opp(i)
         e = c.effect
         if e == "heal":
@@ -776,10 +814,10 @@ class Game:
         elif e == "chicken":
             if o.weapon:
                 self._unequip(o)
-        elif e == "silverlight":       # search your deck for a weapon and equip it, ignoring requirements
-            ws = [n for n in p.deck if CARDS[n].kind in ("weapon", "thrown", "bow", "staff")]
+        elif e == "silverlight":       # choose a weapon from your deck and equip it, ignoring requirements (not a summon)
+            ws = self.silverlight_choices(p)
             if ws:
-                best = max(ws, key=lambda n: CARDS[n].hit * max(1, CARDS[n].durability))
+                best = choice if choice in ws else ws[0]
                 p.deck.remove(best)
                 p.hand.append(best)
                 self._equip(i, best)
@@ -882,7 +920,7 @@ class Game:
             p.fresh[name] += 1
         elif k == "spell":
             if c.damage:
-                self.deal(i, c.damage, "magic", "spell", shatter=c.burns == "shatter",
+                self.deal(i, c.damage, "necrotic" if c.style == "necrotic" else "magic", "spell", shatter=c.burns == "shatter",
                           ignore_shield=c.burns == "pierce")
             if c.wears:
                 self.wear_opponent(i, c.wears)
@@ -915,6 +953,10 @@ class Game:
                 p.discard.append(p.shield["name"])
                 p.shield = None
             p.weapon = {"name": name, "dur": c.durability, "energy": 0, "played": self.turn}
+            if c.soak:                            # the Phantom Guardian is a shield too, as the Shieldbow is
+                p.shield = {"name": name, "soak": c.soak, "virtual": True}
+            if c.wclass == "summon" and self.location == "City of Um":
+                p.weapon["dur"] += 1
             if c.legendary and self.rules["legend_telegraph"] == "sick":
                 self.stats[i]["legend_equipped"] += 1
             if c.equip_swing:
@@ -924,6 +966,8 @@ class Game:
         elif k == "thrown":
             self._unequip(p)
             p.weapon = {"name": name, "dur": c.durability}
+            if c.wclass == "summon" and self.location == "City of Um":    # the Putrid Zombie
+                p.weapon["dur"] += 1
         elif k == "staff":
             self._unequip(p)
             if self.rules["swing_action"]:
@@ -977,7 +1021,7 @@ class Game:
             p.discard.append(name)
         elif k == "destroy":
             if c.damage:
-                self.deal(i, c.damage, c.style if c.style in ("melee", "ranged", "magic") else "none", "spell")
+                self.deal(i, c.damage, c.style if c.style in ("melee", "ranged", "magic", "necrotic") else "none", "spell")
             for _ in range(c.destroy_n):
                 if target is None or not o.materials.get(target):
                     targets = [t for t in o.materials if o.materials[t] > 0 and CARDS[t].mat == c.destroys]
@@ -994,6 +1038,20 @@ class Game:
         elif k == "pouch":
             p.deck.remove(target)
             p.materials[target] += 1
+            self.rng.shuffle(p.deck)
+            p.discard.append(name)
+        elif k == "conduit":                     # the Skull Lantern: a summon from the discard into the Weapon slot
+            p.discard.remove(target)
+            p.discard.append(name)
+            self.log.append(f"{p.name} raises {target}")
+            self._apply_card(i, target, None)
+        elif k == "ritual":                      # Necromancy Ritual: an Ectoplasm into play, or a summon into your hand
+            p.deck.remove(target)
+            if CARDS[target].kind == "material":
+                p.materials[target] += 1
+            else:
+                p.hand.append(target)
+            self.log.append(f"{p.name} finds {target}")
             self.rng.shuffle(p.deck)
             p.discard.append(name)
         elif k == "armor":

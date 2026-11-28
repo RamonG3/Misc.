@@ -374,6 +374,35 @@ console.log(`rematches: offered, taken up, withdrawn, replaced, raced`);
     r = await call(zed, { op: 'story', keys: ['ch1:B'] });
     ok(r.body.bank.coll['Shield of Arrav'] === 1, 'and finishing that road again gives no second copy');
   }
+  {   // a starter deck added later (packs.js GIFTS: Necromancy): its cards once to every bank, never twice
+    const gift = PK.gift('Necromancy'), oldStart = { ...st.coll };
+    for (const [n, k] of Object.entries(gift)) { oldStart[n] -= k; if (!oldStart[n]) delete oldStart[n]; }
+    const plus = (a, b) => { const o = { ...a }; for (const [n, k] of Object.entries(b)) o[n] = (o[n] || 0) + k; return o; };
+    const same = (a, b) => J(Object.keys(a).sort().map((n) => [n, a[n]])) === J(Object.keys(b).sort().map((n) => [n, b[n]]));
+    ok(Object.keys(gift).length > 10 && !Object.keys(gift).some((n) => PK.isBasic(n)) && gift['Touch of Death'] === 4, `the gift: ${J(gift)}`);
+    // a bank opened before the gift existed (made here as the old function made it: the three old starter decks)
+    const old = uuid(); db.profiles.set(old, { id: old, name: 'Old' });
+    db.bank.set(old, { user_id: old, gp: 40, coll: { ...oldStart }, packs: 0, free_pack: false, rev: 1, created_at: '', updated_at: '' });
+    r = await call(old, { op: 'bank' });
+    ok(same(r.body.bank.coll, st.coll) && r.body.bank.gp === 40, `an old bank gets the Necromancy starter: ${J(r.body.bank.coll).slice(0, 160)}`);
+    r = await call(old, { op: 'bank' });
+    ok(same(r.body.bank.coll, st.coll), 'and only once');
+    r = await call(old, { op: 'reset' });
+    ok(same(r.body.bank.coll, st.coll), 'a reset: the starter decks, the gift among them, once');
+    r = await call(old, { op: 'bank' });
+    ok(same(r.body.bank.coll, st.coll), 'and still once after it');
+    // opening: from the starter decks (they hold it), from a device that had it (its gifts say so), from one that didn't
+    const nu = uuid(), had = uuid(), not = uuid();
+    for (const [u, n] of [[nu, 'Nu'], [had, 'Had'], [not, 'Not']]) db.profiles.set(u, { id: u, name: n });
+    r = await call(nu, { op: 'bank', snapshot: { gp: 99999, coll: everything, packs: 0 } });
+    ok(r.body.opened === 'starter' && same(r.body.bank.coll, st.coll), `a bank opened from the starter decks gets no second copy: ${J(r.body.bank.coll).slice(0, 120)}`);
+    r = await call(had, { op: 'bank', snapshot: { gp: 50, coll: { ...st.coll }, packs: 0, wins: 1, gifts: ['Necromancy'] } });
+    ok(r.body.opened === 'device' && same(r.body.bank.coll, st.coll), 'a device that had the gift keeps it, once');
+    r = await call(not, { op: 'bank', snapshot: { gp: 50, coll: { ...oldStart }, packs: 0, wins: 1 } });
+    ok(r.body.opened === 'device' && same(r.body.bank.coll, plus(oldStart, gift)), 'a device from before the gift gets it as the bank opens');
+    r = await call(not, { op: 'bank' });
+    ok(same(r.body.bank.coll, plus(oldStart, gift)), 'and only once');
+  }
   const bossDeck = { ...G.PD.decks[0].cards };
   { const k = Object.keys(bossDeck).find((n) => !PK.isBasic(n)); bossDeck[k] -= 1; if (!bossDeck[k]) delete bossDeck[k]; bossDeck.Bite = 1; }
   await expectError(fay, { op: 'challenge', deck: bossDeck, cape: G.PD.decks[0].capes[0], version: VERSION }, 'deck', "a deck with a boss's card");
@@ -386,7 +415,7 @@ console.log(`rematches: offered, taken up, withdrawn, replaced, raced`);
   await expectError(fay, { op: 'challenge', deck: notMine.cards, cape: notMine.capes[0], version: VERSION }, 'deck', "a deck you don't own");
   void gus;
   ok(paidSeen[0] && paidSeen[50] && paidSeen[100], `online pay: not every amount came up ${J(paidSeen)}`);
-  console.log('bank: opening (cloud save, honest device, doubtful device), bot duels, packs, the free pack, replace, reset, decks owned, online pay');
+  console.log('bank: opening (cloud save, honest device, doubtful device), bot duels, packs, the free pack, replace, reset, decks owned, online pay, a starter deck given once');
 }
 console.log(`function: ${tally.duels} duels, ${tally.moves} moves, ${tally.refused} bad moves tried, ${tally.timeouts} clock jumps, ${tally.catchups} catch-ups, ends ${J(tally.ends)}, ${dbCalls} database calls`);
 console.log(failures ? `${failures} FAILED` : 'all passed');

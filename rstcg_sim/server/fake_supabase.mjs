@@ -22,8 +22,9 @@
 //                                       of addresses, or null for anyone), and "Confirm email"
 //   POST /__test/revoke { uid }         the server forgets that player's sign-ins (their devices are signed out)
 //   GET  /__test/mail?to=address        the emails sent to that address, newest last: [{ to, kind, code }]
-//   GET  /__test/db                     the tables
+//   GET  /__test/db                     the tables (and each player's bank log: ref -> kind)
 //   POST /__test/bank { uid, gp, cards }   put GP and cards in a player's bank (as if they'd won and opened packs)
+//   POST /__test/unlog { uid, ref }      forget one line of a player's bank log (a bank from before that change existed)
 // Prints "listening <port>" when ready. The browser tests (web/test/ui/online.js, accounts.js) run it as a child process.
 import http from 'http';
 import crypto from 'crypto';
@@ -143,7 +144,8 @@ const server = http.createServer(async (req, res) => {
       if (u.pathname === '/__test/realtime') { realtimeOn = !!b.on; if (!realtimeOn) for (const c of live) c.socket.destroy(); out(200, { on: realtimeOn }); return; }
       if (u.pathname === '/__test/db') {
         out(200, { profiles: [...db.profiles.values()], matches: [...db.matches.values()], moves: Object.fromEntries([...db.moves].map(([k, v]) => [k, v.length])),
-          users: [...users.values()].map(userJson), progress: [...db.progress.values()], bank: [...db.bank.values()] });
+          users: [...users.values()].map(userJson), progress: [...db.progress.values()], bank: [...db.bank.values()],
+          bankLog: Object.fromEntries([...db.bankLog].map(([u, m]) => [u, Object.fromEntries([...m].map(([ref, l]) => [ref, l.kind]))])) });
         return;
       }
       if (u.pathname === '/__test/auth') { Object.assign(flags, b); out(200, flags); return; }
@@ -152,6 +154,7 @@ const server = http.createServer(async (req, res) => {
         const r = RPC.bank_apply({ p_user: b.uid, p_ref: `test:${Date.now()}:${Math.random()}`, p_kind: 'test', p_gp: b.gp || 0, p_cards: b.cards || null, p_packs: 0, p_free: false });
         out(r.ok ? 200 : 409, r); return;
       }
+      if (u.pathname === '/__test/unlog') { const l = db.bankLog.get(b.uid); out(200, { gone: !!(l && l.delete(b.ref)) }); return; }
       if (u.pathname === '/__test/revoke') { for (const [k, v] of sessions) if (v.uid === b.uid) sessions.delete(k); out(200, {}); return; }
       out(404, {}); return;
     }

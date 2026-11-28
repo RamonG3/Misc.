@@ -40,6 +40,8 @@ def main():
         decks.append({"name": name, "group": "Starter decks", "cards": d})
     for name, d in field.items():
         decks.append({"name": name, "group": "Tournament decks", "cards": d})
+    for name, d in cards.NECRO_DECKS.items():      # 2026-11-27: Necromancy's decks
+        decks.append({"name": name, "group": "Tournament decks", "cards": d})
     extra = {"Quest Point Cape": "Quest Melee", "Defence Cape": "Defence Melee",
              "Prayer Cape": "Prayer Melee", "Cooking Cape": "Cooking Melee"}
     for cape, label in extra.items():
@@ -76,6 +78,7 @@ def main():
         "Dust Mage": ["Magic Cape", "Runecrafting Cape"], "Varrock Melee": ["Attack Cape", "Smithing Cape"],
         "Hammer Mace": ["Attack Cape", "Smithing Cape"],
         **cards.STORY_CAPES,
+        **cards.NECRO_CAPES,
     }
     for d in decks:
         d["cards"] = cards.modernize(d["cards"])        # Round 22: Cloth, Leather, Thessalia cut

@@ -33,7 +33,7 @@ Read `HANDOFF.md` before starting. If the job is AI opponents, also read `BOTS_B
   - Anything that changes `engine.js` or `cards.json` changes the version stamp, so the function must be deployed again (the GitHub Action does it on push; the repo has the token).
   - Online duels on the page never run the engine: see "Online duels" below.
 - **Save keys are versioned.** Players' saves live in `localStorage`:
-  - `rstcg-profile-v1`: GP, collection, decks, tutorial state, `story` (Story Mode: `main`, `replay`, `roads`, `claimed`); and `cloud`, the account this progress was last saved to (its id, the revision, and the save both sides agreed on). `progressNow()` is the profile without it;
+  - `rstcg-profile-v1`: GP, collection, decks, tutorial state, `story` (Story Mode: `main`, `replay`, `roads`, `claimed`), `gifts` (the starter decks added later that this player has been given: `packs.js` `GIFTS`); and `cloud`, the account this progress was last saved to (its id, the revision, and the save both sides agreed on). `progressNow()` is the profile without it;
   - `rstcg-arena-duel-v1`: the duel in progress;
   - `rstcg-settings`, `rstcg-arena-setup`, `rstcg-speed`;
   - `rstcg-online-v1`: the sign-in (a guest's or an account's), your online name, the online duel you're in (its log and last picture), and a trip to Google under way (`flow`);
@@ -47,7 +47,7 @@ Read `HANDOFF.md` before starting. If the job is AI opponents, also read `BOTS_B
 ```
 python web/build_arena.py                 # build web/dist/arena.html (about 3 MB)
 python web/build_netlify.py               # then the installable app in web/dist/netlify/ (deploy that folder)
-node web/test/ui/run_all.js               # every regression test (18 of them, ~22 min); must end "all passed"
+node web/test/ui/run_all.js               # every regression test (31 of them, ~30 min); must end "all passed"
 node web/test/ui/tour.js 892 412          # screenshots of every screen at one window size (here a Pixel held sideways)
 node web/test/bot_speed.js 4              # Champion's thinking time in the page, with Chrome's CPU slowed 4x
 node web/test/arena_play.js 3             # just full duels by mouse; must report "no page errors"
@@ -161,6 +161,14 @@ python simulate.py 300                    # Python simulator, starter decks
   - `sfx('flare')`: the stranger's flash (Story Mode), synthesized with its own long reverbs; timed so its boom lands at the page's `FLASH_CUT`.
   - Recorded clips: `CLIP_GAIN` 2.6 plus a 5 dB low shelf (`CLIP_BODY`), since 2026-11-18; runes play at `RUNE_V` 0.45 so they stay where they were, prayers at `PRAYER_V` 2.5 (they're recorded softer); `clipV(name)` in the page picks a card's volume.
   - **A silent layer costs as much as a loud one.** Web Audio synthesizes a note at 1/10,000 volume exactly as hard as at full. The intense layer's notes are only played while it is on or fading out (`intenseUntil`, `catchUp`); do the same for any new layer that waits in silence.
+
+## Necromancy (2026-11-27)
+
+- A **summon** is a weapon with `wclass: "summon"` (the Putrid Zombie is `thrown`). Rules ask `summon_attack(p, src)` (Python) / `summonAttack(p, src)` (JS) whether an attack is a summon's.
+- **Necrotic** is a damage type like Melee, Ranged and Magic: a spell deals `necrotic` when its card's style is `necrotic`; armour lists `("necrotic", n)`. Every Necromancy card but its materials has the purple frame, summons included (`frameOf`).
+- The Necromancy Cape counts `cape_prog.necro_hit` (summon hits and Necrotic hits). A summon's hit also counts for its style's cape.
+- `web/test/necro_rules.js --compare` checks each Necromancy rule in both engines; run it after touching any of them.
+- **A starter deck added later is a gift** (`packs.js` `GIFTS`, Ramon: players who began before Necromancy get its starter too). The page adds the deck once (`giveStarters()`, marked in `profile.gifts`), and the cards too when the device has never been online; the server gives a bank the cards once (`gift:<deck>` in the bank log, from `openBank` and `reset`), and logs a bank that already holds them (opened from the starter decks, or from progress whose `gifts` lists it) as `gift-kept`. The cloud save keeps `gifts` from both sides. New players and resets start with every gift marked. `web/test/ui/gift.js` checks it; adding a starter deck later means adding its name to `GIFTS`.
 
 ## Gotchas already paid for
 

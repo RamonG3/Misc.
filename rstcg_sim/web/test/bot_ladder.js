@@ -4,7 +4,8 @@
 //   node web/test/bot_ladder.js 10 hard greedy all          every starter and tournament deck
 //   node web/test/bot_ladder.js 40 hard:playouts=64 greedy  a bot with its settings changed
 //   node web/test/bot_ladder.js 10 hard greedy --peek-test  also check the first bot never uses hidden cards
-//   options: --jobs N (cores to use)  --seed N (first seed)  --no-capes  --mirror-only  --no-mirror
+//   node web/test/bot_ladder.js 10 hard greedy all --decks "Necromancy,Ghost Mage"   only those decks for bot A
+//   options: --jobs N (cores to use)  --seed N (first seed)  --no-capes  --mirror-only  --no-mirror  --decks A,B (bot A's decks)
 //
 // Each pairing is played on the same seeds with each bot going first, so shuffle luck cancels out.
 // A few games are always played a second time in another process: the same seed must give the same game.
@@ -129,13 +130,16 @@ if (process.argv[2] === '--worker') {
   const seed0 = +(flag('--seed') || 1);
   const o = { noCapes: has('--no-capes'), peekTest: has('--peek-test') };
   const mirrorOnly = has('--mirror-only'), noMirror = has('--no-mirror'), json = has('--json');
+  const only = flag('--decks');                         // bot A plays only these; bot B every deck
   const n = +(args[0] || 20);
   const a = args[1] || 'hard', b = args[2] || 'greedy';
   const all = args[3] === 'all';
   parseBot(a); parseBot(b);
   const names = R.DECKS.filter((d) => d.group === 'Starter decks' || (all && d.group === 'Tournament decks')).map((d) => d.name);
   const pairs = [];
-  for (const x of names) for (const y of names) if ((x === y ? !noMirror : !mirrorOnly)) pairs.push([x, y]);
+  const mine = only ? only.split(',').map((x) => x.trim()) : names;
+  for (const x of mine) if (!names.includes(x)) { console.error(`no deck "${x}" here; have: ${names.join(', ')}`); process.exit(1); }
+  for (const x of mine) for (const y of names) if ((x === y ? !noMirror : !mirrorOnly)) pairs.push([x, y]);
 
   const jobs = [];
   pairs.forEach(([x, y], p) => {

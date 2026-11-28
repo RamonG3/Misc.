@@ -362,3 +362,31 @@ As a staff it would knock Mage/Ranged+'s own bow out of the weapon slot, so it l
   `cards.json`. Checked in the JS engine: Air Mage with 3 Battlestaves 48.5% (Python 48.3%).
 - Seen while checking: Mage/Ranged+ scores about 2 points lower in the JS engine than in Python, before this change
   (old: 42.1 vs 44.3, 600 games per opponent per seat) and after it (39.5 vs 41.0). Not chased yet.
+
+## Round 29: Necromancy — `necro.py`, `necro_r2b.py`, `web/test/parity_necro.py`
+
+Ramon (2026-11-25 to 27): Necromancy joins Set 1 as something you add to a deck. The design, every decision and the
+three simulation rounds (1, 2a, 2b) are in `NECROMANCY_DESIGN.md` (Project doc); this is the summary.
+
+- **New:** four summons (weapons with `wclass: "summon"`, needing 1 Ectoplasm plus their style's material), the Skull
+  Lantern (`conduit`), Necromancy Ritual (`ritual`), four Necrotic spells, Rasial's Greed, Bone Shield, Decay,
+  Accelerated Decay, Protect from Necromancy, City of Um, five robes (one Legendary), five materials and the
+  Necromancy Cape (3 hits by your summons or your Necrotic attacks). Necrotic is a fourth damage type.
+- **Balance change to old cards:** every armour but White Knight Armor and Cabbage Armor gains Necrotic −1. Demon
+  Slayer's reward lets the player choose the weapon (the bots still take the strongest). The Set 1 decks play as
+  before: 120 games on the same seeds, identical (`PYTHONHASHSEED=0`).
+- **Numbers settled by simulation:** Touch / Finger / Spectral Scythe / Death Skulls 6 / 9 / 12 / 16; every summon on
+  1 Ectoplasm; Skeleton Warrior hit 7; Accelerated Decay +4; Master Deathdealer Robe Necrotic −2; Robes of the First
+  Necromancer 1 Ectoplasm.
+- **Decks, against the starter and tournament field with capes** (Python / JS, 400 games per seat per opponent):
+
+| Deck | Python | JS |
+|---|---|---|
+| Necromancy (the fourth starter) | 49.5 | 49.0 |
+| Lean Necrotic | 49.0 | 49.6 |
+| Skeleton Melee | 49.3 | 49.2 |
+| Zombie Ranged | 48.8 | 49.8 |
+| Ghost Mage | 44.6 | 44.7 |
+
+- `necro.py` and `necro_r2b.py` ran on the engine before the build (they add the rules themselves; see their note).
+  The built rules are checked by `web/test/necro_rules.js --compare` (both engines, value for value).

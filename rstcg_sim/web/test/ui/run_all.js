@@ -26,6 +26,7 @@ const tests = [
   ['account calls, in node (accounts_test)', [path.join(__dirname, '..', 'accounts_test.js')]],
   ['accounts, several devices (accounts)', [T('accounts.js')]],
   ['the bank in the page (bank)', [T('bank.js')]],
+  ['a starter deck added later, given once (gift)', [T('gift.js')]],
   ['Story Mode, in node (story_test)', [path.join(__dirname, '..', 'story_test.js')]],
   ['Story Mode, both roads (story)', [T('story.js')]],
   ['Story Mode chapter 2, both roads, from an old save (story2)', [T('story2.js')]],

@@ -75,11 +75,13 @@
       return out;
     }
 
-    // Rune Pouch lists the runes left in your deck in deck order; sort them so the list says nothing about the order.
+    // Rune Pouch (and Necromancy Ritual) list the cards left in your deck in deck order; sort them so the list says
+    // nothing about the order.
+    const FROM_DECK = new Set(['pouch', 'ritual']);
     function canon(legal) {
       const out = legal.slice();
       const at = {};
-      out.forEach((a, j) => { if (a[0] === 'play' && CARDS[a[1]] && CARDS[a[1]].kind === 'pouch') (at[a[1]] = at[a[1]] || []).push(j); });
+      out.forEach((a, j) => { if (a[0] === 'play' && CARDS[a[1]] && FROM_DECK.has(CARDS[a[1]].kind)) (at[a[1]] = at[a[1]] || []).push(j); });
       for (const js of Object.values(at)) {
         const sorted = js.map((j) => out[j]).sort((a, b) => String(a[2]).localeCompare(String(b[2])));
         js.forEach((j, n) => { out[j] = sorted[n]; });

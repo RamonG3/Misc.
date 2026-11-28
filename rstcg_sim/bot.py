@@ -26,7 +26,7 @@ def deck_style(decklist):
     tally = {}
     for name, n in decklist.items():
         c = CARDS[name]
-        if c.style in ("melee", "ranged", "magic") and c.kind != "armor":
+        if c.style in ("melee", "ranged", "magic", "necrotic") and c.kind != "armor":
             tally[c.style] = tally.get(c.style, 0) + n
     return max(tally, key=tally.get)
 
@@ -80,6 +80,9 @@ class HeuristicBot:
         """Rough damage the opponent threatens next turn, and its style."""
         o = g.opp(i)
         w = o.weapon_card()
+        if w and w.kind == "weapon" and w.wclass == "summon":    # a summon fights in its own style
+            st = (w.styles or ("melee",))[0]
+            return w.hit + (2 if st == "melee" else 0), st
         if w and w.kind == "weapon":
             return w.hit + 2, "melee"
         if w and w.kind == "thrown":
@@ -89,6 +92,8 @@ class HeuristicBot:
         style = self.style[1 - i]
         if style == "magic" and o.family_count("rune") >= 1:
             return 10 if o.count("Chaos Rune") else 6, "magic"
+        if style == "necrotic" and o.family_count("rune") >= 1:
+            return 8, "necrotic"
         return 0, style
 
     # ---------- scoring ----------
@@ -118,6 +123,8 @@ class HeuristicBot:
             return [("melee_hit", 1)]
         if a[0] in ("swing", "free_swing"):
             w = p.weapon_card()
+            if w and w.wclass == "summon":          # a summon's hit counts for its style's cape and the Necromancy Cape
+                return [(a[1] + "_hit", w.hits), ("necro_hit", w.hits)]
             return [(a[1] + "_hit", w.hits if w else 1)]
         if a[0] == "spec":
             w = p.weapon_card()
@@ -125,6 +132,8 @@ class HeuristicBot:
         if a[0] != "play":
             return []
         c = CARDS[a[1]]
+        if c.style == "necrotic" and c.kind in ("spell", "destroy") and c.damage:
+            return [("necrotic_hit", 1), ("necro_hit", 1)]      # the Necromancy Cape, not the Magic Cape
         if c.kind == "spell" and c.damage:
             return [("magic_hit", 1)]
         if c.kind == "food":
@@ -209,7 +218,7 @@ class HeuristicBot:
             return v + 4.0 * self.unlocks(g, i, name)
 
         if k == "spell":
-            v = self.hit_value(g, i, c.damage, "magic") if c.damage else 0.0
+            v = self.hit_value(g, i, c.damage, "necrotic" if c.style == "necrotic" else "magic") if c.damage else 0.0
             v += 2.0 * c.draws
             if c.heals:
                 v += min(c.heals, g.rules["max_lp"] - p.lp) * self.urgency(p)
@@ -226,6 +235,8 @@ class HeuristicBot:
         swing = g.rules["swing_action"]
         if c.legendary and g.rules["legend_telegraph"] == "reveal" and target != "equip":
             return 3.5 if not p.telegraph else -2.0      # reveal it early: it's a free threat
+        if k in ("weapon", "thrown") and c.wclass == "summon":
+            return self.summon_score(g, i, c)
         if k in ("weapon", "thrown") and swing and c.equip_swing:
             return self.hit_value(g, i, c.hit, "melee") + 4.0 - self.current_weapon_value(p)
         if k in ("weapon", "thrown") and swing:
@@ -315,9 +326,18 @@ class HeuristicBot:
                 their_need = self.need[1 - i].get(target, 0)
                 v = (5.0 if o.count(target, real=True) <= their_need else 1.0) * min(c.destroy_n, o.materials.get(target, 0))
             if c.damage:
-                st = c.style if c.style in ("melee", "ranged", "magic") else "none"
+                st = c.style if c.style in ("melee", "ranged", "magic", "necrotic") else "none"
                 v += self.hit_value(g, i, c.damage, st)
             return v
+
+        if k == "conduit":           # a summon back from the discard: as good as playing it, without spending a card
+            return self.summon_score(g, i, CARDS[target]) + 2.0
+        if k == "ritual":
+            if CARDS[target].kind == "material":   # an Ectoplasm into play
+                return 2.0 + 4.0 * self.unlocks(g, i, target) + (2.0 if p.count(target) < need.get(target, 0) else 0.0)
+            t = CARDS[target]                      # a summon into your hand
+            v = 2.0 + (2.0 if not p.weapon and not any(CARDS[n].wclass == "summon" for n in p.hand) else 0.0)
+            return v + (1.0 if p.meets(t.req) and all(p.family_count(f) >= n for f, n in t.fam_req) else 0.0)
 
         if k == "pouch":
             v = 2.0 + 4.0 * self.unlocks(g, i, target)
@@ -326,6 +346,9 @@ class HeuristicBot:
         if k == "armor":
             mods = dict(c.armor)
             fit = -mods.get(threat_style, 0) * 0.75 + c.bonus * 1.6 * 0.7 * 3   # bonus: Void, Round 22 platebodies
+            if c.summon_bonus:      # Robes of the First Necromancer: +2 on the share of attacks summons make
+                share = min(1.0, sum(n for m, n in p.decklist.items() if CARDS[m].wclass == "summon") / 6)
+                fit += c.summon_bonus * 1.6 * 0.7 * 3 * share
             if not p.armor:
                 return 3.0 + fit
             cur = dict(CARDS[p.armor].armor).get(threat_style, 0)
@@ -416,6 +439,12 @@ class HeuristicBot:
             return 1.0 + (1.0 if p.lp < o.lp else 0.0)
         if name == "Grand Exchange":
             return 2.5
+        if name == "City of Um":       # Necrotic +2, summons +1 durability: for whoever has them
+            def worth(j):
+                q = g.players[j]
+                nec = 3.0 if self.style[j] == "necrotic" else (1.0 if "necrotic" in self.styles[j] else 0.0)
+                return nec + 0.12 * sum(n for m, n in q.decklist.items() if CARDS[m].wclass == "summon")
+            return worth(i) - worth(1 - i)
         return 0.0
 
     def attacks_per_turn(self, g, i, style):
@@ -424,7 +453,7 @@ class HeuristicBot:
             return 1.6
         if style not in self.styles[i]:
             return 0.0
-        return 1.6 / len(self.styles[i] & {"melee", "ranged", "magic"})
+        return 1.6 / len(self.styles[i] & {"melee", "ranged", "magic", "necrotic"})
 
     def buff_value(self, g, i, c):
         p, o = g.players[i], g.opp(i)
@@ -522,6 +551,9 @@ class HeuristicBot:
         left = len(c.steps) - p.quest["step"]
         v = self.quest_worth(g, i, c) / left
         kind, _ = c.steps[p.quest["step"]]
+        if target is not None and kind not in ("discard", "spend"):     # Demon Slayer: the strongest weapon, as before
+            ws = g.silverlight_choices(p)
+            v -= 1.0 * ws.index(target) if target in ws else 0.0
         if kind == "discard":
             v -= 0.6 * self.keep_value(g, i, target)
         elif kind == "spend":
@@ -571,6 +603,18 @@ class HeuristicBot:
         lethal = incoming >= me.lp
         return best if best and (lethal or best_v >= 7) else None
 
+    def summon_score(self, g, i, c):
+        """A summon going into the Weapon slot (from your hand, or from the discard by the Skull Lantern)."""
+        p = g.players[i]
+        dur = c.durability + (1 if g.location == "City of Um" else 0)
+        hit = c.hit + (CARDS[p.armor].summon_bonus if p.armor else 0)
+        v = hit * dur * FUTURE + 1.0 - self.current_weapon_value(p)
+        if c.heals:
+            v += c.heals * dur * max(0.4, self.urgency(p))
+        if c.soak:
+            v += c.soak * 0.4 - (p.shield["soak"] * 0.3 if p.shield and not p.shield.get("virtual") else 0.0)
+        return v
+
     @staticmethod
     def current_weapon_value(p):
         w = p.weapon_card()
@@ -601,4 +645,8 @@ class HeuristicBot:
             return 6.0
         if c.kind == "buff":
             return 3.5
+        if c.kind in ("conduit", "ritual"):
+            return 3.5
+        if c.kind == "destroy" and c.style == "necrotic":
+            return 4.0
         return 3.0

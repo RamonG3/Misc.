@@ -21,7 +21,7 @@
     two_handed: false, free_swing_after_spell: false, wears: 0, draws: 0, reacts_to: '', converts_to: '',
     bonus: 0, effect: '', spec: '', spec_cost: 0, spec_val: 0, qp: 0, steps: [], reward_val: 0,
     duration: 0, families: 0, hits: 1, equip_swing: false, expend: [], fam_req: [],
-    heals: 0, fetch: '', unshatter: false, burns: '', story: '',
+    heals: 0, fetch: '', unshatter: false, burns: '', story: '', summon_bonus: 0,
   };
 
   const CARDS = {};
@@ -47,6 +47,9 @@
   const ELEMENTAL = ['Air Rune', 'Water Rune', 'Earth Rune', 'Fire Rune'];
   const anyElemental = (list) => { for (let j = 0; j < list.length; j++) if (ELEMENTAL.includes(list[j])) return true; return false; };
   const NO_BUFF_SRC = new Set(['punch', 'reversal', 'quest']);
+  const SUMMON_SRC = new Set(['weapon', 'thrown', 'ability']);   // Necromancy: the sources a summon's swing or throw can have
+  // Is this attack a summon's swing or throw? (the Necromancy Cape's count, the First Necromancer's bonus)
+  const summonAttack = (p, src) => SUMMON_SRC.has(src) && p.weapon !== null && CARDS[p.weapon.name].wclass === 'summon';
   const WEAPON_KINDS = ['weapon', 'thrown', 'bow', 'staff'];
 
   // ---------- small helpers ----------
@@ -241,6 +244,7 @@
       const p = this.players[i];
       let extra = 0;
       if (p.armor && CARDS[p.armor].bonus && !NO_BUFF_SRC.has(src)) extra = CARDS[p.armor].bonus;  // Void
+      if (p.armor && CARDS[p.armor].summon_bonus && summonAttack(p, src)) extra += CARDS[p.armor].summon_bonus;  // Robes of the First Necromancer
       if (p.buff && !NO_BUFF_SRC.has(src)) {
         const c = CARDS[p.buff];
         if (c.prayer === style || c.prayer === 'any') return c.bonus + extra;   // 'any': Smite (Round 22)
@@ -258,6 +262,7 @@
       if (src !== null) amount += this.attack_bonus(i, style, src);
       if (!punch) {
         if (this.location === "Wizards' Tower" && style === 'magic') amount += 2;
+        if (this.location === 'City of Um' && style === 'necrotic') amount += 2;
         if (this.location === 'Wilderness') amount += 2;
         if (this.location === 'Mage Arena') amount += style === 'magic' ? 2 : style === 'ranged' ? -2 : 0;
         if (this.location === 'Draynor Manor') amount += style === 'magic' ? 2 : style === 'melee' ? -2 : 0;     // Story Mode: Delrith
@@ -314,6 +319,7 @@
     async deal(i, amount, style, src, opts = {}) {
       if (this.winner !== null) return 0;
       const bonus = opts.no_bonus ? 0 : this.attack_bonus(i, style, src);
+      const bySummon = summonAttack(this.players[i], src);
       amount += bonus;
       if (amount > 0 && !opts.unreactable && (await this.offer_reaction(i, amount, style, src))) return 0;
       if (this.winner !== null) return 0;
@@ -339,6 +345,7 @@
       o.set_lp(o.lp - to_lp);
       this.stat(i, 'dmg_' + src, to_lp);
       if (to_lp > 0) inc(this.players[i].cape_prog, style + '_hit');
+      if (to_lp > 0 && (bySummon || style === 'necrotic')) inc(this.players[i].cape_prog, 'necro_hit');   // the Necromancy Cape
       if (soaked) inc(o.cape_prog, 'soak', soaked);
       this.emit({ type: 'hit', by: i, target: 1 - i, amount: to_lp, soaked, style, src, broke });
       if (broke) this.note(`${Poss(o)} ${broke} breaks`, 1 - i);
@@ -437,6 +444,11 @@
       else {
         for (let k = 0; k < w.hits; k++) await this.deal(i, w.hit, style, 'weapon', { shatter: w.legendary });
         if (p.weapon) this.wear(i);
+        if (w.heals && this.winner === null) {    // the Vengeful Ghost heals with every swing
+          const before = p.lp;
+          p.set_lp(p.lp + Math.min(w.heals, this.rules.max_lp - p.lp));
+          if (p.lp > before) this.emit({ type: 'heal', who: i, amount: p.lp - before });
+        }
       }
     }
 
@@ -525,6 +537,11 @@
           }
         case 'pouch':
           return uniq(p.deck).filter((t) => CARDS[t].mat === 'rune').map((t) => ['play', n, t]);
+        case 'conduit':     // a summon from your discard pile, if you could play it from your hand
+          return uniq(p.discard).filter((t) => CARDS[t].wclass === 'summon' && this.card_actions(i, CARDS[t], no_damage).length)
+            .map((t) => ['play', n, t]);
+        case 'ritual':      // an Ectoplasm or a summon from your deck
+          return uniq(p.deck).filter((t) => CARDS[t].mat === 'ectoplasm' || CARDS[t].wclass === 'summon').map((t) => ['play', n, t]);
         case 'armor':
           if (c.families && new Set(Object.keys(p.materials).map((m) => CARDS[m].mat)).size < c.families) return [];
           if (c.fam_req.length && c.fam_req.some(([f, x]) => p.family_count(f) < x)) return [];   // Round 22 armor
@@ -605,7 +622,18 @@
       if (kind === 'spend') return Object.keys(p.materials).map((m) => ['quest', m]);
       const ok = { have: () => p.family_count(arg[0]) >= arg[1], weapon: () => p.weapon !== null,
         armor: () => p.armor !== null, shield: () => p.shield !== null }[kind]();
+      if (ok && p.quest.step === CARDS[p.quest.name].steps.length - 1 && CARDS[p.quest.name].effect === 'silverlight') {
+        const ws = this.silverlight_choices(p);   // Demon Slayer: choose the weapon (the strongest first; by name, never deck order)
+        if (ws.length) return ws.map((w) => ['quest', w]);
+      }
       return ok ? [['quest', null]] : [];
+    }
+
+    // Demon Slayer's reward: the weapons in your deck, summons left out, each named once.
+    silverlight_choices(p) {
+      const val = (n) => CARDS[n].hit * Math.max(1, CARDS[n].durability);
+      return uniq(p.deck).filter((n) => WEAPON_KINDS.includes(CARDS[n].kind) && CARDS[n].wclass !== 'summon')
+        .sort((a, b) => val(b) - val(a) || (a < b ? -1 : a > b ? 1 : 0));
     }
 
     async do_quest_step(i, target) {
@@ -616,6 +644,7 @@
         removeOne(p.hand, target);
         p.discard.push(target);
       } else if (kind === 'spend') this.lose_material(p, target);
+      const choice = kind !== 'discard' && kind !== 'spend' ? target : null;   // Demon Slayer's chosen weapon
       p.quest.step += 1;
       this.stat(i, 'quest_steps');
       if (p.quest.step >= c.steps.length) {
@@ -625,7 +654,7 @@
         p.qp += c.qp;
         this.note(`${subj(p)} ${vb(p, 'complete', 'completes')} ${c.name} (${p.qp} QP)`, i);
         this.emit({ type: 'quest', who: i, card: c.name });
-        await this.quest_reward(i, c);
+        await this.quest_reward(i, c, choice);
       }
     }
 
@@ -639,7 +668,7 @@
       this.rng.shuffle(p.deck);
     }
 
-    async quest_reward(i, c) {
+    async quest_reward(i, c, choice = null) {
       const p = this.players[i];
       const o = this.opp(i);
       switch (c.effect) {
@@ -666,12 +695,10 @@
             this.unequip(o);
           }
           break;
-        case 'silverlight': {
-          const ws = p.deck.filter((n) => WEAPON_KINDS.includes(CARDS[n].kind));
+        case 'silverlight': {    // choose a weapon from your deck and equip it, ignoring requirements (not a summon)
+          const ws = this.silverlight_choices(p);
           if (ws.length) {
-            let best = ws[0];
-            const val = (n) => CARDS[n].hit * Math.max(1, CARDS[n].durability);
-            for (const n of ws) if (val(n) > val(best)) best = n;
+            const best = ws.includes(choice) ? choice : ws[0];
             removeOne(p.deck, best);
             p.hand.push(best);
             await this.equip(i, best);
@@ -759,7 +786,7 @@
       switch (k) {
         case 'material': inc(p.materials, name); inc(p.fresh, name); break;
         case 'spell': {
-          if (c.damage) await this.deal(i, c.damage, 'magic', 'spell', { shatter: c.burns === 'shatter', ignore_shield: c.burns === 'pierce' });
+          if (c.damage) await this.deal(i, c.damage, c.style === 'necrotic' ? 'necrotic' : 'magic', 'spell', { shatter: c.burns === 'shatter', ignore_shield: c.burns === 'pierce' });
           if (c.wears) this.wear_opponent(i, c.wears);
           if (c.heals && this.winner === null) {
             const before = p.lp;
@@ -780,9 +807,15 @@
             p.shield = null;
           }
           p.weapon = { name, dur: c.durability, energy: 0, played: this.turn };
+          if (c.soak) p.shield = { name, soak: c.soak, virtual: true };   // the Phantom Guardian is a shield too, as the Shieldbow is
+          if (c.wclass === 'summon' && this.location === 'City of Um') p.weapon.dur += 1;
           if (c.legendary) this.stat(i, 'legend_equipped');
           break;
-        case 'thrown': this.unequip(p); p.weapon = { name, dur: c.durability }; break;
+        case 'thrown':
+          this.unequip(p);
+          p.weapon = { name, dur: c.durability };
+          if (c.wclass === 'summon' && this.location === 'City of Um') p.weapon.dur += 1;   // the Putrid Zombie
+          break;
         case 'staff': this.unequip(p); p.weapon = { name, dur: c.durability, energy: 0 }; break;
         case 'bow':
           this.unequip(p);
@@ -826,7 +859,7 @@
           p.discard.push(name);
           break;
         case 'destroy':
-          if (c.damage) await this.deal(i, c.damage, ['melee', 'ranged', 'magic'].includes(c.style) ? c.style : 'none', 'spell');
+          if (c.damage) await this.deal(i, c.damage, ['melee', 'ranged', 'magic', 'necrotic'].includes(c.style) ? c.style : 'none', 'spell');
           if (target && o.materials[target] > 0) {
             inc(o.materials, target, -1);
             o.discard.push(target);
@@ -836,6 +869,20 @@
         case 'pouch':
           removeOne(p.deck, target);
           inc(p.materials, target);
+          this.rng.shuffle(p.deck);
+          p.discard.push(name);
+          break;
+        case 'conduit':                // the Skull Lantern: a summon from the discard into the Weapon slot
+          removeOne(p.discard, target);
+          p.discard.push(name);
+          this.note(`${subj(p)} ${vb(p, 'raise', 'raises')} ${target}`, i);
+          await this.apply_card(i, target, null);
+          break;
+        case 'ritual':                 // Necromancy Ritual: an Ectoplasm into play, or a summon into your hand
+          removeOne(p.deck, target);
+          if (CARDS[target].kind === 'material') inc(p.materials, target);
+          else p.hand.push(target);
+          this.note(`${subj(p)} ${vb(p, 'find', 'finds')} ${target}`, i);
           this.rng.shuffle(p.deck);
           p.discard.push(name);
           break;

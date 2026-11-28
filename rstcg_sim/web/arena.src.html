@@ -11,7 +11,7 @@
    Card faces match print/build_pnp.py so paper and screen read as one game. */
 :root {
   --gold: #c9a54b; --gold-hi: #f3d27a; --gold-pale: #fff1c4; --parch: #f1e7cf; --ink: #2a2420; --cream: #e9dfc7; --muted: #cdbf9f; --faint: #8f8268;
-  --melee: #8e2b23; --ranged: #3e6b34; --magic: #2d4f8c; --neutral: #5e5a52; --material: #7a6648; --cape: #b08a2e;
+  --melee: #8e2b23; --ranged: #3e6b34; --magic: #2d4f8c; --necrotic: #5d3b86; --neutral: #5e5a52; --material: #7a6648; --cape: #b08a2e;
   --you: #c9a54b; --bot: #2d4f8c; --bot-hi: #9cc3e6; --hurt: #ff9b85; --heal: #9fd986;
   --display: 'Cinzel', Georgia, serif; --body: 'Alegreya Sans', 'Segoe UI', system-ui, sans-serif;
   color-scheme: dark;
@@ -92,6 +92,9 @@ html.bigtext .cf-bd p { font-size: 19px; line-height: 1.22; font-weight: 700; co
 html.bigtext .chip { font-size: 19px; padding: 2px 9px; }
 html.bigtext .cf-ft { font-size: 12px; font-weight: 700; }
 html.bigtext .cf-nm.long { font-size: 20px; letter-spacing: 0; }
+/* the longest names (2026-11-27: "Protect from Necromancy", "Robes of the First Necromancer") step down again, in both sizes */
+.cf-nm.xlong, html.bigtext .cf-nm.xlong { font-size: 18px; letter-spacing: 0; }
+.cf-nm.xxlong, html.bigtext .cf-nm.xxlong { font-size: 15px; letter-spacing: 0; }
 html.bigtext .mc-nm { font-size: 13px; padding: 4px 5px 3px; letter-spacing: -.01em; }
 
 /* ---------- the tilted table ---------- */
@@ -933,6 +936,9 @@ html, body { touch-action: manipulation; }
   const LV = window.RSTCGLevels;
   const AS = window.ARENA_ASSETS;
   const ART = AS.art, ICON = AS.icons, SET1 = AS.set1, FRAME = AS.frame;
+  // Necromancy (2026-11-27): the purple frame and a stand-in Necrotic icon, until the PC's assets carry their own
+  if (!FRAME.necrotic) FRAME.necrotic = '#5d3b86';
+  if (!ICON.necrotic) ICON.necrotic = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><circle cx="32" cy="32" r="30" fill="#2a1840" stroke="#c9a6f0" stroke-width="3"/><path d="M32 12c-10 0-17 7-17 16 0 6 3 10 7 12v6h20v-6c4-2 7-6 7-12 0-9-7-16-17-16z" fill="#e9dcff"/><circle cx="25" cy="29" r="4.5" fill="#2a1840"/><circle cx="39" cy="29" r="4.5" fill="#2a1840"/><path d="M32 34l-3 5h6z" fill="#2a1840"/><path d="M26 46v5M32 46v5M38 46v5" stroke="#2a1840" stroke-width="2"/></svg>');
   const $ = (s) => document.querySelector(s);
   const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -946,8 +952,8 @@ html, body { touch-action: manipulation; }
   // =====================================================================================
   // Card words. Copied from game.src.html so both pages describe cards the same way.
   // =====================================================================================
-  const S = { melee: 'Melee', ranged: 'Ranged', magic: 'Magic', none: 'pure' };
-  const FAM = { rune: 'rune', bar: 'bar', log: 'log', cloth: 'cloth', leather: 'leather', any: 'material' };
+  const S = { melee: 'Melee', ranged: 'Ranged', magic: 'Magic', necrotic: 'Necrotic', none: 'pure' };
+  const FAM = { rune: 'rune', bar: 'bar', log: 'log', cloth: 'cloth', leather: 'leather', ectoplasm: 'Ectoplasm', any: 'material' };
   const TIER = { 1: 'Bronze', 2: 'Mithril', 3: 'Rune' };
   const short = (m) => (m === 'Elemental Rune' ? 'Air/Water/Earth/Fire' : m.replace(/ (Bar|Rune|Logs)$/, ''));
   const countsText = (m, k) => (m === 'Elemental Rune'
@@ -987,7 +993,7 @@ html, body { touch-action: manipulation; }
       heal: `Heal ${c.reward_val}`, draw: `Draw ${c.reward_val}`, fetch_rune: 'Put a rune from your deck into play',
       fetch_bar: 'Put a bar from your deck into play', fetch_prayer: 'Search your deck for a prayer',
       lose_action: "Your opponent's next turn has 1 action", damage: `${c.reward_val} damage that ignores armor and reactions`,
-      chicken: "Your opponent's weapon becomes a chicken", silverlight: 'Equip the best weapon in your deck',
+      chicken: "Your opponent's weapon becomes a chicken", silverlight: 'Choose a weapon from your deck and equip it, even without its materials. Not a summon',
       dragon_slayer: 'Put an armor and a shield from your deck into play',
       none: c.name === 'Romeo & Juliet' ? "Nothing. It's Romeo & Juliet." : 'Nothing',
     }[c.effect] || '';
@@ -1003,24 +1009,27 @@ html, body { touch-action: manipulation; }
         break;
       case 'spell':
         type = 'Spell';
-        stat = c.damage ? `${c.damage} Magic` : 'No damage';
+        stat = c.damage ? `${c.damage} ${c.style === 'necrotic' ? 'Necrotic' : 'Magic'}` : 'No damage';
         if (c.heals) t.push(`Heal ${c.heals}.`);
         if (c.wears) t.push(`Their weapon loses ${c.wears} durability (or ammo ${plural(c.wears, 'shot')}).`);
         if (c.fetch) t.push(`Play ${c.fetch} from your deck${c.draws ? ', then draw a card' : ''}.`);
         else if (c.draws) t.push(`Draw ${c.draws}.`);
         break;
       case 'weapon':
-        type = `Weapon · ${c.wclass || 'blade'}${c.legendary ? ' · Legendary' : ''}`;
+        type = c.wclass === 'summon' ? `Summon · ${S[c.styles[0] || 'melee']}` : `Weapon · ${c.wclass || 'blade'}${c.legendary ? ' · Legendary' : ''}`;
         stat = `Hit ${c.hit}${c.hits > 1 ? ' ×' + c.hits : ''} · Dur ${c.durability}`;
         if (c.styles.length > 1) t.push(`Swings as ${c.styles.map((s) => S[s]).join(' or ')}.`);
         else if (c.styles.length === 1 && c.styles[0] !== 'melee') t.push(`Hits as ${S[c.styles[0]]}.`);
         if (c.hits > 1) t.push(`Each swing hits ${c.hits} times.`);
+        if (c.heals) t.push(`Each swing heals you ${c.heals}.`);
+        if (c.soak) t.push(`A shield too: soak ${c.soak}.`);
         if (c.two_handed) t.push('Two-handed.');
+        if (c.wclass === 'summon') t.push('Takes your Weapon slot. Gone when its durability runs out.');
         if (c.free_swing_after_spell) t.push('After you cast a spell, one free swing that turn.');
         if (c.spec) t.push(specText(c) + '.');
         if (c.legendary) t.push("Can't attack the turn it's played. Breaks shields it hits.");
         break;
-      case 'thrown': type = `Thrown · ${c.wclass}`; stat = `Hit ${c.hit} · ${c.durability} throws`; t.push('Ranged. One throw per swing.'); break;
+      case 'thrown': type = c.wclass === 'summon' ? 'Summon · Ranged' : `Thrown · ${c.wclass}`; stat = `Hit ${c.hit} · ${c.durability} throws`; t.push(c.wclass === 'summon' ? 'Ranged. It hurls itself: one throw per swing. No arrows needed.' : 'Ranged. One throw per swing.'); break;
       case 'staff':
         type = 'Staff';
         stat = `Swing ${c.hit} Magic · Dur ${c.durability}`;
@@ -1046,18 +1055,24 @@ html, body { touch-action: manipulation; }
       case 'rapid': type = 'Ability · Ranged'; stat = '2 shots'; t.push('Fire 2 shots, or throw twice, as one action.'); break;
       case 'longrange': type = 'Ability · Ranged'; stat = '1 shot −1'; t.push('Melee damage you take −2 until your next turn.'); break;
       case 'destroy':
-        type = c.item ? 'Item' : c.style === 'magic' ? 'Spell' : 'Ability';
-        if (c.damage) stat = `${c.damage} damage`;
-        t.push(c.damage ? `${c.damage} damage, then destroy one of your opponent's ${FAM[c.destroys]}s if they have one.`
-          : `Destroy one of your opponent's ${FAM[c.destroys]}s.`);
+        type = c.item ? 'Item' : c.style === 'magic' || c.style === 'necrotic' ? 'Spell' : 'Ability';
+        if (c.damage) stat = c.style === 'necrotic' ? `${c.damage} Necrotic` : `${c.damage} damage`;
+        {
+          const theirs = c.destroys === 'ectoplasm' ? 'Ectoplasm' : `${FAM[c.destroys]}s`;
+          t.push(c.damage ? `${c.damage} damage, then destroy one of your opponent's ${theirs} if they have one.`
+            : `Destroy one of your opponent's ${theirs}.`);
+        }
         if (c.needs_melee_weapon) t.push('Needs a Melee weapon equipped.');
         break;
       case 'pouch': type = 'Item'; t.push('Put a rune of your choice from your deck into play.'); break;
+      case 'conduit': type = 'Item · Conduit'; t.push('Put a summon from your discard pile straight into your Weapon slot. You still need its materials.'); break;
+      case 'ritual': type = 'Ritual'; t.push('Choose an Ectoplasm or a summon in your deck. The Ectoplasm goes into play, the summon into your hand. Shuffle your deck.'); break;
       case 'armor':
-        type = `Armor · ${S[c.style] || 'any style'}`;
+        type = `Armor · ${S[c.style] || 'any style'}${c.legendary ? ' · Legendary' : ''}`;
         stat = c.armor.map(([s, m]) => `${S[s]} ${m > 0 ? '+' : '−'}${Math.abs(m)}`).join(' · ');
         t.push('Changes the damage you take.');
         if (c.bonus) t.push(`Your attacks +${c.bonus}.`);
+        if (c.summon_bonus) t.push(`Your summons hit +${c.summon_bonus}.`);
         if (c.families) t.push(`Needs ${c.families} material types in play.`);
         break;
       case 'shield': type = 'Shield'; stat = `Soak ${c.soak}`; t.push(c.free ? 'Free to play.' : 'Soaks damage until it breaks.');
@@ -1092,6 +1107,7 @@ html, body { touch-action: manipulation; }
           'Mage Arena': 'Magic damage +2, Ranged damage −2, for both players.',
           'Duel Arena': 'No food, no prayers of any kind. Active prayers end when it arrives.',
           'Grand Exchange': 'Once a turn, free: discard a card from hand to draw a card. Either player.',
+          'City of Um': 'Necrotic damage +2, for both players. Summons come into play with +1 durability.',
           // Story Mode's boss Locations (2026-11-18: they had no text, which made a 0-damage Punch a mystery)
           'Draynor Manor': 'Magic damage +2, Melee damage −2, for both players. Punches are unchanged.',
           'Moonlit Circle': 'Melee damage +2, Magic damage −2, for both players. Punches are unchanged.',
@@ -1114,14 +1130,16 @@ html, body { touch-action: manipulation; }
   // =====================================================================================
   const RARITY = { C: 'Common', U: 'Uncommon', R: 'Rare', L: 'Legendary' };
   const GLYPH = { material: 'M', food: 'F', npc: 'N', location: 'L', quest: 'Q', shield: 'S', hammer: 'I', pouch: 'I', buff: 'P',
-    prayer: 'P', reversal: 'R', destroy: 'D', teleport: 'I' };
-  const STYLES = ['melee', 'ranged', 'magic'];
+    prayer: 'P', reversal: 'R', destroy: 'D', teleport: 'I', conduit: 'I', ritual: 'R' };
+  const STYLES = ['melee', 'ranged', 'magic', 'necrotic'];
   const MAT_COLOR = { 'Bronze Bar': '#b0773c', 'Mithril Bar': '#5b6fa8', 'Rune Bar': '#3d9fb0', 'Enchanted Bar': '#7a5bb0', 'Black Bar': '#34323a',
     'Mithril Grapple': '#5b8f8a', 'Normal Logs': '#9a7448', 'Willow Logs': '#8f9d55', 'Yew Logs': '#6e4a2a',
     'Enchanted Logs': '#8a6ab0', 'Air Rune': '#f4f4f4', 'Fire Rune': '#d8503a', 'Water Rune': '#3f7fd0', 'Earth Rune': '#6c8a3a',
     'Chaos Rune': '#e0a030', 'Death Rune': '#202020', 'Blood Rune': '#a01818', 'Smoke Rune': '#8c8c8c', 'Dust Rune': '#b8a070',
-    'Mist Rune': '#a9c4e0', 'Lava Rune': '#c8602a', 'Steam Rune': '#b8b8c8', 'Mud Rune': '#7a6040' };
-  const frameOf = (c) => (c.kind === 'material' ? FRAME.material : STYLES.includes(c.style) ? FRAME[c.style] : FRAME.neutral);
+    'Mist Rune': '#a9c4e0', 'Lava Rune': '#c8602a', 'Steam Rune': '#b8b8c8', 'Mud Rune': '#7a6040',
+    'Ectoplasm': '#7ad98a', 'Spirit Rune': '#d9d2f0', 'Bone Rune': '#e6dcc0', 'Flesh Rune': '#c0606a', 'Miasma Rune': '#6f8a3a' };
+  // Every Necromancy card but its materials has the purple frame, summons included (Ramon, 2026-11-25)
+  const frameOf = (c) => (c.kind === 'material' ? FRAME.material : c.wclass === 'summon' ? FRAME.necrotic : STYLES.includes(c.style) ? FRAME[c.style] : FRAME.neutral);
   const styleIcon = (s) => (ICON[s] ? `<img src="${ICON[s]}" alt="${S[s] || s}">` : '');
 
   function matSvg(name, w = 200) {             // print/build_pnp.py mat_svg, plus a rune stone
@@ -1129,6 +1147,9 @@ html, body { touch-action: manipulation; }
     const col = MAT_COLOR[name] || '#999';
     if (c.mat === 'bar') {
       return `<svg width="${w}" height="${w * .65}" viewBox="0 0 200 130" aria-hidden="true"><g stroke="#1b140e" stroke-width="5" stroke-linejoin="round"><path d="M40 50L160 50L185 105L15 105Z" fill="${col}"/><path d="M40 50L160 50L150 30L50 30Z" fill="${col}" style="filter:brightness(1.35)"/></g></svg>`;
+    }
+    if (c.mat === 'ectoplasm') {
+      return `<svg width="${w * .6}" height="${w * .6}" viewBox="0 0 100 100" aria-hidden="true"><path d="M50 12c18 0 30 14 30 32 0 14-6 22-6 30 0 8-8 14-24 14S26 82 26 74c0-8-6-16-6-30 0-18 12-32 30-32z" fill="${col}" stroke="#1b140e" stroke-width="4"/><circle cx="42" cy="40" r="7" fill="#fff" opacity=".55"/></svg>`;
     }
     if (c.mat === 'rune') {
       return `<svg width="${w * .6}" height="${w * .6}" viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" r="42" fill="#8d8a84" stroke="#1b140e" stroke-width="4"/><circle cx="50" cy="50" r="28" fill="${col}" stroke="#1b140e" stroke-width="2"/></svg>`;
@@ -1174,7 +1195,7 @@ html, body { touch-action: manipulation; }
     const rewardCh = c.story === 'reward' && (window.RSTCGStory.CHAPTERS || []).find((ch) => Object.values(ch.rewards || {}).includes(name));
     const foot = c.story === 'reward' ? `Story reward${rewardCh ? ` · Chapter ${rewardCh.n}` : ''}` : c.story === 'boss' ? 'Story · boss only' : `Set 1 · #${s1.num || '—'}${s1.rarity ? ' · ' + RARITY[s1.rarity] : ''}`;
     return `<div class="cf" style="--frame:${frameOf(c)}"><div class="cf-in">
-      <div class="cf-hd">${circle}<div class="cf-tt"><span class="cf-nm${name.length >= 19 ? ' long' : ''}">${esc(name)}</span><span class="cf-sb">${esc(sub)}</span></div></div>
+      <div class="cf-hd">${circle}<div class="cf-tt"><span class="cf-nm${name.length >= 27 ? ' long xxlong' : name.length >= 22 ? ' long xlong' : name.length >= 19 ? ' long' : ''}">${esc(name)}</span><span class="cf-sb">${esc(sub)}</span></div></div>
       ${artBlock(name)}
       <div class="cf-strip"><span>${esc(info.type)}</span><span>${S[c.style] && c.kind !== 'material' ? S[c.style] : ''}</span></div>
       <div class="cf-bd">${chips}${info.text.map((l) => `<p>${esc(l)}</p>`).join('')}</div>
@@ -1506,10 +1527,14 @@ html, body { touch-action: manipulation; }
                                             // were made twice as loud on 2026-11-18; this keeps the runes about where they were)
   const PRAYER_V = 2.5;                     // prayer recordings (2026-11-22) are about 9 dB softer than the spells' as recorded;
                                             // at 2.5 (+8 dB) they sit about 3 dB under a spell through the mixer (spellsound.js)
-  // the volume a card's recording plays at: runes and prayers have their own, spells play at 1
-  const clipV = (name) => { const k = CARDS[name] && CARDS[name].kind; return k === 'material' ? RUNE_V : k === 'buff' || k === 'prayer' ? PRAYER_V : 1; };
+  const SUMMON_V = 0.12;                    // Conjuration.ogg, every summon's sound (Ramon, 2026-11-27): about 18 dB louder than the
+                                            // spells as recorded, so it plays well down: -22 dB through the mixer, 3 under the spells
+                                            // (-19), beside the prayers (-21.6); spellsound.js checks it
+  // the volume a card's recording plays at: runes, prayers and summons have their own, spells play at 1
+  const isSummon = (name) => !!CARDS[name] && (CARDS[name].wclass === 'summon' || CARDS[name].kind === 'conduit');
+  const clipV = (name) => { const k = CARDS[name] && CARDS[name].kind; return isSummon(name) ? SUMMON_V : k === 'material' ? RUNE_V : k === 'buff' || k === 'prayer' ? PRAYER_V : 1; };
   const STAYS = new Set(['weapon', 'thrown', 'bow', 'staff', 'shield', 'armor', 'arrows', 'buff', 'material', 'quest', 'location']);
-  const STYLE_COL = { melee: '#ff9b85', ranged: '#9fd986', magic: '#9cc3e6', none: '#f3d27a' };
+  const STYLE_COL = { melee: '#ff9b85', ranged: '#9fd986', magic: '#9cc3e6', necrotic: '#c9a6f0', none: '#f3d27a' };
 
   function snap(g) {
     return { active: g.active, winner: g.winner, loc: g.location, locOwner: g.location_owner,
@@ -1610,7 +1635,7 @@ html, body { touch-action: manipulation; }
       // (and so does a rune that was just played, its runecrafting sound; a prayer going up; a Protect prayer blocking)
       if (!ui.replaying && !ui.intro && before) {
         const k = hint && hint.act === 'play' && CARDS[hint.name] && CARDS[hint.name].kind;
-        if (k && (!STAYS.has(k) || k === 'material' || k === 'buff')) AU.clip(hint.name, { v: clipV(hint.name) });
+        if (k && (!STAYS.has(k) || k === 'material' || k === 'buff' || isSummon(hint.name))) AU.clip(hint.name, { v: clipV(hint.name) });
         for (const e of evs) if (e.type === 'react' && CARDS[e.card] && CARDS[e.card].kind === 'prayer') AU.clip(e.card, { v: PRAYER_V });
       }
       if (held) held.el.remove(); $('#reveal').innerHTML = ''; render(); return;
@@ -1697,13 +1722,13 @@ html, body { touch-action: manipulation; }
       if (destEl) {
         if (ctx.held) ctx.held.el.remove();
         if (isNew) hide(destEl);
-        const landSound = h.act === 'play' && CARDS[h.name] && (CARDS[h.name].kind === 'material' || CARDS[h.name].kind === 'buff');
+        const landSound = h.act === 'play' && CARDS[h.name] && (CARDS[h.name].kind === 'material' || CARDS[h.name].kind === 'buff' || isSummon(h.name));
         phase1.push(flyCard({ name: h.name, from: src, to: stageXY(destEl), dur: D(460), rot0: src.rot || 0,
           onLand: () => { pop(destEl); if (!(landSound && AU.clip(h.name, { v: clipV(h.name), pan: i === you ? -0.2 : 0.2 }))) sfx('card'); } }));
       } else if (take(m.discIn, h.name)) {
         const hold = i === you ? HOLD_YOU : HOLD_BOT;
         cast = { i, name: h.name, rect: hold };
-        castSound = h.act === 'play' && AU.clip(h.name, { pan: i === you ? -0.2 : 0.2 }) ? i : null;
+        castSound = h.act === 'play' && AU.clip(h.name, { v: clipV(h.name), pan: i === you ? -0.2 : 0.2 }) ? i : null;
         if (ctx.held) cast.el = ctx.held.el;
         else { sfx('reveal', { v: 0.6 }); phase1.push(flyCard({ name: h.name, from: src, to: hold, dur: D(380), rot0: src.rot || 0, keep: true }).then((el) => { cast.el = el; })); }
       } else {
@@ -2895,7 +2920,7 @@ html, body { touch-action: manipulation; }
     const d = (amount, style, o) => { const r = dmg(g, i, amount, style, o); const lethal = r.to >= g.opp(i).lp; return `<span class="${lethal ? 'lethal' : ''}">${lethal ? 'Lethal: ' : ''}${r.to} to their deck</span>${r.soak ? ` · ${r.soak} soaked` : ''}`; };
     if (c.kind === 'spell') {
       const bits = [];
-      if (c.damage) bits.push(d(c.damage, 'magic', { src: 'spell' }));
+      if (c.damage) bits.push(d(c.damage, c.style === 'necrotic' ? 'necrotic' : 'magic', { src: 'spell' }));
       else if (c.wears) bits.push(`Their weapon −${c.wears}`);
       if (c.heals) bits.push(`heal ${Math.min(c.heals, g.rules.max_lp - p.lp)}`);
       if (c.fetch) bits.push(p.deck.includes(c.fetch) ? `plays ${c.fetch}` : `no ${c.fetch} in your deck`);
@@ -2917,6 +2942,8 @@ html, body { touch-action: manipulation; }
     if (c.kind === 'quest' && p.quest) return `Abandons ${p.quest.name}`;
     if (c.kind === 'npc') return `${a[2]}: ${CARDS[a[2]].kind === 'material' ? 'back into play' : 'back to your hand'}`;
     if (c.kind === 'pouch') return `${a[2]} from your deck into play`;
+    if (c.kind === 'conduit') return `${a[2]} from your discard into your Weapon slot${p.weapon ? ` (replaces ${p.weapon.name})` : ''}`;
+    if (c.kind === 'ritual') return `${a[2]} from your deck ${CARDS[a[2]].kind === 'material' ? 'into play' : 'to your hand'}`;
     if (c.kind === 'hammer') return a[2] === 'weapon' ? `+${c.bonus} durability on ${p.weapon.name}` : `+${c.bonus} soak on ${p.shield.name}`;
     if (c.kind === 'material') return 'Stays in play';
     return '';
@@ -2925,12 +2952,17 @@ html, body { touch-action: manipulation; }
     const c = a[0] === 'play' ? CARDS[a[1]] : null;
     if (a[0] === 'varrock') return [`Rest in Varrock`, `Discard it: heal ${Math.min(3, g.rules.max_lp - g.players[i].lp, g.players[i].discard.length + 1)}`];
     if (a[0] === 'exchange') return ['Trade at the Grand Exchange', 'Discard it, draw a card · free'];
-    if (a[0] === 'quest') return [a[1] ? `Quest step: ${a[1]}` : 'Quest step', ''];
+    if (a[0] === 'quest') {
+      const q = g.players[i].quest;
+      const silver = q && CARDS[q.name].effect === 'silverlight' && q.step === CARDS[q.name].steps.length - 1 && a[1];
+      if (silver) return [`Finish ${q.name}: equip ${a[1]}`, 'From your deck, even without its materials'];   // Demon Slayer's choice
+      return [a[1] ? `Quest step: ${a[1]}` : 'Quest step', ''];
+    }
     if (a[0] === 'claim') return [`Claim the ${a[1]}`, '3 of your turns wearing it wins'];
     if (a[0] === 'swing' || a[0] === 'free_swing') return [`${a[0] === 'free_swing' ? 'Free swing' : 'Swing'} as ${S[a[1]]}`, `${swingDmg(g, i, a).to} to their deck`];
     const verb = { material: 'Play', spell: 'Cast', weapon: 'Equip', thrown: 'Equip', bow: 'Equip', staff: 'Equip', arrows: 'Load',
       ability: 'Use', rapid: 'Fire', longrange: 'Fire', armor: 'Wear', shield: 'Raise', food: 'Eat', buff: 'Pray', quest: 'Start', location: 'Travel to',
-      npc: 'Call', destroy: 'Use', pouch: 'Use', hammer: 'Use', teleport: 'Use' }[c.kind] || 'Play';
+      npc: 'Call', destroy: 'Use', pouch: 'Use', hammer: 'Use', teleport: 'Use', conduit: 'Use', ritual: 'Perform' }[c.kind] || 'Play';
     const tail = a[2] && c.kind === 'destroy' ? ` on their ${a[2]}` : a[2] && c.kind === 'hammer' ? ` on your ${a[2]}` : '';
     return [`${verb} ${a[1]}${tail}`, playPreview(g, i, a)];
   }
@@ -2949,6 +2981,8 @@ html, body { touch-action: manipulation; }
     if (c.kind === 'food') return p.lp >= g.rules.max_lp ? 'Your deck is full.' : !p.discard.length ? 'Nothing in your discard to heal from.' : 'You already ate this turn.';
     if (c.kind === 'shield') return 'Your weapon is two-handed.';
     if (c.kind === 'npc') return 'Nothing in your discard it can recover.';
+    if (c.kind === 'conduit') return 'Needs a summon in your discard pile whose materials you have in play.';
+    if (c.kind === 'ritual') return 'No Ectoplasm or summon left in your deck.';
     if (c.kind === 'destroy') return c.needs_melee_weapon && !(w && w.kind === 'weapon') ? 'Needs a Melee weapon equipped.' : "There's nothing of theirs to destroy.";
     if (c.kind === 'location') return 'Already in play.';
     if (c.kind === 'hammer') return 'Needs a weapon with durability (not a Legendary) or a shield.';
@@ -2961,8 +2995,8 @@ html, body { touch-action: manipulation; }
   // =====================================================================================
   // Board
   // =====================================================================================
-  const FAM_ORDER = ['bar', 'log', 'rune'];
-  const FAM_WORD = { bar: 'Bars', log: 'Logs', rune: 'Runes', cloth: 'Cloth', leather: 'Leather' };
+  const FAM_ORDER = ['bar', 'log', 'rune', 'ectoplasm'];
+  const FAM_WORD = { bar: 'Bars', log: 'Logs', rune: 'Runes', cloth: 'Cloth', leather: 'Leather', ectoplasm: 'Ectoplasm' };
 
   function materialsHTML(p) {                // a chip per material in play: its art and how many
     const mine = ui.g && p === ui.g.players[ui.you];
@@ -3073,6 +3107,7 @@ html, body { touch-action: manipulation; }
     soak: () => [ART.Kiteshield && ART.Kiteshield.src, 'soaked'], elite_prayer: () => [ART.Piety && ART.Piety.src, 'elite'],
     food: () => [ART.Lobster && ART.Lobster.src, 'food'], bar: () => [ART['Bronze Bar'] && ART['Bronze Bar'].src, 'bars'],
     log: () => [ART['Normal Logs'] && ART['Normal Logs'].src, 'logs'], rune: () => [ART['Air Rune'] && ART['Air Rune'].src, 'runes'], qp: () => [ICON.quest, 'QP'],
+    necro_hit: () => [ICON.necrotic, 'hits'],
   };
   function capeHTML(g, cape, left) {
     const you = ui.you, bot = 1 - you;
@@ -3089,7 +3124,7 @@ html, body { touch-action: manipulation; }
       const row = (k) => {
         const [have, need] = g.progress(g.players[k], cape);
         const isYou = k === you;
-        const col = isYou ? (def.what.endsWith('_hit') ? FRAME[def.what.split('_')[0]] : 'var(--melee)') : 'var(--bot)';
+        const col = isYou ? (def.what === 'necro_hit' ? FRAME.necrotic : def.what.endsWith('_hit') ? FRAME[def.what.split('_')[0]] : 'var(--melee)') : 'var(--bot)';
         const meter = need <= 7
           ? `<div style="display:flex;gap:4px;flex:1">${Array.from({ length: need }, (_, x) => `<span class="bx ${x < have ? 'on' : 'off'}" style="${x < have ? `background:${col}` : ''}"></span>`).join('')}</div>`
           : `<div class="track"><i style="width:${Math.min(100, 100 * have / need)}%;background:${col}"></i></div>`;
@@ -3522,6 +3557,7 @@ html, body { touch-action: manipulation; }
   }
   const artClass = (a) => (a.mode === 'px' ? 'px' : ['scene', 'tall', 'portrait'].includes(a.mode) ? 'scene' : '');
   const CAPE_HOW = { melee_hit: (n) => `Land ${n} Melee hits`, ranged_hit: (n) => `Land ${n} Ranged hits`, magic_hit: (n) => `Land ${n} Magic hits`,
+    necro_hit: (n) => `Land ${n} hits with summons or Necrotic attacks`,
     soak: (n) => `Soak ${n} damage with shields`, elite_prayer: (n) => `Use ${n} elite prayers`, food: (n) => `Eat ${n} food`,
     bar: (n) => `Have ${n} bars in play at once`, log: (n) => `Have ${n} logs in play at once`, rune: (n) => `Have ${n} runes in play at once`, qp: (n) => `Earn ${n} quest points` };
   const TICK = '<svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8.5l3.5 3.5L13 4" fill="none" stroke="#1a1410" stroke-width="2.5"/></svg>';
@@ -3549,6 +3585,7 @@ html, body { touch-action: manipulation; }
     Varrock: { c: ['#f3d27a', '#fff1c4'], light: 'rgba(255,220,150,.18)', n: 22, t: [18, 30], s: [2, 5], dx: [-40, 80], o: [.35, .7] },
     'Grand Exchange': { c: ['#fff25e', '#f3d27a', '#fff1c4'], light: 'rgba(255,230,140,.2)', n: 24, t: [16, 28], s: [2, 6], dx: [-50, 70], o: [.4, .8] },
     Lumbridge: { c: ['#f4e9a8', '#d7f0b4', '#ffffff'], light: 'rgba(190,230,170,.18)', n: 24, t: [16, 28], s: [2, 6], dx: [-60, 90], o: [.35, .75] },
+    'City of Um': { c: ['#5fe0c8', '#9af5e4', '#b59cff'], core: '#e8fff9', light: 'rgba(90,220,200,.16)', n: 26, t: [18, 30], s: [3, 8], dx: [-70, 70], o: [.35, .8] },   // teal wisps (Necromancy)
   };
   const MOTES = {};                                  // one fixed layout per scene, so redraws don't reshuffle
   function menuLife(place = MENU_BG) {
@@ -3845,7 +3882,8 @@ html, body { touch-action: manipulation; }
   }
   // The progress under the screen was just replaced (another device's, or a merge): point the screen at what's there.
   function profileSwapped() {
-    if (!Array.isArray(profile.decks) || !profile.decks.length || !profile.coll) Object.assign(profile, starterState());
+    if (!Array.isArray(profile.decks) || !profile.decks.length || !profile.coll) Object.assign(profile, starterState(), { gifts: [...RSTCGPacks.GIFTS] });
+    if (giveStarters()) saveProfile();               // progress from before a starter deck was added
     pickedDeck();
     if (ui.deckSel && !myDeck(ui.deckSel)) ui.deckSel = profile.decks[0].id;
     ui.confirmDel = false; ui.renaming = false;
@@ -4135,7 +4173,7 @@ html, body { touch-action: manipulation; }
   function bankSnapshot() {
     const p = profile;
     return { gp: p.gp, coll: p.coll, packs: p.packs, wins: p.wins, losses: p.losses, online: p.online || null, tutorialPack: !!p.tutorialPack,
-      story: { claimed: { ...storyData().claimed } } };
+      story: { claimed: { ...storyData().claimed } }, gifts: Array.isArray(p.gifts) ? [...p.gifts] : [] };
   }
   // the bank's numbers onto this device: what the server has, plus the bot duels it hasn't heard about yet
   // A Story Mode reward on a banked device: kept for the server (rstcg-bank-v1's `story`) and shown at once, as
@@ -5475,10 +5513,28 @@ html, body { touch-action: manipulation; }
   }
   function ensureCollection() {
     if (Array.isArray(profile.decks) && profile.coll) return;
-    Object.assign(profile, starterState(), { packs: 0, lastPack: null });
+    Object.assign(profile, starterState(), { packs: 0, lastPack: null, gifts: [...RSTCGPacks.GIFTS] });
     saveProfile();
   }
+  // A starter deck added after this player began (packs.js GIFTS; Necromancy, 2026-11-27, Ramon): given once, the deck
+  // and its cards. On a banked device the bank gives the cards (the server logs gift:<deck>), so only the deck comes here;
+  // a device that has never been online adds the cards too, and its `gifts` tells the bank it has them when it opens.
+  function giveStarters() {
+    const had = Array.isArray(profile.gifts) ? profile.gifts : [];
+    const todo = RSTCGPacks.GIFTS.filter((n) => !had.includes(n));
+    if (!todo.length) return false;
+    const st = starterState();
+    for (const name of todo) {
+      const d = st.decks.find((x) => x.name === name);
+      if (!d) continue;
+      if (!profile.decks.some((x) => x.id === d.id)) profile.decks.push(d);
+      if (!banked()) for (const [n, k] of Object.entries(d.cards)) if (!isBasic(n)) profile.coll[n] = (profile.coll[n] || 0) + k;
+    }
+    profile.gifts = [...had, ...todo];
+    return true;
+  }
   ensureCollection();
+  if (giveStarters()) saveProfile();
   const myDeck = (id) => profile.decks.find((d) => d.id === id);
   const collected = () => POOL.filter((n) => owned(n) > 0).length;
   // Deck rules (deckrules.js): exactly 60, at most 4 of a card (basic materials excepted), at most 1 Legendary,
@@ -5524,7 +5580,7 @@ html, body { touch-action: manipulation; }
     const total = cardsTotal(cards) || 1;
     const fams = {};
     let rest = 0;
-    const st = { melee: 0, ranged: 0, magic: 0, neutral: 0 };
+    const st = { melee: 0, ranged: 0, magic: 0, necrotic: 0, neutral: 0 };
     for (const [n, k] of Object.entries(cards)) {
       const c = CARDS[n];
       if (c.kind === 'material') fams[c.mat] = (fams[c.mat] || 0) + k;
@@ -5537,8 +5593,8 @@ html, body { touch-action: manipulation; }
     return {
       mats: `<div style="display:flex;height:${h}px;border-radius:6px;overflow:hidden;font-size:12px;font-weight:800;background:#3a2f25">${Object.entries(fams).map(([f, k]) => seg(k, FAMC[f] || FRAME.material, `${(FAM_WORD[f] || f).toUpperCase()} ${k}`)).join('')}${seg(rest, '#4a3d30', `${rest} OTHER`, 'var(--cream)')}</div>`,
       matLegend: Object.keys(FAMC).map((f) => `<span style="${fams[f] ? '' : 'color:var(--faint)'}">${(FAM_WORD[f] || f).toUpperCase()} ${fams[f] || 0}</span>`).join(''),
-      style: `<div style="display:flex;height:${h}px;border-radius:6px;overflow:hidden;font-size:12px;font-weight:800;color:#fff;background:#3a2f25">${seg2(st.melee, FRAME.melee, st.melee)}${seg2(st.ranged, FRAME.ranged, st.ranged)}${seg2(st.magic, FRAME.magic, st.magic)}${seg2(st.neutral, FRAME.neutral, st.neutral)}</div>`,
-      styleLegend: ['melee', 'ranged', 'magic', 'neutral'].map((k) => `<span style="display:inline-flex;align-items:center;gap:5px;${st[k] ? '' : 'color:var(--faint)'}"><span class="rar" style="background:${FRAME[k]}"></span>${(S[k] || 'Neutral').toUpperCase()} ${st[k]}</span>`).join(''),
+      style: `<div style="display:flex;height:${h}px;border-radius:6px;overflow:hidden;font-size:12px;font-weight:800;color:#fff;background:#3a2f25">${seg2(st.melee, FRAME.melee, st.melee)}${seg2(st.ranged, FRAME.ranged, st.ranged)}${seg2(st.magic, FRAME.magic, st.magic)}${seg2(st.necrotic, FRAME.necrotic, st.necrotic)}${seg2(st.neutral, FRAME.neutral, st.neutral)}</div>`,
+      styleLegend: ['melee', 'ranged', 'magic', ...(st.necrotic ? ['necrotic'] : []), 'neutral'].map((k) => `<span style="display:inline-flex;align-items:center;gap:5px;${st[k] ? '' : 'color:var(--faint)'}"><span class="rar" style="background:${FRAME[k]}"></span>${(S[k] || 'Neutral').toUpperCase()} ${st[k]}</span>`).join(''),
       rest,
     };
   }
@@ -5612,7 +5668,7 @@ html, body { touch-action: manipulation; }
       styles: new Set(['melee', 'ranged', 'magic', 'neutral']), rars: new Set(['C', 'U', 'R', 'L']), type: 'all', page: 0, dirty: !d, leave: false, capeOpen: false, back: ui.screen };
     ui.screen = 'editor';
   }
-  const styleKey = (n) => { const s = CARDS[n].style; return CARDS[n].kind === 'material' ? 'neutral' : ['melee', 'ranged', 'magic'].includes(s) ? s : 'neutral'; };
+  const styleKey = (n) => { const s = CARDS[n].style; return CARDS[n].kind === 'material' ? 'neutral' : CARDS[n].wclass === 'summon' ? 'necrotic' : ['melee', 'ranged', 'magic', 'necrotic'].includes(s) ? s : 'neutral'; };
   function edList() {
     const e = ui.ed;
     const q = e.q.trim().toLowerCase();
@@ -5687,7 +5743,7 @@ html, body { touch-action: manipulation; }
     const chip = chipF;
     const nOff = (4 - e.styles.size) + (4 - e.rars.size) + (e.type === 'all' ? 0 : 1);
     const filterRows = `<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center"><span class="lbl" style="width:52px">Style</span>
-        ${['melee', 'ranged', 'magic'].map((s) => chip('edstyle', s, e.styles.has(s), `${ICON[s] ? `<img src="${ICON[s]}" alt="">` : ''}${S[s]}`)).join('')}${chip('edstyle', 'neutral', e.styles.has('neutral'), 'Neutral')}
+        ${['melee', 'ranged', 'magic', 'necrotic'].map((s) => chip('edstyle', s, e.styles.has(s), `${ICON[s] ? `<img src="${ICON[s]}" alt="">` : ''}${s === 'necrotic' ? 'Necromancy' : S[s]}`)).join('')}${chip('edstyle', 'neutral', e.styles.has('neutral'), 'Neutral')}
         <span style="width:1px;height:26px;background:rgba(201,165,75,.3);margin:0 6px"></span><span class="lbl" style="width:60px">Rarity</span>
         ${['C', 'U', 'R', 'L'].map((r) => chip('edrar', r, e.rars.has(r), `${rarDot(r)}${r}`)).join('')}
         ${L.short ? '' : `<span style="margin-left:auto;font-size:14px;font-weight:800;color:var(--muted)">${list.length} card${list.length === 1 ? '' : 's'}</span>`}</div>
@@ -6118,6 +6174,8 @@ html, body { touch-action: manipulation; }
       case 'arrows': return 'ammo';
       case 'buff': return 'prayer';
       case 'material': case 'pouch': return 'mats';
+      case 'conduit': return 'weapon';               // it fills your Weapon slot
+      case 'ritual': return a[2] && CARDS[a[2]].kind === 'material' ? 'mats' : null;
       case 'quest': return 'quest';
       case 'location': case 'teleport': return 'loc';
       case 'food': return 'mydeck';                 // discards go back under your deck
@@ -6206,7 +6264,10 @@ html, body { touch-action: manipulation; }
   }
   function clearZones() {
     $('#board').classList.remove('dragging');
-    document.querySelectorAll('.dz-on, .dz-alt, .dz-hot').forEach((n) => n.classList.remove('dz-on', 'dz-alt', 'dz-hot'));
+    document.querySelectorAll('.dz-on, .dz-alt, .dz-hot').forEach((n) => {
+      n.classList.remove('dz-on', 'dz-alt', 'dz-hot');
+      if (!n.classList.length) n.removeAttribute('class');   // the discard pile has no class of its own: leave it as drawn
+    });
   }
   function springBack(d) {
     sfx('back');
@@ -6612,13 +6673,13 @@ html, body { touch-action: manipulation; }
         if (banked()) {                          // the bank is reset at the server first: offline, nothing changes
           ON.call('reset').then((r) => {
             store.set(BANK, { uid: account().uid, bank: r.bank, claims: [] });
-            Object.assign(profile, { gp: START_GP, wins: 0, losses: 0 }, starterState(), { packs: 0, lastPack: null, tutorial: null, tutorialPack: false, tips: {} }); saveProfile();
+            Object.assign(profile, { gp: START_GP, wins: 0, losses: 0 }, starterState(), { packs: 0, lastPack: null, tutorial: null, tutorialPack: false, tips: {}, gifts: [...RSTCGPacks.GIFTS] }); saveProfile();
             bankApply(true);
             ui.confirmReset = false; ui.setup.youDeck = profile.decks[0].id; render();
           }).catch((e) => { ui.confirmReset = false; odToast(e && e.code === 'net' ? "Resetting goes through the game server, and it can't be reached. Nothing has changed." : (e && e.message) || 'Nothing has changed.'); render(); });
           return;
         }
-        Object.assign(profile, { gp: START_GP, wins: 0, losses: 0 }, starterState(), { packs: 0, lastPack: null, tutorial: null, tutorialPack: false, tips: {} });
+        Object.assign(profile, { gp: START_GP, wins: 0, losses: 0 }, starterState(), { packs: 0, lastPack: null, tutorial: null, tutorialPack: false, tips: {}, gifts: [...RSTCGPacks.GIFTS] });
         for (const c of Object.values(storyData().claimed)) if (CARDS[c]) profile.coll[c] = (profile.coll[c] || 0) + 1;   // the story's rewards stay
         saveProfile(); ui.confirmReset = false; ui.setup.youDeck = profile.decks[0].id; break;
       case 'duelmenu': ui.duelMenu = !ui.duelMenu; break;
@@ -6997,7 +7058,7 @@ html, body { touch-action: manipulation; }
     // Story Mode: the runner, and (for tests) ending the duel on the table at once, won or lost
     story: { STY, data: () => storyData(), hit: () => storyDuelLines(ui.g, [{ type: 'hit', by: ui.you, amount: 3 }], false),
       give(key) { const card = RSTCGPacks.STORY_REWARDS[key], st = storyData(); if (!card || st.claimed[key]) return false; st.claimed[key] = card; storyGrant(card, key); saveProfile(); return true; }, endDuel(won) { const g = ui.g; if (!g || g.winner !== null) return; stopDuel(); g.winner = won ? ui.you : 1 - ui.you; g.end_reason = 'damage'; finishDuel(g); } },
-    tour: { get place() { return MENU_BG; }, get places() { return tourPlaces(); }, get busy() { return TOUR.busy; }, get shown() { return TOUR.shown; }, get every() { return TOUR.every; }, set every(ms) { TOUR.every = ms; }, step: (to) => tourStep(to) }, deckRules, POOL, PACK_POOL, cardFace, mini, AS, ART, ICON, get CREST() { return CREST; }, get EMBLEM() { return EMBLEM; },
+    tour: { get place() { return MENU_BG; }, get places() { return tourPlaces(); }, get busy() { return TOUR.busy; }, get shown() { return TOUR.shown; }, get every() { return TOUR.every; }, set every(ms) { TOUR.every = ms; }, step: (to) => tourStep(to) }, deckRules, POOL, PACK_POOL, cardFace, mini, AS, ART, ICON, cardInfo, clipV, get CREST() { return CREST; }, get EMBLEM() { return EMBLEM; },
     // for tests: does the duel board, redrawn in place, read the same as a board drawn from scratch?
     // (attribute order aside). Returns true, or the first place they differ.
     morphCheck() {

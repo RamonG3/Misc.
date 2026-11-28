@@ -115,6 +115,10 @@ const tick = () => new Promise((r) => setImmediate(r));
     check('merge: never leaves a player with no deck', none.decks.length === 1);
     const lots = C.merge({}, { onlinePaid: Array.from({ length: 30 }, (_, i) => 'a' + i) }, { onlinePaid: Array.from({ length: 30 }, (_, i) => 'b' + i) });
     check('merge: the paid list stays short', lots.onlinePaid.length === 40 && lots.onlinePaid.includes('a29'));
+    // a starter deck added later is given once per player: the list of ones had only grows, from either side
+    const g = C.merge({ gifts: [] }, { gifts: ['Necromancy'] }, { gifts: [] });
+    const g2 = C.merge({}, { gp: 1 }, { gifts: ['Necromancy'] }), g3 = C.merge({ gifts: ['Necromancy'] }, { gifts: ['Necromancy', 'X'] }, { gifts: ['Necromancy', 'Y'] });
+    check('merge: gifts had on either side stay had', JSON.stringify(g.gifts) === '["Necromancy"]' && JSON.stringify(g2.gifts) === '["Necromancy"]' && g3.gifts.length === 3);
     // Story Mode: rewards and finished roads add up from both; where you are goes by the usual rule
     const sb = { story: { main: { ch: 'ch1', node: 'swamp', i: 3 }, roads: { ch1: [] }, claimed: {} } };
     const sl = clone(sb); sl.story.main.i = 9; sl.story.roads.ch1 = ['A']; sl.story.claimed['ch1:A'] = 'Claws of Guthix';

@@ -4,12 +4,16 @@
  *   P.POOL                  every card you can own (Set 1, no capes, nothing cut), by name
  *   P.BY_RARITY             { C, U, R, L }: the cards a pack can hold (never basic materials)
  *   P.roll(rnd)             one pack: [{ name, rar }]. rnd() -> [0, 1): Math.random on the page, crypto on the server
- *   P.starter()             { coll, decks }: the three starter decks, and the collection they make
+ *   P.starter()             { coll, decks }: the starter decks, and the collection they make
+ *   P.gift(name)            the cards a starter deck added later gives a player who began before it (GIFTS)
  *   P.plausible(p)          could honest play have made this progress? -> { ok, why, gp, coll, packs }
  *                           (the numbers cleaned: only real cards, whole numbers, nothing below zero)
  *   PACK_COST, PAY, SLOTS, LEGEND_ODDS
  *   STORY_REWARDS          { 'ch1:A': card }: the card each Story Mode road gives, once (STORY_BRIEF.md). They're never
  *                          in packs; a collection may hold each once a profile's story.claimed says it was given
+ *   GIFTS                  starter decks added after the game began (Necromancy, 2026-11-27; Ramon: players who began
+ *                          before it get it too): each is given once, the deck and its cards (not basic materials).
+ *                          The bank logs it as gift:<deck>; a profile lists the ones it has had in `gifts`
  *
  * A pack is 3 Commons, 2 Uncommons and a Rare that is a Legendary about one time in eight, with no card twice.
  * Basic materials (the common ones) are unlimited, so they are never in packs or in a collection.
@@ -24,6 +28,7 @@
   // chapter 3 is keyed by the card, not the road: Lord Daquarius's rack gives one per win, either road (story.js rewardBy)
   const STORY_REWARDS = { 'ch1:A': 'Claws of Guthix', 'ch1:B': 'Shield of Arrav', 'ch2:A': 'White Knight Armor', 'ch2:B': 'Cabbage Armor',
     'ch3:bow': 'Kinshra Shortbow', 'ch3:sword': 'Kinshra Sword', 'ch3:staff': 'Kinshra Battlestaff' };
+  const GIFTS = ['Necromancy'];
 
   function make(CARDS, set1, decks) {
     const rarityOf = (n) => (set1[n] ? set1[n].rarity : 'C');
@@ -49,6 +54,11 @@
       return { coll, decks: STARTERS.map((d) => ({ name: d.name, cards: { ...d.cards }, cape: d.capes[0] })) };
     }
     const START = starter().coll;
+    function gift(name) {
+      const d = STARTERS.find((x) => x.name === name), coll = {};
+      if (d) for (const [n, k] of Object.entries(d.cards)) if (!isBasic(n)) coll[n] = (coll[n] || 0) + k;
+      return coll;
+    }
 
     const whole = (x) => (typeof x === 'number' && isFinite(x) && x > 0 ? Math.floor(x) : 0);
     function plausible(p) {
@@ -70,10 +80,10 @@
       if (gp + PACK_COST * Math.max(0, packs - 1) > PAY.win * duels + SLACK_GP) why.push(`${gp} GP and ${packs} packs from ${duels} duels`);
       return { ok: !why.length, why: why.join('; '), gp, coll, packs, story: story.filter((k) => coll[STORY_REWARDS[k]]) };
     }
-    return { POOL, BY_RARITY, roll, starter, plausible, rarityOf, isBasic, STORY_REWARDS };
+    return { POOL, BY_RARITY, roll, starter, gift, plausible, rarityOf, isBasic, STORY_REWARDS, GIFTS };
   }
 
-  const api = { make, SLOTS, LEGEND_ODDS, PACK_COST, PAY, STORY_REWARDS };
+  const api = { make, SLOTS, LEGEND_ODDS, PACK_COST, PAY, STORY_REWARDS, GIFTS };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   root.RSTCGPacks = api;
 })(typeof window !== 'undefined' ? window : globalThis);

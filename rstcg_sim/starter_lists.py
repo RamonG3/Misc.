@@ -32,4 +32,14 @@ NEW = {
         "Archmage Sedridor": 2, "Banker": 1, "Wizards' Tower": 1, "Rune Mysteries": 1, "Tinderbox": 1,
     },
 }
-CAPE = {"Melee": "Attack Cape", "Ranged": "Defence Cape", "Air Mage": "Magic Cape"}
+# The Necromancy starter (2026-11-27, NECROMANCY_DESIGN.md round 2b): a Necrotic spell deck in the Air Mage's shape
+NEW["Necromancy"] = {
+    "Spirit Rune": 13, "Bone Rune": 5, "Flesh Rune": 3,
+    "Touch of Death": 4, "Finger of Death": 4, "Spectral Scythe": 4, "Rasial's Greed": 3,
+    "Rune Pouch": 3, "Deathwarden Robe": 2, "Bone Shield": 3, "Wooden Shield": 2, "Kiteshield": 2,
+    "Shrimp": 1, "Lobster": 2,
+    "Decay": 2, "Accelerated Decay": 2,
+    "Mirror Shield": 1, "Protect from Melee": 1,
+    "Archmage Sedridor": 2, "City of Um": 1,
+}
+CAPE = {"Melee": "Attack Cape", "Ranged": "Defence Cape", "Air Mage": "Magic Cape", "Necromancy": "Necromancy Cape"}
